@@ -217,6 +217,11 @@ i.da-chat-inactive:hover {
     margin-right: calc(var(--bs-gutter-x) * .5);
 }
 
+.da-grid-container.da-form-group-floating legend {
+    margin-left: calc(var(--bs-gutter-x) * .5);
+    margin-right: calc(var(--bs-gutter-x) * .5);
+}
+
 .da-grid-container {
     position: relative;
 }
@@ -760,6 +765,10 @@ div.dafieldpart > label:first-of-type {
     margin-top: 0px;
 }
 
+div.dafieldpart > legend:first-of-type {
+    margin-top: 0px;
+}
+
 div.datopcenter {
     position: fixed;
     top: 5px;
@@ -919,6 +928,10 @@ img.da-sig-spinner {
 }
 
 .dafullwidth + label {
+    width: 100%;
+}
+
+.dafullwidth + legend {
     width: 100%;
 }
 
@@ -1881,7 +1894,7 @@ a.dadisabled {
     }
 }
 
-div.da-field-container-datatype-range label.da-top-label {
+div.da-field-container-datatype-range .da-top-label {
     margin-bottom: 1.5rem;
 }
 

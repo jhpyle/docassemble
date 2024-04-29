@@ -8987,8 +8987,8 @@ def index(action_argument=None, refer=None):
             }
           }
         }
-        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('fieldset').length > 0){
-          var fieldSet = $(returnVal).parents('fieldset')[0];
+        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('div.da-field-group').length > 0){
+          var fieldSet = $(returnVal).parents('div.da-field-group')[0];
           if (!$(fieldSet).hasClass('da-field-checkbox') && !$(fieldSet).hasClass('da-field-checkboxes')){
             return fieldSet;
           }
@@ -9042,7 +9042,7 @@ def index(action_argument=None, refer=None):
           console.log('setField: reference to non-existent field ' + fieldName);
           return;
         }
-        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
           elem = $(elem).find('input')[0];
         }
         if ($(elem).attr('type') == "checkbox"){
@@ -9092,7 +9092,7 @@ def index(action_argument=None, refer=None):
             }
           }
         }
-        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
           if (!Array.isArray(theValue)){
             throw new Error('setField: value must be an array');
           }
@@ -9178,7 +9178,7 @@ def index(action_argument=None, refer=None):
         if (elem == null){
           return null;
         }
-        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
           elem = $(elem).find('input')[0];
         }
         if ($(elem).attr('type') == "checkbox"){
@@ -9207,7 +9207,7 @@ def index(action_argument=None, refer=None):
             }
           }
         }
-        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
           var cbSelected = [];
           $(elem).find('input').each(function(){
             if ($(this).attr('name').substr(0,7) === '_ignore'){
@@ -11218,15 +11218,15 @@ def index(action_argument=None, refer=None):
           e.preventDefault();
           if ($("#daform").valid()){
             var num = $(this).parent().parent().data('collectnum');
-            $('div[data-collectnum="' + num + '"]').show('fast');
-            $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
-            $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+            $('[data-collectnum="' + num + '"]').show('fast');
+            $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
+            $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
                daComboBoxes[$(this).attr('id')].enable();
             });
-            $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+            $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
               $(this).slider('enable');
             });
-            $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+            $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
               $(this).data("fileinput").enable();
             });
             $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
@@ -11234,7 +11234,7 @@ def index(action_argument=None, refer=None):
             $(this).addClass("dainvisible");
             $(".da-first-delete").removeClass("dainvisible");
             rationalizeListCollect();
-            var elem = $('div[data-collectnum="' + num + '"]').find('input, textarea, select').first();
+            var elem = $('[data-collectnum="' + num + '"]').find('input, textarea, select').first();
             if ($(elem).visible()){
               $(elem).focus();
             }
@@ -11245,15 +11245,15 @@ def index(action_argument=None, refer=None):
         $(".dacollectremove").on('click', function(e){
           e.preventDefault();
           var num = $(this).parent().parent().data('collectnum');
-          $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
-          $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
-          $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+          $('[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
+          $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
+          $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].disable();
           });
-          $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+          $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
             $(this).slider('disable');
           });
-          $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+          $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
             $(this).data("fileinput").disable();
           });
           $(this).parent().find("button.dacollectadd").removeClass("dainvisible");
@@ -11265,15 +11265,15 @@ def index(action_argument=None, refer=None):
         $(".dacollectremoveexisting").on('click', function(e){
           e.preventDefault();
           var num = $(this).parent().parent().data('collectnum');
-          $('div[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
-          $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
-          $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+          $('[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
+          $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
+          $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].disable();
           });
-          $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+          $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
             $(this).slider('disable');
           });
-          $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+          $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
             $(this).data("fileinput").disable();
           });
           $(this).parent().find("button.dacollectunremove").removeClass("dainvisible");
@@ -11285,15 +11285,15 @@ def index(action_argument=None, refer=None):
         $(".dacollectunremove").on('click', function(e){
           e.preventDefault();
           var num = $(this).parent().parent().data('collectnum');
-          $('div[data-collectnum="' + num + '"]').show('fast');
-          $('div[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
-          $('div[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
+          $('[data-collectnum="' + num + '"]').show('fast');
+          $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
+          $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
             daComboBoxes[$(this).attr('id')].enable();
           });
-          $('div[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
+          $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
             $(this).slider('enable');
           });
-          $('div[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
+          $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
             $(this).data("fileinput").enable();
           });
           $(this).parent().find("button.dacollectremoveexisting").removeClass("dainvisible");
@@ -11335,7 +11335,7 @@ def index(action_argument=None, refer=None):
             daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
           });
         })
-        $('fieldset.da-field-checkboxes').each(function(){
+        $('div.da-field-group.da-field-checkboxes').each(function(){
           var isObject = $(this).hasClass('daobject');
           var varname = atou($(this).data('varname'));
           var cbList = [];
@@ -11433,7 +11433,7 @@ def index(action_argument=None, refer=None):
         $("input.daaota-checkbox").click(function(){
           var anyChanged = false;
           var firstEncountered = null;
-          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
             if (firstEncountered === null){
               firstEncountered = this;
             }
@@ -11447,7 +11447,7 @@ def index(action_argument=None, refer=None):
           if (firstEncountered !== null && anyChanged === false){
             $(firstEncountered).trigger('change');
           }
-          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -11458,7 +11458,7 @@ def index(action_argument=None, refer=None):
         $("input.danota-checkbox").click(function(){
           var anyChanged = false;
           var firstEncountered = null;
-          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
             if (firstEncountered === null){
               firstEncountered = this;
             }
@@ -11472,7 +11472,7 @@ def index(action_argument=None, refer=None):
           if (firstEncountered !== null && anyChanged === false){
             $(firstEncountered).trigger('change');
           }
-          $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -11481,7 +11481,7 @@ def index(action_argument=None, refer=None):
           });
         });
         $("input.danon-nota-checkbox").click(function(){
-          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -11489,7 +11489,7 @@ def index(action_argument=None, refer=None):
             }
           });
           if (!$(this).prop('checked')){
-            $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
+            $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
               var existing_val = $(this).prop('checked');
               $(this).prop('checked', false);
               if (existing_val != false){
@@ -11535,7 +11535,7 @@ def index(action_argument=None, refer=None):
         var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
           return new bootstrap.Popover(daPopoverTriggerEl, {trigger: """ + json.dumps(interview.options.get('popover trigger', 'focus')) + """, html: true});
         });
-        $('label a[data-bs-toggle="popover"]').on('click', function(event){
+        $('label a[data-bs-toggle="popover"], legend a[data-bs-toggle="popover"]').on('click', function(event){
           event.preventDefault();
           event.stopPropagation();
           var thePopover = bootstrap.Popover.getOrCreateInstance(this);
@@ -12130,7 +12130,7 @@ def index(action_argument=None, refer=None):
           if (varName.endsWith('[nota]') || varName.endsWith('[aota]')){
             var signifier = varName.endsWith('[nota]') ? 'nota' : 'aota';
             var cbVarName = varName.replace(/\[[na]ota\]$/, '');
-            $('fieldset.da-field-checkboxes').each(function(){
+            $('div.da-field-group.da-field-checkboxes').each(function(){
               var thisVarName = atou($(this).data('varname'));
               if (thisVarName == cbVarName){
                 elem = $(this).find('input.da' + signifier + '-checkbox');
@@ -12526,6 +12526,11 @@ def index(action_argument=None, refer=None):
         errorPlacement: function(error, element) {
             $(error).addClass('invalid-feedback');
             var elementName = $(element).attr("name");
+            var idOfErrorSpan = $(element).attr("id") + "-error";
+            $("#" + idOfErrorSpan).remove();
+            $(error).attr("id", idOfErrorSpan);
+            $(element).attr("aria-invalid", "true");
+            $(element).attr("aria-errormessage", idOfErrorSpan);
             var lastInGroup = $.map(daValidationRules['groups'], function(thefields, thename){
               var fieldsArr;
               if (thefields.indexOf(elementName) >= 0) {
@@ -12576,7 +12581,7 @@ def index(action_argument=None, refer=None):
               }
             }
             else if (element.hasClass('danon-nota-checkbox')){
-              element.parents('fieldset').append(error);
+              element.parents('div.da-field-group').append(error);
             }
             else {
               error.insertAfter(element);
@@ -14332,8 +14337,8 @@ def observer():
             }
           }
         }
-        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('fieldset').length > 0){
-          var fieldSet = $(returnVal).parents('fieldset')[0];
+        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('div.da-field-group').length > 0){
+          var fieldSet = $(returnVal).parents('div.da-field-group')[0];
           if (!$(fieldSet).hasClass('da-field-checkbox') && !$(fieldSet).hasClass('da-field-checkboxes')){
             return fieldSet;
           }
@@ -14387,7 +14392,7 @@ def observer():
           console.log('setField: reference to non-existent field ' + fieldName);
           return;
         }
-        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
           elem = $(elem).find('input')[0];
         }
         if ($(elem).attr('type') == "checkbox"){
@@ -14437,7 +14442,7 @@ def observer():
             }
           }
         }
-        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
           if (!Array.isArray(theValue)){
             throw new Error('setField: value must be an array');
           }
@@ -14523,7 +14528,7 @@ def observer():
         if (elem == null){
           return null;
         }
-        if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-radio")){
+        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
           elem = $(elem).find('input')[0];
         }
         if ($(elem).attr('type') == "checkbox"){
@@ -14552,7 +14557,7 @@ def observer():
             }
           }
         }
-        else if ($(elem).prop('tagName') == "FIELDSET" && $(elem).hasClass("da-field-checkboxes")){
+        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
           var cbSelected = [];
           $(elem).find('input').each(function(){
             if ($(this).attr('name').substr(0,7) === '_ignore'){
@@ -14963,7 +14968,7 @@ def observer():
         $("input.daaota-checkbox").click(function(){
           var anyChanged = false;
           var firstEncountered = null;
-          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
             if (firstEncountered === null){
               firstEncountered = this;
             }
@@ -14977,7 +14982,7 @@ def observer():
           if (firstEncountered !== null && anyChanged === false){
             $(firstEncountered).trigger('change');
           }
-          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -14988,7 +14993,7 @@ def observer():
         $("input.danota-checkbox").click(function(){
           var anyChanged = false;
           var firstEncountered = null;
-          $(this).parents('fieldset').find('input.danon-nota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
             if (firstEncountered === null){
               firstEncountered = this;
             }
@@ -15002,7 +15007,7 @@ def observer():
           if (firstEncountered !== null && anyChanged === false){
             $(firstEncountered).trigger('change');
           }
-          $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -15011,7 +15016,7 @@ def observer():
           });
         });
         $("input.danon-nota-checkbox").click(function(){
-          $(this).parents('fieldset').find('input.danota-checkbox').each(function(){
+          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
             var existing_val = $(this).prop('checked');
             $(this).prop('checked', false);
             if (existing_val != false){
@@ -15019,7 +15024,7 @@ def observer():
             }
           });
           if (!$(this).prop('checked')){
-            $(this).parents('fieldset').find('input.daaota-checkbox').each(function(){
+            $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
               var existing_val = $(this).prop('checked');
               $(this).prop('checked', false);
               if (existing_val != false){
@@ -15065,7 +15070,7 @@ def observer():
             daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
           });
         })
-        $('fieldset.da-field-checkboxes').each(function(){
+        $('div.da-field-group.da-field-checkboxes').each(function(){
           var isObject = $(this).hasClass('daobject');
           var varname = atou($(this).data('varname'));
           var cbList = [];
@@ -15286,7 +15291,7 @@ def observer():
           if (varName.endsWith('[nota]') || varName.endsWith('[aota]')){
             var signifier = varName.endsWith('[nota]') ? 'nota' : 'aota';
             var cbVarName = varName.replace(/\[[na]ota\]$/, '');
-            $('fieldset.da-field-checkboxes').each(function(){
+            $('div.da-field-group.da-field-checkboxes').each(function(){
               var thisVarName = atou($(this).data('varname'));
               if (thisVarName == cbVarName){
                 elem = $(this).find('input.da' + signifier + '-checkbox');

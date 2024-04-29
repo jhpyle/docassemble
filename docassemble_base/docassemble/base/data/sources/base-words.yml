@@ -35,6 +35,7 @@
 "Already registered?": Null
 "Already registered? Sign in.": Null
 "American Samoa": Null
+"am I": Null
 "and enter the code": Null
 "and": Null
 "Andorra": Null
@@ -57,6 +58,7 @@
 "App": Null
 ", are attached": Null
 "A reset password email has been sent to '%(email)s'. Open that email and follow the instructions to reset your password.": Null
+"are we": Null
 "are you": Null
 "Are you sure that you want to delete this file?": Null
 "Are you sure that you want to delete this package?": Null
@@ -401,10 +403,12 @@
 "Here is the start of a YAML file you can import with a 'words' directive in your Configuration.": Null
 "Here is your document.": Null
 "her": Null
+"herself": Null
 "Hide context of example": Null
 "Hide entries that are already classified": Null
 "Hide import controls": Null
 "him": Null
+"himself": Null
 "History": Null
 "Holy See (Vatican City State)": Null
 "Home Page": Null
@@ -472,6 +476,7 @@
 "Interview Progress": Null
 "Interviews": Null
 "in the": Null
+"I": Null
 "Invalid action.": Null
 "Invalid confirmation token.": Null
 "Invalid e-mail address": Null
@@ -506,6 +511,7 @@
 "Items in the training set": Null
 "Items": Null
 "it": Null
+"itself": Null
 "Jamaica": Null
 "Japan": Null
 "Jersey": Null
@@ -564,6 +570,7 @@
 "means the name may be located in a file included by reference, such as:": Null
 "mentioned in": Null
 "menu items": Null
+"me": Null
 "menu": Null
 "Menu": Null
 "Menu:": Null
@@ -593,6 +600,7 @@
 "Myanmar": Null
 "My Interviews": Null
 "My Playground": Null
+"myself": Null
 "Name": Null
 "Name of new branch": Null
 "Name of new privilege is required": Null
@@ -688,6 +696,7 @@
 "Other settings": Null
 "other user": Null
 "other users": Null
+"ourselves": Null
 "Output Format": Null
 "Overrides": Null
 "Package created": Null
@@ -874,7 +883,6 @@
 "Security Method": Null
 "Select a package": Null
 "Select a value between": Null
-"Select box": Null
 "Select file": Null
 "Select...": Null
 "Select one": Null
@@ -1012,6 +1020,8 @@
 "The link has expired.": Null
 "The mapping was reset because the folder does not appear to exist anymore.": Null
 "them": Null
+"themself": Null
+"themselves": Null
 "The name must be filled in.": Null
 "The new user has been created": Null
 "The operator is no longer controlling your screen.": Null
@@ -1189,6 +1199,7 @@
 "Uses two-factor authentication": Null
 "Using Jinja2": Null
 "(using your email address) and change your password.": Null
+"us": Null
 "Utilities": Null
 "Uzbekistan": Null
 "Valid characters are: A-Z, a-z, 0-9, hyphen": Null
@@ -1215,6 +1226,7 @@
 "was saved at": Null
 "We have received your password reset request.": Null
 "We just sent you a text message with a verification code.  Enter the verification code to proceed.": Null
+"we": Null
 "Western Sahara": Null
 "We were unable to submit your request.": Null
 "What file do you want to import?": Null
@@ -1335,6 +1347,7 @@
 "Your reset password token is invalid.": Null
 "Your screen is being controlled by an operator.": Null
 "yourself": Null
+"yourselves": Null
 "Your status: ": Null
 "Your username has been changed": Null
 "Your username has been changed.": Null

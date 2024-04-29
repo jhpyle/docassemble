@@ -172,6 +172,14 @@
       this.$element.attr("aria-owns", this.$menu.attr("id"));
       this.$button.attr("aria-controls", this.$menu.attr("id"));
       this.$button.attr("aria-label", this.$source.attr("aria-label"));
+      if (this.$source.attr("aria-labelledby")) {
+        this.$element.attr(
+          "aria-labelledby",
+          this.$source.attr("aria-labelledby"),
+        );
+      } else {
+        this.$source.attr("aria-labelledby", "daMainQuestion");
+      }
       this.$button.attr(
         "aria-labelledby",
         this.$source.attr("aria-labelledby"),

@@ -1,0 +1,120 @@
+mandatory: True
+objects:
+  - helper: Thing.using(_point_of_view='1')
+  - user: Individual
+  - user_alias: Individual.using(_point_of_view='2')
+  - other_user: Individual
+  - company: Person
+  - other_company: Person
+  - thing: Thing
+  - single_list: DAList.using(object_type=Individual)
+  - multiple_list: DAList.using(object_type=Individual)
+  - users: DAList.using(_point_of_view='2p')
+  - helpers: DAList.using(_point_of_view='1p')
+  - single_dict: DADict.using(object_type=Thing)
+  - multiple_dict: DADict.using(object_type=Thing)
+  - single_set: DASet
+  - multiple_set: DASet
+---
+mandatory: True
+code: |
+  helper.name.text = "Robot"
+  user.name.first = "Ursula"
+  user.name.last = "User"
+  user.gender = 'female'
+  user_alias.name.first = "Ursie"
+  user_alias.name.last = "User"
+  user_alias.gender = 'female'
+  other_user.name.first = "Harold"
+  other_user.name.last = "User"
+  other_user.gender = 'male'
+  users.clear()
+  users.append(user)
+  users.append(other_user)
+  users.gathered = True
+  company.name.text = "ABC, Inc."
+  other_company.name.text = "DEF, Inc."
+  thing.name.text = "apple tree"
+  single_list.clear()
+  single_list.appendObject()
+  single_list[0].name.first = "Fred"
+  single_list[0].name.last = "Smith"
+  single_list[0].gender = 'male'
+  single_list.gathered = True
+  multiple_list.clear()
+  multiple_list.appendObject()
+  multiple_list[-1].name.first = "Sally"
+  multiple_list[-1].name.last = "Jones"
+  multiple_list[-1].gender = 'female'
+  multiple_list.appendObject()
+  multiple_list[-1].name.first = "Peter"
+  multiple_list[-1].name.last = "Roberts"
+  multiple_list[-1].gender = 'male'
+  multiple_list.gathered = True
+  single_dict.clear()
+  single_dict.initializeObject('a')
+  single_dict['a'].name.text = 'Single thing in a dictionary'
+  single_dict.gathered = True
+  multiple_dict.clear()
+  multiple_dict.initializeObject('a')
+  multiple_dict['a'].name.text = 'First thing in a dictionary'
+  multiple_dict.initializeObject('b')
+  multiple_dict['b'].name.text = 'Second thing in a dictionary'
+  multiple_dict.gathered = True
+  single_set.clear()
+  single_set.add('single set item')
+  single_set.gathered = True
+  multiple_set.clear()
+  multiple_set.add('first item in a set')
+  multiple_set.add('second item in a set')
+  multiple_set.gathered = True
+  helpers.clear()
+  helpers.append(company)
+  helpers.append(other_company)
+  helpers.gathered = True
+---
+initial: True
+code: |
+  set_info(user=user)
+---
+mandatory: True
+question: Test of language methods
+subquestion: |
+  % for item in [helper, user, user_alias, other_user, company, thing, single_list, multiple_list, users, helpers]:
+  Variable name is ${ item.object_name() }.
+  ${ item.object_possessive('string representation', capitalize=True) } is ${ item }.
+  ${ item.is_are_you(capitalize=True) } going to the ball?
+  ${ item.pronoun_possessive('favorite fruit', capitalize=True) } is apple.
+  The apple should be given to ${ item.pronoun() }.
+  The orange should be given to ${ item.pronoun_objective() }.
+  ${ item.pronoun_subjective(capitalize=True) } ${ item.does_verb('belong') }
+  in an apple orchard and
+  ${ item.did_verb('visit') }
+  an orange farm once.
+  ${ item.possessive('favorite vegetable', capitalize=True) } is turnips.
+  % if isinstance(item, DAList):
+  Please fetch ${ item.quantity_noun('apple') }
+  for ${ item }, since there are
+  ${ item.number_as_word() }.
+  % endif
+  % if item.is_user():
+  ${ item } is the user.
+  % else:
+  ${ item } is not the user.
+  % endif
+  ${ item.do_question('eat', capitalize=True) } fruit?
+  ${ item.did_question('eat', capitalize=True) } mushrooms last Tuesday?
+  ${ item.were_question('present', capitalize=True) }
+  at the ball last month?
+  ${ item.have_question('befriended', capitalize=True) }
+  the cows in the field?
+  The subject is ${ item.subjective_pronoun_or_name() }.
+  The object is ${ item.pronoun_or_name() }.
+  ${ item.pronoun_subjective(capitalize=True) }
+  ${ item.did_verb('return') }
+  the radishes to ${ item.yourself_or_name() }.
+  ${ item }
+  ${ item.did_verb('return') }
+  the potatoes to ${ item.itself() }.
+  
+  % endfor

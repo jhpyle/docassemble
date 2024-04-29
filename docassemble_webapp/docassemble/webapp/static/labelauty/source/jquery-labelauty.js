@@ -15,6 +15,9 @@
      * Our default settings
      * Hope you don't need to change anything, with these settings
      */
+    function removeTabIndex(elem, thisLabel) {
+      PPP;
+    }
     var settings = $.extend(
       {
         // Development Mode
@@ -57,7 +60,7 @@
         // If this has a true value, then label width will be the greatest between labels
         same_width: false,
       },
-      options
+      options,
     );
 
     /*
@@ -123,7 +126,7 @@
             use_labels = false;
             debug(
               settings.development,
-              "There's more than two labels. LABELAUTY will not use labels."
+              "There's more than two labels. LABELAUTY will not use labels.",
             );
           } else {
             // If there's just one label (no split by "settings.separator"), it will be used for both cases
@@ -131,7 +134,7 @@
             if (labels_object.length === 1)
               debug(
                 settings.development,
-                "There's just one label. LABELAUTY will use this one for both cases."
+                "There's just one label. LABELAUTY will use this one for both cases.",
               );
           }
         }
@@ -168,7 +171,7 @@
           input_id = "labelauty-" + input_id_number;
           debug(
             settings.development,
-            "Holy crap, between 1024 thousand numbers, one raised a conflict. Trying again."
+            "Holy crap, between 1024 thousand numbers, one raised a conflict. Trying again.",
           );
         }
 
@@ -186,8 +189,8 @@
           type,
           labels_object,
           use_labels,
-          use_icons
-        )
+          use_icons,
+        ),
       );
 
       for (var idx = 0; idx < classes.length; idx++) {
@@ -206,14 +209,16 @@
       if (type == "radio") {
         $object.on("change", function () {
           $object.parents("fieldset").first().find(".da-has-error").remove();
-          $('input.labelauty[type="radio"]').each(function () {
-            if ($(this).attr("name") == the_name) {
+          var anyChecked = false;
+          $('input.labelauty[name="' + the_name + '"]:enabled').each(
+            function () {
               if ($(this).is(":checked")) {
                 $(this)
                   .next()
                   .addClass("btn-" + color);
                 $(this).next().removeClass("btn-light");
                 $(this).next().attr("aria-checked", true);
+                anyChecked = true;
               } else {
                 $(this)
                   .next()
@@ -221,8 +226,19 @@
                 $(this).next().addClass("btn-light");
                 $(this).next().attr("aria-checked", false);
               }
-            }
-          });
+            },
+          );
+          if (anyChecked) {
+            $('input.labelauty[name="' + the_name + '"]:enabled').each(
+              function () {
+                if ($(this).is(":checked")) {
+                  $(this).next().attr("tabindex", 0);
+                } else {
+                  $(this).next().attr("tabindex", -1);
+                }
+              },
+            );
+          }
         });
       } else {
         $object.on("change", function () {
@@ -243,9 +259,27 @@
         });
       }
 
-      element.keypress(function (event) {
+      element.keydown(function (event) {
         $object.parents("fieldset").first().find(".da-has-error").remove();
         var theCode = event.which || event.keyCode;
+        if (theCode === 40) {
+          event.preventDefault();
+          var nextElement = $object.next("label").next("input").next("label");
+          if (nextElement.length) {
+            nextElement.focus();
+            nextElement.click();
+          }
+          return false;
+        }
+        if (theCode === 38) {
+          event.preventDefault();
+          var prevElement = $object.prev("label");
+          if (prevElement.length) {
+            prevElement.focus();
+            prevElement.click();
+          }
+          return false;
+        }
         if (theCode === 32 || theCode === 13) {
           event.preventDefault();
           if ($object.is(":checked")) {
@@ -277,10 +311,10 @@
       if (settings.same_width != false && settings.label == true) {
         var label_object = $object.next("label[for='" + input_id + "']");
         var unchecked_width = getRealWidth(
-          label_object.find("span.labelauty-unchecked")
+          label_object.find("span.labelauty-unchecked"),
         );
         var checked_width = getRealWidth(
-          label_object.find("span.labelauty-checked")
+          label_object.find("span.labelauty-checked"),
         );
 
         if (unchecked_width > checked_width)
@@ -326,7 +360,7 @@
     type,
     messages_object,
     label,
-    icon
+    icon,
   ) {
     var block;
     var unchecked_message;

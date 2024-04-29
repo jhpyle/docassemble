@@ -1,6 +1,6 @@
 "use strict";
 
-console.log("Starting script");
+//console.log("Starting script");
 var pythonVariableChar = /[A-Za-z0-9\_]/g;
 var daServer = null;
 var daFullServer = null;
@@ -361,7 +361,7 @@ function arraysSame(a, b) {
 
 Office.initialize = function (reason) {
   $(document).ready(function () {
-    console.log("Starting script during document ready");
+    //console.log("Starting script during document ready");
     if (!Office.context.requirements.isSetSupported("WordApi", "1.3")) {
       onDesktop = true;
       //console.log("On desktop");

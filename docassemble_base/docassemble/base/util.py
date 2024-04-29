@@ -40,6 +40,20 @@ from twilio.rest import Client as TwilioRestClient
 import pycountry
 from jinja2.runtime import UndefinedError
 from jinja2.exceptions import TemplateError
+import dateutil
+import dateutil.parser
+import babel.dates
+# import redis
+import phonenumbers
+from bs4 import BeautifulSoup
+import i18naddress
+from pyzbar.pyzbar import decode
+from docxtpl import InlineImage, Subdoc, DocxTemplate
+# import tablib
+import pandas
+from docx import Document
+from pikepdf import Pdf
+import google.cloud
 from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError, DAException
 from docassemble.base.file_docx import include_docx_template
 from docassemble.base.filter import markdown_to_html
@@ -56,20 +70,6 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 from docassemble.base import DA
 from docassemble.webapp.da_flask_mail import Message
-import dateutil
-import dateutil.parser
-import babel.dates
-# import redis
-import phonenumbers
-from bs4 import BeautifulSoup
-import i18naddress
-from pyzbar.pyzbar import decode
-from docxtpl import InlineImage, Subdoc, DocxTemplate
-# import tablib
-import pandas
-from docx import Document
-from pikepdf import Pdf
-import google.cloud
 
 capitalize_func = capitalize
 NoneType = type(None)
@@ -869,6 +869,13 @@ class DAObject:
             return tree.add_relationship_dir(parent=self, child=target, relationship_type=relationship_type)
         return tree.add_relationship_dir(child=self, parent=target, relationship_type=relationship_type)
 
+    def get_point_of_view(self):
+        if hasattr(self, '_point_of_view'):
+            return self._point_of_view
+        if self is this_thread.global_vars.user:
+            return '2'
+        return None
+
     def fix_instance_name(self, old_instance_name, new_instance_name):
         """Substitutes a different instance name for the object and its subobjects."""
         self.instanceName = re.sub(r'^' + re.escape(old_instance_name), new_instance_name, self.instanceName)
@@ -953,6 +960,20 @@ class DAObject:
         """Returns a serializable representation of the object."""
         return docassemble.base.functions.safe_json(self)
 
+    def possessive(self, target, **kwargs):
+        """Given a word like "fish," returns "your fish" or
+        "John Smith's fish," depending on whether the person is the user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            return your(target, **kwargs)
+        if person == '2p':
+            return docassemble.base.functions.your_plural(target, **kwargs)
+        if person == '1':
+            return docassemble.base.functions.my_possessive(target, **kwargs)
+        if person == '1p':
+            return docassemble.base.functions.our_possessive(target, **kwargs)
+        return possessify(self, target, **kwargs)
+
     def object_possessive(self, target, **kwargs):
         """Returns a possessive phrase based on the instanceName.  E.g., client.object_possessive('fish') returns
         "client's fish." """
@@ -960,6 +981,58 @@ class DAObject:
         if len(self.instanceName.split(".")) > 1:
             return possessify_long(self.object_name(), target, language=language)
         return possessify(the(self.object_name(), language=language), target, language=language, capitalize=kwargs.get('capitalize', False))
+
+    def is_are_you(self, **kwargs):
+        """Returns "is" followed by the object reduced to text."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.are_you(**kwargs)
+        if person == '2p':
+            output = docassemble.base.functions.are_you_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.am_i(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.are_we(**kwargs)
+        else:
+            output = is_word(str(self), **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(output)
+        return output
+
+    def yourself_or_name(self, **kwargs):
+        """Returns a "yourself" if the object is the user, otherwise
+        returns the object as a string."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.yourself(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.yourselves(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.myself(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.ourselves(**kwargs)
+        else:
+            output = str(self)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(output)
+        return output
+
+    def itself(self, **kwargs):
+        """Returns "yourself," "itself," "himself," etc."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            return docassemble.base.functions.yourself(**kwargs)
+        if person == '2p':
+            return docassemble.base.functions.yourselves(**kwargs)
+        if person == '1':
+            return docassemble.base.functions.myself(**kwargs)
+        if person == '1p':
+            return docassemble.base.functions.ourselves(**kwargs)
+        return docassemble.base.functions.itself(**kwargs)
+
+    def is_user(self):
+        """Returns True if the object is the user, otherwise False."""
+        return self is this_thread.global_vars.user
 
     def initializeAttribute(self, *pargs, **kwargs):
         """Defines an attribute for the object, setting it to a newly initialized object.
@@ -1027,11 +1100,15 @@ class DAObject:
 
     def pronoun_possessive(self, target, **kwargs):
         """Returns "its <target>." """
-        person = str(kwargs.get('person', '3'))
+        person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
             output = your(target, **kwargs)
-        elif person = '1':
-            output = docassemble.base.functions.lang_my(target, **kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.your_plural(target, **kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.my_possessive(target, **kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.our_possessive(target, **kwargs)
         else:
             output = its(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1039,8 +1116,42 @@ class DAObject:
         return output
 
     def pronoun(self, **kwargs):
-        """Returns it."""
-        return word('it', **kwargs)
+        """Returns "it." """
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.you_objective(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.you_objective_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.me_objective(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.us_objective(**kwargs)
+        else:
+            output = docassemble.base.functions.it_objective(**kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize_func(output)
+        return output
+
+    def pronoun_objective(self, **kwargs):
+        """Same as pronoun()."""
+        return self.pronoun(**kwargs)
+
+    def pronoun_subjective(self, **kwargs):
+        """Returns "it." """
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.you_subjective(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.i_subjective(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.we_subjective(**kwargs)
+        else:
+            output = docassemble.base.functions.it_subjective(**kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize_func(output)
+        return output
 
     def alternative(self, *pargs, **kwargs):
         """Returns a particular value depending on the value of a given attribute"""
@@ -1056,13 +1167,132 @@ class DAObject:
             return kwargs['default']
         return None
 
-    def pronoun_objective(self, **kwargs):
-        """Same as pronoun()."""
-        return self.pronoun(**kwargs)
+    def do_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
+        depending on whether the object is the user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            return do_you(the_verb, **kwargs)
+        if person == '2p':
+            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+        if person == '1':
+            return docassemble.base.functions.do_i(the_verb, **kwargs)
+        if person == '1p':
+            return docassemble.base.functions.do_we(the_verb, **kwargs)
+        return does_a_b(self, the_verb, **kwargs)
 
-    def pronoun_subjective(self, **kwargs):
-        """Same as pronoun()."""
-        return self.pronoun(**kwargs)
+    def did_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
+        depending on whether the object is the user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            return did_you(the_verb, **kwargs)
+        if person == '2p':
+            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+        if person == '1':
+            return docassemble.base.functions.did_i(the_verb, **kwargs)
+        if person == '1p':
+            return docassemble.base.functions.did_we(the_verb, **kwargs)
+        return did_a_b(self, the_verb, **kwargs)
+
+    def were_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "were you married" or "was
+        John Smith married," depending on whether the object is the
+        user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            return were_you(the_target, **kwargs)
+        if person == '2p':
+            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+        if person == '1':
+            return docassemble.base.functions.was_i(the_target, **kwargs)
+        if person == '1p':
+            return docassemble.base.functions.were_we(the_target, **kwargs)
+        return was_a_b(self, the_target, **kwargs)
+
+    def have_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "have you married" or "has
+        John Smith married," depending on whether the object is the
+        user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            return have_you(the_target, **kwargs)
+        if person == '2p':
+            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+        if person == '1':
+            return docassemble.base.functions.have_i(the_target, **kwargs)
+        if person == '1p':
+            return docassemble.base.functions.have_we(the_target, **kwargs)
+        return has_a_b(self, the_target, **kwargs)
+
+    def does_verb(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "eat" or "eats"
+        depending on whether the object is the user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            tense = '2sg'
+        elif person == '2p':
+            tense = '2pl'
+        elif person == '1':
+            tense = '1sg'
+        elif person == '1p':
+            tense = '1pl'
+        else:
+            tense = '3sg'
+        if ('past' in kwargs and kwargs['past'] is True) or ('present' in kwargs and kwargs['present'] is False):
+            return verb_past(the_verb, tense, **kwargs)
+        return verb_present(the_verb, tense, **kwargs)
+
+    def did_verb(self, the_verb, **kwargs):
+        """Like does_verb(), except uses the past tense of the verb."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            tense = '2sgp'
+        elif person == '2p':
+            tense = '2ppl'
+        elif person == '1':
+            tense = '1sgp'
+        elif person == '1p':
+            tense = '1ppl'
+        else:
+            tense = '3sgp'
+        return verb_past(the_verb, tense, **kwargs)
+
+    def subjective_pronoun_or_name(self, **kwargs):
+        """Returns "you" or the object as a string, depending on whether the
+        object is the user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.you_subjective(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.i_subjective(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.we_subjective(**kwargs)
+        else:
+            output = str(self)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(output)
+        return output
+
+    def pronoun_or_name(self, **kwargs):
+        """Returns "you" or the object as a string, depending on whether the
+        object is the user."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.you_objective(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.you_objective_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.me_objective(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.us_objective(**kwargs)
+        else:
+            output = str(self)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(output)
+        return output
 
     def __setattr__(self, key, the_value):
         if isinstance(the_value, DAObject) and not the_value.has_nonrandom_instance_name:
@@ -1954,31 +2184,164 @@ class DAList(DAObject):
             return self.__getitem__(0)  # pylint: disable=unnecessary-dunder-call
         return self.__getitem__(len(self.elements)-1)  # pylint: disable=unnecessary-dunder-call
 
+    def itself(self, **kwargs):
+        """Returns "themselves" unless the list has only one element,
+        in which case the method is called on the first element."""
+        self._trigger_gather()
+        if self.number() == 1:
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].itself(**kwargs)
+            return docassemble.base.functions.itself(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.yourselves(**kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.ourselves(**kwargs)
+        return docassemble.base.functions.themselves(**kwargs)
+
+    def do_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "do x eat" if there is
+        more than one element. x is the string representation of the
+        list. If there is only one element, the method is called on
+        the first element of the list.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].do_question(the_verb, **kwargs)
+            return does_a_b(self.elements[0], the_verb, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.do_we(the_verb, **kwargs)
+        return docassemble.base.functions.do_a_b(self, the_verb, **kwargs)
+
+    def did_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "did x eat" if there is
+        more than one element. x is the string representation of the
+        list. If there is only one element, the method is called on
+        the first element of the list.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].did_question(the_verb, **kwargs)
+            return did_a_b(self.elements[0], the_verb, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.did_we(the_verb, **kwargs)
+        return docassemble.base.functions.did_a_b_plural(self, the_verb, **kwargs)
+
+    def were_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "were x married" if
+        there is more than one element in the list. x is the string
+        representation of the list. If there is only one element, the
+        method is called on the first element."""
+        self._trigger_gather()
+        if self.number() == 1:
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].were_question(the_target, **kwargs)
+            return was_a_b(self.elements[0], the_target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.were_we(the_target, **kwargs)
+        return docassemble.base.functions.were_a_b_plural(self, the_target, **kwargs)
+
+    def have_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "have x married" if
+        there is more than one element in the list. x is the string
+        representation of the list. If there is only one element, the
+        method is called on the first element.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].have_question(the_target, **kwargs)
+            return has_a_b(self.elements[0], the_target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.have_we(the_target, **kwargs)
+        return docassemble.base.functions.have_a_b(self, the_target, **kwargs)
+
     def does_verb(self, the_verb, **kwargs):
         """Returns the appropriate conjugation of the given verb depending on whether
         there is only one element in the list or multiple elements.  E.g.,
         case.plaintiff.does_verb('sue') will return "sues" if there is one plaintiff
         and "sue" if there is more than one plaintiff."""
         language = kwargs.get('language', None)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
         if ('past' in kwargs and kwargs['past'] is True) or ('present' in kwargs and kwargs['present'] is False):
             if self.number() > 1:
-                tense = 'ppl'
+                if person in ('2', '2p'):
+                    tense = '2ppl'
+                elif person in ('1', '1p'):
+                    tense = '1ppl'
+                else:
+                    tense = '3ppl'
             else:
-                tense = '3sgp'
+                if person == '2':
+                    tense = '2sgp'
+                elif person == '2p':
+                    tense = '2ppl'
+                elif person == '1':
+                    tense = '1sgp'
+                elif person == '1p':
+                    tense = '1ppl'
+                else:
+                    tense = '3sgp'
             return verb_past(the_verb, tense, language=language)
         if self.number() > 1:
-            tense = 'pl'
+            if person in ('2', '2p'):
+                tense = '2pl'
+            elif person in ('1', '1p'):
+                tense = '1pl'
+            else:
+                tense = '3pl'
         else:
-            tense = '3sg'
+            if person == '2':
+                tense = '2sg'
+            elif person == '2p':
+                tense = '2pl'
+            elif person == '1':
+                tense = '1sg'
+            elif person == '1p':
+                tense = '1pl'
+            else:
+                tense = '3sg'
         return verb_present(the_verb, tense, language=language)
 
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""
         language = kwargs.get('language', None)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
         if self.number() > 1:
-            tense = 'ppl'
+            if person in ('2', '2p'):
+                tense = '2ppl'
+            elif person in ('1', '1p'):
+                tense = '1ppl'
+            else:
+                tense = '3ppl'
         else:
-            tense = '3sgp'
+            if person == '2':
+                tense = '2sgp'
+            elif person == '2p':
+                tense = '2ppl'
+            elif person == '1':
+                tense = '1sgp'
+            elif person == '1p':
+                tense = '1ppl'
+            else:
+                tense = '3sgp'
         return verb_past(the_verb, tense, language=language)
 
     def as_singular_noun(self):
@@ -1998,6 +2361,25 @@ class DAList(DAObject):
         """
         language = kwargs.get('language', None)
         return possessify(self.as_noun(**kwargs), target, plural=(self.number() > 1), language=language)
+
+    def is_are_you(self, **kwargs):
+        """Returns "are" followed by the list object reduced to text,
+        but if the list has only one element, the method is called on
+        that element instead.
+        """
+        if self.number() == 1:
+            self._trigger_gather()
+            return self.elements[0].is_are_you(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            output = docassemble.base.functions.are_you_plural(**kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.are_we(**kwargs)
+        else:
+            output = docassemble.base.functions.are_word(str(self), **kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize(output)
+        return output
 
     def quantity_noun(self, *pargs, **kwargs):
         """Returns the output of the quantity_noun() function using the number
@@ -2110,7 +2492,7 @@ class DAList(DAObject):
                     if isinstance(self.new_object_type, DAObjectPlusParameters):
                         object_type_to_use = self.new_object_type.object_type
                         parameters_to_use = self.new_object_type.parameters
-                    if isinstance(self.new_object_type, type):
+                    elif isinstance(self.new_object_type, type):
                         object_type_to_use = self.new_object_type
                         parameters_to_use = {}
                     else:
@@ -2384,14 +2766,16 @@ class DAList(DAObject):
         """
         if self.number() == 1:
             self._trigger_gather()
-            return self.elements[0].pronoun_possessive(target, **kwargs)
-        person = str(kwargs.get('person', '3'))
-        if person == '3':
-            output = their(target, **kwargs)
-        elif person == '2':
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].pronoun_possessive(target, **kwargs)
+            return its(target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
             output = docassemble.base.functions.your_plural(target, **kwargs)
-        elif person == '1':
-            output = docassemble.base.functions.my(target, **kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.our_possessive(target, **kwargs)
+        else:
+            output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -2400,8 +2784,16 @@ class DAList(DAObject):
         """Returns a pronoun like "you," "her," or "him," "it", or "them," as appropriate."""
         if self.number() == 1:
             self._trigger_gather()
-            return self.elements[0].pronoun(**kwargs)
-        output = word('them', **kwargs)
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].pronoun(**kwargs)
+            return docassemble.base.functions.it_objective(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            output = docassemble.base.functions.you_objective_plural(**kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.us_objective(**kwargs)
+        else:
+            output = docassemble.base.functions.them_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -2414,8 +2806,16 @@ class DAList(DAObject):
         """Returns a pronoun like "you," "she," "he," or "they" as appropriate."""
         if self.number() == 1:
             self._trigger_gather()
-            return self.elements[0].pronoun_subjective(**kwargs)
-        output = word('they', **kwargs)
+            if isinstance(self.elements[0], DAObject):
+                return self.elements[0].pronoun_subjective(**kwargs)
+            docassemble.base.functions.it_subjective(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.we_subjective(**kwargs)
+        else:
+            output = docassemble.base.functions.they_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -2855,6 +3255,102 @@ class DADict(DAObject):
             return True
         return False
 
+    def itself(self, **kwargs):
+        """Returns "themselves" unless the dictionary has only one element,
+        in which case the method is called on the first element."""
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements.values())[0]
+            if isinstance(first_element, DAObject):
+                return first_element.itself(**kwargs)
+            return docassemble.base.functions.itself(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.yourselves(**kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.ourselves(**kwargs)
+        return docassemble.base.functions.themselves(**kwargs)
+
+    def do_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "do x eat" if there is
+        more than one element. x is the string representation of the
+        dictionary. If there is only one element, the method is called on
+        the first element of the dictionary.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements.values())[0]
+            if isinstance(first_element, DAObject):
+                return first_element.do_question(**kwargs)
+            return does_a_b(first_element, the_verb, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.do_we(the_verb, **kwargs)
+        return docassemble.base.functions.do_a_b(self, the_verb, **kwargs)
+
+    def did_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "did x eat" if there is
+        more than one element. x is the string representation of the
+        dictionary. If there is only one element, the method is called on
+        the first element of the dictionary.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements.values())[0]
+            if isinstance(first_element, DAObject):
+                return first_element.did_question(the_verb, **kwargs)
+            return did_a_b(first_element, the_verb, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.did_we(the_verb, **kwargs)
+        return docassemble.base.functions.did_a_b_plural(self, the_verb, **kwargs)
+
+    def were_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "were x married" if
+        there is more than one element in the dictionary. x is the
+        string representation of the dictionary. If there is only one
+        element, the method is called on the first element.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements.values())[0]
+            if isinstance(first_element, DAObject):
+                return first_element.were_question(the_target, **kwargs)
+            return was_a_b(first_element, the_target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.were_we(the_target, **kwargs)
+        return docassemble.base.functions.were_a_b_plural(self, the_target, **kwargs)
+
+    def have_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "have x married" if
+        there is more than one element in the dictionary. x is the
+        string representation of the dictionary. If there is only one
+        element, the method is called on the first element.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements.values())[0]
+            if isinstance(first_element, DAObject):
+                return first_element.have_question(the_target, **kwargs)
+            return has_a_b(first_element, the_target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.have_we(the_target, **kwargs)
+        return docassemble.base.functions.have_a_b(self, the_target, **kwargs)
+
     def does_verb(self, the_verb, **kwargs):
         """Returns the appropriate conjugation of the given verb depending on
         whether there is only one key in the dictionary or multiple
@@ -2862,25 +3358,69 @@ class DADict(DAObject):
         is one player and "finish" if there is more than one
         player."""
         language = kwargs.get('language', None)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
         if ('past' in kwargs and kwargs['past'] is True) or ('present' in kwargs and kwargs['present'] is False):
             if self.number() > 1:
-                tense = 'ppl'
+                if person in ('2', '2p'):
+                    tense = '2ppl'
+                elif person in ('1', '1p'):
+                    tense = '1ppl'
+                else:
+                    tense = '3ppl'
             else:
-                tense = '3sgp'
+                if person == '2':
+                    tense = '2sgp'
+                elif person == '2p':
+                    tense = '2ppl'
+                elif person == '1':
+                    tense = '1sgp'
+                elif person == '1p':
+                    tense = '1ppl'
+                else:
+                    tense = '3sgp'
             return verb_past(the_verb, tense, language=language)
         if self.number() > 1:
-            tense = 'pl'
+            if person in ('2', '2p'):
+                tense = '2pl'
+            elif person in ('1', '1p'):
+                tense = '1pl'
+            else:
+                tense = '3pl'
         else:
-            tense = '3sg'
+            if person == '2':
+                tense = '2sg'
+            elif person == '2p':
+                tense = '2pl'
+            elif person == '1':
+                tense = '1sg'
+            elif person == '1p':
+                tense = '1pl'
+            else:
+                tense = '3sg'
         return verb_present(the_verb, tense, language=language)
 
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""
         language = kwargs.get('language', None)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
         if self.number() > 1:
-            tense = 'ppl'
+            if person in ('2', '2p'):
+                tense = '2ppl'
+            elif person in ('1', '1p'):
+                tense = '1ppl'
+            else:
+                tense = '3ppl'
         else:
-            tense = '3sgp'
+            if person == '2':
+                tense = '2sgp'
+            elif person == '2p':
+                tense = '2ppl'
+            elif person == '1':
+                tense = '1sgp'
+            elif person == '1p':
+                tense = '1ppl'
+            else:
+                tense = '3sgp'
         return verb_past(the_verb, tense, language=language)
 
     def as_singular_noun(self):
@@ -2934,7 +3474,7 @@ class DADict(DAObject):
         """If the variable name is "plaintiff" and the target is "fish,"
         returns "plaintiff's fish" if there is one item in the dictionary,
         and "plaintiffs' fish" if there is more than one item in the
-        list.
+        dictionary.
 
         """
         language = kwargs.get('language', None)
@@ -2955,7 +3495,7 @@ class DADict(DAObject):
         return False
 
     def number_gathered(self, if_started=False):
-        """Returns the number of elements in the list that have been gathered so far."""
+        """Returns the number of elements in the dictionary that have been gathered so far."""
         if if_started and not self.gathering_started():
             self._trigger_gather()
         return len(self.elements)
@@ -3365,7 +3905,17 @@ class DADict(DAObject):
 
     def pronoun_possessive(self, target, **kwargs):
         """Returns "their <target>." """
-        output = their(target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = your(target, **kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.your_plural(target, **kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.my_possessive(target, **kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.our_possessive(**kwargs)
+        else:
+            output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -3374,8 +3924,16 @@ class DADict(DAObject):
         """Returns them, or the pronoun for the only element."""
         if self.number() == 1:
             self._trigger_gather()
-            return list(self.elements.values())[0].pronoun(**kwargs)
-        output = word('them', **kwargs)
+            if isinstance(list(self.elements.values())[0], DAObject):
+                return list(self.elements.values())[0].pronoun(**kwargs)
+            return docassemble.base.functions.it_objective(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            output = docassemble.base.functions.you_objective_plural(**kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.us_objective(**kwargs)
+        else:
+            output = docassemble.base.functions.them_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -3385,8 +3943,22 @@ class DADict(DAObject):
         return self.pronoun(**kwargs)
 
     def pronoun_subjective(self, **kwargs):
-        """Same as pronoun()."""
-        return self.pronoun(**kwargs)
+        """Returns a pronoun like "you," "she," "he," or "they" as appropriate."""
+        if self.number() == 1:
+            self._trigger_gather()
+            if isinstance(list(self.elements.values())[0], DAObject):
+                return list(self.elements.values())[0].pronoun_subjective(**kwargs)
+            docassemble.base.functions.it_subjective(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.we_subjective(**kwargs)
+        else:
+            output = docassemble.base.functions.they_subjective(**kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize_func(output)
+        return output
 
     def item_actions(self, *pargs, **kwargs):
         """Returns HTML for editing the items in a dictionary"""
@@ -3704,34 +4276,174 @@ class DASet(DAObject):
         if something_added:
             self.there_are_any = True
 
+    def itself(self, **kwargs):
+        """Returns "themselves" unless the set has only one element,
+        in which case the method is called on the first element."""
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements)[0]
+            if isinstance(first_element, DAObject):
+                return first_element.itself(**kwargs)
+            return docassemble.base.functions.itself(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.yourselves(**kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.ourselves(**kwargs)
+        return docassemble.base.functions.themselves(**kwargs)
+
+    def do_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "do x eat" if there is
+        more than one element. x is the string representation of the
+        set. If there is only one element, the method is called on
+        the first element of the set.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements)[0]
+            if isinstance(first_element, DAObject):
+                return first_element.do_question(**kwargs)
+            return does_a_b(first_element, the_verb, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.do_we(the_verb, **kwargs)
+        return docassemble.base.functions.do_a_b(self, the_verb, **kwargs)
+
+    def did_question(self, the_verb, **kwargs):
+        """Given a verb like "eat," returns "did x eat" if there is
+        more than one element. x is the string representation of the
+        set. If there is only one element, the method is called on
+        the first element of the set.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements)[0]
+            if isinstance(first_element, DAObject):
+                return first_element.did_question(the_verb, **kwargs)
+            return did_a_b(first_element, the_verb, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.did_we(the_verb, **kwargs)
+        return docassemble.base.functions.did_a_b_plural(self, the_verb, **kwargs)
+
+    def were_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "were x married" if
+        there is more than one element in the set. x is the string
+        representation of the set. If there is only one element, the
+        method is called on the first element.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements)[0]
+            if isinstance(first_element, DAObject):
+                return first_element.were_question(the_target, **kwargs)
+            return was_a_b(first_element, the_target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.were_we(the_target, **kwargs)
+        return docassemble.base.functions.were_a_b_plural(self, the_target, **kwargs)
+
+    def have_question(self, the_target, **kwargs):
+        """Given a target like "married", returns "have x married" if
+        there is more than one element in the set. x is the string
+        representation of the set. If there is only one element, the
+        method is called on the first element.
+
+        """
+        self._trigger_gather()
+        if self.number() == 1:
+            first_element = list(self.elements)[0]
+            if isinstance(first_element, DAObject):
+                return first_element.have_question(the_target, **kwargs)
+            return has_a_b(first_element, the_target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+        if person in ('1', '1p'):
+            return docassemble.base.functions.have_we(the_target, **kwargs)
+        return docassemble.base.functions.have_a_b(self, the_target, **kwargs)
+
     def does_verb(self, the_verb, **kwargs):
-        """Returns the appropriate conjugation of the given verb depending on
-        whether there is only one element in the set or multiple
-        items.  E.g., player.does_verb('finish') will return
+        """Returns the appropriate conjugation of the given verb
+        depending on whether there is only one element in the set or
+        multiple items.  E.g., player.does_verb('finish') will return
         "finishes" if there is one player and "finish" if there is
         more than one player.
 
         """
         language = kwargs.get('language', None)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
         if ('past' in kwargs and kwargs['past'] is True) or ('present' in kwargs and kwargs['present'] is False):
             if self.number() > 1:
-                tense = 'ppl'
+                if person in ('2', '2p'):
+                    tense = '2ppl'
+                elif person in ('1', '1p'):
+                    tense = '1ppl'
+                else:
+                    tense = '3ppl'
             else:
-                tense = '3sgp'
+                if person == '2':
+                    tense = '2sgp'
+                elif person == '2p':
+                    tense = '2ppl'
+                elif person == '1':
+                    tense = '1sgp'
+                elif person == '1p':
+                    tense = '1ppl'
+                else:
+                    tense = '3sgp'
             return verb_past(the_verb, tense, language=language)
         if self.number() > 1:
-            tense = 'pl'
+            if person in ('2', '2p'):
+                tense = '2pl'
+            elif person in ('1', '1p'):
+                tense = '1pl'
+            else:
+                tense = '3pl'
         else:
-            tense = '3sg'
+            if person == '2':
+                tense = '2sg'
+            elif person == '2p':
+                tense = '2pl'
+            elif person == '1':
+                tense = '1sg'
+            elif person == '1p':
+                tense = '1pl'
+            else:
+                tense = '3sg'
         return verb_present(the_verb, tense, language=language)
 
     def did_verb(self, the_verb, **kwargs):
         """Like does_verb(), except it returns the past tense of the verb."""
         language = kwargs.get('language', None)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
         if self.number() > 1:
-            tense = 'ppl'
+            if person in ('2', '2p'):
+                tense = '2ppl'
+            elif person in ('1', '1p'):
+                tense = '1ppl'
+            else:
+                tense = '3ppl'
         else:
-            tense = '3sgp'
+            if person == '2':
+                tense = '2sgp'
+            elif person == '2p':
+                tense = '2ppl'
+            elif person == '1':
+                tense = '1sgp'
+            elif person == '1p':
+                tense = '1ppl'
+            else:
+                tense = '3sgp'
         return verb_past(the_verb, tense, language=language)
 
     def as_singular_noun(self):
@@ -3802,7 +4514,7 @@ class DASet(DAObject):
         return False
 
     def number_gathered(self, if_started=False):
-        """Returns the number of elements in the list that have been gathered so far."""
+        """Returns the number of elements in the set that have been gathered so far."""
         if if_started and not self.gathering_started():
             self._trigger_gather()
         return len(self.elements)
@@ -3995,7 +4707,17 @@ class DASet(DAObject):
 
     def pronoun_possessive(self, target, **kwargs):
         """Returns "their <target>." """
-        output = their(target, **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = your(target, **kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.your_plural(target, **kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.my_possessive(target, **kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.our_possessive(target, **kwargs)
+        else:
+            output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -4004,8 +4726,16 @@ class DASet(DAObject):
         """Returns them, or the pronoun for the one element."""
         if self.number() == 1:
             self._trigger_gather()
-            return list(self.elements)[0].pronoun(**kwargs)
-        output = word('them', **kwargs)
+            if isinstance(list(self.elements)[0], DAObject):
+                return list(self.elements)[0].pronoun(**kwargs)
+            return docassemble.base.functions.it_objective(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            output = docassemble.base.functions.you_objective_plural(**kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.us_objective(**kwargs)
+        else:
+            output = docassemble.base.functions.them_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -4015,8 +4745,22 @@ class DASet(DAObject):
         return self.pronoun(**kwargs)
 
     def pronoun_subjective(self, **kwargs):
-        """Same as pronoun()."""
-        return self.pronoun(**kwargs)
+        """Returns a pronoun like "you," "she," "he," or "they" as appropriate."""
+        if self.number() == 1:
+            self._trigger_gather()
+            if isinstance(list(self.elements)[0], DAObject):
+                return list(self.elements)[0].pronoun_subjective(**kwargs)
+            return docassemble.base.functions.it_subjective(**kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person in ('2', '2p'):
+            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+        elif person in ('1', '1p'):
+            output = docassemble.base.functions.we_subjective(**kwargs)
+        else:
+            output = docassemble.base.functions.they_subjective(**kwargs)
+        if 'capitalize' in kwargs and kwargs['capitalize']:
+            return capitalize_func(output)
+        return output
 
     def hook_on_gather(self, *pargs, **kwargs):
         """Code that runs just before a set is marked as gathered."""
@@ -7842,39 +8586,52 @@ class Person(DAObject):
     def pronoun_objective(self, **kwargs):
         """Returns "it" or "It" depending on the value of the optional
         keyword argument "capitalize." """
-        output = word('it', **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.you_objective(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.you_objective_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.me_objective(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.us_objective(**kwargs)
+        else:
+            output = docassemble.base.functions.it_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
 
-    def possessive(self, target, **kwargs):
-        """Given a word like "fish," returns "your fish" or
-        "John Smith's fish," depending on whether the person is the user."""
-        if self is this_thread.global_vars.user:
-            return your(target, **kwargs)
-        return possessify(self, target, **kwargs)
-
     def object_possessive(self, target, **kwargs):
         """Given a word, returns a phrase indicating possession, but
         uses the variable name rather than the object's actual name."""
-        if self is this_thread.global_vars.user:
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
             return your(target, **kwargs)
+        if person == '2p':
+            return docassemble.base.functions.your_plural(target, **kwargs)
+        if person == '1':
+            return docassemble.base.functions.my_possessive(target, **kwargs)
+        if person == '1p':
+            return docassemble.base.functions.our_possessive(target, **kwargs)
         return super().object_possessive(target, **kwargs)
 
     def is_are_you(self, **kwargs):
         """Returns "are you" if the object is the user, otherwise returns
         "is" followed by the object name."""
-        if self is this_thread.global_vars.user:
-            output = word('are you', **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.are_you(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.are_you_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.am_i(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.are_we(**kwargs)
         else:
             output = is_word(str(self), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
-
-    def is_user(self):
-        """Returns True if the person is the user, otherwise False."""
-        return self is this_thread.global_vars.user
 
     def address_block(self, language=None, international=False, show_country=False):
         """Returns the person name address as a block, for use in mailings."""
@@ -7898,6 +8655,9 @@ class Person(DAObject):
             else:
                 country = get_country()
         return phone_number_in_e164(the_number, country=country)
+
+    def subject(self, **kwargs):
+        return self.subjective_pronoun_or_name(**kwargs)
 
     def facsimile_number(self, country=None):
         """Returns the person's fax_number, formatted appropriately."""
@@ -7930,67 +8690,6 @@ class Person(DAObject):
     #         return today.year - born.year - 1
     #     else:
     #         return today.year - born.year
-
-    def do_question(self, the_verb, **kwargs):
-        """Given a verb like "eat," returns "do you eat" or "does John Smith eat,"
-        depending on whether the person is the user."""
-        if self == this_thread.global_vars.user:
-            return do_you(the_verb, **kwargs)
-        return does_a_b(self, the_verb, **kwargs)
-
-    def did_question(self, the_verb, **kwargs):
-        """Given a verb like "eat," returns "did you eat" or "did John Smith eat,"
-        depending on whether the person is the user."""
-        if self == this_thread.global_vars.user:
-            return did_you(the_verb, **kwargs)
-        return did_a_b(self, the_verb, **kwargs)
-
-    def were_question(self, the_target, **kwargs):
-        """Given a target like "married", returns "were you married" or "was
-        John Smith married," depending on whether the person is the
-        user."""
-        if self == this_thread.global_vars.user:
-            return were_you(the_target, **kwargs)
-        return was_a_b(self, the_target, **kwargs)
-
-    def have_question(self, the_target, **kwargs):
-        """Given a target like "", returns "have you married" or "has
-        John Smith married," depending on whether the person is the
-        user."""
-        if self == this_thread.global_vars.user:
-            return have_you(the_target, **kwargs)
-        return has_a_b(self, the_target, **kwargs)
-
-    def does_verb(self, the_verb, **kwargs):
-        """Given a verb like "eat," returns "eat" or "eats"
-        depending on whether the person is the user."""
-        if self == this_thread.global_vars.user:
-            tense = '2sg'
-        else:
-            tense = '3sg'
-        if ('past' in kwargs and kwargs['past'] is True) or ('present' in kwargs and kwargs['present'] is False):
-            return verb_past(the_verb, tense, **kwargs)
-        return verb_present(the_verb, tense, **kwargs)
-
-    def did_verb(self, the_verb, **kwargs):
-        """Like does_verb(), except uses the past tense of the verb."""
-        if self == this_thread.global_vars.user:
-            tense = "2sgp"
-        else:
-            tense = "3sgp"
-        # logmessage(the_verb + " " + tense)
-        return verb_past(the_verb, tense, **kwargs)
-
-    def subject(self, **kwargs):
-        """Returns "you" or the person's name, depending on whether the
-        person is the user."""
-        if self == this_thread.global_vars.user:
-            output = word('you', **kwargs)
-        else:
-            output = str(self)
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(output)
-        return output
 
 
 class Individual(Person):
@@ -8073,8 +8772,19 @@ class Individual(Person):
 
     def pronoun_possessive(self, target, **kwargs):
         """Given a word like "fish," returns "her fish" or "his fish," as appropriate."""
-        if self == this_thread.global_vars.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
+        thirdperson = kwargs.pop('thirdperson', False)
+        if thirdperson:
+            person = '3'
+        else:
+            person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
             output = your(target, **kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.your_plural(target, **kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.my_possessive(target, **kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.our_possessive(target, **kwargs)
         elif self.gender == 'female':
             output = her(target, **kwargs)
         elif self.gender == 'other':
@@ -8087,14 +8797,21 @@ class Individual(Person):
 
     def pronoun(self, **kwargs):
         """Returns a pronoun like "you," "her," or "him," as appropriate."""
-        if self == this_thread.global_vars.user:
-            output = word('you', **kwargs)
-        if self.gender == 'female':
-            output = word('her', **kwargs)
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.you_objective(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.you_objective_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.me_objective(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.our_objective(**kwargs)
+        elif self.gender == 'female':
+            output = docassemble.base.functions.her_objective(**kwargs)
         elif self.gender == 'other':
-            output = word('them', **kwargs)
+            output = docassemble.base.functions.genderless_objective(**kwargs)
         else:
-            output = word('him', **kwargs)
+            output = docassemble.base.functions.him_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -8105,28 +8822,45 @@ class Individual(Person):
 
     def pronoun_subjective(self, **kwargs):
         """Returns a pronoun like "you," "she," or "he," as appropriate."""
-        if self == this_thread.global_vars.user and ('thirdperson' not in kwargs or not kwargs['thirdperson']):
-            output = word('you', **kwargs)
-        elif self.gender == 'female':
-            output = word('she', **kwargs)
-        elif self.gender == 'other':
-            output = word('they', **kwargs)
+        thirdperson = kwargs.pop('thirdperson', False)
+        if thirdperson:
+            person = '3'
         else:
-            output = word('he', **kwargs)
+            person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            output = docassemble.base.functions.you_subjective(**kwargs)
+        elif person == '2p':
+            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+        elif person == '1':
+            output = docassemble.base.functions.i_subjective(**kwargs)
+        elif person == '1p':
+            output = docassemble.base.functions.we_subjective(**kwargs)
+        elif self.gender == 'female':
+            output = docassemble.base.functions.she_subjective(**kwargs)
+        elif self.gender == 'other':
+            output = docassemble.base.functions.genderless_subjective(**kwargs)
+        else:
+            output = docassemble.base.functions.he_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
 
-    def yourself_or_name(self, **kwargs):
-        """Returns a "yourself" if the individual is the user, otherwise
-        returns the individual's name."""
-        if self == this_thread.global_vars.user:
-            output = word('yourself', **kwargs)
-        else:
-            output = str(self)
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(output)
-        return output
+    def itself(self, **kwargs):
+        """Returns "yourself," "itself," "himself," etc."""
+        person = str(kwargs.pop('person', self.get_point_of_view()))
+        if person == '2':
+            return docassemble.base.functions.yourself(**kwargs)
+        if person == '2p':
+            return docassemble.base.functions.yourselves(**kwargs)
+        if person == '1':
+            return docassemble.base.functions.myself(**kwargs)
+        if person == '1p':
+            return docassemble.base.functions.ourselves(**kwargs)
+        if self.gender == 'female':
+            return docassemble.base.functions.herself(**kwargs)
+        if self.gender == 'other':
+            return docassemble.base.functions.genderless_self(**kwargs)
+        return docassemble.base.functions.himself(**kwargs)
 
     def __setattr__(self, attrname, the_value):
         if attrname == 'name' and isinstance(the_value, str):

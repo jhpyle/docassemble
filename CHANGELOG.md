@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.4.103] - 2024-04-29
+
+### Added
+- Interface in the Word sidebar for changing the Playground project.
+- Additional language functions accessible through methods on standard
+  classes.
+- `attachment` object of the result of `current_context()` containing
+  information about the attachment currently being assembled.
+
+### Changed
+- Changes to HTML for accessibility purposes.
+
+### Fixed
+- PostgreSQL error in multiserver configuration when two servers try
+  to delete a package at the same time.
+- The `ask_object` feature did not work when `new_object_type` was
+  used with `.using()`.
+
 ## [1.4.102] - 2024-03-18
 
 ### Fixed

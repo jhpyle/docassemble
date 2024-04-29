@@ -53,15 +53,15 @@ import docassemble_pattern.nl  # pylint: disable=import-error,no-name-in-module
 from pylatex.utils import escape_latex
 # import operator
 import titlecase
-from docassemble.base.logger import logmessage
-from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError, DANameError, DAInvalidFilename
-from docassemble.base.generate_key import random_string
-import docassemble.base.astparser
 from user_agents import parse as ua_parse
 import phonenumbers
 import werkzeug.utils
 import num2words
 from jinja2.runtime import Undefined
+from docassemble.base.logger import logmessage
+from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError, DANameError, DAInvalidFilename
+from docassemble.base.generate_key import random_string
+import docassemble.base.astparser
 FileType = IOBase
 equals_byte = bytes('=', 'utf-8')
 TypeType = type(type(None))
@@ -748,6 +748,7 @@ def user_has_privilege(*pargs):
 
 class AttachmentInfo:
     pass
+
 
 class TheContext:
 
@@ -3527,23 +3528,119 @@ language_functions = {
     'a_in_the_b': {
         'en': middle_constructor(' in the ')
     },
+    'i_subjective': {
+        'en': lambda *pargs, **kwargs: word('I', **kwargs)
+    },
+    'he_subjective': {
+        'en': lambda *pargs, **kwargs: word('he', **kwargs)
+    },
+    'she_subjective': {
+        'en': lambda *pargs, **kwargs: word('she', **kwargs)
+    },
+    'genderless_subjective': {
+        'en': lambda *pargs, **kwargs: word('they', **kwargs)
+    },
+    'myself': {
+        'en': lambda *pargs, **kwargs: word('myself', **kwargs)
+    },
+    'itself': {
+        'en': lambda *pargs, **kwargs: word('itself', **kwargs)
+    },
+    'herself': {
+        'en': lambda *pargs, **kwargs: word('herself', **kwargs)
+    },
+    'himself': {
+        'en': lambda *pargs, **kwargs: word('himself', **kwargs)
+    },
+    'themselves': {
+        'en': lambda *pargs, **kwargs: word('themselves', **kwargs)
+    },
+    'genderless_self': {
+        'en': lambda *pargs, **kwargs: word('themself', **kwargs)
+    },
+    'yourself': {
+        'en': lambda *pargs, **kwargs: word('yourself', **kwargs)
+    },
+    'yourselves': {
+        'en': lambda *pargs, **kwargs: word('yourselves', **kwargs)
+    },
+    'ourselves': {
+        'en': lambda *pargs, **kwargs: word('ourselves', **kwargs)
+    },
+    'you_subjective': {
+        'en': lambda *pargs, **kwargs: word('you', **kwargs)
+    },
+    'you_subjective_plural': {
+        'en': lambda *pargs, **kwargs: word('you', **kwargs)
+    },
+    'we_subjective': {
+        'en': lambda *pargs, **kwargs: word('we', **kwargs)
+    },
+    'they_subjective': {
+        'en': lambda *pargs, **kwargs: word('they', **kwargs)
+    },
+    'it_subjective': {
+        'en': lambda *pargs, **kwargs: word('it', **kwargs)
+    },
+    'it_objective': {
+        'en': lambda *pargs, **kwargs: word('it', **kwargs)
+    },
+    'them_objective': {
+        'en': lambda *pargs, **kwargs: word('them', **kwargs)
+    },
+    'genderless_objective': {
+        'en': lambda *pargs, **kwargs: word('them', **kwargs)
+    },
+    'me_objective': {
+        'en': lambda *pargs, **kwargs: word('me', **kwargs)
+    },
+    'him_objective': {
+        'en': lambda *pargs, **kwargs: word('him', **kwargs)
+    },
+    'her_objective': {
+        'en': lambda *pargs, **kwargs: word('her', **kwargs)
+    },
+    'you_objective': {
+        'en': lambda *pargs, **kwargs: word('you', **kwargs)
+    },
+    'you_objective_plural': {
+        'en': lambda *pargs, **kwargs: word('you', **kwargs)
+    },
+    'us_objective': {
+        'en': lambda *pargs, **kwargs: word('us', **kwargs)
+    },
+    'are_we': {
+        'en': lambda *pargs, **kwargs: word('are we', **kwargs)
+    },
+    'are_you': {
+        'en': lambda *pargs, **kwargs: word('are you', **kwargs)
+    },
+    'are_you_plural': {
+        'en': lambda *pargs, **kwargs: word('are you', **kwargs)
+    },
+    'am_i': {
+        'en': lambda *pargs, **kwargs: word('am I', **kwargs)
+    },
     'her': {
         'en': prefix_constructor('her ')
     },
     'his': {
         'en': prefix_constructor('his ')
     },
+    'are_word': {
+        'en': prefix_constructor('are ')
+    },
     'is_word': {
         'en': prefix_constructor('is ')
+    },
+    'their': {
+        'en': prefix_constructor('their ')
     },
     'my': {
         'en': prefix_constructor('my ')
     },
     'our': {
         'en': prefix_constructor('our ')
-    },
-    'their': {
-        'en': prefix_constructor('their ')
     },
     'of_the': {
         'en': prefix_constructor('of the ')
@@ -3572,26 +3669,77 @@ language_functions = {
     'does_a_b': {
         'en': prefix_constructor_two_arguments('does ')
     },
+    'do_a_b': {
+        'en': prefix_constructor_two_arguments('do ')
+    },
     'did_a_b': {
         'en': prefix_constructor_two_arguments('did ')
+    },
+    'did_a_b_plural': {
+        'en': prefix_constructor_two_arguments('did ')
+    },
+    'do_i': {
+        'en': prefix_constructor('do I ')
+    },
+    'do_we': {
+        'en': prefix_constructor('do we ')
     },
     'do_you': {
         'en': prefix_constructor('do you ')
     },
+    'do_you_plural': {
+        'en': prefix_constructor('do you ')
+    },
+    'did_i': {
+        'en': prefix_constructor('did I ')
+    },
+    'did_we': {
+        'en': prefix_constructor('did we ')
+    },
     'did_you': {
         'en': prefix_constructor('did you ')
     },
+    'did_you_plural': {
+        'en': prefix_constructor('did you ')
+    },
+    'was_i': {
+        'en': prefix_constructor('was I ')
+    },
+    'were_we': {
+        'en': prefix_constructor('were we ')
+    },
     'were_you': {
+        'en': prefix_constructor('were you ')
+    },
+    'were_you_plural': {
         'en': prefix_constructor('were you ')
     },
     'was_a_b': {
         'en': prefix_constructor_two_arguments('was ')
     },
+    'were_a_b': {
+        'en': prefix_constructor_two_arguments('were ')
+    },
+    'were_a_b_plural': {
+        'en': prefix_constructor_two_arguments('were ')
+    },
+    'have_i': {
+        'en': prefix_constructor('have I ')
+    },
+    'have_we': {
+        'en': prefix_constructor('have we ')
+    },
     'have_you': {
+        'en': prefix_constructor('have you ')
+    },
+    'have_you_plural': {
         'en': prefix_constructor('have you ')
     },
     'has_a_b': {
         'en': prefix_constructor_two_arguments('has ')
+    },
+    'have_a_b': {
+        'en': prefix_constructor_two_arguments('have ')
     },
     'verb_past': {
         'en': verb_past_en,
@@ -3705,32 +3853,81 @@ def language_function_constructor(term):
 in_the = language_function_constructor('in_the')
 a_preposition_b = language_function_constructor('a_preposition_b')
 a_in_the_b = language_function_constructor('a_in_the_b')
+i_subjective = language_function_constructor('i_subjective')
+he_subjective = language_function_constructor('he_subjective')
+she_subjective = language_function_constructor('she_subjective')
+genderless_subjective = language_function_constructor('genderless_subjective')
+myself = language_function_constructor('myself')
+itself = language_function_constructor('itself')
+herself = language_function_constructor('herself')
+himself = language_function_constructor('himself')
+themselves = language_function_constructor('themselves')
+genderless_self = language_function_constructor('genderless_self')
+yourself = language_function_constructor('yourself')
+yourselves = language_function_constructor('yourselves')
+ourselves = language_function_constructor('ourselves')
+you_subjective = language_function_constructor('you_subjective')
+you_subjective_plural = language_function_constructor('you_subjective_plural')
+we_subjective = language_function_constructor('we_subjective')
+they_subjective = language_function_constructor('they_subjective')
+it_subjective = language_function_constructor('it_subjective')
+it_objective = language_function_constructor('it_objective')
+them_objective = language_function_constructor('them_objective')
+genderless_objective = language_function_constructor('genderless_objective')
+me_objective = language_function_constructor('me_objective')
+him_objective = language_function_constructor('him_objective')
+her_objective = language_function_constructor('her_objective')
+you_objective = language_function_constructor('you_objective')
+you_objective_plural = language_function_constructor('you_objective_plural')
+us_objective = language_function_constructor('us_objective')
+are_we = language_function_constructor('are_we')
+are_you = language_function_constructor('are_you')
+are_you_plural = language_function_constructor('are_you_plural')
+am_i = language_function_constructor('am_i')
 her = language_function_constructor('her')
 his = language_function_constructor('his')
+are_word = language_function_constructor('are_word')
 is_word = language_function_constructor('is_word')
 their = language_function_constructor('their')
-lang_my = language_function_constructor('my')
-lang_our = language_function_constructor('our')
+my_possessive = language_function_constructor('my')
+our_possessive = language_function_constructor('our')
+of_the = language_function_constructor('of_the')
 your = language_function_constructor('your')
 your_plural = language_function_constructor('your_plural')
+some = language_function_constructor('some')
 its = language_function_constructor('its')
-of_the = language_function_constructor('of_the')
 the = language_function_constructor('the')
-this = language_function_constructor('this')
 these = language_function_constructor('these')
-do_you = language_function_constructor('do_you')
-did_you = language_function_constructor('did_you')
+this = language_function_constructor('this')
 does_a_b = language_function_constructor('does_a_b')
+do_a_b = language_function_constructor('do_a_b')
 did_a_b = language_function_constructor('did_a_b')
+did_a_b_plural = language_function_constructor('did_a_b_plural')
+do_i = language_function_constructor('do_i')
+do_we = language_function_constructor('do_we')
+do_you = language_function_constructor('do_you')
+do_you_plural = language_function_constructor('do_you_plural')
+did_i = language_function_constructor('did_i')
+did_we = language_function_constructor('did_we')
+did_you = language_function_constructor('did_you')
+did_you_plural = language_function_constructor('did_you_plural')
+was_i = language_function_constructor('was_i')
+were_we = language_function_constructor('were_we')
 were_you = language_function_constructor('were_you')
+were_you_plural = language_function_constructor('were_you_plural')
 was_a_b = language_function_constructor('was_a_b')
+were_a_b = language_function_constructor('were_a_b')
+were_a_b_plural = language_function_constructor('were_a_b_plural')
+have_i = language_function_constructor('have_i')
+have_we = language_function_constructor('have_we')
 have_you = language_function_constructor('have_you')
+have_you_plural = language_function_constructor('have_you_plural')
 has_a_b = language_function_constructor('has_a_b')
+have_a_b = language_function_constructor('have_a_b')
 verb_past = language_function_constructor('verb_past')
 verb_present = language_function_constructor('verb_present')
 noun_plural = language_function_constructor('noun_plural')
 noun_singular = language_function_constructor('noun_singular')
-some = language_function_constructor('some')
 indefinite_article = language_function_constructor('indefinite_article')
 period_list = language_function_constructor('period_list')
 name_suffix = language_function_constructor('name_suffix')

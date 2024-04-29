@@ -74,7 +74,7 @@ Feature: Example interviews
     Then I should see the phrase "What is your date of birth?"
     And I set the text box to "03/31/1977"
     And I click the button "Continue"
-    Then I should see the phrase "You are 46 years old"
+    Then I should see the phrase "You are 47 years old"
 
   Scenario: Test the interview "Scheduled task"
     Given I start the interview "docassemble.base:data/questions/examples/alarm-clock.yml"
@@ -7605,10 +7605,10 @@ Feature: Example interviews
     Then I should see the phrase "Do you like turnips?"
     And I click the button "No"
     Then I should see the phrase "When did you stop idolizing worms?"
-    And I set "Date" to "04/01/2024"
+    And I set "Date" to "04/01/2026"
     And I click the button "Continue"
     Then I should see the phrase "I can’t believe you don’t like turnips."
-    And I should see the phrase "So, you idolize worms now, but plan to stop on April 1, 2024."
+    And I should see the phrase "So, you idolize worms now, but plan to stop on April 1, 2026."
     And I should see the phrase "Interesting."
 
   Scenario: Test the interview "Buttons that run code" 1
