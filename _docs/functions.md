@@ -2701,23 +2701,23 @@ The `current_context()` function will return an object with the
 following attributes describing information about the context in which
 Python code is executing:
 
-* `session` the session ID of the current interview session
-* `filename` the filename of the current interview session
-* `package` the package of the current filename
-* `question_id` the `id` of the current `question`, or `None` if there is
+* `session` - the session ID of the current interview session
+* `filename` - the filename of the current interview session
+* `package` - the package of the current filename
+* `question_id` - the `id` of the current `question`, or `None` if there is
   no current `question` or the `question` does not have an `id`.
-* `current_filename` the filename of the currently executing block
-* `current_package` the package of the filename of the currently executing block
-* `variable` the name of the last variable to be sought, or
+* `current_filename` - the filename of the currently executing block
+* `current_package` - the package of the filename of the currently executing block
+* `variable` - the name of the last variable to be sought, or
   `None` if there was no variable being sought.
-* `current_section` the name of the current section, as determined by
+* `current_section` - the name of the current section, as determined by
   the `section` modifier of the latest `question` **docassemble**
   tried to process. In most situations, you will want to use
   `nav.get_section()` instead. The `current_section` is useful if your
   Python code needs to know the `section` modifier of the `question`
   that **docassemble** is currently trying to display (which might not
   be the same `question` that ultimately is displayed).
-* `inside_of` the document assembly context, if any. The possible
+* `inside_of` - the document assembly context, if any. The possible
   values are `'standard'`, `'docx'`, `'pdf'`, `'pandoc'`, `'raw'`,
   `'md'`, and `'html'`. The default context is `'standard'`; the other
   contexts are in effect if code is executing to assemble a file using
@@ -2726,6 +2726,21 @@ Python code is executing:
   file, or creation of an HTML version of a Markdown file (typically
   used with the Pandoc document assembly system as an HTML preview of
   the output).
+* `attachment` - if the code that is currently executing is inside of a
+  document assembly process, this is an object with attributes
+  that relate to the document being assembled.
+  * `attachment.name` - the name of the document, as specified in the
+    [`attachment`] or [`attachments`] block.
+  * `attachment.filename` - the filename of the document.
+  * `attachment.description` - the description of the document.
+  * `attachment.update_references` - indicates whether the attachment
+    has been instructed to [`update references`].
+  * `attachment.redact` - is `False` if [`redact`] is set to a false value, and
+    `True` otherwise.
+  * `attachment.pdfa` - indicates whether the attachment has been
+    instructed to produce a [PDF/A file].
+  * `attachment.tagged` - indicates whether the attachment has been
+    instructed to produce a [tagged PDF].
 
 ## <a name="user_info"></a>user_info()
 
@@ -8944,3 +8959,7 @@ Note that you should only attach a `daPageLoad` listener from a
 [`allow registration`]: {{ site.baseurl }}/docs/config.html#allow registration
 [`/api/user_invite`]: {{ site.baseurl }}/docs/api.html#user_invite
 [`noun_singular()`]: #noun_singular
+[`redact`]: {{ site.baseurl }}/docs/documents.html#redact
+[`update references`]: {{ site.baseurl }}/docs/documents.html#update references
+[PDF/A file]: {{ site.baseurl }}/docs/documents.html#pdfa
+[tagged PDF]: {{ site.baseurl }}/docs/documents.html#tagged pdf

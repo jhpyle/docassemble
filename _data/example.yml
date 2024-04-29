@@ -2019,7 +2019,7 @@
         color: danger
 "buttons-icons":
   "height": !!int |-
-    437
+    439
   "width": !!int |-
     488
   "yaml": |-
@@ -8218,7 +8218,7 @@
       % endfor
 "generators":
   "height": !!int |-
-    234
+    230
   "width": !!int |-
     488
   "yaml": |-
@@ -18863,6 +18863,68 @@
     \  You said you don't know if you like\n  mushrooms. Your ridiculous explanation\n\
     \  was:\n\n  ${ quote_paragraphs(reason_why_unsure) }\n  % elif likes_mushrooms:\n\
     \  Your favorite mushroom is ${ mushroom }.\n  % endif\nmandatory: True"
+"language-functions":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    code: |
+      helper.name.text = "Robot"
+      user.name.first = "Ursula"
+      user.name.last = "User"
+      user.gender = 'female'
+      user_alias.name.first = "Ursie"
+      user_alias.name.last = "User"
+      user_alias.gender = 'female'
+      other_user.name.first = "Harold"
+      other_user.name.last = "User"
+      other_user.gender = 'male'
+      users.clear()
+      users.append(user)
+      users.append(other_user)
+      users.gathered = True
+      company.name.text = "ABC, Inc."
+      other_company.name.text = "DEF, Inc."
+      thing.name.text = "apple tree"
+      single_list.clear()
+      single_list.appendObject()
+      single_list[0].name.first = "Fred"
+      single_list[0].name.last = "Smith"
+      single_list[0].gender = 'male'
+      single_list.gathered = True
+      multiple_list.clear()
+      multiple_list.appendObject()
+      multiple_list[-1].name.first = "Sally"
+      multiple_list[-1].name.last = "Jones"
+      multiple_list[-1].gender = 'female'
+      multiple_list.appendObject()
+      multiple_list[-1].name.first = "Peter"
+      multiple_list[-1].name.last = "Roberts"
+      multiple_list[-1].gender = 'male'
+      multiple_list.gathered = True
+      single_dict.clear()
+      single_dict.initializeObject('a')
+      single_dict['a'].name.text = 'Single thing in a dictionary'
+      single_dict.gathered = True
+      multiple_dict.clear()
+      multiple_dict.initializeObject('a')
+      multiple_dict['a'].name.text = 'First thing in a dictionary'
+      multiple_dict.initializeObject('b')
+      multiple_dict['b'].name.text = 'Second thing in a dictionary'
+      multiple_dict.gathered = True
+      single_set.clear()
+      single_set.add('single set item')
+      single_set.gathered = True
+      multiple_set.clear()
+      multiple_set.add('first item in a set')
+      multiple_set.add('second item in a set')
+      multiple_set.gathered = True
+      helpers.clear()
+      helpers.append(company)
+      helpers.append(other_company)
+      helpers.gathered = True
 "life_story":
   "yaml": |-
     template: life_story

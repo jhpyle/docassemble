@@ -2392,6 +2392,10 @@ When the server starts, the value of `os locale` is appended to
 `/etc/locale.gen` (if not already there in uncommented form) and
 `locale-gen` and `update-locale` are run.
 
+After changing `os locale`, you will need to restart your container
+(`docker stop -t 600 <container ID>` followed by `docker start
+<container ID>`).
+
 ## <a name="other os locales"></a>Other available locales
 
 If your interviews use locale and language settings that your
@@ -2414,6 +2418,10 @@ values] that [Ubuntu]/[Debian] recognizes (listed in the
 When the server starts, each of the `other os locales` is appended to
 `/etc/locale.gen` (if not already there in uncommented form) and
 `locale-gen` and `update-locale` are run.
+
+After changing `other os locales`, you will need to restart your
+container (`docker stop -t 600 <container ID>` followed by `docker
+start <container ID>`).
 
 ## <a name="server administrator email"></a>E-mail address of server administrator
 

@@ -911,24 +911,24 @@ Directory service.
 * Set the Name to the name you want to use for your application.  This
   is the name that your users will see when they are prompted by Azure
   to give their consent to logging in with Azure.
-* Set the Sign-on URL to the URL for your site's login page.  If your
-  hostname is `docassemble.example.com`, then the URL will be
-  `https://docassemble.example.com/user/sign-in` (unless you have set
-  a non-standard [`root`]).
 * Create the Registered App and then open it.
-* Find the Application ID.  You need to set this value as the `id` in
-  the [`oauth`] configuration, under `azure`.
-* Go into Reply URLs and add an additional Reply URL for
+* Under "Overview," find the "Application (client) ID."  You need to
+  set this value as the `id` in the **docassemble** [`oauth`]
+  configuration, under `azure`.
+* Go into Authentication and add a "Platform." Choose "Web" as the
+  "platform" type.
+* Set the Redirect URI to
   `https://docassemble.example.com/callback/azure`, or whatever the URL
   for `/callback/azure` is on your site.
-* Go into Keys and create a new key.  The "Key description" can be
-  `docassemble` or some other name of your choosing.  The duration can
-  be anything you want, but note that if the duration expires, you
-  will need to edit this configuration if you want users to still be
-  able to log in with Azure.
-* Press save.  Then copy the value of the key you just created.  You
-  need to set this value as the `secret` in the [`oauth`] configuration,
-  under `azure`.
+* Leave other settings of the "platform" at the default values.
+* Go into Certificates & Secrets and create a new "client secret."
+  The "Description" can be `docassemble` or some other name of your
+  choosing. The expiration setting can be anything you want, but note
+  that if the key expires, you will need to edit this configuration if
+  you want users to still be able to log in with Azure.
+* Press Add. Then make a note of the "value" of the key you just
+  created. You need to set these value as
+  the `secret` in the [`oauth`] configuration, under `azure`.
 * Go into Required permissions and click Add.
 * Add "Microsoft Graph" as one of the APIs.
 * Under "delegated permissions," select the following:

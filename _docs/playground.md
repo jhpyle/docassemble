@@ -252,8 +252,19 @@ Packages are defined with the following elements:
   software can be found.
 * **Dependencies**: From the list of Python [packages] installed on
   the system, indicate the ones that are required for your package to
-  operate.  When your package is installed on another system, these
-  packages will be installed first.
+  operate. When your package is installed on another system, these
+  packages will be installed first. When **docassemble** creates your
+  package, it will include within the package a `setup.py` file that
+  defines basic information about the package, including which other
+  Python packages are dependencies. You can see what these
+  dependencies are by inspecting the `setup.py` file and looking for
+  the `install_requires` list. Note that the assumption is that the
+  dependency packages are available on PyPI, the Python Package
+  Index. If you have a dependency package that you installed on your
+  system using a ZIP file or a GitHub URL, the `setup.py` file will
+  nevertheless assume that the package is available on PyPI. If you
+  need your `setup.py` to pull a dependency from GitHub, you will need
+  to edit it manually.
 * **Interview files**: From the [interview files] defined in your
   Playground, indicate which ones should be included in your package.
 * **Template files**: From the [template files] defined in your

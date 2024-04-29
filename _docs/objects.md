@@ -3460,8 +3460,8 @@ your bearer token.
 {% highlight yaml %}
 objects:
   - web: |
-      DAWeb.using(base_url='https://api.example.com', 
-                  auth={'type': 'bearer', 
+      DAWeb.using(base_url='https://api.example.com',
+                  auth={'type': 'bearer',
                         'token': 'uweoDS0iBfirGwesB.8d29230fa55b5c5deb2f87a82b3f6d2f4ab25c2b7e34b563d3b8fb84532c254b'})
 {% endhighlight %}
 
@@ -7013,9 +7013,9 @@ called from the [`init()`] method of each class after the call to
 ### <a name="sqlobject class methods"></a>Class methods
 
 <a name="SQLObject.by_id"></a>If you have the `id` of a [SQL] record
-and you want to obtain a [Python] object corresponding to that ID, 
-you can call the `by_id()` class method.  If your class name is `Customer`, 
-and the id is `customer_id`, you would call `Customer.by_id(customer_id)`, 
+and you want to obtain a [Python] object corresponding to that ID,
+you can call the `by_id()` class method.  If your class name is `Customer`,
+and the id is `customer_id`, you would call `Customer.by_id(customer_id)`,
 and the result would be a `Customer` object.  If an object for this `id`
 is already present in the interview answers, that object will be
 returned.  If the object does not already exist, a new object will be
