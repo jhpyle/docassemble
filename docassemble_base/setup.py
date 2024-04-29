@@ -49,7 +49,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 install_requires = [
     'docassemble==1.4.103',
     "3to2==1.1.1",
-    "aiohttp==3.9.2",
+    "aiohttp==3.9.4",
     "aiohttp-retry==2.8.3",
     "aiosignal==1.3.1",
     "alembic==1.13.1",
