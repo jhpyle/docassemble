@@ -2870,11 +2870,14 @@ def salutation_default(indiv, **kwargs):
     elif indiv.gender == 'female':
         used_gender = True
         salut = 'Ms.'
+    elif indiv.gender == "nonbinary":
+        used_gender = True
+        salut = 'Mx.'
     else:
         used_gender = True
         salut = 'Mr.'
     if with_name_and_punctuation or with_name:
-        if used_gender and indiv.gender not in ('male', 'female'):
+        if used_gender and indiv.gender not in ('male', 'female', 'nonbinary'):
             salut_and_name = indiv.name.full()
         else:
             salut_and_name = salut + ' ' + indiv.name.last
