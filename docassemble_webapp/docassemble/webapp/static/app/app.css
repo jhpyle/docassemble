@@ -242,6 +242,10 @@ i.da-chat-inactive:hover {
     color: var(--bs-red);
 }
 
+legend.da-top-label {
+    font-size: inherit;
+}
+
 .da-form-group.darequired .da-top-label {
     position: relative;
 }

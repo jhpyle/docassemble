@@ -1,5 +1,18 @@
 # Change Log
 
+## [1.4.104] - 2024-05-06
+
+### Changed
+- Changes to HTML for accessibility purposes.
+- Upgraded Bootstrap to version 5.3.3, jQuery to version 3.7.1, Font
+  Awesome to verson 6.5.2, and Pillow to version 10.3.0.
+- Upgraded Ubuntu to 24.04 and Pandoc to version 3.1.13 (system
+  upgrade required).
+
+### Fixed
+- Bug with `progress bar multiplier`.
+- CSS error with radio buttons and labels above fields.
+
 ## [1.4.103] - 2024-04-29
 
 ### Added

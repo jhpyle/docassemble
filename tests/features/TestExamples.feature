@@ -5267,11 +5267,6 @@ Feature: Example interviews
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/gather.yml"
     Then I should explicitly see the phrase "Interview has an error. There was a reference to a variable 'witness.there_are_any' that could not be looked up in the question file (for language 'en') or in any of the files incorporated by reference into the question file."
 
-  Scenario: Test the interview "Infinite loop" 2
-    Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/infinite-loop-2.yml"
-    Then I should explicitly see the phrase "There appears to be an infinite loop."
-    And I should explicitly see the phrase "Variables in stack are bar, foo."
-
   # Scenario: Test the interview ""
   #   Given I start the interview "docassemble.base:data/questions/examples/interview-flowers.yml"
 

@@ -1,3 +1,9 @@
+metadata:
+  title: Point of view
+  documentation: "https://docassemble.org/docs/objects.html#DAObject._point_of_view"
+  example start: 1
+  example end: 4
+---
 mandatory: True
 objects:
   - helper: Thing.using(_point_of_view='1')

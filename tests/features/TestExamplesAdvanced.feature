@@ -2,6 +2,11 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Test the interview "Infinite loop" 2
+    Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/infinite-loop-2.yml"
+    Then I should explicitly see the phrase "There appears to be an infinite loop."
+    And I should explicitly see the phrase "Variables in stack are bar, foo."
+
   Scenario: Test the interview "Back button inside question"
     Given I start the interview "docassemble.base:data/questions/examples/question-back-button.yml"
     Then I should see the phrase "Are you doing well?"

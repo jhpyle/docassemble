@@ -49,14 +49,14 @@ bash -c \
 && echo \"en_US.UTF-8 UTF-8\" >> /etc/locale.gen \
 && locale-gen \
 && update-locale \
-&& /usr/bin/pip3 install unoconv \
+&& /usr/bin/pip3 install --break-system-packages unoconv \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
-&& /usr/bin/python3 -m venv --copies /usr/share/docassemble/local3.10 \
+&& python3.10 -m venv --copies /usr/share/docassemble/local3.10 \
 && source /usr/share/docassemble/local3.10/bin/activate \
-&& pip3 install --upgrade pip==23.3.2 \
-&& pip3 install --upgrade wheel==0.42.0 \
-&& pip3 install --upgrade mod_wsgi==5.0.0 \
-&& pip3 install --upgrade \
+&& pip install --upgrade pip==24.0 \
+&& pip install --upgrade wheel==0.42.0 \
+&& pip install --upgrade mod_wsgi==5.0.0 \
+&& pip install --upgrade \
    acme==2.8.0 \
    certbot==2.8.0 \
    certbot-apache==2.8.0 \
@@ -85,7 +85,7 @@ bash -c \
    six==1.16.0 \
    tqdm==4.66.1 \
    urllib3==2.0.7 \
-&& pip3 install \
+&& pip install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \

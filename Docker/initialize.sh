@@ -1453,7 +1453,7 @@ if [ "$CRONRUNNING" == "false" ]; then
     echo "initialize: Starting cron" >&2
     if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
         if ! grep -q '^CONTAINERROLE' /etc/crontab; then
-            bash -c "set | grep -e '^CONTAINERROLE=' -e '^DA_PYTHON=' -e '^DA_CONFIG=' -e '^DA_ROOT=' -e '^DASUPERVISORUSERNAME=...' -e '^DASUPERVISORPASSWORD=...'; cat \"${DA_ROOT}/cron/crontab\"" > /tmp/crontab && cat /tmp/crontab > "${DA_ROOT}/cron/crontab" && rm -f /tmp/crontab
+            bash -c "set | grep -e '^CONTAINERROLE=' -e '^DA_PYTHON=' -e '^DA_CONFIG=' -e '^DA_ROOT=' -e '^DASUPERVISORUSERNAME=...' -e '^DASUPERVISORPASSWORD=...'; echo MAILTO=root@localhost; cat \"${DA_ROOT}/cron/crontab\"" > /tmp/crontab && cat /tmp/crontab > "${DA_ROOT}/cron/crontab" && rm -f /tmp/crontab
         fi
     fi
     ${SUPERVISORCMD} start cron

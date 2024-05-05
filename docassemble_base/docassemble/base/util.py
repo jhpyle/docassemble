@@ -2184,6 +2184,13 @@ class DAList(DAObject):
             return self.__getitem__(0)  # pylint: disable=unnecessary-dunder-call
         return self.__getitem__(len(self.elements)-1)  # pylint: disable=unnecessary-dunder-call
 
+    def is_user(self):
+        """Returns True if the list has one element and that element is the user, otherwise False."""
+        if self.number() == 1:
+            self._trigger_gather()
+            return self.elements[0].is_user()
+        return False
+
     def itself(self, **kwargs):
         """Returns "themselves" unless the list has only one element,
         in which case the method is called on the first element."""
@@ -2350,7 +2357,7 @@ class DAList(DAObject):
         returns "child" even if there are multiple children."""
         the_noun = self.instanceName
         the_noun = re.sub(r'.*\.', '', the_noun)
-        return the_noun
+        return noun_singular(the_noun)
 
     def possessive(self, target, **kwargs):
         """If the variable name is "plaintiff" and the target is "fish,"
@@ -4275,6 +4282,13 @@ class DASet(DAObject):
                 something_added = True
         if something_added:
             self.there_are_any = True
+
+    def is_user(self):
+        """Returns True if the set has one element and the one element is the user, otherwise False."""
+        self._trigger_gather()
+        if self.number() == 1:
+            return list(self.elements)[0].is_user()
+        return False
 
     def itself(self, **kwargs):
         """Returns "themselves" unless the set has only one element,

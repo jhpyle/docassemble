@@ -3128,8 +3128,7 @@ def possessify_en(a, b, **kwargs):
 def a_preposition_b_default(a, b, **kwargs):
     ensure_definition(a, b, **kwargs)
     if hasattr(a, 'preposition'):
-        # logmessage("Has preposition")
-        preposition = a.preposition
+        preposition = word(a.preposition)
     else:
         preposition = word('in the')
     if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -3636,10 +3635,10 @@ language_functions = {
     'their': {
         'en': prefix_constructor('their ')
     },
-    'my': {
+    'my_possessive': {
         'en': prefix_constructor('my ')
     },
-    'our': {
+    'our_possessive': {
         'en': prefix_constructor('our ')
     },
     'of_the': {
@@ -3777,9 +3776,7 @@ language_functions = {
         'en': indefinite_article_en,
         'es': indefinite_article_es,
         'de': indefinite_article_de,
-        'fr': indefinite_article_fr,
-        'it': indefinite_article_it,
-        'nl': indefinite_article_nl
+        'it': indefinite_article_it
     },
     'currency_symbol': {
         '*': currency_symbol_default
@@ -3889,8 +3886,8 @@ his = language_function_constructor('his')
 are_word = language_function_constructor('are_word')
 is_word = language_function_constructor('is_word')
 their = language_function_constructor('their')
-my_possessive = language_function_constructor('my')
-our_possessive = language_function_constructor('our')
+my_possessive = language_function_constructor('my_possessive')
+our_possessive = language_function_constructor('our_possessive')
 of_the = language_function_constructor('of_the')
 your = language_function_constructor('your')
 your_plural = language_function_constructor('your_plural')
@@ -4364,10 +4361,10 @@ def process_action():
                 force_ask_nameerror(variable_dict['var'])
         if 'event_stack' in this_thread.internal and this_thread.current_info['user']['session_uid'] in this_thread.internal['event_stack']:
             if len(this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']]) > 0:
-                if this_thread.interview_status.checkin:
-                    event_info = this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']].pop(0)
-                else:
-                    event_info = this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']][0]
+                # if this_thread.interview_status.checkin:
+                #     event_info = this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']].pop(0)
+                # else:
+                event_info = this_thread.internal['event_stack'][this_thread.current_info['user']['session_uid']][0]
                 # logmessage("process_action: adding " + event_info['action'] + " to current_info")
                 this_thread.current_info.update(event_info)
                 the_context = event_info.get('context', {})

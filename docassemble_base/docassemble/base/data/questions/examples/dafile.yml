@@ -16,7 +16,7 @@ code: |
                      (512, 512),
                      "green")
   myfile.initialize(filename="foo.jpg")
-  im.save(myfile.path())
+  im.save(myfile.path(), format='JPEG')
 ---
 mandatory: True
 question: |

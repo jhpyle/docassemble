@@ -1,0 +1,193 @@
+metadata:
+  title: Language methods
+  documentation: "https://docassemble.org/docs/objects.html#language methods"
+  example start: 1
+  example end: 4
+---
+mandatory: True
+objects:
+  - user: Individual
+  - person: Individual
+  - thing: Thing
+---
+mandatory: True
+code: |
+  user.name.first = 'John'
+  user.name.last = 'Smith'
+  user.gender = 'male'
+  person.name.first = 'Thomas'
+  person.name.last = 'Montague'
+  person.gender = 'male'
+  thing.name.text = 'apple'
+---
+initial: True
+code: |
+  set_info(user=user)
+---
+mandatory: True
+question: |
+  Language functions
+subquestion: |
+  #### `possessive()`
+
+  Don't eat the
+  ${ thing.possessive('core') }.
+
+  ${ person.possessive('résumé') }
+  is unimpressive.
+
+  #### `object_possessive()`
+
+  Do you understand
+  ${ thing.object_possessive('intrinsic nature') }?
+
+  Have you met
+  ${ person.object_possessive('dog') } yet?
+
+  #### `pronoun()`
+
+  Look at the ${ thing }, but do
+  not stare at ${ thing.pronoun() }.
+
+  Look at ${ person }, but do
+  not stare at ${ person.pronoun() }.
+
+  #### `pronoun_objective()`
+
+  Eat the ${ thing }, but not too
+  much of ${ thing.pronoun_objective() }.
+
+  May an abundance of ${ thing } be
+  granted unto ${ user.pronoun_objective() }.
+
+  Teach ${ person } well, but do not
+  bore ${ person.pronoun_objective() }.
+
+  #### `pronoun_subjective()`
+
+  If you polish the ${ thing },
+  ${ thing.pronoun_subjective() }
+  will be shiny.
+
+  ${ user.pronoun_subjective(capitalize=True) }
+  may win unlimited ${ thing } pie for life
+  if you accept this limited time offer.
+
+  If you are nice to ${ person },
+  ${ person.pronoun_subjective() } will
+  probably not be nice to you in return.
+
+  #### `pronoun_possessive()`
+
+  You can squeeze the ${ thing }, but
+  ${ thing.pronoun_possessive('juice') }
+  will get all over your hands.
+
+  You have many fireplaces, but all
+  ${ user.pronoun_possessive('chimneys') }
+  are filled up with insulation.
+
+  ${ person } drives, but
+  ${ person.pronoun_possessive('car') }
+  is a piece of junk.
+
+  #### `is_are_you()`
+
+  ${ thing.is_are_you(capitalize=True) }
+  sweet?
+
+  ${ user.is_are_you(capitalize=True) }
+  sweet?
+
+  #### `yourself_or_name()`
+
+  Give the ${ thing } to
+  ${ user.yourself_or_name() }.
+
+  Give the ${ thing } to
+  ${ person.yourself_or_name() }.
+
+  #### `itself()`
+
+  The ${ thing } can speak for
+  ${ thing.itself() }.
+
+  You can speak for
+  ${ user.itself() }.
+
+  ${ person } can speak for
+  ${ person.itself() }.
+
+  #### `is_user()`
+
+  % for item in (thing, user, person):
+    % if item.is_user():
+  ${ item } is the user.
+    % endif
+  % endfor
+
+  #### `do_question()`
+
+  ${ thing.do_question('exist', capitalize=True) }?
+
+  ${ user.do_question('exist', capitalize=True) }?
+
+  ${ person.do_question('exist', capitalize=True) }?
+
+  #### `did_question()`
+
+  ${ user.did_question('invest', capitalize=True) }
+  in real estate?
+
+  ${ person.did_question('invest', capitalize=True) }
+  in real estate?
+
+  #### `were_question()`
+
+  ${ user.were_question('present', capitalize=True) }
+  at the scene of the crime?
+
+  ${ person.were_question('present', capitalize=True) }
+  at the scene of the crime?
+
+  #### `have_question()`
+
+  ${ user.have_question('followed', capitalize=True) }
+  the news about the ${ thing } festival?
+
+  ${ person.have_question('followed', capitalize=True) }
+  the news about the ${ thing } festival?
+
+  #### `does_verb()`
+
+  ${ user.pronoun_subjective(capitalize=True) }
+  ${ user.does_verb('eat') }
+  like a pig.
+
+  ${ person.pronoun_subjective(capitalize=True) }
+  ${ person.does_verb('eat') }
+  like a pig.
+
+  #### `did_verb()`
+
+  ${ user.pronoun_subjective(capitalize=True) }
+  ${ user.did_verb('go') }
+  to the park.
+
+  ${ person.pronoun_subjective(capitalize=True) }
+  ${ person.did_verb('go') }
+  to the park.
+
+  #### `subjective_pronoun_or_name()`
+
+  ${ user.subjective_pronoun_or_name(capitalize=True) }
+  will not disappoint me again.
+
+  ${ person.subjective_pronoun_or_name(capitalize=True) }
+  will not disappoint me again.
+
+  #### `pronoun_or_name()`
+
+  I gave the ${ thing } to ${ user.pronoun_or_name() }.
+
+  I gave the ${ thing } to ${ person.pronoun_or_name() }.

@@ -2170,7 +2170,7 @@ class Question:
             if 'progress bar multiplier' in data['features'] and isinstance(data['features']['progress bar multiplier'], (int, float)):
                 if data['features']['progress bar multiplier'] <= 0.0 or data['features']['progress bar multiplier'] >= 1.0:
                     raise DASourceError("progress bar multiplier in features must be between 0 and 1." + self.idebug(data))
-                self.interview.progress_bar_method = data['features']['progress bar multiplier']
+                self.interview.progress_bar_multiplier = data['features']['progress bar multiplier']
             if 'question back button' in data['features'] and isinstance(data['features']['question back button'], bool):
                 self.interview.question_back_button = data['features']['question back button']
             if 'question help button' in data['features'] and isinstance(data['features']['question help button'], bool):
@@ -2539,7 +2539,7 @@ class Question:
                 raise DASourceError("You cannot use the mandatory modifier and the initial modifier at the same time." + self.idebug(data))
             if 'id' not in data and self.interview.debug and self.interview.source.package.startswith('docassemble.playground'):
                 self.interview.issue['mandatory_id'] = True
-            if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data:
+            if 'question' not in data and 'code' not in data and 'objects' not in data and 'attachment' not in data and 'data' not in data and 'data from code' not in data and 'objects from file' not in data:
                 raise DASourceError("You cannot use the mandatory modifier on this type of block." + self.idebug(data))
             if data['mandatory'] is True:
                 self.is_mandatory = True
@@ -8709,8 +8709,9 @@ class Interview:
                                 else:
                                     use_objects = bool(eval(question.use_objects, user_dict))
                                 exec(import_core, user_dict)
+                                thename = from_safeid(question.fields[0].saveas)
                                 for field in question.fields:
-                                    command = variable + ' = objects_from_file("' + str(field.extras['file_name'].text(user_dict).strip()) + '", name=' + repr(from_safeid(field.saveas)) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
+                                    command = thename + ' = objects_from_file("' + str(field.extras['file_name'].text(user_dict).strip()) + '", name=' + repr(from_safeid(field.saveas)) + ', use_objects=' + repr(use_objects) + ', package=' + repr(question.package) + ')'
                                     # logmessage("Running " + command)
                                     exec(command, user_dict)
                                 question.mark_as_answered(user_dict)

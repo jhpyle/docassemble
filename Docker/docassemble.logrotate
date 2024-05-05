@@ -19,3 +19,11 @@
 	        /usr/share/docassemble/webapp/restart-post-logrotate.sh
 	endscript
 }
+/var/mail/mail
+{
+	rotate 7
+	maxsize 5M
+	daily
+	missingok
+	notifempty
+}
