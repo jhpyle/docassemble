@@ -265,7 +265,7 @@ install_requires = [
     "titlecase==2.4.1",
     "toml==0.10.2",
     "tomli==2.0.1",
-    "tqdm==4.66.1",
+    "tqdm==4.66.3",
     "trio==0.23.2",
     "trio-websocket==0.11.1",
     "twilio==8.11.0",
