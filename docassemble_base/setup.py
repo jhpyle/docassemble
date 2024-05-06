@@ -216,7 +216,7 @@ install_requires = [
     "titlecase==2.4.1",
     "toml==0.10.2",
     "tomli==2.0.1",
-    "tqdm==4.66.1",
+    "tqdm==4.66.3",
     "twilio==8.11.0",
     "twine==4.0.2",
     "typing_extensions==4.9.0",
