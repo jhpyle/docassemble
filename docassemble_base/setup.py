@@ -229,7 +229,7 @@ install_requires = [
     "user-agents==2.2.0",
     "wcwidth==0.2.12",
     "webencodings==0.5.1",
-    "Werkzeug==3.0.1",
+    "Werkzeug==3.0.3",
     "wrapt==1.16.0",
     "xfdfgen==0.4",
     "xlrd==2.0.1",
