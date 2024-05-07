@@ -428,6 +428,9 @@ do
     elif [ "$tfile" = "fields" -o "$tfile" = "attachment-code" -o "$tfile" = "attachment-simple" -o "$tfile" = "document-markup" -o "$tfile" = "document-variable-name" -o "$tfile" = "document-cache-invalidate" -o "$tfile" = "address-autocomplete-test"  -o "$tfile" = "address-autocomplete-test" -o "$tfile" = "table-width" -o "$tfile" = "document-language" -o "$tfile" = "allow-downloading-true" -o "$tfile" = "allow-downloading-true-zip-filename" -o "$tfile" = "document-docx" -o "$tfile" = "document-docx-from-rtf" -o "$tfile" = "document-file" -o "$tfile" = "google-sheet-3" ]
     then
 	convert $tempfile -crop 488x1999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
+    elif [ "$tfile" = "language-functions" -o "$tfile" = "daobject-language-functions" ]
+    then
+	convert $tempfile -crop 488x4999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
     else
 	convert $tempfile -crop 488x630+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
     fi
