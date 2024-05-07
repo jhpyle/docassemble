@@ -17563,7 +17563,7 @@
     buttons:\n  - Restart: restart"
 "daobject-language-functions":
   "height": !!int |-
-    626
+    2481
   "width": !!int |-
     488
   "yaml": "mandatory: True\nobjects:\n  - user: Individual\n  - person: Individual\n\
@@ -18921,7 +18921,7 @@
     \  Your favorite mushroom is ${ mushroom }.\n  % endif\nmandatory: True"
 "language-functions":
   "height": !!int |-
-    630
+    3058
   "width": !!int |-
     488
   "yaml": "mandatory: True\nobjects:\n  - helper: Thing.using(_point_of_view='1')\n\
