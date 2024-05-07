@@ -3029,7 +3029,7 @@
                          (512, 512),
                          "green")
       myfile.initialize(filename="foo.jpg")
-      im.save(myfile.path())
+      im.save(myfile.path(), format='JPEG')
     ---
     mandatory: True
     question: |
@@ -17561,6 +17561,62 @@
     \ way that the \"Back\" button works. You may wish to\n  use `prevent going back:\
     \ True` strategically throughout your\n  interview so that the user is not confused.\n\
     buttons:\n  - Restart: restart"
+"daobject-language-functions":
+  "height": !!int |-
+    626
+  "width": !!int |-
+    488
+  "yaml": "mandatory: True\nobjects:\n  - user: Individual\n  - person: Individual\n\
+    \  - thing: Thing\n---\nmandatory: True\ncode: |\n  user.name.first = 'John'\n\
+    \  user.name.last = 'Smith'\n  user.gender = 'male'\n  person.name.first = 'Thomas'\n\
+    \  person.name.last = 'Montague'\n  person.gender = 'male'\n  thing.name.text\
+    \ = 'apple'\n---\ninitial: True\ncode: |\n  set_info(user=user)\n---\nmandatory:\
+    \ True\nquestion: |\n  Language functions\nsubquestion: |\n  #### `possessive()`\n\
+    \n  Don't eat the\n  ${ thing.possessive('core') }.\n\n  ${ person.possessive('r\xE9\
+    sum\xE9') }\n  is unimpressive.\n\n  #### `object_possessive()`\n\n  Do you understand\n\
+    \  ${ thing.object_possessive('intrinsic nature') }?\n\n  Have you met\n  ${ person.object_possessive('dog')\
+    \ } yet?\n\n  #### `pronoun()`\n\n  Look at the ${ thing }, but do\n  not stare\
+    \ at ${ thing.pronoun() }.\n\n  Look at ${ person }, but do\n  not stare at ${\
+    \ person.pronoun() }.\n\n  #### `pronoun_objective()`\n\n  Eat the ${ thing },\
+    \ but not too\n  much of ${ thing.pronoun_objective() }.\n\n  May an abundance\
+    \ of ${ thing } be\n  granted unto ${ user.pronoun_objective() }.\n\n  Teach ${\
+    \ person } well, but do not\n  bore ${ person.pronoun_objective() }.\n\n  ####\
+    \ `pronoun_subjective()`\n\n  If you polish the ${ thing },\n  ${ thing.pronoun_subjective()\
+    \ }\n  will be shiny.\n\n  ${ user.pronoun_subjective(capitalize=True) }\n  may\
+    \ win unlimited ${ thing } pie for life\n  if you accept this limited time offer.\n\
+    \n  If you are nice to ${ person },\n  ${ person.pronoun_subjective() } will\n\
+    \  probably not be nice to you in return.\n\n  #### `pronoun_possessive()`\n\n\
+    \  You can squeeze the ${ thing }, but\n  ${ thing.pronoun_possessive('juice')\
+    \ }\n  will get all over your hands.\n\n  You have many fireplaces, but all\n\
+    \  ${ user.pronoun_possessive('chimneys') }\n  are filled up with insulation.\n\
+    \n  ${ person } drives, but\n  ${ person.pronoun_possessive('car') }\n  is a piece\
+    \ of junk.\n\n  #### `is_are_you()`\n\n  ${ thing.is_are_you(capitalize=True)\
+    \ }\n  sweet?\n\n  ${ user.is_are_you(capitalize=True) }\n  sweet?\n\n  #### `yourself_or_name()`\n\
+    \n  Give the ${ thing } to\n  ${ user.yourself_or_name() }.\n\n  Give the ${ thing\
+    \ } to\n  ${ person.yourself_or_name() }.\n\n  #### `itself()`\n\n  The ${ thing\
+    \ } can speak for\n  ${ thing.itself() }.\n\n  You can speak for\n  ${ user.itself()\
+    \ }.\n\n  ${ person } can speak for\n  ${ person.itself() }.\n\n  #### `is_user()`\n\
+    \n  % for item in (thing, user, person):\n    % if item.is_user():\n  ${ item\
+    \ } is the user.\n    % endif\n  % endfor\n\n  #### `do_question()`\n\n  ${ thing.do_question('exist',\
+    \ capitalize=True) }?\n\n  ${ user.do_question('exist', capitalize=True) }?\n\n\
+    \  ${ person.do_question('exist', capitalize=True) }?\n\n  #### `did_question()`\n\
+    \n  ${ user.did_question('invest', capitalize=True) }\n  in real estate?\n\n \
+    \ ${ person.did_question('invest', capitalize=True) }\n  in real estate?\n\n \
+    \ #### `were_question()`\n\n  ${ user.were_question('present', capitalize=True)\
+    \ }\n  at the scene of the crime?\n\n  ${ person.were_question('present', capitalize=True)\
+    \ }\n  at the scene of the crime?\n\n  #### `have_question()`\n\n  ${ user.have_question('followed',\
+    \ capitalize=True) }\n  the news about the ${ thing } festival?\n\n  ${ person.have_question('followed',\
+    \ capitalize=True) }\n  the news about the ${ thing } festival?\n\n  #### `does_verb()`\n\
+    \n  ${ user.pronoun_subjective(capitalize=True) }\n  ${ user.does_verb('eat')\
+    \ }\n  like a pig.\n\n  ${ person.pronoun_subjective(capitalize=True) }\n  ${\
+    \ person.does_verb('eat') }\n  like a pig.\n\n  #### `did_verb()`\n\n  ${ user.pronoun_subjective(capitalize=True)\
+    \ }\n  ${ user.did_verb('go') }\n  to the park.\n\n  ${ person.pronoun_subjective(capitalize=True)\
+    \ }\n  ${ person.did_verb('go') }\n  to the park.\n\n  #### `subjective_pronoun_or_name()`\n\
+    \n  ${ user.subjective_pronoun_or_name(capitalize=True) }\n  will not disappoint\
+    \ me again.\n\n  ${ person.subjective_pronoun_or_name(capitalize=True) }\n  will\
+    \ not disappoint me again.\n\n  #### `pronoun_or_name()`\n\n  I gave the ${ thing\
+    \ } to ${ user.pronoun_or_name() }.\n\n  I gave the ${ thing } to ${ person.pronoun_or_name()\
+    \ }."
 "data-objects":
   "height": !!int |-
     178
@@ -18868,63 +18924,58 @@
     630
   "width": !!int |-
     488
-  "yaml": |-
-    mandatory: True
-    code: |
-      helper.name.text = "Robot"
-      user.name.first = "Ursula"
-      user.name.last = "User"
-      user.gender = 'female'
-      user_alias.name.first = "Ursie"
-      user_alias.name.last = "User"
-      user_alias.gender = 'female'
-      other_user.name.first = "Harold"
-      other_user.name.last = "User"
-      other_user.gender = 'male'
-      users.clear()
-      users.append(user)
-      users.append(other_user)
-      users.gathered = True
-      company.name.text = "ABC, Inc."
-      other_company.name.text = "DEF, Inc."
-      thing.name.text = "apple tree"
-      single_list.clear()
-      single_list.appendObject()
-      single_list[0].name.first = "Fred"
-      single_list[0].name.last = "Smith"
-      single_list[0].gender = 'male'
-      single_list.gathered = True
-      multiple_list.clear()
-      multiple_list.appendObject()
-      multiple_list[-1].name.first = "Sally"
-      multiple_list[-1].name.last = "Jones"
-      multiple_list[-1].gender = 'female'
-      multiple_list.appendObject()
-      multiple_list[-1].name.first = "Peter"
-      multiple_list[-1].name.last = "Roberts"
-      multiple_list[-1].gender = 'male'
-      multiple_list.gathered = True
-      single_dict.clear()
-      single_dict.initializeObject('a')
-      single_dict['a'].name.text = 'Single thing in a dictionary'
-      single_dict.gathered = True
-      multiple_dict.clear()
-      multiple_dict.initializeObject('a')
-      multiple_dict['a'].name.text = 'First thing in a dictionary'
-      multiple_dict.initializeObject('b')
-      multiple_dict['b'].name.text = 'Second thing in a dictionary'
-      multiple_dict.gathered = True
-      single_set.clear()
-      single_set.add('single set item')
-      single_set.gathered = True
-      multiple_set.clear()
-      multiple_set.add('first item in a set')
-      multiple_set.add('second item in a set')
-      multiple_set.gathered = True
-      helpers.clear()
-      helpers.append(company)
-      helpers.append(other_company)
-      helpers.gathered = True
+  "yaml": "mandatory: True\nobjects:\n  - helper: Thing.using(_point_of_view='1')\n\
+    \  - user: Individual\n  - user_alias: Individual.using(_point_of_view='2')\n\
+    \  - other_user: Individual\n  - company: Person\n  - other_company: Person\n\
+    \  - thing: Thing\n  - single_list: DAList.using(object_type=Individual)\n  -\
+    \ multiple_list: DAList.using(object_type=Individual)\n  - users: DAList.using(_point_of_view='2p')\n\
+    \  - helpers: DAList.using(_point_of_view='1p')\n  - single_dict: DADict.using(object_type=Thing)\n\
+    \  - multiple_dict: DADict.using(object_type=Thing)\n  - single_set: DASet\n \
+    \ - multiple_set: DASet\n---\nmandatory: True\ncode: |\n  helper.name.text = \"\
+    Robot\"\n  user.name.first = \"Ursula\"\n  user.name.last = \"User\"\n  user.gender\
+    \ = 'female'\n  user_alias.name.first = \"Ursie\"\n  user_alias.name.last = \"\
+    User\"\n  user_alias.gender = 'female'\n  other_user.name.first = \"Harold\"\n\
+    \  other_user.name.last = \"User\"\n  other_user.gender = 'male'\n  users.clear()\n\
+    \  users.append(user)\n  users.append(other_user)\n  users.gathered = True\n \
+    \ company.name.text = \"ABC, Inc.\"\n  other_company.name.text = \"DEF, Inc.\"\
+    \n  thing.name.text = \"apple tree\"\n  single_list.clear()\n  single_list.appendObject()\n\
+    \  single_list[0].name.first = \"Fred\"\n  single_list[0].name.last = \"Smith\"\
+    \n  single_list[0].gender = 'male'\n  single_list.gathered = True\n  multiple_list.clear()\n\
+    \  multiple_list.appendObject()\n  multiple_list[-1].name.first = \"Sally\"\n\
+    \  multiple_list[-1].name.last = \"Jones\"\n  multiple_list[-1].gender = 'female'\n\
+    \  multiple_list.appendObject()\n  multiple_list[-1].name.first = \"Peter\"\n\
+    \  multiple_list[-1].name.last = \"Roberts\"\n  multiple_list[-1].gender = 'male'\n\
+    \  multiple_list.gathered = True\n  single_dict.clear()\n  single_dict.initializeObject('a')\n\
+    \  single_dict['a'].name.text = 'Single thing in a dictionary'\n  single_dict.gathered\
+    \ = True\n  multiple_dict.clear()\n  multiple_dict.initializeObject('a')\n  multiple_dict['a'].name.text\
+    \ = 'First thing in a dictionary'\n  multiple_dict.initializeObject('b')\n  multiple_dict['b'].name.text\
+    \ = 'Second thing in a dictionary'\n  multiple_dict.gathered = True\n  single_set.clear()\n\
+    \  single_set.add('single set item')\n  single_set.gathered = True\n  multiple_set.clear()\n\
+    \  multiple_set.add('first item in a set')\n  multiple_set.add('second item in\
+    \ a set')\n  multiple_set.gathered = True\n  helpers.clear()\n  helpers.append(company)\n\
+    \  helpers.append(other_company)\n  helpers.gathered = True\n---\ninitial: True\n\
+    code: |\n  set_info(user=user)\n---\nmandatory: True\nquestion: Test of language\
+    \ methods\nsubquestion: |\n  % for item in [helper, user, user_alias, other_user,\
+    \ company, thing, single_list, multiple_list, users, helpers]:\n  Variable name\
+    \ is ${ item.object_name() }.\n  ${ item.object_possessive('string representation',\
+    \ capitalize=True) } is ${ item }.\n  ${ item.is_are_you(capitalize=True) } going\
+    \ to the ball?\n  ${ item.pronoun_possessive('favorite fruit', capitalize=True)\
+    \ } is apple.\n  The apple should be given to ${ item.pronoun() }.\n  The orange\
+    \ should be given to ${ item.pronoun_objective() }.\n  ${ item.pronoun_subjective(capitalize=True)\
+    \ } ${ item.does_verb('belong') }\n  in an apple orchard and\n  ${ item.did_verb('visit')\
+    \ }\n  an orange farm once.\n  ${ item.possessive('favorite vegetable', capitalize=True)\
+    \ } is turnips.\n  % if isinstance(item, DAList):\n  Please fetch ${ item.quantity_noun('apple')\
+    \ }\n  for ${ item }, since there are\n  ${ item.number_as_word() }.\n  % endif\n\
+    \  % if item.is_user():\n  ${ item } is the user.\n  % else:\n  ${ item } is not\
+    \ the user.\n  % endif\n  ${ item.do_question('eat', capitalize=True) } fruit?\n\
+    \  ${ item.did_question('eat', capitalize=True) } mushrooms last Tuesday?\n  ${\
+    \ item.were_question('present', capitalize=True) }\n  at the ball last month?\n\
+    \  ${ item.have_question('befriended', capitalize=True) }\n  the cows in the field?\n\
+    \  The subject is ${ item.subjective_pronoun_or_name() }.\n  The object is ${\
+    \ item.pronoun_or_name() }.\n  ${ item.pronoun_subjective(capitalize=True) }\n\
+    \  ${ item.did_verb('return') }\n  the radishes to ${ item.yourself_or_name()\
+    \ }.\n  ${ item }\n  ${ item.did_verb('return') }\n  the potatoes to ${ item.itself()\
+    \ }.\n  \n  % endfor"
 "life_story":
   "yaml": |-
     template: life_story

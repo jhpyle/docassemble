@@ -4420,54 +4420,165 @@ arguments to the `conjugate()` function of the [pattern.en].
 * `verb_present('helps', '1sg')` returns `help` (first person singular).
 * `verb_present('helps', 'pl')` returns `help` (plural).
 
-# <a name="simplelang"></a>Simple language functions
+## <a name="simplelang"></a><a name="langfuncs"></a>All language-specific functions
 
-The following simple language functions all have the property that if
-the optional argument `capitalize=True` is added, the resulting phrase
-will be capitalized.
+The following is a list of all of the language functions that
+**docassemble** uses. Many of these are very basic functions called by
+[`DAObject`] methods.
 
-* `her('turtle')` returns `her turtle`.
-* `her('turtle', capitalize=True)` returns `Her turtle`.
-* `his('turtle')` returns `his turtle`.
-* `a_in_the_b('cat', 'hat')` returns `cat in the hat`.
-* `do_you('smoke')` returns `do you smoke`.
-* `does_a_b('Fred', 'smoke')` returns `does Fred smoke`.
-* `in_the('house')` returns `in the house`.
-* `of_the('world')` returns `of the world`.
-* `possessify('Fred', 'cat')` returns `Fred's cat`.
-* `possessify_long('Fred', 'cat')` returns `the cat of Fred`.
-* `the('apple')` returns `the apple`.
+* `a_in_the_b('cat', 'hat')` returns `'cat in the hat'`.
+* `a_preposition_b('fish', 'sea')` returns `'fish in the sea'`.
+* `a_preposition_b(plaintiff, 'James')` returns `'Thomas Smith son of James'` if `plaintiff` when reduced to text is `'Thomas Smith'` and the `preposition` attribute of `plaintiff` is 'son of'.
+* `add_separators()` is described [above](#add_separators).
+* `am_i()` returns `'am I'`.
+* `are_we()` returns `'are we'`.
+* `are_word('fruit')` returns `'are fruit'`.
+* `are_you()` returns `'are you'`.
+* `are_you_plural()` returns `'are you'`.
+* `capitalize()` is described [above](#capitalize).
+* `comma_and_list()` is described [above](#comma_and_list).
+* `comma_list()` is described [above](#comma_list).
+* `currency()` is described [above](#currency).
+* `currency_symbol()` is described [above](#currency_symbol).
+* `did_a_b('Fred', 'eat')` returns `'did Fred eat'`.
+* `did_a_b_plural('Fred', 'eat')` returns `'did Fred eat'`.
+* `did_i()` returns `'did I'`.
+* `did_we()` returns `'did we'`.
+* `did_you()` returns `'did you'`.
+* `did_you_plural()` returns `'did you'`.
+* `do_a_b('pigs', 'fly')` returns `'do pigs fly'`.
+* `do_i()` returns `'do I'`.
+* `do_we()` returns `'do we'`.
+* `do_you('smoke')` returns `'do you smoke'`.
+* `do_you_plural()` returns `'do you'`.
+* `does_a_b('Fred', 'smoke')` returns `'does Fred smoke'`.
+* `genderless_objective()` returns `'them'`.
+* `genderless_self()` returns `'themself'`.
+* `genderless_subjective()` returns `'they'`.
+* `has_a_b('Fred', 'left')` returns `'has Fred left'`.
+* `have_a_b('elephants', 'invented')` returns `'have elephants invented'`.
+* `have_i()` returns `'have I'`.
+* `have_we()` returns `'have we'`.
+* `have_you()` returns `'have you'`.
+* `have_you_plural()` returns `'have you'`.
+* `he_subjective()` returns `'he'`.
+* `her('turtle')` returns `'her turtle'`.
+* `her('turtle', capitalize=True)` returns `'Her turtle'`.
+* `her_objective()` returns `'her'`.
+* `herself()` returns `'himself'`.
+* `him_objective()` returns `'him'`.
+* `himself()` returns `'himself'`.
+* `his('turtle')` returns `'his turtle'`.
+* `i_subjective()` returns `'I'`.
+* `in_the('house')` returns `'in the house'`.
+* `indefinite_article()` is described [above](#indefinite_article).
+* `is_word('Thomas')` returns `'is Thomas'`.
+* `it_objective()` returns `'it'`.
+* `it_subjective()` returns `'it'`.
+* `its()` returns `'its'`.
+* `itself()` returns `'itself'`.
+* `me_objective()` returns `'me'`.
+* `my_possessive('fish')` returns `'my fish'`.
+* `myself()` returns `'myself'`.
+* `name_suffix()` is described [above](#name_suffix).
+* `nice_number()` is described [above](#nice_number).
+* `noun_plural()` is described [above](#noun_plural).
+* `noun_singular()` is described [above](#noun_singular).
+* `of_the('world')` returns `'of the world'`.
+* `ordinal()` is described [above](#ordinal).
+* `ordinal_number()` is described [above](#ordinal_number).
+* `our_possessive('common interest')` returns `'our common interest'`.
+* `ourselves()` returns `'ourselves'`.
+* `period_list()` is described [above](#period_list).
+* `possessify('Fred', 'cat')` returns `'Fred's cat'`.
+* `possessify_long('Fred', 'cat')` returns `'the cat of Fred'`.
+* `quantity_noun()` is described [above](#quantity_noun).
+* `salutation()` is described [above](#salutation).
+* `she_subjective()` returns `'she'`.
+* `some('beads')` returns `'some beads'`.
+* `the('apple')` returns `'the apple'`.
+* `their('fruit')` returns `'their fruit'`.
+* `them_objective()` returns `'them'`.
+* `themselves()` returns `'themselves'`.
+* `these('tomatoes')` returns `'these tomatoes'`.
+* `they_subjective()` returns `'they'`.
+* `this('place')` returns `'this place'`.
+* `title_case()` is described [above](#title_case).
+* `us_objective()` returns `'us'`.
+* `verb_past()` is described [above](#verb_past).
+* `verb_present()` is described [above](#verb_past).
+* `was_a_b('Fred', 'here')` returns `'was Fred here'`.
+* `was_i('here')` returns `'was I here'`.
+* `we_subjective()` returns `'we'`.
+* `were_a_b('celebrities', 'present')` returns `'were celebrities present'`.
+* `were_a_b_plural('celebrities', 'present')` returns `'were celebrities present'`.
+* `were_we('cool')` returns `'were we cool'`.
+* `were_you('innocent')` returns `'were you innocent'`.
+* `were_you_plural('innocent')` returns `'were you innocent'`.
+* `you_objective()` returns `'you'`.
+* `you_objective_plural()` returns `'you'`.
+* `you_subjective()` returns `'you'`.
+* `you_subjective_plural()` returns `'you'`.
+* `your('house')` returns `'your house'`.
+* `your_plural('house')` returns `'your house'`.
+* `yourself()` returns `'yourself'`.
+* `yourselves()` returns `'yourselves'`.
 
-Note that unlike other functions, these functions are *not* available
-for use within interviews.
+These functions have the property that if the optional argument
+`capitalize=True` is added, the resulting phrase will be capitalized.
 
-These functions are intended to be used from within [Python modules],
-where you can import them by doing:
+Note that most of the language functions are not imported into the
+namespace of the Python environment in which the code of your YAML
+operates. (The functions explained in their own subsections above are
+available for use in your YAML.) Likewise, if you do `from
+docassemble.base.util import *`, most of these names will not be
+imported, because they are not automatically exported by
+[`docassemble.base.util`].
+
+These functions may be called from [Python modules], where you can
+import them specifically by doing:
 
 {% highlight python %}
 from docassemble.base.util import his, her
 {% endhighlight %}
 
-Note that doing `from docassemble.base.util import *` will not work,
-because these functions are not automatically exported by
-[`docassemble.base.util`].
+**docassemble** only defines English versions of these functions, but
+you can create custom versions of the functions for other languages.
 
-You can customize the functions for different languages:
+For example, suppose you wanted the `.pronoun_possessive()` method of the
+`Individual` class to work appropriately in French. You could create
+a module like the following.
 
 {% highlight python %}
-def her_fr(word, capitalize=False):
-  if capitalize:
-    return 'Sa ' + word
+import docassemble.base.util
+from pylexique import Lexique383
+
+LEXIQUE = Lexique383()
+
+def his_her_fr(the_word, capitalize=False, **kwargs):
+  the_word = str(the_word).strip()
+  word_to_look_up = the_word.lower()
+  try:
+    result = LEXIQUE.lexique[word_to_look_up]
+    if not isinstance(result, list):
+      result = [result]
+    result = [item for item in result where item.cgram == 'NOM']
+    if len(result) == 0:
+      raise KeyError()
+  except KeyError:
+    if capitalize:
+      return 'Son ' + the_word
+    return 'son ' + the_word
+  if result[0].genre == 'f':
+    output = 'sa ' + the_word
   else:
-    return 'sa ' + word
-docassemble.base.util.update_language_function('fr', 'her', her_fr)
-{% endhighlight %}
+    output = 'son ' + the_word
+  if capitalize:
+    return docassemble.base.util.capitalize(output)
+  return output
 
-Or, you can accomplish the same result with a handy function generator
-from [`docassemble.base.util`]:
-
-{% highlight python %}
-docassemble.base.util.update_language_function('fr', 'her', docassemble.base.util.prefix_constructor('sa '))
+docassemble.base.util.update_language_function('fr', 'her', his_her_fr)
+docassemble.base.util.update_language_function('fr', 'his', his_her_fr)
 {% endhighlight %}
 
 # <a name="formfilling"></a>Helper functions for form filling
