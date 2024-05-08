@@ -4076,7 +4076,7 @@ If you set the `name` attribute of a `Thing` to text, the
 An `Event` is a type of [`DAObject`] with the following attributes
 initialized by default:
 
-* `address`: an [`Address`] object
+* `address`: a [`City`] object
 * `location`: a [`LatitudeLongitude`] object
 
 There may be many other attributes you want to use for an `Event`, but
