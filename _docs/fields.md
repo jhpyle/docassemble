@@ -1328,7 +1328,7 @@ $(document).on('daPageLoad', function(){
   then the variable will be set to the output of the `.empty()` class
   method.
 * `is_object` - the default is `False`.  If you have a `transform()`
-  class method that returns something that cannot be defined with with
+  class method that returns something that cannot be defined with
   `repr()`, set this to `True`.
 * `parameters` - the default is `[]`.  If you want to pass parameters
   from the YAML to `data` attributes of the resulting `<input>`, you

@@ -4,7 +4,9 @@
 .highlight {
     // background: #fff;
     @extend %vertical-rhythm;
-
+    pre code {
+	color: rgb(33, 37, 41);
+    }
     .c     { color: #998; font-style: italic } // Comment
     .err   { color: #a61717; background-color: #e3d2d2 } // Error
     .k     { font-weight: bold } // Keyword
