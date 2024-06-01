@@ -635,7 +635,7 @@ if DEBUG_BOOT:
 initial_dict = {'_internal': {'session_local': {}, 'device_local': {}, 'user_local': {}, 'dirty': {}, 'progress': 0, 'tracker': 0, 'docvar': {}, 'doc_cache': {}, 'steps': 1, 'steps_offset': 0, 'secret': None, 'informed': {}, 'livehelp': {'availability': 'unavailable', 'mode': 'help', 'roles': [], 'partner_roles': []}, 'answered': set(), 'answers': {}, 'objselections': {}, 'starttime': None, 'modtime': None, 'accesstime': {}, 'tasks': {}, 'gather': [], 'event_stack': {}, 'misc': {}}, 'url_args': {}, 'nav': docassemble.base.functions.DANav()}
 # else:
 #    initial_dict = {'_internal': {'tracker': 0, 'steps_offset': 0, 'answered': set(), 'answers': {}, 'objselections': {}}, 'url_args': {}}
-if 'initial_dict' in daconfig:
+if 'initial dict' in daconfig:
     initial_dict.update(daconfig['initial dict'])
 docassemble.base.parse.set_initial_dict(initial_dict)
 

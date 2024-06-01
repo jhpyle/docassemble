@@ -961,6 +961,9 @@ def load(**kwargs):
     if not isinstance(daconfig['ldap login'], dict):
         config_error("ldap login must be structured as a dictionary")
         daconfig['ldap login'] = {}
+    if 'initial dict' in daconfig and not isinstance(daconfig['initial dict'], dict):
+        config_error("initial dict must be structured as a dictionary")
+        del daconfig['initial dict']
     if daconfig.get('auto resume interview', None) is not None:
         daconfig['show interviews link'] = False
     if 'use minio' not in daconfig:

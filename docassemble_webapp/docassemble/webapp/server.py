@@ -7620,7 +7620,7 @@ def index(action_argument=None, refer=None):
                         data = repr(test_data)
                 else:
                     try:
-                        if not info['class'].validate(raw_data):
+                        if not info['class'].call_validate(raw_data, key):
                             raise DAValidationError(word("You need to enter a valid value."))
                     except DAValidationError as err:
                         validated = False
@@ -7630,7 +7630,7 @@ def index(action_argument=None, refer=None):
                             field_error[orig_key] = word(str(err))
                         new_values[key] = repr(raw_data)
                         continue
-                    test_data = info['class'].transform(raw_data)
+                    test_data = info['class'].call_transform(raw_data, key)
                     if is_object:
                         user_dict['__DANEWOBJECT'] = test_data
                         data = '__DANEWOBJECT'
@@ -7750,14 +7750,20 @@ def index(action_argument=None, refer=None):
                 continue
             elif known_datatypes[orig_key] in docassemble.base.functions.custom_types:
                 info = docassemble.base.functions.custom_types[known_datatypes[orig_key]]
+                if info['is_object']:
+                    is_object = True
                 if set_to_empty:
                     if info['skip_if_empty']:
                         continue
                     test_data = info['class'].empty()
-                    data = repr(test_data)
+                    if is_object:
+                        user_dict['__DANEWOBJECT'] = raw_data
+                        data = '__DANEWOBJECT'
+                    else:
+                        data = repr(test_data)
                 else:
                     try:
-                        if not info['class'].validate(raw_data):
+                        if not info['class'].call_validate(raw_data, key):
                             raise DAValidationError(word("You need to enter a valid value."))
                     except DAValidationError as err:
                         validated = False
@@ -7767,8 +7773,12 @@ def index(action_argument=None, refer=None):
                             field_error[orig_key] = word(str(err))
                         new_values[key] = repr(raw_data)
                         continue
-                    test_data = info['class'].transform(raw_data)
-                    data = repr(test_data)
+                    test_data = info['class'].call_transform(raw_data, key)
+                    if is_object:
+                        user_dict['__DANEWOBJECT'] = test_data
+                        data = '__DANEWOBJECT'
+                    else:
+                        data = repr(test_data)
             elif known_datatypes[orig_key] == 'raw':
                 if raw_data == "None" and set_to_empty is not None:
                     test_data = None

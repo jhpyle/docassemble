@@ -2086,7 +2086,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         else:
                             the_icon = ''
                             if pair.get('color', None):
-                                btn_class = ' ' + BUTTON_STYLE + ' btn-' + pair['color'].strip()
+                                btn_class = ' ' + BUTTON_STYLE + pair['color'].strip()
                             else:
                                 btn_class = ' ' + BUTTON_STYLE + continue_button_color
                         if pair.get('css class', None):
@@ -2110,7 +2110,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         else:
                             the_icon = ''
                             if choice.get('color', None):
-                                btn_class = ' ' + BUTTON_STYLE + ' btn-' + choice['color'].strip()
+                                btn_class = ' ' + BUTTON_STYLE + choice['color'].strip()
                             else:
                                 btn_class = ' ' + BUTTON_STYLE + continue_button_color
                         if choice.get('css class', None):
@@ -2127,7 +2127,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     else:
                         css_class = ''
                     if choice.get('color', None):
-                        btn_class = ' ' + BUTTON_STYLE + ' btn-' + choice['color'].strip()
+                        btn_class = ' ' + BUTTON_STYLE + choice['color'].strip()
                         auto_color = False
                     else:
                         btn_class = ' ' + BUTTON_STYLE + continue_button_color
@@ -2667,7 +2667,7 @@ def input_for(status, field, embedded=False, floating_label=None):
         defaultvalue_set = True
         if hasattr(field, 'datatype') and field.datatype in custom_types:
             try:
-                defaultvalue = custom_types[field.datatype]['class'].default_for(status.defaults[field.number])
+                defaultvalue = custom_types[field.datatype]['class'].call_default_for(status.defaults[field.number], from_safeid(field.saveas))
             except:
                 defaultvalue_set = False
                 defaultvalue = None

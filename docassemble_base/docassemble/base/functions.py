@@ -5939,18 +5939,37 @@ class CustomDataTypeRegister(type):
 
 
 class CustomDataType(metaclass=CustomDataTypeRegister):
+    include_variable_name = False
 
     @classmethod
     def validate(cls, item):  # pylint: disable=unused-argument
         return True
 
     @classmethod
+    def call_validate(cls, item, variable_name):  # pylint: disable=unused-argument
+        if cls.validate.__code__.co_argcount == 3:
+            return cls.validate(item, variable_name)
+        return cls.validate(item)
+
+    @classmethod
     def transform(cls, item):
         return item
 
     @classmethod
+    def call_transform(cls, item, variable_name):
+        if cls.transform.__code__.co_argcount == 3:
+            return cls.transform(item, variable_name)
+        return cls.transform(item)
+
+    @classmethod
     def default_for(cls, item):
         return str(item)
+
+    @classmethod
+    def call_default_for(cls, item, variable_name):
+        if cls.default_for.__code__.co_argcount == 3:
+            return cls.default_for(item, variable_name)
+        return cls.default_for(item)
 
     @classmethod
     def empty(cls):
