@@ -1524,6 +1524,11 @@ be substituted for any fields for which a value cannot be determined
 due to a variable being undefined.  You can also set `skip undefined`
 to a Python expression that evaluates to a true or false value.
 
+If your template contains computations, using `skip undefined: True`
+may lead to bugs that are difficult to track down, since variables
+that should have certain data types will be `Undefined` and you will
+get strange error messages.
+
 The `skip undefined` setting should only be used if the document does
 not need to be robust.  For example, it could be used to show the user
 an intermediate draft of a PDF document.  It should not be used as a
