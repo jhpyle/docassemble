@@ -92,7 +92,7 @@ install_requires = [
     "exceptiongroup==1.2.0",
     "Flask==3.0.0",
     "flask-babel==4.0.0",
-    "Flask-Cors==4.0.0",
+    "Flask-Cors==4.0.1",
     "Flask-Login==0.6.3",
     "Flask-Mail==0.9.1",
     "Flask-SocketIO==5.3.6",
