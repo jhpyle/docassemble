@@ -7630,7 +7630,7 @@ def index(action_argument=None, refer=None):
                             field_error[orig_key] = word(str(err))
                         new_values[key] = repr(raw_data)
                         continue
-                    test_data = info['class'].call_transform(raw_data, key)
+                    test_data = info['class'].call_transform(raw_data, sub_indices(key, user_dict))
                     if is_object:
                         user_dict['__DANEWOBJECT'] = test_data
                         data = '__DANEWOBJECT'
@@ -7762,8 +7762,9 @@ def index(action_argument=None, refer=None):
                     else:
                         data = repr(test_data)
                 else:
+                    key_tr = sub_indices(key, user_dict)
                     try:
-                        if not info['class'].call_validate(raw_data, key):
+                        if not info['class'].call_validate(raw_data, key_tr):
                             raise DAValidationError(word("You need to enter a valid value."))
                     except DAValidationError as err:
                         validated = False
@@ -7773,7 +7774,7 @@ def index(action_argument=None, refer=None):
                             field_error[orig_key] = word(str(err))
                         new_values[key] = repr(raw_data)
                         continue
-                    test_data = info['class'].call_transform(raw_data, key)
+                    test_data = info['class'].call_transform(raw_data, key_tr)
                     if is_object:
                         user_dict['__DANEWOBJECT'] = test_data
                         data = '__DANEWOBJECT'

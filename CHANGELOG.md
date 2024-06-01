@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.4.105] - 2024-06-01
+
+### Changed
+- The `validate()`, `transform()`, and `default_for()` methods of a
+  `CustomDataType` are now called with an additional positional
+  parameter that is the name of the variable as a string. This change
+  is backwards-compatible, so if your method does not expect the
+  additional positional parameter, it is not called with the
+  additional positional parameter.
+- When using a `datatype` that references a `CustomDataType`, `data`
+  attributes will be added to the `<input>` element containing the
+  values of field modifiers `minlength`, `maxlength`, `min`, `max`,
+  `step`, `scale`, `currency symbol`, and `field metadata`, if those
+  modifiers are present. The `field metadata` are available as a JSON
+  string in the `field-metadata` data attribute.
+### Fixed
+- Bug that prevented the Configuration directive `initial dict` from
+  functioning.
+- Added `aria-required` and moved `role="radiogroup"` for
+  accessibility compliance.
+- Bug with `button style` Configuration parameter.
+
 ## [1.4.104] - 2024-05-06
 
 ### Changed
