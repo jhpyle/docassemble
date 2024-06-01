@@ -571,11 +571,11 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
         enclosing_type = 'fieldset'
         label_type = 'legend'
         if required:
-            aria_req = ' aria-required="true"'
+            aria_req = 'aria-required="true" '
         else:
             aria_req = ''
         if use_fieldset == 1:
-            aria_req += ' role="radiogroup"'
+            aria_req += 'role="radiogroup" '
     else:
         enclosing_type = 'div'
         label_type = 'label'
@@ -3521,6 +3521,12 @@ def input_for(status, field, embedded=False, floating_label=None):
                 input_type = custom_types[field.datatype]['input_type']
                 extra_class += ' ' + custom_types[field.datatype]['input_class']
                 custom_parameters = {}
+                if hasattr(field, 'extras'):
+                    for param_type in ('minlength', 'maxlength', 'min', 'max', 'step', 'scale', 'currency symbol'):
+                        if param_type in status.extras and field.number in status.extras[param_type]:
+                            custom_parameters[param_type] = status.extras[param_type][field.number]
+                    if 'field metadata' in status.extras and field.number in status.extras['field metadata']:
+                        custom_parameters['field-metadata'] = json.dumps(status.extras['field metadata'][field.number])
                 if hasattr(field, 'extras') and 'custom_parameters' in field.extras:
                     for parameter, parameter_value in field.extras['custom_parameters'].items():
                         custom_parameters[parameter] = parameter_value

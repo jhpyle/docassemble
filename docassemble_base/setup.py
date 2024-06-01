@@ -194,7 +194,7 @@ install_requires = [
     "regex==2023.10.3",
     "reportlab==4.0.8",
     "repoze.lru==0.7",
-    "requests==2.32.2",
+    "requests==2.32.3",
     "requests-oauthlib==1.3.1",
     "requests-toolbelt==1.0.0",
     "rfc3986==2.0.0",
