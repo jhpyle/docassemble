@@ -1242,14 +1242,14 @@ $.validator.addMethod('ssn', function(value, element, params){
     jq_rule = 'ssn'
     jq_message = 'You need to enter a valid SSN.'
     @classmethod
-    def validate(cls, item):
+    def validate(cls, item, variable_name, data):
         item = str(item).strip()
         m = re.search(r'^[0-9]{3}-?[0-9]{2}-?[0-9]{4}$', item)
         if item == '' or m:
             return True
         raise DAValidationError("A SSN needs to be in the form xxx-xx-xxxx")
     @classmethod
-    def transform(cls, item):
+    def transform(cls, item, variable_name, data):
         item = str(item).strip()
         m = re.search(r'^([0-9]{3})-?([0-9]{2})-?([0-9]{4})$', item)
         if m:
@@ -1349,52 +1349,116 @@ $(document).on('daPageLoad', function(){
 The available class methods are:
 
 * `validate()` - the `validate()` class method is used for server-side
-  input validation.  The raw value from the POST request is passed to
-  this method as the first positional parameter.  The method should
-  return `True` if the value is valid.  If the value is invalid, the
+  input validation. The raw value from the POST request is passed to
+  this method as the first positional parameter. The second
+  positional parameter is the name of the variable, as a string. The
+  third positional parameter is a dictionary containing the parameters
+  specified in the YAML (see `parameters`, etc., above). The method should
+  return `True` if the value is valid. If the value is invalid, the
   method should raise a `DAValidationError` exception with a message.
   The message given to `DAValidationError` will pass through the
   [`word()`] function before it is presented to the user, so you can
   use the [`words`] directive in the [Configuration] to support
-  multiple languages.  If the method returns a false value, the error
+  multiple languages. If the method returns a false value, the error
   message will be "You need to enter a valid value."  If a
   `validate()` class method is not provided, no input validation will
   be performed.
 - `transform` - the `transform()` class method is used to perform any
   necessary transformations on the data received from the browser.
   The raw value from the POST request is passed to this method as the
-  first positional parameter.  The method should return the
-  transformed value.  In the example above, the `transform()` class
-  method ensures that Social Security numbers that are entered without
-  hyphens (which are accepted) will contain hyphens when the variable
-  `user.ssn` is actually defined.  If a `transform()` class method is
-  not provided, the variable will be set to the raw value from the
-  POST request (a string).
+  first positional parameter. The second positional parameter is the
+  name of the variable, as a string. The third positional parameter is
+  a dictionary containing the parameters specified in the YAML (see
+  `parameters`, etc., above). The method should return the transformed
+  value. In the example above, the `transform()` class method ensures
+  that Social Security numbers that are entered without hyphens (which
+  are accepted) will contain hyphens when the variable `user.ssn` is
+  actually defined. If a `transform()` class method is not provided,
+  the variable will be set to the raw value from the POST request (a
+  string).
 - `default_for` - the `default_for()` method is used when the user
-  visits a `question` when the variable is already defined.  If the
+  visits a `question` when the variable is already defined. If the
   output of your `transform` method is not suitable for placing into
   the field as the default value, you can define a `default_for()`
   class method that returns the text that should be inserted into the
-  field.  The `default_for()` class method takes a single positional
-  parameter, which is the value of the variable.  For example, if your
-  `transform()` method returns a [Python object], you can write a
-  `default_for()` class method that takes the object as its parameter
-  and returns plain text (an `str`) that is a suitable default value
-  to insert into the field.  If you do not define a `default_for()`
-  class method, an attempt will be made to obtain a default value by
-  running `str()` on the variable.
-- `empty` - this is rarely used, so you can probably ignore it.  The
+  field. The first positional parameter for the `default_for()` class
+  method is the value of the variable. The second positional parameter
+  is the name of the variable, as a string. The third positional
+  parameter is a dictionary containing the parameters specified in the
+  YAML (see `parameters`, etc., above). If your `transform()` method
+  returns a [Python object], you can write a `default_for()` class
+  method that takes the object as the first positional parameter and
+  returns plain text (an `str`) that is a suitable default value to
+  use for the HTML field. If you do not define a `default_for()` class
+  method, an attempt will be made to obtain a default value by running
+  `str()` on the variable.
+- `empty` - this is rarely used, so you can probably ignore it. The
   `empty` class method is used when `skip_if_empty` is
-  `False`.  Instead of not defining the variable, **docassemble** will
-  set the value of the variable to the output of this method.  If no
+  `False`. Instead of not defining the variable, **docassemble** will
+  set the value of the variable to the output of this method. If no
   `empty()` method is provided, the value `None` is used.
 
-If you provide client-side input validation, it is also a good idea to
-provide server-side validation, even though it might never be
-triggered.  There are ways that users might accidentally or
-deliberately bypass client-side input validation.  So even if you
-have a [jQuery Validation Plugin] rule that works, it is a good idea
-to include a `validate()` class method.
+Here is an example that demonstrates the use of the `transform()`,
+`validate()`, and `default_for()` methods.
+
+{% highlight python %}
+from docassemble.base.util import CustomDataType, Thing, DAValidationError, word
+
+class CustomFruit(CustomDataType):
+    name = 'customfruit'
+    container_class = 'da-fruit-container'
+    input_class = 'da-fruit'
+    is_object = True
+    parameters = ['seeds']
+    code_parameters = ['max words']
+    @classmethod
+    def transform(cls, item, variable_name, data):
+        new_object = Thing(variable_name)
+        new_object.name.text = item
+        new_object.seeds = data.get('seeds', 0)
+        return new_object
+    @classmethod
+    def validate(cls, item, variable_name, data):
+        max_words = data.get('max words', 2)
+        if len(item.split()) <= max_words:
+            return True
+        raise DAValidationError(word("You cannot write more than %d words") % (max_words, ))
+    @classmethod
+    def default_for(cls, item, variable_name, data):
+        if isinstance(item, Thing):
+            return item.name.text
+        return str(item)
+{% endhighlight %}
+
+An example of using this data type would be:
+
+{% highlight yaml %}
+question: |
+  Tell me about the fruit.
+fields:
+  - Fruit name: favorite_fruit
+    datatype: customfruit
+    max words: 3
+    seeds: 10
+{% endhighlight %}
+
+The `favorite_fruit` variable will become a `Thing` object. The value
+of the HTML `<input>` element becomes the `.name.text` attribute of
+the object. In addition, the `.seeds` attribute of the object is
+defined using the custom parameter `seeds`. The validation method
+limits the number of words that can be used, based on the parameter
+`max words`, which can contain a Python expression.
+
+Note that the `default_for()` and `transform()` objects are
+complementary; the `default_for()` converts a `Thing` object to a
+string, and `transform()` converts a string into a `Thing` object.
+The `default_for()` method needs to be flexible because the default
+value of the field that is passed to the `default_for()` method may be
+plain text or a `Thing` object, depending on the circumstances. The
+value will be a string if a `default` field modifier is used (which is
+always treated as a Mako expression that returns a string), or if
+there is a validation error, in which case the default value becomes
+the string that was found invalid.
 
 Python classes, when loaded into the Python web application, are
 loaded globally across all threads of the server; they are not loaded

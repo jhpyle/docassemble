@@ -2741,7 +2741,13 @@ Python code is executing:
     instructed to produce a [PDF/A file].
   * `attachment.tagged` - indicates whether the attachment has been
     instructed to produce a [tagged PDF].
-
+* `request_url` - a dictionary containing the elements of the URL of
+  the currently executing request. Note that this URL does not always
+  match the URL that the user sees in the navigation bar in the
+  browser, because many requests are Ajax requests. The dictionary
+  keys are `args`, `base_url`, `full_path`, `path`, `scheme`, `url`,
+  `url_root`. These come directly from the [Flask Request object].
+  
 ## <a name="user_info"></a>user_info()
 
 The `user_info()` function will return an object with the following
@@ -2760,9 +2766,10 @@ attributes describing the current user:
 * `language` the user's language, if set (an [ISO-639-1] or
   [ISO-639-3] code)
 * `timezone` the user's time zone, in a format like `America/New_York`
-
-All of these attributes are set by the user on the [Profile
-page]. They can also be set by the [`set_user_info()`] function.
+* `privileges` a list of the user's privileges; same result as the
+  [`user_privileges()`] function
+* `permissions` a list of special permissions allowed to the user
+  based on the user's privileges.
 
 For example:
 
@@ -2775,9 +2782,20 @@ yesno: email_is_best
 ---
 {% endhighlight %}
 
+The `first_name`, `last_name`, `country`, `subdivision_first`,
+`subdivision_second`, `subdivision_third`, `organization`, `language`,
+and `timezone` attributes can be set by the user on the [Profile
+page]. They can also be set by the [`set_user_info()`] function. The
+`permissions` are controlled by the [`permissions`] in the
+[Configuration]. The `privileges` of a user are controlled by a user
+with `admin` privileges on the [User List page] or using the
+[`set_user_info()`] function.
+
 If the user is not logged in, the first name will be `'Anonymous'`,
-the last name will be `'User'`, and the other attributes will be
-`None`.
+the last name will be `'User'`, the `privileges` will be `['user']`,
+the `permissions` will be `[]` (unless the [Configuration] confers
+additional permissions to an anonymous user), and the other attributes
+will be `None`.
 
 ## <a name="set_save_status"></a>set_save_status()
 
@@ -8708,6 +8726,7 @@ Note that you should only attach a `daPageLoad` listener from a
 [HTTPS]: {{ site.baseurl }}/docs/docker.html#https
 [QR code]: https://en.wikipedia.org/wiki/QR_code
 [Profile page]: {{ site.baseurl }}/docs/users.html#profile
+[User List page]: {{ site.baseurl }}/docs/users.html#user_list
 [`task_performed()`]: #task_performed
 [`task_not_yet_performed()`]: #task_not_yet_performed
 [`mark_task_as_performed()`]: #mark_task_as_performed
@@ -9074,3 +9093,6 @@ Note that you should only attach a `daPageLoad` listener from a
 [`update references`]: {{ site.baseurl }}/docs/documents.html#update references
 [PDF/A file]: {{ site.baseurl }}/docs/documents.html#pdfa
 [tagged PDF]: {{ site.baseurl }}/docs/documents.html#tagged pdf
+[`user_privileges()`]: #user_privileges
+[`permissions`]: {{ site.baseurl }}/docs/config.html#permissions
+[Flask Request object]: https://tedboy.github.io/flask/generated/generated/flask.Request.html

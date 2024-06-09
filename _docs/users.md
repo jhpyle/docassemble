@@ -106,6 +106,9 @@ fields, including:
 * Third subdivision (e.g., municipality)
 * Organization (e.g., company, non-profit organization)
 
+The [`user profile fields`] directive in the [Configuration] controls
+which fields are editable by the user.
+
 ## <a name="user_list">User List</a>
 
 Administrators can go to the "User List" from the menu.  From here,
@@ -322,3 +325,4 @@ will run after [`imports`] and [`modules`] blocks, but before
 [API]: {{ site.baseurl }}/docs/api.html
 [`permissions`]: {{ site.baseurl }}/docs/config.html#permissions
 [Configuration]: {{ site.baseurl }}/docs/config.html
+[`user profile fields`]: {{ site.baseurl }}/docs/config.html#user profile fields

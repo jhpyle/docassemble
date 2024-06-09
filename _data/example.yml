@@ -4489,6 +4489,79 @@
     \ |\n  Here is your document!\n  \n  ${ complaint }\n---\nattachment:\n  filename:\
     \ complaint\n  name: Complaint\n  variable name: complaint\n  content: |\n   \
     \ This is a complaint.\n\n    Blah, blah, blah\n  valid formats:\n    - pdf"
+"document-manual":
+  "height": !!int |-
+    495
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: Your document is ready.
+    attachment:
+      - name: A merged document
+        filename: report
+        manual:
+          pdf: pdf_concatenate(document_one, document_two)
+    mandatory: True
+    ---
+    attachment:
+      variable name: document_one
+      content: |
+        Hello, world!
+    ---
+    attachment:
+      variable name: document_two
+      content: |
+        Goodbye, world!
+"document-manual-code":
+  "height": !!int |-
+    495
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: Your document is ready.
+    attachment:
+      - name: A merged document
+        filename: report
+        manual code: |
+          {'pdf': pdf_concatenate(document_one, document_two)}
+    mandatory: True
+    ---
+    attachment:
+      variable name: document_one
+      content: |
+        Hello, world!
+    ---
+    attachment:
+      variable name: document_two
+      content: |
+        Goodbye, world!
+"document-manual-jpg":
+  "height": !!int |-
+    471
+  "width": !!int |-
+    488
+  "yaml": |-
+    imports:
+      - PIL
+    ---
+    objects:
+      - my_image: DAFile
+    ---
+    sets: my_image.initialized
+    code: |
+      im = PIL.Image.new("RGB",
+                         (512, 512),
+                         "green")
+      my_image.initialize(filename="green.jpg")
+      im.save(my_image.path(), format='JPEG')
+    ---
+    question: Your document is ready.
+    attachment:
+      - name: A green square
+        filename: greensquare
+        manual:
+          jpg: my_image
+    mandatory: True
 "document-markup":
   "height": !!int |-
     639
@@ -4878,7 +4951,7 @@
     \ |\n  Who is your favorite person?\nfields:\n  - Favorite: favorite\n    code:\
     \ person\n---\nmandatory: True\nquestion: |\n  All done\nsubquestion: |\n  The\
     \ people are ${ person }.\n\n  Your favorite is ${ favorite }.\n  \n  ${ people_table\
-    \ }\n  \n  [<i class=\"fas fa-plus-circle\"></i> Add another person](${ url_action('person_add')\
+    \ }\n  \n  [<i class=\"fa-solid fa-plus-circle\"></i> Add another person](${ url_action('person_add')\
     \ })\n---\ntable: people_table\nrows: person\ncolumns:\n  - Name: |\n      row_item.name.full()\n\
     \  - Fruit: |\n      row_item.favorite_fruit\n  - Action: |\n      '[:pencil-alt:]('\
     \ + url_action(row_item.instanceName + '.review') + ')&nbsp;&nbsp;&nbsp;&nbsp;'\

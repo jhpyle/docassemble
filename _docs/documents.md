@@ -564,7 +564,7 @@ features can be lost in the process of concatenation.)
 The `docx template file` feature relies heavily on the [Python]
 package known as [`python-docx-template`].  This package uses the
 [Jinja2] templating system to indicate fields in the DOCX file and
-logic based on Python expressions.  [Jinja2] is different from the
+logic based on [Python expressions].  [Jinja2] is different from the
 [Mako] templating system, which **docassemble** primarily uses, but it
 serves the same general purpose.
 
@@ -1079,7 +1079,7 @@ prefix, `{% raw %}{{r ... }}{% endraw %}`.
 
 ## <a name="filters"></a>Jinja2 filters
 
-[Jinja2] does not allow you to write every kind Python expression, the
+[Jinja2] does not allow you to write every kind [Python expression], the
 way that [Mako] does; there are limitations, such as not being able to
 refer to certain built-in names like `None`.  [Jinja2] allows you to
 do sophisticated things, however, but it encourages the use of
@@ -1522,7 +1522,7 @@ some of the variables needed for the fields are undefined, set `skip
 undefined` to `True`.  If `skip undefined` is true, then blanks will
 be substituted for any fields for which a value cannot be determined
 due to a variable being undefined.  You can also set `skip undefined`
-to a Python expression that evaluates to a true or false value.
+to a [Python expression] that evaluates to a true or false value.
 
 If your template contains computations, using `skip undefined: True`
 may lead to bugs that are difficult to track down, since variables
@@ -1713,6 +1713,34 @@ name).  The expression can return:
     [Playground].
   * If the text is `docassemble.missouri:data/static/sample_form.pdf`,
     that file will be retrieved from the `docassemble.missouri` package.
+
+## <a name="manual"></a>Adding a DAFile to an attachment manually
+
+Normally, the `attachment` block is used to perform document
+assembly. If you already have a file that is complete, and you just
+want to show it as an `attachment`, or as part of an `attachment`, you
+can use the `manual` specifier. The `manual` specifier needs to refer
+to a dictionary where the keys are file extensions (in lowercase) and
+the values are [Python expressions] referencing `DAFile` objects.
+
+{% include side-by-side.html demo="document-manual" %}
+
+If you need to do a computation to figure out what extensions and
+documents you need, you can use `manual code` instead. `manual code`
+must refer to a [Python expression] that evaluates to a dictionary in
+which the keys are file extensions (in lowercase) and the values are
+`DAFile` objects.
+
+{% include side-by-side.html demo="document-manual-code" %}
+
+You can use `manual` or `manual code` to show file types other than
+PDF, DOCX, etc. Here is an example of showing a JPEG file:
+
+{% include side-by-side.html demo="document-manual-jpg" %}
+
+It is possible to combine `manual` and `manual code` with `docx
+template file`, `pdf template file`, `content`, etc. The manual file
+extensions will take precedence.
 
 ## <a name="pdfa"></a>Producing PDF/A files
 
@@ -2258,6 +2286,7 @@ interview, see the [`cache documents` feature].
 [`Legal-Template.rtf`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.rtf
 [`Legal-Template.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.docx
 [Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Python expressions]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [font list tool]: https://demo.docassemble.org/start/demo/fontlist/
 [pikepdf]: https://pikepdf.readthedocs.io/en/latest/
 
