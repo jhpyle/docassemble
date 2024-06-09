@@ -10,7 +10,7 @@
   <a href="{{ url_for('train', show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3 class="mt-4">{{ word('Packages') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Packages') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', show_all=show_all) }}"><i class="fa-solid fa-sync-alt"></i></a></h3>
 <div class="list-group">
   {%- for package, count in package_list %}
   {%- if package == '_global' %}
@@ -31,7 +31,7 @@
   <a href="{{ url_for('train', package=the_package, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3 class="mt-4">{{ word('Interviews') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Interviews') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, show_all=show_all) }}"><i class="fa-solid fa-sync-alt"></i></a></h3>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
@@ -56,7 +56,7 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3 class="mt-4">{{ word('Models') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Models') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all) }}"><i class="fa-solid fa-sync-alt"></i></a></h3>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
@@ -78,7 +78,7 @@
     </li>
   </ol>
 </nav>
-<a class="btn {{ config['BUTTON_STYLE'] }}secondary float-end" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fas fa-download"></i> {{ word('Download') }}</a>
+<a class="btn {{ config['BUTTON_STYLE'] }}secondary float-end" target="_blank" href="{{ url_for('train', package=the_package, file=the_file, show_all=show_all, download='1') }}"><i class="fa-solid fa-download"></i> {{ word('Download') }}</a>
 
 <p>
   <a class="btn {{ config['BUTTON_STYLE'] }}success" href="#" id="showimport">{{ word("Show import controls") }}</a>
@@ -149,7 +149,7 @@
   <a href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=1) }}">{{ word("Show entries that are already classified") }}</a>
   {%- endif %}
 </p>
-<h3 class="mt-4">{{ word('Items') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fas fa-sync-alt"></i></a></h3>
+<h3 class="mt-4">{{ word('Items') }}<a class="daonright" title="{{ word('Refresh') }}" href="{{ url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all) }}"><i class="fa-solid fa-sync-alt"></i></a></h3>
 {%- if the_package == '_global' %}
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">

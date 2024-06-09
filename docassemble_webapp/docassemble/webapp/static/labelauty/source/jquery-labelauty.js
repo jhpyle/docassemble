@@ -377,15 +377,15 @@
     }
     var uncheck_icon;
     if (type == "checkbox") {
-      uncheck_icon = '<i class="far fa-square fa-fw"></i>';
+      uncheck_icon = '<i class="fa-regular fa-square fa-fw"></i>';
     } else {
-      uncheck_icon = '<i class="far fa-circle fa-fw"></i>';
+      uncheck_icon = '<i class="fa-regular fa-circle fa-fw"></i>';
     }
     var check_icon;
     if (type == "checkbox") {
-      check_icon = '<i class="fas fa-check fa-fw"></i>';
+      check_icon = '<i class="fa-solid fa-check fa-fw"></i>';
     } else {
-      check_icon = '<i class="fas fa-check-circle fa-fw"></i>';
+      check_icon = '<i class="fa-solid fa-check-circle fa-fw"></i>';
     }
 
     if (aria_label == null) aria = "";

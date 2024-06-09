@@ -794,7 +794,9 @@ select.playground-select {
     border: 0;
     max-width: 8em;
     border-radius: 5px;
-    background: url(option-vertical.svg) no-repeat right #aad7ee;
+    background-image: url(option-vertical.svg);
+    background-repeat: no-repeat;
+    background-position: right;
     background-size: 1em 1em;
     padding: 2px 20px 2px 2px;
     outline: 0;

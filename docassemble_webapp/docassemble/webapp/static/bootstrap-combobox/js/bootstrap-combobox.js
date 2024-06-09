@@ -75,7 +75,7 @@
           '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-label="' +
           this.options.buttonLabel +
           '" aria-expanded="false" aria-controls="id_controls">' +
-          '<span class="fas fa-caret-down"></span><span class="fas fa-xmark"></span>' +
+          '<span class="fa-solid fa-caret-down"></span><span class="fa-solid fa-xmark"></span>' +
           "</button> </div> </div> </div>"
         );
       }

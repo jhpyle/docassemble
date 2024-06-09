@@ -4,24 +4,24 @@
 <ul class="nav nav-pills danavpillssmaller">
   <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" title="{{ word('Open another log file')}}">
-      <span class="fas fa-file" aria-hidden="true"></span>&nbsp;{{ current_file }}
+      <span class="fa-solid fa-file" aria-hidden="true"></span>&nbsp;{{ current_file }}
     </a>
     <div class="dropdown-menu daheightlim">
       {% for file in files %}{% if file == current_file %}
-      <a class="dropdown-item active" href="#"><span class="fas fa-file fa-fw" aria-hidden="true"></span> {{ file }}
+      <a class="dropdown-item active" href="#"><span class="fa-solid fa-file fa-fw" aria-hidden="true"></span> {{ file }}
       </a>
       {% else %}
-      <a class="dropdown-item" href="?file={{ file }}"><span class="fas fa-file fa-fw" aria-hidden="true"></span> {{ file }}
+      <a class="dropdown-item" href="?file={{ file }}"><span class="fa-solid fa-file fa-fw" aria-hidden="true"></span> {{ file }}
       </a>
       {% endif %}{% endfor %}
     </div>
   </li>
   <li class="nav-item">
-    <a class="nav-link" title="{{ word('Download this log file') }}" href="{{ url_for('logfile', filename=current_file) }}"><span class="fas fa-download" aria-hidden="true"></span>&nbsp;{{ word('Download this file') }}</a>
+    <a class="nav-link" title="{{ word('Download this log file') }}" href="{{ url_for('logfile', filename=current_file) }}"><span class="fa-solid fa-download" aria-hidden="true"></span>&nbsp;{{ word('Download this file') }}</a>
   </li>
   {%- if show_download_all %}
   <li class="nav-item">
-    <a class="nav-link" title="{{ word('Download all files') + ' ' + word('(%s uncompressed)') % (total_bytes, ) }}" href="{{ url_for('logs', zip=1) }}"><span class="fas fa-file-archive" aria-hidden="true"></span>&nbsp;{{ word('Download all files') }}</a>
+    <a class="nav-link" title="{{ word('Download all files') + ' ' + word('(%s uncompressed)') % (total_bytes, ) }}" href="{{ url_for('logs', zip=1) }}"><span class="fa-solid fa-file-archive" aria-hidden="true"></span>&nbsp;{{ word('Download all files') }}</a>
   </li>
   {%- endif %}
 </ul>
@@ -38,9 +38,9 @@
     </div>
     <div class="ms-auto my-1 h3">
       {%- if default_filter_string == '' %}
-      <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file) }}"><i class="fas fa-sync-alt"></i></a>
+      <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file) }}"><i class="fa-solid fa-sync-alt"></i></a>
       {%- else %}
-      <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file, q=default_filter_string) }}"><i class="fas fa-sync-alt"></i></a>
+      <a title="{{ word('Refresh') }}" href="{{ url_for('logs', file=current_file, q=default_filter_string) }}"><i class="fa-solid fa-sync-alt"></i></a>
       {%- endif %}
     </div>
   </div>

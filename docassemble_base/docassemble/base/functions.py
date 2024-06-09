@@ -24,6 +24,7 @@ import us
 import pycountry
 import markdown
 import nltk
+
 try:
     if not os.path.isfile(os.path.join(nltk.data.path[0], 'corpora', 'omw-1.4.zip')):
         nltk.download('omw-1.4')
@@ -716,7 +717,7 @@ def user_privileges():
     logged in, this is always ['user']."""
     if user_logged_in():
         return list(this_thread.current_info['user']['roles'])
-    return [word('user')]
+    return ['user']
 
 
 def user_has_privilege(*pargs):
@@ -808,6 +809,14 @@ class TheContext:
             return this_thread.evaluation_context or 'standard'
         except:
             return 'standard'
+
+    @property
+    def request_url(self):
+        try:
+            info = server.get_url()
+        except:
+            info = {}
+        return info
 
     @property
     def attachment(self):
@@ -919,6 +928,17 @@ class TheUser:
         if user_logged_in():
             return this_thread.current_info['user']['timezone']
         return None
+
+    @property
+    def privileges(self):
+        return user_privileges()
+
+    @property
+    def permissions(self):
+        enabled_privileges = set()
+        for privilege in user_privileges():
+            enabled_privileges.update(server.get_permissions_of_privilege(privilege, privileged=True))
+        return list(enabled_privileges)
 
     @property
     def session(self):
@@ -1894,6 +1914,10 @@ server.write_answer_json = null_func
 server.write_record = null_func
 server.to_text = null_func
 server.transform_json_variables = null_func
+server.get_login_url = null_func
+server.run_action_in_session = null_func
+server.invite_user = null_func
+server.get_url = null_func
 
 
 def write_record(key, data):
@@ -5906,6 +5930,16 @@ def secure_filename(the_filename):
     the_filename = re.sub(r'[\._]*$', '', the_filename)
     return the_filename
 
+
+def secure_filename_unicode_ok(the_filename):
+    for sep in (os.path.sep, os.path.altsep):
+        if sep:
+            the_filename = the_filename.replace(sep, "_")
+    the_filename = re.sub(r'[^\w_\.\- ]', '', the_filename, flags=re.UNICODE)
+    the_filename = re.sub(r'^[\._]*', '', the_filename)
+    the_filename = re.sub(r'[\._]*$', '', the_filename)
+    return the_filename
+
 custom_types = {}
 
 
@@ -5946,7 +5980,9 @@ class CustomDataType(metaclass=CustomDataTypeRegister):
         return True
 
     @classmethod
-    def call_validate(cls, item, variable_name):  # pylint: disable=unused-argument
+    def call_validate(cls, item, variable_name, data):  # pylint: disable=unused-argument
+        if cls.validate.__code__.co_argcount == 4:
+            return cls.validate(item, variable_name, data)
         if cls.validate.__code__.co_argcount == 3:
             return cls.validate(item, variable_name)
         return cls.validate(item)
@@ -5956,7 +5992,9 @@ class CustomDataType(metaclass=CustomDataTypeRegister):
         return item
 
     @classmethod
-    def call_transform(cls, item, variable_name):
+    def call_transform(cls, item, variable_name, data):
+        if cls.transform.__code__.co_argcount == 4:
+            return cls.transform(item, variable_name, data)
         if cls.transform.__code__.co_argcount == 3:
             return cls.transform(item, variable_name)
         return cls.transform(item)
@@ -5966,7 +6004,9 @@ class CustomDataType(metaclass=CustomDataTypeRegister):
         return str(item)
 
     @classmethod
-    def call_default_for(cls, item, variable_name):
+    def call_default_for(cls, item, variable_name, data):
+        if cls.default_for.__code__.co_argcount == 4:
+            return cls.default_for(item, variable_name, data)
         if cls.default_for.__code__.co_argcount == 3:
             return cls.default_for(item, variable_name)
         return cls.default_for(item)

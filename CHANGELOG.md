@@ -1,5 +1,36 @@
 # Change Log
 
+## [1.4.106] - 2024-06-08
+
+### Added
+- The `manual` feature of `attachment`, which allows a `DAFile` to be
+  attached to an `attachment`.
+- The `privileges` and `permissions` attributes of the `user_info()`
+  function.
+- The `request_url` attribute of `current_context()`. This returns a
+  dictionary containing the elements of the URL of the currently
+  executing request. Note that this URL does not always match the URL
+  that the user sees in the navigation bar in the browser, because
+  many requests are Ajax requests. The dictionary keys are `args`,
+  `base_url`, `full_path`, `path`, `scheme`, `url`, `url_root`.
+- A `__config__` variable is now available when using `# use jinja` in
+  interview YAML files so that items in the Configuration are
+  accessible.
+
+### Changed
+- The `validate()`, `transform()`, and `default_for()` methods of a
+  `CustomDataType` are now called with a third positional parameter
+  that is a dictionary containing the data attributes for the given
+  field. This change is backwards-compatible, so if your method does
+  not expect the additional positional parameter, it is not called
+  with the additional positional parameter.
+
+### Fixed
+- In the Playground, variables representing errors defined by `except`
+  statements showed up as undefined variables.
+- If `# use jinja` is enabled and there were Jinja2 errors in the
+  template, the Playground page could not load.
+
 ## [1.4.105] - 2024-06-01
 
 ### Changed

@@ -6,14 +6,14 @@
 <div class="row mb-2">
   <div class="col text-end">
     <div class="dropdown">
-      <button class="btn {{ config['BUTTON_STYLE'] }}secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-bars"></i> {{ word('Menu') }}</button>
+      <button class="btn {{ config['BUTTON_STYLE'] }}secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-bars"></i> {{ word('Menu') }}</button>
       <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuButton">
   {%- if current_user.has_role('admin') or current_user.can_do('create_user') %}
-        <a class="dropdown-item" href="{{ url_for('user_add') }}"><i class="fas fa-user-plus fa-fw"></i> {{ word('Add a user') }}</a>
-        <a class="dropdown-item" href="{{ url_for('invite') }}"><i class="fas fa-envelope fa-fw"></i> {{ word('Invite a user') }} </a>
+        <a class="dropdown-item" href="{{ url_for('user_add') }}"><i class="fa-solid fa-user-plus fa-fw"></i> {{ word('Add a user') }}</a>
+        <a class="dropdown-item" href="{{ url_for('invite') }}"><i class="fa-solid fa-envelope fa-fw"></i> {{ word('Invite a user') }} </a>
   {%- endif %}
   {%- if current_user.has_role('admin') or current_user.can_do('edit_privileges') %}
-        <a class="dropdown-item" href="{{ url_for('privilege_list') }}"><i class="fas fa-edit fa-fw"></i> {{ word('Edit privileges') }}</a>
+        <a class="dropdown-item" href="{{ url_for('privilege_list') }}"><i class="fa-solid fa-edit fa-fw"></i> {{ word('Edit privileges') }}</a>
   {%- endif %}
       </div>
     </div>
@@ -42,19 +42,19 @@
       <td>
       {%- if user_info['active'] %}
         {%- if user_info['high_priv'] == 'advocate' %}
-      <i class="fas fa-user-circle" title="{{ word('Advocate privilege') }}"></i>
+      <i class="fa-solid fa-user-circle" title="{{ word('Advocate privilege') }}"></i>
         {%- elif user_info['high_priv'] == 'admin' %}
-      <i class="fas fa-cog" title="{{ word('Administrator privilege') }}"></i>
+      <i class="fa-solid fa-cog" title="{{ word('Administrator privilege') }}"></i>
         {%- elif user_info['high_priv'] == 'developer' %}
-      <i class="fas fa-code" title="{{ word('Developer privilege') }}"></i>
+      <i class="fa-solid fa-code" title="{{ word('Developer privilege') }}"></i>
         {%- elif user_info['high_priv'] == 'trainer' %}
-      <i class="fas fa-comment" title="{{ word('Trainer privilege') }}"></i>
+      <i class="fa-solid fa-comment" title="{{ word('Trainer privilege') }}"></i>
         {%- else %}
       &nbsp;
         {%- endif %}
       </td>
       {%- else %}
-      <i class="fas fa-ban text-danger" title="{{ word('Account disabled') }}"></i>
+      <i class="fa-solid fa-ban text-danger" title="{{ word('Account disabled') }}"></i>
       {%- endif %}
       {%- if user_info['active'] %}
       <td>{{ user_info['email'] }}</td>
@@ -64,7 +64,7 @@
       <td class="text-danger">{{ user_info['name'] }}</td>
       {%- endif %}
       {%- if current_user.has_role('admin') or (current_user.can_do('edit_user_info') and user_info['high_priv'] in ('trainer', 'user')) %}
-      <td style="text-align:right;"><a class="text-nowrap btn btn-sm {{ config['BUTTON_STYLE'] }}secondary" href="{{ url_for('edit_user_profile_page', user_id=user_info['id']) }}"><i class="fas fa-pencil-alt"></i> {{ word('Edit') }}</a></td>
+      <td style="text-align:right;"><a class="text-nowrap btn btn-sm {{ config['BUTTON_STYLE'] }}secondary" href="{{ url_for('edit_user_profile_page', user_id=user_info['id']) }}"><i class="fa-solid fa-pencil-alt"></i> {{ word('Edit') }}</a></td>
       {%- else %}
       <td style="text-align:right;">&nbsp;</td>
       {%- endif %}
@@ -78,10 +78,10 @@
     <nav class="text-center">
       <ul class="pagination">
         {%- if prev_page > 0 %}
-        <li class="page-item"><a class="page-link" href="?page={{ prev_page }}" aria-label="{{ word('Back') }}"><i class="fas fa-chevron-left"></i> {{ word('Back') }}</a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ prev_page }}" aria-label="{{ word('Back') }}"><i class="fa-solid fa-chevron-left"></i> {{ word('Back') }}</a></li>
         {%- endif %}
         {%- if next_page %}
-        <li class="page-item"><a class="page-link" href="?page={{ next_page }}" aria-label="{{ word('Next') }}">{{ word('Next') }} <i class="fas fa-chevron-right"></i></a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ next_page }}" aria-label="{{ word('Next') }}">{{ word('Next') }} <i class="fa-solid fa-chevron-right"></i></a></li>
         {%- endif %}
       </ul>
     </nav>

@@ -388,8 +388,16 @@ class InterviewSourceFile(InterviewSource):
             loader=DAFileSystemLoader(self.directory),
             autoescape=select_autoescape()
         )
-        template = env.get_template(os.path.basename(self.filepath))
+        if kwargs.get('raise_jinja_errors', True):
+            template = env.get_template(os.path.basename(self.filepath))
+        else:
+            try:
+                template = env.get_template(os.path.basename(self.filepath))
+            except TemplateError:
+                self.set_content(orig_text)
+                return True
         data = copy.deepcopy(get_config('jinja data'))
+        data['__config__'] = copy.deepcopy(docassemble.base.functions.server.daconfig)
         data['__version__'] = da_version
         data['__architecture__'] = da_arch
         data['__filename__'] = self.path
@@ -1102,9 +1110,9 @@ class InterviewStatus:
                         if attachment[key]:
                             the_attachment[key] = attachment[key]
                 for the_format in attachment['file']:
-                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + extension_of_doc_format[the_format])
+                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + extension_of_doc_format.get(the_format, the_format))
                     the_attachment['number'][the_format] = attachment['file'][the_format]
-                    the_attachment['filename_with_extension'][the_format] = attachment['filename'] + '.' + extension_of_doc_format[the_format]
+                    the_attachment['filename_with_extension'][the_format] = attachment['filename'] + '.' + extension_of_doc_format.get(the_format, the_format)
                 result['attachments'].append(the_attachment)
         if self.extras.get('list_collect', False) is not False:
             result['listCollect'] = {
@@ -5446,10 +5454,32 @@ class Question:
                     self.find_fields_in(target['tagged pdf'])
                 else:
                     raise DASourceError('Unknown data type in attachment tagged pdf.' + self.idebug(target))
+            if 'manual' in target:
+                dict_of_items = {}
+                try:
+                    assert isinstance(target['manual'], dict)
+                    for key, val in target['manual'].items():
+                        assert isinstance(key, str)
+                        assert isinstance(val, str)
+                        assert re.match(r'^[A-Za-z0-9][A-Za-z0-9]*$', key)
+                        dict_of_items[key] = compile(val, '<manual attachment expression>', 'eval')
+                except AssertionError:
+                    raise DASourceError('The manual specifier in the attachment is not valid.' + self.idebug(target))
+                if len(dict_of_items) > 0:
+                    options['manual'] = dict_of_items
+            if 'manual code' in target:
+                if isinstance(target['manual code'], str):
+                    options['manual code'] = compile(target['manual code'], '<manual code expression>', 'eval')
+                else:
+                    raise DASourceError('The manual code in the attachment is not valid.' + self.idebug(target))
             if 'content' not in target:
                 if 'content file code' in options:
                     return {'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': None, 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']}
-                raise DASourceError("No content provided in attachment." + self.idebug(target))
+                if 'manual' in target or 'manual code' in target:
+                    target['content'] = ''
+                    target['valid formats'] = []
+                else:
+                    raise DASourceError("No content provided in attachment." + self.idebug(target))
             # logmessage("The content is " + str(target['content']))
             return {'name': TextObject(target['name'], question=self), 'filename': TextObject(target['filename'], question=self), 'description': TextObject(target['description'], question=self), 'content': TextObject("\n".join(defs) + "\n" + target['content'], question=self), 'valid_formats': target['valid formats'], 'metadata': metadata, 'variable_name': variable_name, 'orig_variable_name': variable_name, 'options': options, 'raw': target['raw']}
         if isinstance(orig_target, str):
@@ -6789,7 +6819,12 @@ class Question:
             for the_att in computed_attachment_list:
                 if the_att.__class__.__name__ == 'DAFileCollection':
                     file_dict = {}
-                    for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw', 'md'):
+                    all_formats = ['pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw', 'md']
+                    if 'manual_formats' in the_att.info:
+                        for extension in the_att.info['manual_formats']:
+                            if extension not in all_formats:
+                                all_formats.append(extension)
+                    for doc_format in all_formats:
                         if hasattr(the_att, doc_format):
                             the_dafile = getattr(the_att, doc_format)
                             if hasattr(the_dafile, 'number'):
@@ -6798,7 +6833,7 @@ class Question:
                         the_att.info['formats'] = list(file_dict.keys())
                         if 'valid_formats' not in the_att.info:
                             the_att.info['valid_formats'] = list(file_dict.keys())
-                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', {}), 'content': the_att.info.get('content', {}), 'extension': the_att.info.get('extension', {}), 'mimetype': the_att.info.get('mimetype', {}), 'file': file_dict, 'metadata': the_att.info.get('metadata', {}), 'variable_name': '', 'orig_variable_name': getattr(the_att, 'instanceName', ''), 'raw': the_att.info.get('raw', False)})
+                    result_list.append({'name': the_att.info['name'], 'filename': the_att.info['filename'], 'description': the_att.info['description'], 'valid_formats': the_att.info.get('valid_formats', ['*']), 'formats_to_use': the_att.info['formats'], 'markdown': the_att.info.get('markdown', {}), 'content': the_att.info.get('content', {}), 'extension': the_att.info.get('extension', {}), 'mimetype': the_att.info.get('mimetype', {}), 'file': file_dict, 'metadata': the_att.info.get('metadata', {}), 'variable_name': '', 'orig_variable_name': getattr(the_att, 'instanceName', ''), 'raw': the_att.info.get('raw', False), 'manual_formats': the_att.info.get('manual_formats', [])})
                     # convert_to_pdf_a
                     # file is dict of file numbers
                 # if the_att.__class__.__name__ == 'DAFileCollection' and 'attachment' in the_att.info and isinstance(the_att.info, dict) and 'name' in the_att.info['attachment'] and 'number' in the_att.info['attachment'] and len(self.interview.questions_by_name[the_att.info['attachment']['name']].attachments) > the_att.info['attachment']['number']:
@@ -6945,7 +6980,20 @@ class Question:
         if self.interview.cache_documents and attachment['variable_name']:
             try:
                 existing_object = eval(attachment['variable_name'], the_user_dict)
-                for doc_format in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw'):
+                all_formats = ['pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'html', 'raw']
+                if 'manual' in result:
+                    if 'manual_formats' not in result:
+                        result['manual_formats'] = []
+                    for extension in result['manual'].keys():
+                        if extension not in all_formats:
+                            all_formats.append(extension)
+                        if extension not in result['manual_formats']:
+                            result['manual_formats'].append(extension)
+                        if extension not in result['valid_formats']:
+                            result['valid_formats'].append(extension)
+                        if extension not in result['formats_to_use']:
+                            result['formats_to_use'].append(extension)
+                for doc_format in all_formats:
                     attr_doc_format = 'docx' if doc_format == 'rtf to docx' else doc_format
                     if hasattr(existing_object, attr_doc_format):
                         the_file = getattr(existing_object, attr_doc_format)
@@ -6954,7 +7002,7 @@ class Question:
                                 result[key][doc_format] = getattr(the_file, key)
                         if hasattr(the_file, 'number'):
                             result['file'][doc_format] = the_file.number
-                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'use_pdftk', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
+                for key in ('template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'use_pdftk', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font', 'manual'):
                     if key in result:
                         del result[key]
                 return result
@@ -6993,7 +7041,7 @@ class Question:
                             if the_template_path is None:
                                 raise DASourceError("pdf template file " + attachment['options']['pdf_template_file'].original_reference() + " not found")
                             the_pdf_file = docassemble.base.pdftk.fill_template(the_template_path, data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], use_pdftk=result['use_pdftk'], password=result['password'], owner_password=result['owner_password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
-                            result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], the_pdf_file, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                            result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format.get(doc_format, doc_format), the_pdf_file, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                             for key in ('images', 'data_strings', 'convert_to_pdf_a', 'use_pdftk', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                                 if key in result:
                                     del result[key]
@@ -7087,12 +7135,37 @@ class Question:
                                 converter.template_file = self.interview.attachment_options['template_file'].path(the_user_dict=the_user_dict)
                         converter.metadata = result['metadata']
                         converter.convert(self)
-                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format[doc_format], converter.output_filename, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format.get(doc_format, doc_format), converter.output_filename, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                         result['content'][doc_format] = result['markdown'][doc_format]
                 elif doc_format == 'html':
                     result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
                 elif doc_format == 'md':
                     result['content'][doc_format] = result['markdown'][doc_format]
+            if 'manual' in result:
+                if 'extension' not in result:
+                    result['extension'] = {}
+                if 'mimetype' not in result:
+                    result['mimetype'] = {}
+                if 'manual_formats' not in result:
+                    result['manual_formats'] = []
+                for extension, dafile in result['manual'].items():
+                    if extension not in result['formats_to_use']:
+                        result['formats_to_use'].append(extension)
+                    result['file'][extension] = dafile.number
+                    result['extension'][extension] = extension
+                    if getattr(dafile, 'mimetype', None):
+                        result['mimetype'][extension] = dafile.mimetype
+                    else:
+                        result['mimetype'][extension] = get_mimetype('file.' + extension)
+                    if extension not in result['valid_formats']:
+                        result['valid_formats'].append(extension)
+                    if extension not in result['formats_to_use']:
+                        result['formats_to_use'].append(extension)
+                    result['manual_formats'].append(extension)
+                manual_files = result['manual']
+                del result['manual']
+            else:
+                manual_files = {}
             if attachment['variable_name']:
                 the_string = "from docassemble.base.util import DAFile, DAFileCollection"
                 exec(the_string, the_user_dict)
@@ -7104,37 +7177,45 @@ class Question:
                 if the_filename == '':
                     the_filename = docassemble.base.functions.space_to_underscore(the_name)
                 the_user_dict['_attachment_info'] = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': result['valid_formats'], 'formats': result['formats_to_use'], 'attachment': {'name': attachment['question_name'], 'number': attachment['indexno']}, 'extension': result.get('extension', {}), 'mimetype': result.get('mimetype', {}), 'content': result.get('content', {}), 'markdown': result.get('markdown', {}), 'metadata': result.get('metadata', {}), 'convert_to_pdf_a': result.get('convert_to_pdf_a', False), 'convert_to_tagged_pdf': result.get('convert_to_tagged_pdf', False), 'orig_variable_name': result.get('orig_variable_name', None), 'raw': result['raw'], 'permissions': result.get('permissions', None)}
+                if len(manual_files) > 0:
+                    the_user_dict['_attachment_info']['manual_formats'] = result['manual_formats']
                 exec(variable_name + '.info = _attachment_info', the_user_dict)
                 del the_user_dict['_attachment_info']
                 for doc_format in result['file']:
-                    variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                    variable_string = variable_name + '.' + extension_of_doc_format.get(doc_format, doc_format)
                     # filename = result['filename'] + '.' + doc_format
                     # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                     if result['file'][doc_format] is None:
                         raise DAError("Could not save numbered file")
-                    if 'content' in result and doc_format in result['content']:
-                        content_string = ', content=' + repr(result['content'][doc_format])
+                    if doc_format in manual_files:
+                        the_user_dict['__TEMPOBJ'] = manual_files[doc_format]
+                        the_string = variable_string + " = __TEMPOBJ"
                     else:
-                        content_string = ''
-                    if 'markdown' in result and doc_format in result['markdown']:
-                        markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
-                    else:
-                        markdown_string = ''
-                    if 'name' in result and result['name']:
-                        alt_text_string = ', alt_text=' + repr(result['name'] + ' (' + doc_format.upper() + ')')
-                    else:
-                        alt_text_string = ''
-                    if result['raw']:
-                        the_ext = result['raw']
-                    else:
-                        the_ext = '.' + extension_of_doc_format[doc_format]
-                    the_string = variable_string + " = DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + alt_text_string + ")"
+                        if 'content' in result and doc_format in result['content']:
+                            content_string = ', content=' + repr(result['content'][doc_format])
+                        else:
+                            content_string = ''
+                        if 'markdown' in result and doc_format in result['markdown']:
+                            markdown_string = ', markdown=' + repr(result['markdown'][doc_format])
+                        else:
+                            markdown_string = ''
+                        if 'name' in result and result['name']:
+                            alt_text_string = ', alt_text=' + repr(result['name'] + ' (' + doc_format.upper() + ')')
+                        else:
+                            alt_text_string = ''
+                        if result['raw']:
+                            the_ext = result['raw']
+                        else:
+                            the_ext = '.' + extension_of_doc_format.get(doc_format, doc_format)
+                        the_string = variable_string + " = DAFile(" + repr(variable_string) + ", filename=" + repr(str(result['filename']) + the_ext) + ", number=" + str(result['file'][doc_format]) + ", mimetype='" + str(result['mimetype'][doc_format]) + "', extension='" + str(result['extension'][doc_format]) + "'" + content_string + markdown_string + alt_text_string + ")"
                     # logmessage("Executing " + the_string)
                     exec(the_string, the_user_dict)
+                    if doc_format in manual_files:
+                        del the_user_dict['__TEMPOBJ']
                 for doc_format in result['content']:
                     # logmessage("Considering " + doc_format)
                     if doc_format not in result['file']:
-                        variable_string = variable_name + '.' + extension_of_doc_format[doc_format]
+                        variable_string = variable_name + '.' + extension_of_doc_format.get(doc_format, doc_format)
                         # logmessage("Setting " + variable_string)
                         the_string = variable_string + " = DAFile(" + repr(variable_string) + ', markdown=' + repr(result['markdown'][doc_format]) + ', content=' + repr(result['content'][doc_format]) + ")"
                         exec(the_string, the_user_dict)
@@ -7174,10 +7255,10 @@ class Question:
         try:
             the_name = attachment['name'].text(the_user_dict).strip()
             the_filename = attachment['filename'].text(the_user_dict).strip()
-            the_filename = docassemble.base.functions.secure_filename(the_filename)
+            the_filename = docassemble.base.functions.secure_filename_unicode_ok(the_filename)
             if the_filename == '':
-                the_filename = docassemble.base.functions.secure_filename(docassemble.base.functions.space_to_underscore(the_name))
-            result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': attachment['valid_formats']}
+                the_filename = docassemble.base.functions.secure_filename_unicode_ok(docassemble.base.functions.space_to_underscore(the_name))
+            result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': copy.deepcopy(attachment['valid_formats'])}
             actual_extension = attachment['raw']
             if attachment['content'] is None and 'content file code' in attachment['options']:
                 raw_content = ''
@@ -7241,7 +7322,7 @@ class Question:
                 if '*' in attachment['valid_formats']:
                     result['formats_to_use'] = ['pdf', 'rtf', 'html']
                 else:
-                    result['formats_to_use'] = attachment['valid_formats']
+                    result['formats_to_use'] = copy.deepcopy(attachment['valid_formats'])
             result['metadata'] = {}
             if len(attachment['metadata']) > 0:
                 for key in attachment['metadata']:
@@ -7633,6 +7714,30 @@ class Question:
             docassemble.base.functions.set_language(old_language)
         docassemble.base.functions.this_thread.misc.pop('redact', None)
         docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
+        if 'manual' in attachment['options']:
+            result['manual'] = {extension: eval(expression, the_user_dict) for extension, expression in attachment['options']['manual'].items()}
+        if 'manual code' in attachment['options']:
+            if 'manual' not in result:
+                result['manual'] = {}
+            manual_code_dict = eval(attachment['options']['manual code'], the_user_dict)
+            try:
+                assert isinstance(manual_code_dict, dict)
+                for extension, dafile in manual_code_dict.items():
+                    assert isinstance(extension, str)
+                    assert re.match(r'^[A-Za-z0-9][A-Za-z0-9]*$', extension)
+                    result['manual'][extension] = dafile
+            except AssertionError:
+                raise DAError('manual code in an attachment returned an invalid data structure')
+        if 'manual' in result:
+            for extension, dafile in result['manual'].items():
+                if not hasattr(dafile, 'ok'):
+                    raise DAError('manual specifier in an attachment returned something other than a DAFile')
+                if not dafile.ok:
+                    dafile.initialized  # pylint: disable=pointless-statement
+                if not hasattr(dafile, 'number'):
+                    raise DAError('manual specifier in an attachment returned something other than an initialized DAFile')
+            if len(result['manual']) == 0:
+                del result['manual']
         return result
 
     def process_selections_manual(self, data):

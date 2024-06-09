@@ -8,6 +8,7 @@ import subprocess
 # import sys
 import tempfile
 import zipfile
+import urllib.parse
 from packaging import version
 from flask import url_for
 from flask_login import current_user
@@ -358,7 +359,7 @@ class SavedFile:
                 break
         use_external = kwargs.get('_external', bool('jsembed' in docassemble.base.functions.this_thread.misc))
         url = url_for('rootindex', _external=use_external).rstrip('/')
-        url += '/tempfile' + suffix + '/' + code + '/' + path_to_key(kwargs.get('display_filename', filename))
+        url += '/tempfile' + suffix + '/' + code + '/' + urllib.parse.quote(path_to_key(kwargs.get('display_filename', filename)))
         return url
 
     def cloud_path(self, filename=None):
@@ -416,9 +417,9 @@ class SavedFile:
                 url += '/' + str(self.file_number) + '/' + str(page)
             else:
                 if re.search(r'\.', str(filename)):
-                    url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + path_to_key(filename)
+                    url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + urllib.parse.quote(path_to_key(filename))
                 elif extn != '':
-                    url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + path_to_key(filename) + extn
+                    url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number) + '/' + urllib.parse.quote(path_to_key(filename) + extn)
                 else:
                     url = base_url + '/uploadedfile' + suffix + '/' + str(self.file_number)
         else:

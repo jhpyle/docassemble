@@ -562,7 +562,7 @@ def embed_input(status, variable):
 def help_wrap(content, helptext, status):
     if helptext is None:
         return content
-    help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-' + (status.extras.get('help button color', None) or BUTTON_COLOR_HELP) + '"><a tabindex="0" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="left" data-bs-content=%s><i class="fas fa-question-circle"></i></a></div></div></div>'
+    help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-' + (status.extras.get('help button color', None) or BUTTON_COLOR_HELP) + '"><a tabindex="0" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="left" data-bs-content=%s><i class="fa-solid fa-question-circle"></i></a></div></div></div>'
     return help_wrapper % (content, noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)))
 
 
@@ -763,6 +763,19 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
     return output
 
 
+def sub_indices(the_var, special_vars):
+    try:
+        if the_var.startswith('x.') and 'x' in special_vars and hasattr(special_vars['x'], 'instanceName'):
+            the_var = re.sub(r'^x\.', special_vars['x'].instanceName + '.', the_var)
+        if the_var.startswith('x[') and 'x' in special_vars and hasattr(special_vars['x'], 'instanceName'):
+            the_var = re.sub(r'^x\[', special_vars['x'].instanceName + '[', the_var)
+        if re.search(r'\[[ijklmn]\]', the_var):
+            the_var = re.sub(r'\[([ijklmn])\]', lambda m: '[' + repr(special_vars[m.group(1)]) + ']', the_var)
+    except KeyError:
+        pass
+    return the_var
+
+
 def as_html(status, debug, root, validation_rules, field_error, the_progress_bar, steps):
     decorations = []
     audio_text = ''
@@ -809,7 +822,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     continue_button_color = status.extras.get('continuecolor', None) or BUTTON_COLOR
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + (status.extras.get('back button color', None) or BUTTON_COLOR_BACK) + ' ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fas fa-chevron-left"></i> '
+        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + (status.extras.get('back button color', None) or BUTTON_COLOR_BACK) + ' ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fa-solid fa-chevron-left"></i> '
         back_button += status.back
         back_button += '</button>'
     else:
@@ -840,7 +853,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             if item['icon'] is not None:
                 icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', item['icon'])
                 if not re.search(r'^fa[a-z] fa-', icon):
-                    icon = 'fas fa-' + icon
+                    icon = 'fa-solid fa-' + icon
+                icon = re.sub(r'^fas ', 'fa-solid ', icon)
+                icon = re.sub(r'^far ', 'fa-regular ', icon)
+                icon = re.sub(r'^fab ', 'fa-brands ', icon)
                 icon = '<i class="' + icon + '"></i> '
             else:
                 icon = ''
@@ -1090,11 +1106,14 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     color = status.question.interview.options.get('review button color', BUTTON_COLOR_REVIEW)
                     if color not in ('link', 'danger', 'warning', 'info', 'primary', 'secondary', 'tertiary', 'light', 'dark', 'success'):
                         color = BUTTON_COLOR_REVIEW
-                    icon = status.question.interview.options.get('review button icon', 'fas fa-pencil-alt')
+                    icon = status.question.interview.options.get('review button icon', 'fa-solid fa-pencil-alt')
                     if isinstance(icon, str) and icon != '':
                         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
                         if not re.search(r'^fa[a-z] fa-', icon):
-                            icon = 'fas fa-' + icon
+                            icon = 'fa-solid fa-' + icon
+                        icon = re.sub(r'^fas ', 'fa-solid ', icon)
+                        icon = re.sub(r'^far ', 'fa-regular ', icon)
+                        icon = re.sub(r'^fab ', 'fa-brands ', icon)
                         icon = '<i class="' + icon + '"></i> '
                     else:
                         icon = ''
@@ -1345,7 +1364,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if hasattr(field, 'collect_type'):
                         hide_delete = bool('list_minimum' in status.extras and field.collect_number < status.extras['list_minimum'])
                         if status.extras['list_collect_allow_delete'] and not hide_delete:
-                            da_remove_existing = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_DELETE + ' float-end dacollectremoveexisting' + class_of_first + '"><i class="fas fa-trash"></i> ' + word("Delete") + '</button>'
+                            da_remove_existing = '<button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_DELETE + ' float-end dacollectremoveexisting' + class_of_first + '"><i class="fa-solid fa-trash"></i> ' + word("Delete") + '</button>'
                         else:
                             da_remove_existing = ''
                         list_message = status.extras['list_message'][field.collect_number]
@@ -1358,17 +1377,17 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         else:
                             add_another = word("Add another")
                         if field.collect_type == 'extraheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><hr><span class="dacollectnum dainvisible">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_DELETE + ' float-end dainvisible dacollectremove"><i class="fas fa-trash"></i> ' + word("Delete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-end dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_ADD + ' dacollectadd"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><hr><span class="dacollectnum dainvisible">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_DELETE + ' float-end dainvisible dacollectremove"><i class="fa-solid fa-trash"></i> ' + word("Delete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-end dainvisible dacollectunremove"><i class="fa-solid fa-trash-restore"></i> ' + word("Undelete") + '</button><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_ADD + ' dacollectadd"><i class="fa-solid fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
                         elif field.collect_type == 'postheader':
                             fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"></div></div>\n')
                         elif field.collect_type == 'extrapostheader':
                             fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"></div></div>\n')
                         elif field.collect_type == 'extrafinalpostheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><button type="button" id="da-extra-collect" value=' + myb64doublequote(json.dumps({'function': 'add', 'list': status.extras['list_collect'].instanceName})) + ' class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_ADD + '"><i class="fas fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><button type="button" id="da-extra-collect" value=' + myb64doublequote(json.dumps({'function': 'add', 'list': status.extras['list_collect'].instanceName})) + ' class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_ADD + '"><i class="fa-solid fa-plus-circle"></i> ' + add_another + '</button></div></div>\n')
                         elif field.collect_type == 'firstheader':
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-end dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-end dainvisible dacollectunremove"><i class="fa-solid fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
                         else:
-                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><hr><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-end dainvisible dacollectunremove"><i class="fas fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
+                            fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '"><div class="col"><hr><span class="dacollectnum">' + list_message + '</span><span class="dacollectremoved text-danger dainvisible"> ' + word("(Deleted)") + '</span><button type="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_UNDELETE + ' float-end dainvisible dacollectunremove"><i class="fa-solid fa-trash-restore"></i> ' + word("Undelete") + '</button>' + da_remove_existing + '</div></div>\n')
                     else:
                         if field.number in note_fields:
                             if field.datatype == 'raw html':
@@ -1435,7 +1454,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             field_class += extra_container_class
             if field.number in status.helptexts:
                 helptext_start = '<a tabindex="0" class="text-info ms-1 dapointer" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True, status=status)) + '>'
-                helptext_end = '<i class="fas fa-question-circle"></i></a>'
+                helptext_end = '<i class="fa-solid fa-question-circle"></i></a>'
             else:
                 helptext_start = ''
                 helptext_end = ''
@@ -2210,7 +2229,12 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += '            </form>\n'
-    if len(status.attachments) > 0:
+    any_attachments = False
+    for attachment in status.attachments:
+        if len(attachment['valid_formats']) > 0:
+            any_attachments = True
+            break
+    if any_attachments:
         if not status.extras.get('manual_attachment_list', False):
             output += '            <br/>\n'
             if len(status.attachments) > 1:
@@ -2241,6 +2265,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     editable_options.add('DOCX')
             if status.extras.get('manual_attachment_list', False):
                 continue
+            extra_formats = []
+            for output_format in attachment.get('manual_formats', []):
+                if output_format not in ('pdf', 'rtf', 'docx', 'rtf to docx', 'tex', 'md', '*'):
+                    extra_formats.append(output_format)
             if debug and len(attachment['markdown']):
                 if 'html' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
                     md_format = 'html'
@@ -2252,7 +2280,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             else:
                 show_markdown = False
             # logmessage("markdown is " + str(attachment['markdown']))
-            show_download = bool('pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or 'md' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats'])
+            show_download = bool('pdf' in attachment['valid_formats'] or 'rtf' in attachment['valid_formats'] or 'rtf to docx' in attachment['valid_formats'] or 'docx' in attachment['valid_formats'] or 'md' in attachment['valid_formats'] or (debug and 'tex' in attachment['valid_formats']) or '*' in attachment['valid_formats'] or len(extra_formats) > 0)
             show_preview = bool('html' in attachment['valid_formats'] or '*' in attachment['valid_formats'])
             multiple_formats = bool(len(attachment['valid_formats']) > 1 or '*' in attachment['valid_formats'])
             if attachment.get('raw', False):
@@ -2285,20 +2313,22 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if multiple_formats:
                     output += '                  <p class="da-attachment-tab-download-intro">' + word('The document is available in the following formats:') + '</p>\n'
                 if attachment.get('raw', False):
-                    output += '                  <p class="da-attachment-tab-download-raw"><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fas fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a> (' + word('for downloading') + ')</p>\n'
+                    output += '                  <p class="da-attachment-tab-download-raw"><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fa-solid fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a> (' + word('for downloading') + ')</p>\n'
                 else:
                     if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-pdf"><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fas fa-print fa-fw"></i> PDF</a> (' + word('for printing; requires Adobe Reader or similar application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-pdf"><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fa-solid fa-print fa-fw"></i> PDF</a> (' + word('for printing; requires Adobe Reader or similar application') + ')</p>\n'
                     if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-rtf"><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> RTF</a> (' + word('for editing; requires Microsoft Word, Wordpad, or similar application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-rtf"><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> RTF</a> (' + word('for editing; requires Microsoft Word, Wordpad, or similar application') + ')</p>\n'
                     if 'docx' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
                     if 'rtf to docx' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
                     if 'tex' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-tex"><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fas fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('for debugging PDF output') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-tex"><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('for debugging PDF output') + ')</p>\n'
                     if 'md' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-md"><a href="' + server.url_finder(attachment['file']['md'], display_filename=attachment['filename'] + '.md') + '" target="_blank"><i class="fab fa-markdown fa-fw"></i> Markdown</a></p>\n'
+                        output += '                  <p class="da-attachment-tab-download-md"><a href="' + server.url_finder(attachment['file']['md'], display_filename=attachment['filename'] + '.md') + '" target="_blank"><i class="fa-brands fa-markdown fa-fw"></i> Markdown</a></p>\n'
+                    for output_format in extra_formats:
+                        output += '                  <p class="da-attachment-tab-download-extra"><a href="' + server.url_finder(attachment['file'][output_format], display_filename=attachment['filename'] + '.' + output_format) + '" target="_blank"><i class="fa-solid fa-file fa-fw"></i> ' + attachment['filename'] + '.' + output_format + '</a></p>\n'
                 output += '                </div>\n'
             if show_preview:
                 output += '                <div class="tab-pane da-attachment-tab-preview" id="dapreview' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dapreview-tab' + str(attachment_index) + '">\n'
@@ -2428,7 +2458,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     master_output += output
     master_output += '          </div>\n'
     master_output += '          <div id="dahelp" role="tabpanel" aria-labelledby="dahelptoggle" class="tab-pane fade ' + grid_class + '">\n'
-    output = '            <div class="mt-2 mb-2"><button id="dabackToQuestion" class="btn ' + BUTTON_STYLE + BUTTON_COLOR_BACK_TO_QUESTION + '"><i class="fas fa-chevron-left"></i> ' + word("Back to question") + '</button></div>'
+    output = '            <div class="mt-2 mb-2"><button id="dabackToQuestion" class="btn ' + BUTTON_STYLE + BUTTON_COLOR_BACK_TO_QUESTION + '"><i class="fa-solid fa-chevron-left"></i> ' + word("Back to question") + '</button></div>'
     output += """
             <div id="daPhoneMessage" class="row dainvisible">
               <div class="col">
@@ -2666,8 +2696,19 @@ def input_for(status, field, embedded=False, floating_label=None):
     if field.number in status.defaults:
         defaultvalue_set = True
         if hasattr(field, 'datatype') and field.datatype in custom_types:
+            field_data = {}
+            for parameter in ('min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'currency symbol', 'field metadata'):
+                if parameter in status.extras and field.number in status.extras[parameter]:
+                    field_data[parameter] = status.extras[parameter][field.number]
+            if hasattr(field, 'extras') and 'custom_parameters' in field.extras:
+                for parameter, parameter_value in field.extras['custom_parameters'].items():
+                    field_data[parameter] = parameter_value
+            for param_type in ('custom_parameters_code', 'custom_parameters_mako'):
+                if param_type in status.extras and field.number in status.extras[param_type]:
+                    for parameter, parameter_value in status.extras[param_type][field.number].items():
+                        field_data[parameter] = parameter_value
             try:
-                defaultvalue = custom_types[field.datatype]['class'].call_default_for(status.defaults[field.number], from_safeid(field.saveas))
+                defaultvalue = custom_types[field.datatype]['class'].call_default_for(status.defaults[field.number], sub_indices(from_safeid(field.saveas), status.special_vars), field_data)
             except:
                 defaultvalue_set = False
                 defaultvalue = None
@@ -2736,10 +2777,8 @@ def input_for(status, field, embedded=False, floating_label=None):
         inline_width = None
     if status.extras['required'][field.number]:
         req_attr = ' required'
-        req_aria = ' aria-required="true"'
     else:
         req_attr = ''
-        req_aria = ''
     if status.labels[field.number] == 'no label':
         req_attr += ' aria-labelledby="daMainQuestion"'
     if embedded:
@@ -3364,7 +3403,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                 output += '<span class="da-inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="dafile-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + disabled_attr + '/></span>'
             else:
                 output += '<input alt=' + fix_double_quote(word("You can upload a file here")) + ' type="file" tabindex="-1" class="' + file_class + '" data-show-upload="false" ' + maximagesize + imagetype + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + disabled_attr + ' /><div class="da-has-error invalid-feedback" role="alert" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
-            # output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fas fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
+            # output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fa-solid fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
         elif field.datatype == 'range' and not is_hidden:
             ok = True
             for key in ['min', 'max']:

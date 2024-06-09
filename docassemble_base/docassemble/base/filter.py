@@ -1277,7 +1277,13 @@ def get_icon_html(text):
             the_prefix = m.group(1)
             text = m.group(2)
         else:
-            the_prefix = docassemble.base.functions.get_config('font awesome prefix', 'fas')
+            the_prefix = docassemble.base.functions.get_config('font awesome prefix', 'fa-solid')
+        if the_prefix == 'fab':
+            the_prefix = 'fa-brands'
+        elif the_prefix == 'far':
+            the_prefix = 'fa-regular'
+        elif the_prefix == 'fas':
+            the_prefix = 'fa-solid'
         return '<i class="' + the_prefix + ' fa-' + str(text) + '"></i>'
     if icons_setting == 'material icons':
         return '<i class="da-material-icons">' + str(text) + '</i>'
@@ -1912,16 +1918,6 @@ def qr_include_docx_template(match):
     with tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False) as the_image:
         im.save(the_image.name)
         return str(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
-
-
-def ensure_valid_filename(filename):
-    m = re.search(r'[\\/\&\`:;,~\'\"\*\?\<\>\|]', filename)
-    if m:
-        raise DAException("Filename contained invalid character " + repr(m.group(1)))
-    for char in filename:
-        if ord(char) < 32 or ord(char) >= 127:
-            raise DAException("Filename contained invalid character " + repr(char))
-    return True
 
 
 def convert_svg_to_eps(file_info):

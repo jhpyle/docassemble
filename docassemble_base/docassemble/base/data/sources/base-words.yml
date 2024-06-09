@@ -1176,6 +1176,7 @@
 "Upload a static file": Null
 "Upload a template file": Null
 "Upload a YAML file to the Playground": Null
+"Uploaded %s to the Playground.": Null
 "Upload": Null
 "Upload successful": Null
 "Upload this .docx file to the Templates folder": Null
@@ -1192,7 +1193,6 @@
 "Username": Null
 "Username or Email": Null
 "%(username_or_email)s does not exist": Null
-"user": Null
 "User": Null
 "User profile": Null
 "User Profile": Null

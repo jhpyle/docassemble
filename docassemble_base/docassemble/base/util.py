@@ -2845,7 +2845,7 @@ class DAList(DAObject):
         index = the_args.pop(0)
         output = ''
         if kwargs.get('reorder', False):
-            output += '<span class="text-nowrap"><a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fas fa-arrow-up"></i><span class="visually-hidden">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fas fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="visually-hidden">' + word("Move down") + '</span></a></span> '
+            output += '<span class="text-nowrap"><a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fa-solid fa-arrow-up"></i><span class="visually-hidden">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fa-solid fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="visually-hidden">' + word("Move down") + '</span></a></span> '
         if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
             can_delete = False
         else:
@@ -2874,13 +2874,13 @@ class DAList(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_list_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><span class="text-nowrap"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</span></a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><span class="text-nowrap"><i class="fa-solid fa-pencil-alt"></i> ' + word('Edit') + '</span></a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure + '"><span class="text-nowrap"><i class="fas fa-trash"></i> ' + word('Delete') + '</span></a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure + '"><span class="text-nowrap"><i class="fa-solid fa-trash"></i> ' + word('Delete') + '</span></a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -2906,7 +2906,10 @@ class DAList(DAObject):
         if isinstance(icon, str):
             icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
             if not re.search(r'^fa[a-z] fa-', icon):
-                icon = 'fas fa-' + icon
+                icon = 'fa-solid fa-' + icon
+            icon = re.sub(r'^fas ', 'fa-solid ', icon)
+            icon = re.sub(r'^far ', 'fa-regular ', icon)
+            icon = re.sub(r'^fab ', 'fa-brands ', icon)
             icon = '<i class="' + icon + '"></i> '
         else:
             icon = ''
@@ -4001,13 +4004,13 @@ class DADict(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_dict_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><i class="fas fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><i class="fa-solid fa-pencil-alt"></i> ' + word('Edit') + '</a> '
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure + '"><i class="fas fa-trash"></i> ' + word('Delete') + '</a>'
+            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure + '"><i class="fa-solid fa-trash"></i> ' + word('Delete') + '</a>'
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -4033,7 +4036,10 @@ class DADict(DAObject):
         if isinstance(icon, str):
             icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
             if not re.search(r'^fa[a-z] fa-', icon):
-                icon = 'fas fa-' + icon
+                icon = 'fa-solid fa-' + icon
+            icon = re.sub(r'^fas ', 'fa-solid ', icon)
+            icon = re.sub(r'^far ', 'fa-regular ', icon)
+            icon = re.sub(r'^fab ', 'fa-brands ', icon)
             icon = '<i class="' + icon + '"></i> '
         else:
             icon = ''
@@ -4960,12 +4966,19 @@ class DAFile(DAObject):
         if 'number' in kwargs:
             self.number = kwargs['number']
             self.ok = True
+        if hasattr(self, 'extension'):
+            self.extension = server.secure_filename(self.extension)
         if not hasattr(self, 'filename'):
             if hasattr(self, 'extension'):
                 self.filename = kwargs.get('filename', 'file.' + self.extension)
             else:
                 self.filename = kwargs.get('filename', 'file.txt')
-        docassemble.base.filter.ensure_valid_filename(self.filename)
+        self.filename = server.secure_filename_unicode_ok(self.filename)
+        if self.filename == '':
+            if hasattr(self, 'extension'):
+                self.filename = 'file.' + self.extension
+            else:
+                self.filename = 'file.txt'
         if hasattr(self, 'number'):
             should_not_exist = False
         else:
@@ -4974,7 +4987,7 @@ class DAFile(DAObject):
             if hasattr(docassemble.base.functions.this_thread, 'current_info'):
                 yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
             uid = docassemble.base.functions.get_uid()
-            self.number = server.get_new_file_number(uid, self.filename, yaml_file_name=yaml_filename)  # pylint: disable=assignment-from-none
+            self.number = server.get_new_file_number(uid, server.secure_filename_spaces_ok(self.filename) or 'file.txt', yaml_file_name=yaml_filename)  # pylint: disable=assignment-from-none
             self.ok = True
             self.extension, self.mimetype = server.get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence
             should_not_exist = True
@@ -5504,8 +5517,14 @@ class DAFile(DAObject):
         if 'persistent' in kwargs and kwargs['persistent'] in [True, False]:
             self.persistent = kwargs['persistent']
         if 'filename' in kwargs:
-            kwargs['filename'] = server.secure_filename_spaces_ok(kwargs['filename'])
-            self.filename = kwargs['filename']
+            self.filename = server.secure_filename_unicode_ok(kwargs['filename'])
+            if kwargs['filename'] == '':
+                if hasattr(self, 'extension'):
+                    self.extension = server.secure_filename(self.extension)
+                    self.filename = 'file.' + self.extension
+                else:
+                    self.filename = 'file.txt'
+                kwargs['filename'] = server.secure_filename_spaces_ok(self.filename)
         if 'session' in kwargs:
             del kwargs['session']
         return server.file_set_attributes(self.number, **kwargs)
@@ -10127,7 +10146,10 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
     if isinstance(icon, str):
         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
         if not re.search(r'^fa[a-z] fa-', icon):
-            icon = 'fas fa-' + icon
+            icon = 'fa-solid fa-' + icon
+        icon = re.sub(r'^fas ', 'fa-solid ', icon)
+        icon = re.sub(r'^far ', 'fa-regular ', icon)
+        icon = re.sub(r'^fab ', 'fa-brands ', icon)
         icon = '<i class="' + icon + '"></i> '
     else:
         icon = ''

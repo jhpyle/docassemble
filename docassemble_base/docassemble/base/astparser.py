@@ -105,7 +105,9 @@ class myvisitnode(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_ExceptHandler(self, node):
-        if node.name is not None and hasattr(node.name, 'id') and node.name.id is not None:
+        if isinstance(node.name, str):
+            self.targets[node.name] = 1
+        elif node.name is not None and hasattr(node.name, 'id') and node.name.id is not None:
             self.targets[node.name.id] = 1
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -248,6 +250,10 @@ class detectIllegal(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_AsyncFunctionDef(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_ExceptHandler(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
@@ -268,7 +274,15 @@ class detectIllegal(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_TypeAlias(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_AugAssign(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_AnnAssign(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -277,6 +291,10 @@ class detectIllegal(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_For(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_AsyncFor(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -292,7 +310,23 @@ class detectIllegal(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_AsyncWith(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_Match(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_Raise(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_Try(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_TryStar(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -324,6 +358,10 @@ class detectIllegal(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_Nonlocal(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_Pass(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
@@ -337,6 +375,10 @@ class detectIllegal(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_BoolOp(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_NamedExpr(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -380,7 +422,15 @@ class detectIllegal(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_Await(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_Yield(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_YieldFrom(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -389,6 +439,14 @@ class detectIllegal(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_Call(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_FormattedValue(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_JoinedStr(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -404,6 +462,10 @@ class detectIllegal(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_Starred(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
 
 class detectIllegalQuery(ast.NodeVisitor):
 
@@ -411,6 +473,10 @@ class detectIllegalQuery(ast.NodeVisitor):
         self.illegal = False
 
     def visit_FunctionDef(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_AsyncFunctionDef(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -434,7 +500,15 @@ class detectIllegalQuery(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_TypeAlias(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_AugAssign(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_AnnAssign(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -443,6 +517,10 @@ class detectIllegalQuery(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_For(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_AsyncFor(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -458,7 +536,23 @@ class detectIllegalQuery(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_AsyncWith(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_Match(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_Raise(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_Try(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_TryStar(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -490,6 +584,10 @@ class detectIllegalQuery(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_Nonlocal(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_Pass(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
@@ -499,6 +597,10 @@ class detectIllegalQuery(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, node)
 
     def visit_Continue(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_NamedExpr(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -534,7 +636,15 @@ class detectIllegalQuery(ast.NodeVisitor):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_Await(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_Yield(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_YieldFrom(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -545,6 +655,18 @@ class detectIllegalQuery(ast.NodeVisitor):
             self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)
 
+    def visit_FormattedValue(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_JoinedStr(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
     def visit_Repr(self, node):
+        self.illegal = True
+        ast.NodeVisitor.generic_visit(self, node)
+
+    def visit_Starred(self, node):
         self.illegal = True
         ast.NodeVisitor.generic_visit(self, node)

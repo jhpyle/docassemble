@@ -1,0 +1,25 @@
+metadata:
+  title: Manual attachments
+  short title: Manual
+  documentation: "https://docassemble.org/docs/documents.html#manual"
+  example start: 1
+  example end: 3
+---
+question: Your document is ready.
+attachment:
+  - name: A merged document
+    filename: report
+    manual code: |
+      {'pdf': pdf_concatenate(document_one, document_two)}
+mandatory: True
+---
+attachment:
+  variable name: document_one
+  content: |
+    Hello, world!
+---
+attachment:
+  variable name: document_two
+  content: |
+    Goodbye, world!
+

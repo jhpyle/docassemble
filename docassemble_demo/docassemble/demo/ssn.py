@@ -15,7 +15,7 @@ $.validator.addMethod('ssn', function(value, element, params){
     jq_message = 'You need to enter a valid SSN.'
 
     @classmethod
-    def validate(cls, item):
+    def validate(cls, item, variable_name, data):  # pylint: disable=unused-argument
         item = str(item).strip()
         m = re.search(r'^[0-9]{3}-?[0-9]{2}-?[0-9]{4}$', item)
         if item == '' or m:
@@ -23,7 +23,7 @@ $.validator.addMethod('ssn', function(value, element, params){
         raise DAValidationError("A SSN needs to be in the form xxx-xx-xxxx")
 
     @classmethod
-    def transform(cls, item):
+    def transform(cls, item, variable_name, data):  # pylint: disable=unused-argument
         item = str(item).strip()
         m = re.search(r'^([0-9]{3})-?([0-9]{2})-?([0-9]{4})$', item)
         if m:

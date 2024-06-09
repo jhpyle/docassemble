@@ -1,0 +1,30 @@
+metadata:
+  title: Manual attachments
+  short title: Manual
+  documentation: "https://docassemble.org/docs/documents.html#manual"
+  example start: 1
+  example end: 4
+---
+imports:
+  - PIL
+---
+objects:
+  - my_image: DAFile
+---
+sets: my_image.initialized
+code: |
+  im = PIL.Image.new("RGB",
+                     (512, 512),
+                     "green")
+  my_image.initialize(filename="green.jpg")
+  im.save(my_image.path(), format='JPEG')
+---
+question: Your document is ready.
+attachment:
+  - name: A green square
+    filename: greensquare
+    manual:
+      jpg: my_image
+mandatory: True
+---
+

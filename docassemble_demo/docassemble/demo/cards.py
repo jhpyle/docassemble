@@ -21,7 +21,10 @@ def card_start(label, color=None, icon=None):
     else:
         icon_text = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', str(icon))
         if not re.search(r'^fa[a-z] fa-', icon_text):
-            icon_text = 'fas fa-' + icon
+            icon_text = 'fa-solid fa-' + icon
+        icon_text = re.sub(r'^fas ', 'fa-solid ', icon_text)
+        icon_text = re.sub(r'^far ', 'fa-regular ', icon_text)
+        icon_text = re.sub(r'^fab ', 'fa-brands ', icon_text)
         icon_text = '<i class="' + icon_text + '"></i> '
     return f'<div class="card{color_text} mb-3" markdown="span"><div class="card-body" markdown="1"><h2 class="card-title h4" markdown="span">{icon_text}{label}</h2>'
 

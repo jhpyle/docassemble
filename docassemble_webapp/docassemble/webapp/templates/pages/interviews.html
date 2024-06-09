@@ -70,10 +70,10 @@
                 <nav class="text-center">
                   <ul class="pagination">
                     {%- if show_back %}
-                    <li class="page-item"><a class="page-link" href="{{ url_for('interview_list') }}" aria-label="{{ word('Back') }}"><i class="fas fa-chevron-left"></i> {{ word('Back') }}</a></li>
+                    <li class="page-item"><a class="page-link" href="{{ url_for('interview_list') }}" aria-label="{{ word('Back') }}"><i class="fa-solid fa-chevron-left"></i> {{ word('Back') }}</a></li>
                     {%- endif %}
                     {%- if next_id %}
-                    <li class="page-item"><a class="page-link" href="?next_id={{ next_id }}" aria-label="{{ word('Next') }}">{{ word('Next') }} <i class="fas fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?next_id={{ next_id }}" aria-label="{{ word('Next') }}">{{ word('Next') }} <i class="fa-solid fa-chevron-right"></i></a></li>
                     {%- endif %}
                   </ul>
                 </nav>
