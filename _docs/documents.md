@@ -347,6 +347,9 @@ attachment:
 
 Metadata values can contain [Mako] template commands.
 
+To set interview-wide default values for the `metadata`, you can use
+[`attachment options`].
+
 ## <a name="metadata rtf pdf"></a>Metadata applicable to RTF and PDF files
 
 * If you wish to use a standard document title, set the following:
@@ -508,10 +511,11 @@ If this question appears within a [YAML] file located in the package
 will exist in the directory `docassemble/pa_family_law/data/templates`
 within that package.
 
-If you want to use a custom template for all the attachments in a
-given interview, you do not have to specify the same values for every
-attachment.  Instead, you can set attachment template options that
-will be applied to all attachments in the interview:
+<a name="attachment options"></a>If you want to use a custom template
+for all the attachments in a given interview, you do not have to
+specify the same values for every attachment.  Instead, you can set
+attachment template options that will be applied to all attachments in
+the interview:
 
 {% highlight yaml %}
 ---
@@ -521,12 +525,22 @@ attachment options:
     - docassemble.pennsylvania:data/templates/pleading_format.yml
   template file: summary_judgment_template.tex
   rtf template file: summary_judgment_template.rtf
+  metadata:
+    SingleSpacing: True
+    fontsize: 10pt
 ---
 {% endhighlight %}
 
 If you use an interview-wide `attachment options` block to set
 defaults, you can override those defaults for a particular attachment
-by providing specific options within the question block.
+by providing specific options within the question block. If you
+specify `metadata` in both the `attachment options` and the
+`attachment` block, the `metadata` in the `attachment` block will
+merge with the `metadata` in the `attachment options` block.
+
+If the interview YAML has more than one `attachment options` block,
+the settings in later blocks will override the settings in earlier
+blocks.
 
 # <a name="docx template file"></a>Assembling DOCX templates
 
@@ -2289,4 +2303,4 @@ interview, see the [`cache documents` feature].
 [Python expressions]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [font list tool]: https://demo.docassemble.org/start/demo/fontlist/
 [pikepdf]: https://pikepdf.readthedocs.io/en/latest/
-
+[`attachment options`]: #attachment options
