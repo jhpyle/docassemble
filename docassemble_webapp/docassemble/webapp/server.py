@@ -6421,6 +6421,8 @@ def setup_variables():
 
 @app.after_request
 def apply_security_headers(response):
+    if request.endpoint is not None and request.endpoint.startswith('api_'):
+        session.modified = False
     if app.config['SESSION_COOKIE_SECURE']:
         response.headers['Strict-Transport-Security'] = 'max-age=31536000'
     if 'embed' in g:
@@ -17866,6 +17868,49 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+        gitignore = """\
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.dmypy.json
+dmypy.json
+*.egg-info/
+.installed.cfg
+*.egg
+.vscode
+*~
+.#*
+en
+.history/
+.idea
+.dir-locals.el
+.flake8
+*.swp
+.DS_Store
+.envrc
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+"""
         readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
         manifestin = """\
 include README.md
@@ -18026,6 +18071,8 @@ class Fruit(DAObject):
         os.makedirs(templatesdir, exist_ok=True)
         os.makedirs(staticdir, exist_ok=True)
         os.makedirs(sourcesdir, exist_ok=True)
+        with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
+            the_file.write(gitignore)
         with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
             the_file.write(readme)
         with open(os.path.join(packagedir, 'LICENSE'), 'w', encoding='utf-8') as the_file:
@@ -20850,9 +20897,10 @@ def playground_packages():
     if request.method == 'POST' and not (app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
         form.install_also.data = 'n'
         form.install.data = ''
-    if request.method == 'POST' and 'uploadfile' not in request.files and form.validate():
+    if request.method == 'POST' and 'uploadfile' not in request.files:
         the_file = form.file_name.data
-        validated = True
+        if form.validate():
+            validated = True
         # else:
         #     the_error = ''
         #     for attrib in ('original_file_name', 'file_name', 'license', 'description', 'author_name', 'author_email', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files', 'readme', 'github_branch', 'commit_message', 'submit', 'download', 'install', 'pypi', 'github', 'cancel', 'delete'):

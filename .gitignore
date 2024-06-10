@@ -4,7 +4,7 @@
 .#*
 *.pyc
 en
-*/auto
+auto/
 bundle.sh
 foobar.pickle
 docassemble/build

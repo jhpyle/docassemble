@@ -81,7 +81,7 @@ install_requires = [
     "Docassemble-Flask-User==0.6.30",
     "Docassemble-Pattern==3.6.7",
     "docassemble-textstat==0.7.2",
-    "docassemblekvsession==0.8",
+    "docassemblekvsession==0.9",
     "docopt==0.6.2",
     "docutils==0.20.1",
     "docxcompose==1.4.0",

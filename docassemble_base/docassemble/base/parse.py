@@ -2608,6 +2608,12 @@ class Question:
                         if not isinstance(value, str):
                             raise DASourceError('The docx reference file must be a string.' + self.idebug(data))
                         self.interview.attachment_options['docx_reference_file'] = FileInPackage(value, 'template', self.package)
+                    elif key == 'metadata':
+                        if not isinstance(value, dict):
+                            raise DASourceError('The metadata must be a dictionary.' + self.idebug(data))
+                        if 'metadata' not in self.interview.attachment_options:
+                            self.interview.attachment_options['metadata'] = {}
+                        self.interview.attachment_options['metadata'].update(value)
         if 'script' in data:
             if not isinstance(data['script'], str):
                 raise DASourceError("A script section must be plain text." + self.idebug(data))
@@ -7323,7 +7329,7 @@ class Question:
                     result['formats_to_use'] = ['pdf', 'rtf', 'html']
                 else:
                     result['formats_to_use'] = copy.deepcopy(attachment['valid_formats'])
-            result['metadata'] = {}
+            result['metadata'] = copy.deepcopy(self.interview.attachment_options.get('metadata', {}))
             if len(attachment['metadata']) > 0:
                 for key in attachment['metadata']:
                     data = attachment['metadata'][key]

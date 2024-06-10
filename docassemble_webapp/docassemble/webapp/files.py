@@ -587,6 +587,49 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+    gitignore = """\
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.dmypy.json
+dmypy.json
+*.egg-info/
+.installed.cfg
+*.egg
+.vscode
+*~
+.#*
+en
+.history/
+.idea
+.dir-locals.el
+.flake8
+*.swp
+.DS_Store
+.envrc
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+"""
     if info['readme'] and re.search(r'[A-Za-z]', info['readme']):
         readme = str(info['readme'])
     else:
@@ -730,6 +773,8 @@ machine learning training files, and other source files.
             shutil.copy2(orig_file, os.path.join(sourcesdir, the_file))
         else:
             logmessage("failure on " + orig_file)
+    with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
+        the_file.write(gitignore)
     with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
         the_file.write(readme)
     os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))
