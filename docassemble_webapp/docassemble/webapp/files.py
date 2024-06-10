@@ -484,7 +484,7 @@ def get_ext_and_mimetype(filename):
 
 
 def publish_package(pkgname, info, author_info, current_project='default'):
-    directory = make_package_dir(pkgname, info, author_info, current_project=current_project)
+    directory = make_package_dir(pkgname, info, author_info, current_project=current_project, include_gitignore=False)
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
     try:
@@ -556,7 +556,7 @@ def get_version_suffix(package_name):
     return ''
 
 
-def make_package_dir(pkgname, info, author_info, directory=None, current_project='default'):
+def make_package_dir(pkgname, info, author_info, directory=None, current_project='default', include_gitignore=True):
     area = {}
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
@@ -773,8 +773,9 @@ machine learning training files, and other source files.
             shutil.copy2(orig_file, os.path.join(sourcesdir, the_file))
         else:
             logmessage("failure on " + orig_file)
-    with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
-        the_file.write(gitignore)
+    if include_gitignore:
+        with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
+            the_file.write(gitignore)
     with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
         the_file.write(readme)
     os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))

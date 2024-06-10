@@ -17694,7 +17694,7 @@ def create_playground_package():
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
-                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, directory=directory, current_project=current_project)
+                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, directory=directory, current_project=current_project, include_gitignore=False)
                 if branch:
                     the_branch = branch
                 else:
