@@ -156,7 +156,7 @@ install_requires = [
     "minio==7.2.0",
     "monotonic==1.6",
     "more-itertools==10.1.0",
-    "msal==1.26.0",
+    "msal==1.28.0",
     "msal-extensions==1.1.0",
     "msrest==0.7.1",
     "multidict==6.0.4",
