@@ -244,7 +244,7 @@ install_requires = [
     "ruamel.yaml.string==0.1.1",
     "s3transfer==0.9.0",
     "s4cmd==2.1.0",
-    "scikit-learn==1.3.2",
+    "scikit-learn==1.5.0",
     "scipy==1.11.4",
     "SecretStorage==3.3.3",
     "selenium==4.16.0",
