@@ -1409,6 +1409,14 @@ sections:
 
 If no language is specified, the fallback language `*` is used.
 
+Section headings are not processed as [Mako]. As a result, the
+[`translations`] system cannot be used to translate section
+headings. Thus the translation method described above, using the
+`language` modifier, must be used to support section headings in
+multiple languages. (Alternatively, you could use [`code` blocks] and
+the [`nav.set_sections()`] to define the sections using [`template`]
+blocks reduced to text.)
+
 In the example above, the [`section`] modifier referred to sections
 using the same text that is displayed to the user.  However, in some
 circumstances, you might want to use a shorthand to refer to a
@@ -1644,7 +1652,7 @@ about the `language` setting of a question.
 One way that **docassemble** supports [multi-lingual interviews] is
 through the [`language` modifier] on a [`question`] and the [`default
 language`] block, which sets a default value for the [`language`
-modifier].  Your interview can contain [`question`]s in English that
+modifier]. Your interview can contain [`question`]s in English that
 don't have a [`language` modifier], and [`question`]s in French that
 have the `language: fr` modifier set.  If the current language in an
 interview (as determined by the [`set_language()`] function) is French
@@ -1684,6 +1692,12 @@ The `translations` block is only capable of defining translations for
 blocks that come after the `translations` block.  Therefore, it is a
 good practice to make sure that the `translations` block is placed as
 one of the very first blocks in your interview [YAML] file.
+
+Since the `translations` block only translates phrases in which [Mako]
+templating is allowed, there are some parts of the YAML that are not
+translatable through a `translations` block. For example, `sections`
+blocks do not use [Mako] and thus do not use the `translations`
+system.
 
 For more information about using translation files, read the section
 [Download an interview phrase translation file]. See [language
