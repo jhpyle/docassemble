@@ -986,7 +986,7 @@ If `some_variable` contains Markdown indicating bold, italics, or
 other character-level formatting, but no paragraph breaks, lists, or
 other paragraph-level formatting, write:
 
-> I went to {% raw %}{{r some_variable \| inline markdown }}{% endraw %} for lunch.
+> I went to {% raw %}{{r some_variable \| inline_markdown }}{% endraw %} for lunch.
 {: .blockquote}
 
 It is important that you understand the difference between
