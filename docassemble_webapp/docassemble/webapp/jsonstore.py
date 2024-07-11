@@ -66,7 +66,7 @@ def write_answer_json(user_code, filename, data, tags=None, persistent=False):
         existing_entry.modtime = datetime.datetime.utcnow()
         existing_entry.persistent = persistent
     else:
-        new_entry = JsonStorage(filename=filename, key=user_code, data=data, tags=tags, persistent=persistent)
+        new_entry = JsonStorage(filename=filename, key=user_code, data=data, tags=tags, persistent=persistent, modtime=datetime.datetime.utcnow())
         JsonDb.add(new_entry)
     JsonDb.commit()
 

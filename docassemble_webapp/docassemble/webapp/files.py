@@ -30,6 +30,50 @@ cloud = docassemble.webapp.cloud.get_cloud()
 
 UPLOAD_DIRECTORY = daconfig.get('uploads', '/usr/share/docassemble/files')
 
+DEFAULT_GITIGNORE = """\
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache/
+.dmypy.json
+dmypy.json
+*.egg-info/
+.installed.cfg
+*.egg
+.vscode
+*~
+.#*
+en
+.history/
+.idea
+.dir-locals.el
+.flake8
+*.swp
+.DS_Store
+.envrc
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+"""
+
 
 def listfiles(directory):
     result = []
@@ -484,7 +528,7 @@ def get_ext_and_mimetype(filename):
 
 
 def publish_package(pkgname, info, author_info, current_project='default'):
-    directory = make_package_dir(pkgname, info, author_info, current_project=current_project, include_gitignore=False)
+    directory = make_package_dir(pkgname, info, author_info, current_project=current_project)
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
     try:
@@ -556,7 +600,7 @@ def get_version_suffix(package_name):
     return ''
 
 
-def make_package_dir(pkgname, info, author_info, directory=None, current_project='default', include_gitignore=True):
+def make_package_dir(pkgname, info, author_info, directory=None, current_project='default'):
     area = {}
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
@@ -587,53 +631,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-    gitignore = """\
-__pycache__/
-*.py[cod]
-*$py.class
-.mypy_cache/
-.dmypy.json
-dmypy.json
-*.egg-info/
-.installed.cfg
-*.egg
-.vscode
-*~
-.#*
-en
-.history/
-.idea
-.dir-locals.el
-.flake8
-*.swp
-.DS_Store
-.envrc
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-"""
+    using_default = {}
+    if info['gitignore'] and re.search(r'[A-Za-z]', info['gitignore']):
+        gitignore = str(info['gitignore'])
+    else:
+        gitignore = daconfig.get('default gitignore', DEFAULT_GITIGNORE)
+        using_default['gitignore'] = True
     if info['readme'] and re.search(r'[A-Za-z]', info['readme']):
         readme = str(info['readme'])
     else:
         readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
+        using_default['readme'] = True
     manifestin = """\
 include README.md
 """
@@ -773,12 +781,14 @@ machine learning training files, and other source files.
             shutil.copy2(orig_file, os.path.join(sourcesdir, the_file))
         else:
             logmessage("failure on " + orig_file)
-    if include_gitignore:
+    if not using_default['gitignore'] or not os.path.isfile(os.path.join(packagedir, '.gitignore')):
         with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
             the_file.write(gitignore)
-    with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
-        the_file.write(readme)
-    os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))
+        os.utime(os.path.join(packagedir, '.gitignore'), (info['modtime'], info['modtime']))
+    if not using_default['readme'] or not os.path.isfile(os.path.join(packagedir, 'README.md')):
+        with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
+            the_file.write(readme)
+        os.utime(os.path.join(packagedir, 'README.md'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'LICENSE'), 'w', encoding='utf-8') as the_file:
         the_file.write(licensetext)
     os.utime(os.path.join(packagedir, 'LICENSE'), (info['modtime'], info['modtime']))

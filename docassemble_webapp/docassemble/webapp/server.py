@@ -73,7 +73,7 @@ from docassemble.webapp.core.models import Uploads, UploadsUserAuth, SpeakList, 
 from docassemble.webapp.daredis import r, r_user, r_store
 from docassemble.webapp.db_object import db
 from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackageForm, UpdatePackageForm, ConfigForm, PlaygroundForm, PlaygroundUploadForm, LogForm, Utilities, PlaygroundFilesForm, PlaygroundFilesEditForm, PlaygroundPackagesForm, GoogleDriveForm, OneDriveForm, GitHubForm, PullPlaygroundPackage, TrainingForm, TrainingUploadForm, APIKey, AddinUploadForm, FunctionFileForm, RenameProject, DeleteProject, NewProject
-from docassemble.webapp.files import SavedFile, get_ext_and_mimetype
+from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, DEFAULT_GITIGNORE
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.info import system_packages
 from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection
@@ -17631,6 +17631,8 @@ def create_playground_package():
                         raise DAError("create_playground_package: error running git init.  " + output)
                     with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
                         the_file.write("")
+                    with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
+                        the_file.write(DEFAULT_GITIGNORE)
                     output += "Doing git config user.email " + json.dumps(github_email) + "\n"
                     try:
                         output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -17643,12 +17645,12 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git config user.name.  " + output)
-                    output += "Doing git add README.MD\n"
+                    output += "Doing git add README.MD .gitignore\n"
                     try:
-                        output += subprocess.check_output(["git", "add", "README.md"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                        output += subprocess.check_output(["git", "add", "README.md", ".gitignore"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
-                        raise DAError("create_playground_package: error running git add README.md.  " + output)
+                        raise DAError("create_playground_package: error running git add README.md .gitignore.  " + output)
                     output += "Doing git commit -m \"first commit\"\n"
                     try:
                         output += subprocess.check_output(["git", "commit", "-m", "first commit"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -17694,7 +17696,7 @@ def create_playground_package():
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
-                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, directory=directory, current_project=current_project, include_gitignore=False)
+                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, directory=directory, current_project=current_project)
                 if branch:
                     the_branch = branch
                 else:
@@ -17868,49 +17870,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-        gitignore = """\
-__pycache__/
-*.py[cod]
-*$py.class
-.mypy_cache/
-.dmypy.json
-dmypy.json
-*.egg-info/
-.installed.cfg
-*.egg
-.vscode
-*~
-.#*
-en
-.history/
-.idea
-.dir-locals.el
-.flake8
-*.swp
-.DS_Store
-.envrc
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-"""
+        gitignore = daconfig.get('default gitignore', DEFAULT_GITIGNORE)
         readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
         manifestin = """\
 include README.md
@@ -20597,6 +20557,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     playground_user = get_playground_user()
     area_sec = {'templates': 'playgroundtemplate', 'static': 'playgroundstatic', 'sources': 'playgroundsources', 'questions': 'playground'}
     readme_text = ''
+    gitignore_text = ''
     setup_py = ''
     if branch in ('', 'None'):
         branch = None
@@ -20726,6 +20687,9 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
             if filename == 'README.md' and at_top_level:
                 with open(orig_file, 'r', encoding='utf-8') as fp:
                     readme_text = fp.read()
+            if filename == '.gitignore' and at_top_level:
+                with open(orig_file, 'r', encoding='utf-8') as fp:
+                    gitignore_text = fp.read()
             if filename == 'setup.py' and at_top_level:
                 with open(orig_file, 'r', encoding='utf-8') as fp:
                     setup_py = fp.read()
@@ -20755,7 +20719,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
                 inner_item = re.sub(r'^"+', '', inner_item)
                 the_list.append(inner_item)
             extracted[m.group(1)] = the_list
-    info_dict = {'readme': readme_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': extracted.get('install_requires', []), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', ''), 'github_url': github_url, 'github_branch': branch, 'pypi_package_name': pypi_package}
+    info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': extracted.get('install_requires', []), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', ''), 'github_url': github_url, 'github_branch': branch, 'pypi_package_name': pypi_package}
     info_dict['dependencies'] = [x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
     # output += "info_dict is set\n"
     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
@@ -21078,6 +21042,7 @@ def playground_packages():
                 zippath.close()
                 with zipfile.ZipFile(zippath.name, mode='r') as zf:
                     readme_text = ''
+                    gitignore_text = ''
                     setup_py = ''
                     extracted = {}
                     data_files = {'templates': [], 'static': [], 'sources': [], 'interviews': [], 'modules': [], 'questions': []}
@@ -21125,6 +21090,10 @@ def playground_packages():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 readme_text = the_file_obj.read()
+                        if filename == '.gitignore' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                gitignore_text = the_file_obj.read()
                         if filename == 'setup.py' and directory == root_dir:
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
@@ -21154,7 +21123,7 @@ def playground_packages():
                                 inner_item = re.sub(r'^"+', '', inner_item)
                                 the_list.append(inner_item)
                             extracted[m.group(1)] = the_list
-                    info_dict = {'readme': readme_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
+                    info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
 
                     info_dict['dependencies'] = [x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
@@ -21254,7 +21223,7 @@ def playground_packages():
                     with open(filename, 'r', encoding='utf-8') as fp:
                         content = fp.read()
                         old_info = standardyaml.load(content, Loader=standardyaml.FullLoader)
-                    for name in ('github_url', 'github_branch', 'pypi_package_name'):
+                    for name in ('github_url', 'github_branch', 'pypi_package_name', 'gitignore'):
                         if old_info.get(name, None):
                             new_info[name] = old_info[name]
                 with open(filename, 'w', encoding='utf-8') as fp:
@@ -26996,10 +26965,10 @@ def get_user_info(user_id=None, email=None, case_sensitive=False, admin=False):
         else:
             email = re.sub(r'\%', '', email)
             user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.email.ilike(email))).scalar()
+    if not (admin or current_user.has_role_or_permission('admin', 'advocate', permissions=['access_user_info']) or (user is not None and current_user.same_as(user_id))):
+        raise DAException("You do not have sufficient privileges to access information about other users")
     if user is None or user.social_id.startswith('disabled$'):
         return None
-    if not admin and not current_user.has_role_or_permission('admin', 'advocate', permissions=['access_user_info']) and not current_user.same_as(user_id):
-        raise DAException("You do not have sufficient privileges to access information about other users")
     for role in user.roles:
         user_info['privileges'].append(role.name)
     for attrib in ('id', 'email', 'first_name', 'last_name', 'country', 'subdivisionfirst', 'subdivisionsecond', 'subdivisionthird', 'organization', 'timezone', 'language', 'active'):
@@ -29596,6 +29565,7 @@ def api_playground_install():
                 zippath.close()
                 with zipfile.ZipFile(zippath.name, mode='r') as zf:
                     readme_text = ''
+                    gitignore_text = ''
                     setup_py = ''
                     extracted = {}
                     data_files = {'templates': [], 'static': [], 'sources': [], 'interviews': [], 'modules': [], 'questions': []}
@@ -29641,6 +29611,10 @@ def api_playground_install():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 readme_text = the_file_obj.read()
+                        if filename == '.gitignore' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                gitignore_text = the_file_obj.read()
                         if filename == 'setup.py' and directory == root_dir:
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
@@ -29670,7 +29644,7 @@ def api_playground_install():
                                 inner_item = re.sub(r'^"+', '', inner_item)
                                 the_list.append(inner_item)
                             extracted[m.group(1)] = the_list
-                    info_dict = {'readme': readme_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
+                    info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
 
                     info_dict['dependencies'] = [x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))

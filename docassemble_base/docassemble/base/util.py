@@ -7506,10 +7506,8 @@ def interview_default(the_part, default_value, language):
     if the_part in this_thread.internal and this_thread.internal[the_part] is not None:
         return this_thread.internal[the_part]
     for lang in (language, get_language(), '*'):
-        if lang is not None:
-            if lang in this_thread.interview.default_title:
-                if the_part in this_thread.interview.default_title[lang]:
-                    return this_thread.interview.default_title[lang][the_part]
+        if lang is not None and this_thread.interview is not None and lang in this_thread.interview.default_title and the_part in this_thread.interview.default_title[lang]:
+            return this_thread.interview.default_title[lang][the_part]
     return default_value
 
 
@@ -8780,8 +8778,20 @@ class Individual(Person):
         birth_date = as_datetime(self.birthdate)
         rd = dateutil.relativedelta.relativedelta(comparator, birth_date)
         if decimals:
-            return float(rd.years)
+            return float(rd.years + rd.months/12.0 + rd.days/365.0 + rd.hours/(365.0*24.0) + rd.minutes/(365.0*24.0*60.0))
         return int(rd.years)
+
+    def age_in_months(self, decimals=False, as_of=None):
+        """Returns the individual's age in months, based on self.birthdate."""
+        if as_of is None:
+            comparator = current_datetime()
+        else:
+            comparator = as_datetime(as_of)
+        birth_date = as_datetime(self.birthdate)
+        rd = dateutil.relativedelta.relativedelta(comparator, birth_date)
+        if decimals:
+            return float(rd.years*12.0 + rd.months + 12.0*(rd.days/365.0 + rd.hours/(365.0*24.0) + rd.minutes/(365.0*24.0*60.0)))
+        return int(rd.years*12.0 + rd.months)
 
     def first_name_hint(self):
         """If the individual is the user and the user is logged in and
@@ -9593,7 +9603,8 @@ def google_ocr_file(image_file, raw_result=False):
                         output.append(the_response)
                     else:
                         for item in the_response['responses']:
-                            output += item['fullTextAnnotation']['text'] + "\n"
+                            if 'fullTextAnnotation' in item and 'text' in item['fullTextAnnotation']:
+                                output += item['fullTextAnnotation']['text'] + "\n"
                 for blob in blob_list:
                     blob.delete()
             else:

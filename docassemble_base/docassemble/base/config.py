@@ -743,6 +743,9 @@ def load(**kwargs):
         config_error('For security, delete the default admin account directive, which is no longer needed')
     if 'ocr languages' not in daconfig:
         daconfig['ocr languages'] = {}
+    if 'default gitignore' in daconfig and not isinstance(daconfig['default gitignore'], str):
+        config_error('default gitignore must be a string')
+        del daconfig['default gitignore']
     if not isinstance(daconfig['ocr languages'], dict):
         config_error('ocr languages must be a dict')
         daconfig['ocr languages'] = {}

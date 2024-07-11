@@ -4540,6 +4540,7 @@ def process_action():
             this_thread.misc['forgive_missing_question'] = this_thread.current_info['arguments']['items'][0]['follow up']
         force_ask(*this_thread.current_info['arguments']['items'])
     if the_action in ('_da_list_ensure_complete', '_da_dict_ensure_complete') and 'group' in this_thread.current_info['arguments']:
+        # logmessage("the_action is " + the_action)
         group_name = this_thread.current_info['arguments']['group']
         if illegal_variable_name(group_name):
             raise DAError("Illegal variable name")
@@ -5619,11 +5620,9 @@ def manage_privileges(*pargs):
 
 def get_user_info(user_id=None, email=None):
     """Returns information about the given user, or the current user, if no user ID or e-mail is provided."""
-    if this_thread.current_info['user']['is_authenticated']:
-        if user_id is None and email is None:
-            user_id = this_thread.current_info['user']['the_user_id']
-        return server.get_user_info(user_id=user_id, email=email)
-    return None
+    if this_thread.current_info['user']['is_authenticated'] and user_id is None and email is None:
+        user_id = this_thread.current_info['user']['the_user_id']
+    return server.get_user_info(user_id=user_id, email=email)
 
 
 def set_user_info(**kwargs):

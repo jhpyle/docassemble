@@ -787,9 +787,9 @@ class InterviewStatus:
         self.continueLabel = question_result['continue_label']
         self.decorations = question_result['decorations']
         self.audiovideo = question_result['audiovideo']
-        self.helpText = question_result['help_text']
-        self.interviewHelpText = question_result['interview_help_text']
-        self.attachments = question_result['attachments']
+        self.helpText = question_result['help_text'] or []
+        self.interviewHelpText = question_result['interview_help_text'] or []
+        self.attachments = question_result['attachments'] or []
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
         self.other_defaults = {}
@@ -867,18 +867,18 @@ class InterviewStatus:
                 the_help['audio'] = [{'url': x[0], 'mime_type': x[1]} for x in audio_result]
             if len(video_result) > 0:
                 the_help['video'] = [{'url': x[0], 'mime_type': x[1]} for x in video_result]
-        if 'content' in help_text and help_text['content'] is not None:
-            the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=(not encode))
-            if debug:
-                if 'help' not in the_help:
-                    the_help['help'] = ''
-                the_help['help'] += the_help['content']
         if 'heading' in help_text and help_text['heading'] is not None:
             the_help['heading'] = help_text['heading'].rstrip()
             if debug:
                 if 'help' not in the_help:
                     the_help['help'] = ''
                 the_help['help'] += '<p>' + the_help['heading'] + '</p>'
+        if 'content' in help_text and help_text['content'] is not None:
+            the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=(not encode))
+            if debug:
+                if 'help' not in the_help:
+                    the_help['help'] = ''
+                the_help['help'] += '<p>' + the_help['content'] + '</p>'
         # elif len(self.helpText) > 1:
         #    the_help['heading'] = word('Help with this question')
         return the_help
@@ -932,7 +932,7 @@ class InterviewStatus:
             if hasattr(self, param) and getattr(self, param) is not None:
                 result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=(not encode))
                 if debug:
-                    output['question'] += result[param]
+                    output['question'] += '<p>' + result[param] + '</p>'
         if debug:
             if hasattr(self, 'breadcrumb') and self.breadcrumb is not None:
                 output['breadcrumb label'] = self.breadcrumb
@@ -1026,10 +1026,22 @@ class InterviewStatus:
                 result['help']['label'] = self.question.help()
             result['help']['title'] = word("Help is available for this question")
             result['help']['specific'] = self.question.helptext is not None
+            if debug:
+                for item in result['helpText']:
+                    output['help'] += '<div>'
+                    if 'label' in item:
+                        output['help'] += '<p>' + item['label'] + '</p>'
+                    if 'help' in item:
+                        output['help'] += '<div>' + item['help'] + '</div>'
+                    output['help'] += '</div>'
         if hasattr(self, 'interviewHelpText') and len(self.interviewHelpText) > 0:
             result['interviewHelpText'] = []
             for help_text in self.interviewHelpText:
                 result['interviewHelpText'].append(self.convert_help(help_text, encode, debug))
+            if debug:
+                for item in result['interviewHelpText']:
+                    if 'help' in item:
+                        output['help'] += '<div>' + item['help'] + '</div>'
             if 'help' not in result:
                 result['help'] = {}
             if self.interviewHelpText[0]['label']:
@@ -1040,7 +1052,7 @@ class InterviewStatus:
             if not (hasattr(self, 'helpText') and len(self.helpText) > 0):
                 result['help']['specific'] = False
         if 'questionText' not in result and self.question.question_type == "signature":
-            result['questionText'] = word('Sign Your Name')
+            result['questionText'] = '<p>' + word('Sign Your Name') + '</p>'
             if debug:
                 output['question'] += '<p>' + result['questionText'] + '</p>'
         result['questionType'] = self.question.question_type
@@ -1104,7 +1116,7 @@ class InterviewStatus:
                     if attachment['description']:
                         the_attachment['description'] = docassemble.base.filter.markdown_to_html(attachment['description'], status=self, verbatim=(not encode))
                         if debug:
-                            output['question'] += the_attachment['description']
+                            output['question'] += '<p>' + the_attachment['description'] + '</p>'
                 for key in ('valid_formats', 'filename', 'content', 'markdown', 'raw'):
                     if key in attachment:
                         if attachment[key]:
@@ -1279,6 +1291,10 @@ class InterviewStatus:
                 the_default = None
             if self.question.question_type == 'multiple_choice' or hasattr(field, 'choicetype') or (hasattr(field, 'datatype') and field.datatype in ('object', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes', 'object_radio')):
                 the_field['choices'] = self.get_choices_data(field, the_default, the_user_dict, encode=encode)
+                if debug:
+                    for item in the_field['choices']:
+                        if 'label' in item:
+                            output['question'] += '<p>' + item['label'] + '</p>'
             if hasattr(field, 'aota'):
                 the_field['all_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['aota'][field.number], do_terms=False, status=self, verbatim=(not encode))
             if hasattr(field, 'nota'):
@@ -1335,7 +1351,7 @@ class InterviewStatus:
             if field.number in self.helptexts:
                 the_field['helptext'] = docassemble.base.filter.markdown_to_html(self.helptexts[field.number], status=self, verbatim=(not encode))
                 if debug:
-                    output['question'] += the_field['helptext']
+                    output['question'] += '<p>' + the_field['helptext'] + '</p>'
             if self.question.question_type in ("yesno", "yesnomaybe"):
                 the_field['true_label'] = docassemble.base.filter.markdown_to_html(self.question.yes(), trim=True, do_terms=False, status=self, verbatim=(not encode))
                 the_field['false_label'] = docassemble.base.filter.markdown_to_html(self.question.no(), trim=True, do_terms=False, status=self, verbatim=(not encode))
@@ -1365,7 +1381,7 @@ class InterviewStatus:
             for question_type in ('question', 'help'):
                 if question_type not in output:
                     continue
-                phrase = docassemble.base.functions.server.to_text(output[question_type])  # pylint: disable=assignment-from-none
+                phrase = docassemble.base.functions.server.to_text('<div>' + output[question_type] + '</div>')  # pylint: disable=assignment-from-none
                 if (not phrase) or len(phrase) < 10:
                     phrase = "The sky is blue."
                 phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
@@ -6896,7 +6912,10 @@ class Question:
                     if not uses_value_label:
                         result_dict['label'] = TextObject(key, question=self)
                     self.embeds = True
-                    result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=prettyyaml.dump_to_string(value))
+                    try:
+                        result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code=prettyyaml.dump_to_string(value))
+                    except TypeError:
+                        result_dict['key'] = Question(value, self.interview, register_target=register_target, source=self.from_source, package=self.package, source_code='')
                 elif isinstance(value, str):
                     if value in ('exit', 'logout', 'exit_logout', 'leave') and 'url' in the_dict:
                         self.embeds = True
@@ -7179,9 +7198,9 @@ class Question:
                 the_string = variable_name + " = DAFileCollection(" + repr(variable_name) + ")"
                 exec(the_string, the_user_dict)
                 the_name = attachment['name'].text(the_user_dict).strip()
-                the_filename = attachment['filename'].text(the_user_dict).strip()
+                the_filename = docassemble.base.functions.secure_filename_unicode_ok(attachment['filename'].text(the_user_dict).strip())
                 if the_filename == '':
-                    the_filename = docassemble.base.functions.space_to_underscore(the_name)
+                    the_filename = docassemble.base.functions.secure_filename_unicode_ok(docassemble.base.functions.space_to_underscore(the_name))
                 the_user_dict['_attachment_info'] = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': result['valid_formats'], 'formats': result['formats_to_use'], 'attachment': {'name': attachment['question_name'], 'number': attachment['indexno']}, 'extension': result.get('extension', {}), 'mimetype': result.get('mimetype', {}), 'content': result.get('content', {}), 'markdown': result.get('markdown', {}), 'metadata': result.get('metadata', {}), 'convert_to_pdf_a': result.get('convert_to_pdf_a', False), 'convert_to_tagged_pdf': result.get('convert_to_tagged_pdf', False), 'orig_variable_name': result.get('orig_variable_name', None), 'raw': result['raw'], 'permissions': result.get('permissions', None)}
                 if len(manual_files) > 0:
                     the_user_dict['_attachment_info']['manual_formats'] = result['manual_formats']
@@ -7319,7 +7338,7 @@ class Question:
             if attachment['raw']:
                 if '.' in the_filename:
                     m = re.search(r'(.*)(\..*)', the_filename)
-                    result['filename'] = m.group(1)
+                    result['filename'] = docassemble.base.functions.secure_filename_unicode_ok(m.group(1))
                     actual_extension = m.group(2)
                 result['raw'] = actual_extension
                 result['formats_to_use'] = ['raw']

@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.4.108] - 2024-07-10
+
+### Changed
+- The standard `.gitignore` can be customized with the Configuration
+  directive `default gitignore`.
+- When using `_use_jinja2=False`, the DOCX file is still processed for
+  images and other global elements.
+
+### Fixed
+- Missing method `.age_in_months()`.
+- The `get_user_info()` function returned `None` if the user was not
+  logged in, even if anonymous users are given the permission to
+  access user information.
+- Text analysis algorithm received insufficient information when the
+  `question` is represented as data.
+- The `modtime` of entries created or modified by
+  `store_variables_snapshot()` was inconsistent because initial
+  entries used the default PostgreSQL datetime, and entries that were
+  changed used `datetime.datetime.utcnow()`.
+- An exception could arise in rare circumstances due to
+  interview-specific settings being accessed by a function that was
+  called outside of the context of a particular interview.
+
 ## [1.4.107] - 2024-06-10
 
 ### Changed
