@@ -293,7 +293,7 @@ install_requires = [
     "XlsxWriter==3.1.9",
     "xlwt==1.3.0",
     "yarl==1.9.4",
-    "zipp==3.17.0"
+    "zipp==3.19.1"
 ]
 
 setup(name='docassemble.webapp',
