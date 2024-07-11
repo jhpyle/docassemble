@@ -32,7 +32,7 @@ install_requires = [
     "attrs==23.1.0",
     "azure-common==1.1.28",
     "azure-core==1.29.6",
-    "azure-identity==1.15.0",
+    "azure-identity==1.16.1",
     "azure-keyvault-secrets==4.7.0",
     "azure-nspkg==3.0.2",
     "azure-storage-blob==12.19.0",
@@ -54,7 +54,7 @@ install_requires = [
     "certbot==2.8.0",
     "certbot-apache==2.8.0",
     "certbot-nginx==2.8.0",
-    "certifi==2023.11.17",
+    "certifi==2024.7.4",
     "cffi==1.16.0",
     "chardet==5.2.0",
     "charset-normalizer==3.3.2",
@@ -156,7 +156,7 @@ install_requires = [
     "minio==7.2.0",
     "monotonic==1.6",
     "more-itertools==10.1.0",
-    "msal==1.26.0",
+    "msal==1.28.0",
     "msal-extensions==1.1.0",
     "msrest==0.7.1",
     "multidict==6.0.4",
@@ -244,7 +244,7 @@ install_requires = [
     "ruamel.yaml.string==0.1.1",
     "s3transfer==0.10.0",
     "s4cmd==2.1.0",
-    "scikit-learn==1.3.2",
+    "scikit-learn==1.5.0",
     "scipy==1.11.4",
     "SecretStorage==3.3.3",
     "selenium==4.16.0",
@@ -276,7 +276,7 @@ install_requires = [
     "tzlocal==5.2",
     "ua-parser==0.18.0",
     "uritemplate==4.1.1",
-    "urllib3==2.0.7",
+    "urllib3==2.2.2",
     "us==3.1.1",
     "user-agents==2.2.0",
     "uWSGI==2.0.23",
@@ -293,7 +293,7 @@ install_requires = [
     "XlsxWriter==3.1.9",
     "xlwt==1.3.0",
     "yarl==1.9.4",
-    "zipp==3.17.0"
+    "zipp==3.19.1"
 ]
 
 setup(name='docassemble.webapp',
