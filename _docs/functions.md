@@ -7771,6 +7771,10 @@ included documents. You should set `change_numbering=False` when your
 included document only contains list items, and you want the list
 items to merge into a list in the main document.
 
+There is a special keyword parameter `_use_jinja2` that when set to
+`False` will prevent Jinja2 processing from taking place within the
+subdocument.
+
 <a name="include_docx_template_inline"></a>As discussed above,
 `include_docx_template()` needs to be used with {% raw %}{{p ... }}{%
 endraw %} because it returns the paragraphs from the included
