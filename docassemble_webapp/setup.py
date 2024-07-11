@@ -32,7 +32,7 @@ install_requires = [
     "attrs==23.1.0",
     "azure-common==1.1.28",
     "azure-core==1.29.6",
-    "azure-identity==1.15.0",
+    "azure-identity==1.16.1",
     "azure-keyvault-secrets==4.7.0",
     "azure-nspkg==3.0.2",
     "azure-storage-blob==12.19.0",
