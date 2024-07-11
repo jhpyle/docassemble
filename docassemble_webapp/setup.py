@@ -54,7 +54,7 @@ install_requires = [
     "certbot==2.8.0",
     "certbot-apache==2.8.0",
     "certbot-nginx==2.8.0",
-    "certifi==2023.11.17",
+    "certifi==2024.7.4",
     "cffi==1.16.0",
     "chardet==5.2.0",
     "charset-normalizer==3.3.2",
