@@ -276,7 +276,7 @@ install_requires = [
     "tzlocal==5.2",
     "ua-parser==0.18.0",
     "uritemplate==4.1.1",
-    "urllib3==2.0.7",
+    "urllib3==2.2.2",
     "us==3.1.1",
     "user-agents==2.2.0",
     "uWSGI==2.0.23",
