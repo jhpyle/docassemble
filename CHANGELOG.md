@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.109] - 2024-07-12
+
+### Fixed
+- Bug related to Playground package generation, introduced in 1.4.108.
+
 ## [1.4.108] - 2024-07-10
 
 ### Changed

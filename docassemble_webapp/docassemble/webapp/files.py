@@ -631,13 +631,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-    using_default = {}
-    if info['gitignore'] and re.search(r'[A-Za-z]', info['gitignore']):
+    using_default = {'gitignore': False, 'readme': False}
+    if info.get('gitignore') and re.search(r'[A-Za-z]', info['gitignore']):
         gitignore = str(info['gitignore'])
     else:
         gitignore = daconfig.get('default gitignore', DEFAULT_GITIGNORE)
         using_default['gitignore'] = True
-    if info['readme'] and re.search(r'[A-Za-z]', info['readme']):
+    if info.get('readme') and re.search(r'[A-Za-z]', info['readme']):
         readme = str(info['readme'])
     else:
         readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
