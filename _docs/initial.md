@@ -2165,15 +2165,14 @@ code: |
 ## <a name="hide corner interface"></a>Hiding the menu and login interface entirely
 
 The interface in the upper-right corner lets the user log in, or shows
-a menu, or shows the exit button. This interface can be removed by
-setting `hide corner interface` to `True`.
+a menu, shows the exit button, and/or shows the [`navigation bar
+html`]. This interface can be removed by setting `hide corner
+interface` to `True`.
 
 {% highlight yaml %}
 features:
   hide corner interface: True
 {% endhighlight %}
-
-Items you have created with [`navigation bar html`] will not be affected.
 
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
