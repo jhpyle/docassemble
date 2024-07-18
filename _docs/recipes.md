@@ -257,6 +257,23 @@ other parts of a screen, such as the `subquestion`.
 
 {% include demo-side-by-side.html demo="testaccordion3" %}
 
+If you need empty accordions to be hidden you can use some CSS to hide
+empty accordions.
+
+{% include demo-side-by-side.html demo="testaccordion4" %}
+
+The CSS in the `accordion.css` file is:
+
+{% highlight css %}
+div.accordion-item:has(.accordion-body:empty) h2 {
+    display: none;
+}
+
+div.accordion-item:has(.accordion-body:empty) div {
+    display: none;
+}
+{% endhighlight %}
+
 When using functions like these that change the HTML structure of the
 screen, it is very important not to forget to call the functions that
 insert closing HTML tags, like `end_accordion()` in this example. If

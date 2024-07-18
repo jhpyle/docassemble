@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.109](https://github.com/jhpyle/docassemble/releases/tag/v1.4.109) - 2024-07-12
+
+
+### Fixed
+- Bug related to Playground package generation, introduced in 1.4.108.
+
 ## [1.4.108](https://github.com/jhpyle/docassemble/releases/tag/v1.4.108) - 2024-07-10
 
 

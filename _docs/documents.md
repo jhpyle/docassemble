@@ -367,9 +367,14 @@ To set interview-wide default values for the `metadata`, you can use
 * `TripleSpacing` - set this to `True` for triple spacing with
   indentation of first lines.
 * `fontsize` - default is `12pt`.  Must be one of `10pt`, `11pt`, and `12pt`.
-* `Indentation` - not defined by default.  By default, the first line
-  of each paragraph is indented, unless `SingleSpacing` is set, in
-  which case there is no indentation.
+* `Indentation` - not defined by default. In `SingleSpacing` mode,
+  which by default has no indentation of the first line of each
+  paragraph, `Indentation` can be set to `True` to force the
+  indentation of the first line of each paragraph. The amount of
+  indentation is 0.5 inches but this can be customized with
+  `IndentationAmount`. In `DoubleSpacing` mode, first-line indentation
+  is enabled by default and can be turned off by setting
+  `IndentationAmount` to `0pt`.
 * `IndentationAmount` - not defined by default.  When double spacing
   is used, the default is 0.5 inches of first-line indentation in each
   paragraph.
