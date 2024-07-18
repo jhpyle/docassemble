@@ -1260,7 +1260,7 @@ Here is an example that uses `.all_false()`:
 {% include side-by-side.html demo="all-false" %}
 
 <a name="DADict.true_values"></a>The method `.true_values()` will return a
-[list] of keys that are `True`.
+[`DAList`] of keys that are `True`.
 
 {% include side-by-side.html demo="true-values" %}
 
@@ -1271,7 +1271,7 @@ order of the underlying dictionary. Otherwise, the keys are sorted in
 alphabetical order.
 
 <a name="DADict.false_values"></a>Similarly, `.false_values()` will return a
-[list] of keys that are `False`.
+[`DAList`] of keys that are `False`.
 
 {% include side-by-side.html demo="false-values" %}
 
