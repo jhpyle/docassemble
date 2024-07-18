@@ -755,27 +755,69 @@ on the file variable using the keyword attribute `persistent`.
 is available to anyone, including non-logged in users.  Even a bot
 that guesses URLs could download the file.  If you want to share with
 particular users, you can indicate specific users using the `allow
-users` modifier.  If `allow users` refers to a [YAML] list, the list
-is expected to be a list of e-mail addresses of users or integers
-indicating the numeric user IDs of users.  If `allow users` refers
-to text, the text is treated as a single item.  If `allow users`
-refers to a [YAML] dictionary, the single key of which is `code`, you
-can define the list with [Python] code.  The code is expected to
-evalute to an e-mail address, an integer user ID, an [`Individual`]
-with the `email` attribute set, or a list or [`DAList`] of any of the
-above.  You can also use the [`.user_access()`] method to control
-which users have access to a file.
+users` modifier.
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users:
+      - peter@abc.com
+      - daniel@abc.com
+{% endhighlight %}
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users:
+      - 1
+      - 2
+{% endhighlight %}
+
+If `allow users` refers to a [YAML] list, the list is expected to be a
+list of e-mail addresses of users or integers indicating the numeric
+user IDs of users. If `allow users` refers to text, the text is
+treated as a single item.
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users: peter@abc.com
+{% endhighlight %}
+
+[Mako] is not available; however, if `allow users` refers to a [YAML]
+dictionary, the single key of which is `code`, you can specify users
+with [Python] code. The code is expected to evalute to an e-mail
+address, an integer user ID, an [`Individual`] with the `email`
+attribute set, or a list or [`DAList`] of any of the above.
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users:
+      code: |
+        [advocate] + ([user_info().id] if user_logged_in() else [])
+{% endhighlight %}
+
+You can also use the [`.user_access()`] method to control which users
+have access to a file.
 
 <a name="allow privileges"></a>Instead of granting access to specific
-other users, you can grant access to categories of users by
-referencing [privileges] by name, such as `user`, `developer`, or
-`advocate`.  If the `allow privileges` modifier refers to a [YAML]
-list, the list items are expected to be text items like `user` or
-`developer`.  If `allow privileges` refers to a string, it is treated
-as a single item.  If it refers to a [YAML] dictionary, the single key
-of which is `code`, you can define the privileges using [Python] code,
-which is expected to evaluate to text (e.g., `'user'`) or a list of
-text strings (e.g., `['user', 'developer']`).  You can also use the
+other users, you can use the `allow privileges` field modifier to
+grant access to categories of users by referencing [privileges] by
+name, such as `user`, `developer`, or `advocate`. The 
+`allow privileges` modifier works much like the `allow users`
+modifier. If the `allow privileges` modifier refers to a [YAML] list,
+the list items are expected to be text items like `user` or
+`developer`. If `allow privileges` refers to a string, it is treated
+as a single item. [Mako] is not allowed. If `allow privileges` refers
+to a [YAML] dictionary, the single key of which is `code`, you can
+define the privileges using [Python] code, which is expected to
+evaluate to text (e.g., `'user'`) or a list of text strings (e.g.,
+`['user', 'developer']`). You can also use the
 [`.privilege_access()`] method to control which users have access to a
 file.
 
