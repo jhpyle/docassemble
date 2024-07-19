@@ -5,7 +5,7 @@ __all__ = ['prog_disclose']
 
 def prog_disclose(template, classname=None):
     if classname is None:
-        classname = ' bg-light'
+        classname = ' bg-secondary-subtle'
     else:
         classname = ' ' + classname.strip()
     the_id = re.sub(r'[^A-Za-z0-9]', '', template.instanceName)

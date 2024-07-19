@@ -1813,6 +1813,8 @@ class DAList(DAObject):
             self.complete_attribute = None
         if 'ask_object_type' in kwargs and kwargs['ask_object_type']:
             self.ask_object_type = True
+            self.object_type = None
+            self.object_type_parameters = {}
             del kwargs['ask_object_type']
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False

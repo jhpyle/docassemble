@@ -822,7 +822,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     continue_button_color = status.extras.get('continuecolor', None) or BUTTON_COLOR
     back_button_val = status.extras.get('back_button', None)
     if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
-        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + (status.extras.get('back button color', None) or BUTTON_COLOR_BACK) + ' ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fa-solid fa-chevron-left"></i> '
+        back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + (status.extras.get('back button color', None) or BUTTON_COLOR_BACK) + ' ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fa-solid fa-chevron-left me-1"></i>'
         back_button += status.back
         back_button += '</button>'
     else:
@@ -1048,6 +1048,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if hasattr(status.question, 'review_saveas'):
             datatypes[safeid(status.question.review_saveas)] = "boolean"
         for field in status.get_field_list():
+            extra_container_class = None
+            if 'css class' in status.extras and field.number in status.extras['css class']:
+                extra_container_class = ' ' + clean_whitespace(status.extras['css class'][field.number])
             if 'html' in status.extras and field.number in status.extras['html']:
                 side_note_content = status.extras['html'][field.number].rstrip()
             elif 'raw html' in status.extras and field.number in status.extras['raw html']:
@@ -1078,12 +1081,12 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         if tabular:
                             fieldlist.append('                <tr class="da-field-container da-field-container-note da-review"><td colspan="2">' + help_wrap(side_note_content, status.helptexts[field.number], status) + '</td></tr>\n')
                         else:
-                            fieldlist.append('                <div class="da-form-group row da-field-container da-field-container-note da-review"><div class="col"><div>' + help_wrap(side_note_content, status.helptexts[field.number], status) + '</div></div></div>\n')
+                            fieldlist.append('                <div class="row da-field-container da-field-container-note da-review da-review-button pt-2 my-2' + (extra_container_class if extra_container_class is not None else '') + '"><div class="col"><div>' + help_wrap(side_note_content, status.helptexts[field.number], status) + '</div></div></div>\n')
                     else:
                         if tabular:
                             fieldlist.append('                <tr class="da-field-container da-field-container-note da-review"><td colspan="2">' + side_note_content + '</td></tr>\n')
                         else:
-                            fieldlist.append('                <div class="da-form-group row da-field-container da-field-container-note da-review"><div class="col"><div>' + side_note_content + '</div></div></div>\n')
+                            fieldlist.append('                <div class="row da-field-container da-field-container-note da-review da-review-button pt-2 my-2' + (extra_container_class if extra_container_class is not None else '') + '"><div class="col"><div>' + side_note_content + '</div></div></div>\n')
                     continue
                 if field.datatype == 'raw html' and 'raw html' in status.extras and field.number in status.extras['raw html'] and side_note_content:
                     fieldlist.append('                ' + side_note_content + '\n')
@@ -1093,12 +1096,12 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         if tabular:
                             fieldlist.append('                <tr class="da-field-container da-field-container-note da-review"><td colspan="2">' + help_wrap(side_note_content, status.helptexts[field.number], status) + '</td></tr>\n')
                         else:
-                            fieldlist.append('                <div class="da-form-group row da-field-container da-field-container-note da-review"><div class="col">' + help_wrap(side_note_content, status.helptexts[field.number], status) + '</div></div>\n')
+                            fieldlist.append('                <div class="row da-field-container da-field-container-note da-review da-review-button pt-2 my-2' + (extra_container_class if extra_container_class is not None else '') + '"><div class="col">' + help_wrap(side_note_content, status.helptexts[field.number], status) + '</div></div>\n')
                     else:
                         if tabular:
                             fieldlist.append('                <tr class="da-field-container da-field-container-note da-review"><td colspan="2">' + side_note_content + '</td></tr>\n')
                         else:
-                            fieldlist.append('                <div class="da-form-group row da-field-container da-field-container-note da-review"><div class="col">' + side_note_content + '</div></div>\n')
+                            fieldlist.append('                <div class="row da-field-container da-field-container-note da-review da-review-button pt-2 my-2' + (extra_container_class if extra_container_class is not None else '') + '"><div class="col">' + side_note_content + '</div></div>\n')
                     continue
                 # elif field.datatype in ['script', 'css']:
                 #     continue
@@ -1120,7 +1123,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if tabular:
                         fieldlist.append('                <tr class="da-review da-review-button-tabular"><td>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</td><td><a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + color + ' da-review-action da-review-action-button" data-action=' + myb64doublequote(status.extras['action'][field.number]) + '>' + icon + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a></td>' + side_note + '</tr>\n')
                     else:
-                        fieldlist.append('                <div class="row' + side_note_parent + ' da-review da-review-button bg-light pt-2 my-2"><div class="col"><a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + color + ' da-review-action da-review-action-button ms-2 mb-1" data-action=' + myb64doublequote(status.extras['action'][field.number]) + '>' + icon + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
+                        fieldlist.append('                <div class="row' + side_note_parent + ' da-review da-review-button' + (extra_container_class if extra_container_class is not None else ' bg-secondary-subtle') + ' pt-2 my-2"><div class="col"><a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + color + ' da-review-action da-review-action-button ms-2 mb-1" data-action=' + myb64doublequote(status.extras['action'][field.number]) + '>' + icon + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + '</a>' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div>' + side_note + '</div>\n')
                     continue
             if hasattr(field, 'label'):
                 if tabular:
@@ -1352,6 +1355,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 else:
                     field_class = ' da-field-container da-field-container-datatype-' + field.datatype
                 if field.datatype == 'html':
+                    if 'css class' in status.extras and field.number in status.extras['css class']:
+                        note_css_class = ' ' + clean_whitespace(status.extras['css class'][field.number])
+                    else:
+                        note_css_class = ''
                     if hasattr(field, 'collect_type'):
                         if not seen_first:
                             if status.extras['list_collect_length'] <= 1:
@@ -1394,10 +1401,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                                 fieldlist.append(note_fields[field.number])
                             else:
                                 if field.number in status.helptexts:
-                                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content=help_wrap(note_fields[field.number], status.helptexts[field.number], status), under_text=under_text))
+                                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + note_css_class + class_def + extra_container_class, content_classes='col', content=help_wrap(note_fields[field.number], status.helptexts[field.number], status), under_text=under_text))
                                     # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col">' + help_wrap(note_fields[field.number], status.helptexts[field.number], status) + '</div></div>\n')
                                 else:
-                                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content='<div>' + note_fields[field.number] + '</div>', under_text=under_text))
+                                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + note_css_class + class_def + extra_container_class, content_classes='col', content='<div>' + note_fields[field.number] + '</div>', under_text=under_text))
                                     # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col"><div>' + note_fields[field.number] + '</div></div></div>\n')
                     # continue
                 elif field.datatype == 'raw html':
@@ -1406,7 +1413,11 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 elif field.datatype == 'note':
                     if field.number in note_fields:
                         if field.number in status.helptexts:
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content=help_wrap(note_fields[field.number], status.helptexts[field.number], status), under_text=under_text))
+                            if 'css class' in status.extras and field.number in status.extras['css class']:
+                                note_css_class = ' ' + clean_whitespace(status.extras['css class'][field.number])
+                            else:
+                                note_css_class = ''
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + note_css_class + class_def + extra_container_class, content_classes='col', content=help_wrap(note_fields[field.number], status.helptexts[field.number], status), under_text=under_text))
                             # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row da-field-container da-field-container-note' + class_def + extra_container_class + '"><div class="col">' + help_wrap(note_fields[field.number], status.helptexts[field.number], status) + '</div></div>\n')
                         else:
                             fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='da-field-container da-field-container-note' + class_def + extra_container_class, content_classes='col', content=note_fields[field.number], under_text=under_text))

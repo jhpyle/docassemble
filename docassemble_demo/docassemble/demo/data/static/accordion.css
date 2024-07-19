@@ -1,0 +1,8 @@
+div.accordion-item:has(.accordion-body:empty) h2 {
+    display: none;
+}
+
+div.accordion-item:has(.accordion-body:empty) div {
+    display: none;
+}
+

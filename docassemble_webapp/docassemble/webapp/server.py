@@ -1544,7 +1544,7 @@ elif daconfig['button style'] == 'outline':
 else:
     app.config['BUTTON_STYLE'] = 'btn-'
 BUTTON_COLOR_NAV_LOGIN = daconfig['button colors'].get('navigation bar login', 'primary')
-app.config['FOOTER_CLASS'] = str(daconfig.get('footer css class', 'bg-light')).strip() + ' dafooter'
+app.config['FOOTER_CLASS'] = str(daconfig.get('footer css class', 'bg-secondary-subtle')).strip() + ' dafooter'
 
 
 def get_page_parts():
@@ -3304,7 +3304,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                             menu_item_classes = ' d-none d-md-block'
                         else:
                             menu_item_classes = ''
-                        match_action = re.search(r'^\?action=([^\&]+)', menu_item['url'])
+                        match_action = re.search(r'\?action=([^\&]+)', menu_item['url'])
                         if match_action:
                             custom_menu += '<a class="dropdown-item' + menu_item_classes + '" data-embaction="' + match_action.group(1) + '" href="' + menu_item['url'] + '">' + menu_item['label'] + '</a>'
                         else:
@@ -3397,6 +3397,9 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
             navbar += '\n            <a class="btn btn-' + BUTTON_COLOR_NAV_LOGIN + ' btn-sm mb-0 ms-3 d-none d-md-block" href="' + login_url + '">' + word('Sign in') + '</a>'
         navbar += """
           </div>"""
+    else:
+        if status.nav_item:
+            navbar += '<ul class="navbar-nav ms-auto">' + status.nav_item + '</ul>'
     navbar += """
         </div>
       </div>
@@ -11454,6 +11457,8 @@ def index(action_argument=None, refer=None):
         }
         $(".da-to-labelauty").labelauty({ class: "labelauty da-active-invisible dafullwidth" });
         $(".da-to-labelauty-icon").labelauty({ label: false });
+        $("input[type=radio].da-to-labelauty:checked").trigger('change');
+        $("input[type=radio].da-to-labelauty-icon:checked").trigger('change');
         $("button").on('click', function(){
           daWhichButton = this;
           return true;
@@ -30400,7 +30405,7 @@ def manage_api():
                 flash(word("Could not create new key"), 'error')
                 return render_template('pages/manage_api.html', **argu)
             argu['description'] = Markup(
-                    """<div class="card text-bg-light mb-3">
+                    """<div class="card bg-info-subtle mb-3">
                       <div class="card-body">
                         <p class="card-text">
                         """ + (word("Your new API key, known internally as <strong>%s</strong>, is:<br />%s<br />") % (form.name.data, '<br /><span class="text-success"><i class="fa-solid fa-check"></i></span> <code id="daApiKey">' + api_key + '</code><wbr /><button aria-label=' + json.dumps(word("Copy API key")) + ' onclick="daCopyToClipboard()" class="btn btn-link ps-1 pt-1" type="button"><i class="fa-regular fa-copy"></i></button>')) + """

@@ -1,0 +1,90 @@
+metadata:
+  title: Review answers
+  short title: Review
+  example start: 3
+  example end: 3
+  documentation: "https://docassemble.org/docs/fields.html#review"
+---
+objects:
+  - fruit_list: DAList.using(object_type=Thing)
+---
+mandatory: True
+code: |
+  favorite_fruit = 'apple'
+  favorite_vegetable = 'turnip'
+  fruit_list.table
+  fruit_list.appendObject()
+  fruit_list[-1].name.text = "Apple"
+  fruit_list.appendObject()
+  fruit_list[-1].name.text = "Orange"
+  fruit_list.appendObject()
+  fruit_list[-1].name.text = "Peach"
+  fruit_list.appendObject()
+  fruit_list[-1].name.text = "Pear"
+  fruit_list.gathered = True
+---
+mandatory: True
+question: |
+  Review your answers
+review:
+  - note: |
+      Please review your favorite fruits
+      and vegetables.
+  - Edit:
+      - favorite_fruit
+    button: |
+      #### Favorite fruit
+
+      You said your favorite
+      fruit was **${ favorite_fruit }**.
+  - Edit:
+      - favorite_vegetable
+    button: |
+      #### Favorite vegetable
+
+      You said your favorite
+      fruit was **${ favorite_vegetable }**.
+    css class: bg-warning-subtle
+  - note: |
+      #### Best fruits
+
+      ${ fruit_list.table }
+
+      ${ fruit_list.add_action() }
+    css class: bg-secondary-subtle
+continue button field: show_review_screen
+---
+mandatory: True
+question: Done
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Favorite fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Favorite fruit: favorite_vegetable
+---
+table:
+  fruit_list.table
+rows:
+  fruit_list
+columns:
+  - Name: row_item
+edit:
+  - name.text
+---
+question: |
+  What is the ${ ordinal(i) } fruit?
+fields:
+  - Fruit: fruit_list[i].name.text
+---
+code: |
+  fruit_list.there_is_another = False

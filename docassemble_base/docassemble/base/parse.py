@@ -4647,6 +4647,10 @@ class Question:
                         if 'extras' not in field_info:
                             field_info['extras'] = {}
                         field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
+                    elif key == 'css class':
+                        if 'extras' not in field_info:
+                            field_info['extras'] = {}
+                        field_info['extras'][key] = TextObject(definitions + str(field[key]), question=self)
                     elif key == 'show if':
                         if not isinstance(field[key], list):
                             field_list = [field[key]]
@@ -6066,7 +6070,7 @@ class Question:
                                 continue
                         else:
                             extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
-                    for key in ('note', 'html', 'raw html', 'min', 'max', 'minlength', 'maxlength', 'step', 'scale', 'inline', 'inline width', 'currency symbol', 'pen color', 'file css class'):  # 'script', 'css',
+                    for key in ('note', 'html', 'raw html', 'css class'):
                         if key in field.extras:
                             if key not in extras:
                                 extras[key] = {}

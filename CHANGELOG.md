@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.4.110] - 2024-07-22
+
+### Added
+- The option of giving an item under `review` a `css class`.
+
+### Changed
+- The `bg-secondary-subtle` class is now used place of `bg-light`
+  since it has a better appearance in dark mode.
+
+### Fixed
+- Actions in the `menu_items` were not launched using Ajax.
+- If `ask_object_type` is used, the `object_type` will be set to
+  `None`.
+- When `hide corner interface` was used, the `navigation bar html` was
+  not shown.
+
 ## [1.4.109] - 2024-07-12
 
 ### Fixed

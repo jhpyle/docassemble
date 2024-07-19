@@ -62,3 +62,4 @@ settings.json
 .idea
 .dir-locals.el
 .flake8
+mypy.ini

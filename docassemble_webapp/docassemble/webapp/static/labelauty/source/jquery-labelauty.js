@@ -15,9 +15,6 @@
      * Our default settings
      * Hope you don't need to change anything, with these settings
      */
-    function removeTabIndex(elem, thisLabel) {
-      PPP;
-    }
     var settings = $.extend(
       {
         // Development Mode
@@ -198,11 +195,11 @@
       }
       if ($object.is(":checked")) {
         $(element).addClass("btn-" + color);
-        $(element).removeClass("btn-light");
+        $(element).removeClass("bg-secondary-subtle");
         $(element).attr("aria-checked", true);
       } else {
         $(element).removeClass("btn-" + color);
-        $(element).addClass("btn-light");
+        $(element).addClass("bg-secondary-subtle");
         $(element).attr("aria-checked", false);
       }
       var the_name = $object.attr("name");
@@ -216,14 +213,14 @@
                 $(this)
                   .next()
                   .addClass("btn-" + color);
-                $(this).next().removeClass("btn-light");
+                $(this).next().removeClass("bg-secondary-subtle");
                 $(this).next().attr("aria-checked", true);
                 anyChecked = true;
               } else {
                 $(this)
                   .next()
                   .removeClass("btn-" + color);
-                $(this).next().addClass("btn-light");
+                $(this).next().addClass("bg-secondary-subtle");
                 $(this).next().attr("aria-checked", false);
               }
             },
@@ -247,13 +244,13 @@
             $(this)
               .next()
               .addClass("btn-" + color);
-            $(this).next().removeClass("btn-light");
+            $(this).next().removeClass("bg-secondary-subtle");
             $(this).next().attr("aria-checked", true);
           } else {
             $(this)
               .next()
               .removeClass("btn-" + color);
-            $(this).next().addClass("btn-light");
+            $(this).next().addClass("bg-secondary-subtle");
             $(this).next().attr("aria-checked", false);
           }
         });
@@ -284,12 +281,12 @@
           event.preventDefault();
           if ($object.is(":checked")) {
             $(this).addClass("btn-" + color);
-            $(this).removeClass("btn-light");
+            $(this).removeClass("bg-secondary-subtle");
             $object.prop("checked", false);
             $(this).attr("aria-checked", true);
           } else {
             $(this).addClass("btn-" + color);
-            $(this).removeClass("btn-light");
+            $(this).removeClass("bg-secondary-subtle");
             $object.prop("checked", true);
             $(this).attr("aria-checked", false);
           }
@@ -401,7 +398,7 @@
 
     if (label == true && icon == true) {
       block =
-        '<label class="text-start btn btn-light dalabelauty" for="' +
+        '<label class="text-start btn bg-secondary-subtle dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
@@ -421,7 +418,7 @@
         "</label>";
     } else if (label == true) {
       block =
-        '<label class="text-start btn btn-light dalabelauty" for="' +
+        '<label class="text-start btn bg-secondary-subtle dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
@@ -435,7 +432,7 @@
         "</label>";
     } else {
       block =
-        '<label class="text-start btn btn-light dalabelauty" for="' +
+        '<label class="text-start btn bg-secondary-subtle dalabelauty" for="' +
         input_id +
         '" ' +
         aria +
