@@ -846,7 +846,7 @@ uploading signature images, see the [Uploads](#uploads) subsection.
 ## <a name="fields yesno"></a><a name="fields noyes"></a>Yes/no fields
 
 `datatype: yesno` will show a checkbox with a label, aligned with
-labeled fields.  `datatype: noyes` is like `datatype: yesno`, except
+labeled fields. `datatype: noyes` is like `datatype: yesno`, except
 with True and False inverted.
 
 {% include side-by-side.html demo="fields-yesno" %}
@@ -3452,6 +3452,23 @@ refer to a variable that has not been defined yet, they will be
 omitted.
 
 {% include side-by-side.html demo="review-3" %}
+
+By default, items in a `review` list have the [CSS] class of
+`bg-secondary-subtle` so that each item is distinguishable from its
+neighbors. However, `note` and `html` items do not have a class. Using
+the `css class` modifier on an item, you can change the [CSS] class of
+an item.
+
+{% include side-by-side.html demo="review-10" %}
+
+In this example, the `favorite_vegetable` item has been given a
+different background color, and the `note`, which by default is
+colorless, is given the color `bg-secondary-subtle` so that it matches
+the other items.
+
+If you want an item to have no background color, set the `css class`
+to the name of a class that does not exist or that does not define a
+background color.
 
 If you include `note` and `html` as modifiers of an item under the
 `review` specifier, the text will appear to the right of the item on

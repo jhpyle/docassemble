@@ -59,7 +59,7 @@
       set_save_status('ignore')
 "action-buttons-http":
   "height": !!int |-
-    291
+    258
   "width": !!int |-
     488
   "yaml": |-
@@ -849,7 +849,7 @@
       background_response()
 "ajax-refresh":
   "height": !!int |-
-    372
+    354
   "width": !!int |-
     488
   "yaml": |-
@@ -1004,7 +1004,7 @@
     \  The variables in the dictionary are:\n    \n  `${ all_variables() }`"
 "allow-downloading-true":
   "height": !!int |-
-    993
+    999
   "width": !!int |-
     488
   "yaml": |-
@@ -1028,7 +1028,7 @@
           Goodbye, cruel world!
 "allow-downloading-true-zip-filename":
   "height": !!int |-
-    1162
+    1135
   "width": !!int |-
     488
   "yaml": |-
@@ -1053,7 +1053,7 @@
           Goodbye, cruel world!
 "allow-emailing-false":
   "height": !!int |-
-    452
+    454
   "width": !!int |-
     488
   "yaml": |-
@@ -1083,7 +1083,7 @@
     allow emailing: False
 "allow-emailing-true":
   "height": !!int |-
-    679
+    681
   "width": !!int |-
     488
   "yaml": |-
@@ -1275,7 +1275,7 @@
           Hello, world!
 "attachment-code":
   "height": !!int |-
-    1283
+    1262
   "width": !!int |-
     488
   "yaml": |-
@@ -1331,7 +1331,7 @@
     mandatory: True
 "attachment-simple":
   "height": !!int |-
-    679
+    681
   "width": !!int |-
     488
   "yaml": |-
@@ -1384,7 +1384,7 @@
       - Last Name: x.name.last
 "audio":
   "height": !!int |-
-    223
+    222
   "width": !!int |-
     488
   "yaml": |-
@@ -1736,7 +1736,7 @@
       - "": target_variable
 "branch-error":
   "height": !!int |-
-    608
+    623
   "width": !!int |-
     488
   "yaml": |-
@@ -1920,7 +1920,7 @@
          {'unsure': "I'm not sure"}]
 "buttons-code-list-equivalent":
   "height": !!int |-
-    186
+    187
   "width": !!int |-
     488
   "yaml": |-
@@ -1987,7 +1987,7 @@
           'color': 'danger'}]
 "buttons-code-list-partial":
   "height": !!int |-
-    186
+    187
   "width": !!int |-
     488
   "yaml": |-
@@ -2034,7 +2034,7 @@
         image: map
 "buttons-icons-code":
   "height": !!int |-
-    437
+    439
   "width": !!int |-
     488
   "yaml": |-
@@ -2132,7 +2132,7 @@
       - Female: Female
 "capitalize":
   "height": !!int |-
-    128
+    129
   "width": !!int |-
     488
   "yaml": |-
@@ -2259,7 +2259,7 @@
       set_live_help_status(availability='available', mode='peerhelp', partner_roles=['advocate'])
 "chat-partners-available":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -2630,7 +2630,7 @@
     mandatory: True
 "code-example-05":
   "height": !!int |-
-    96
+    64
   "width": !!int |-
     488
   "yaml": |-
@@ -2639,7 +2639,7 @@
     mandatory: True
 "code-example-06":
   "height": !!int |-
-    96
+    64
   "width": !!int |-
     488
   "yaml": |-
@@ -2900,7 +2900,7 @@
       background_response()
 "cron":
   "height": !!int |-
-    266
+    267
   "width": !!int |-
     488
   "yaml": |-
@@ -3038,7 +3038,7 @@
       ${ myfile }
 "dafile-url-for":
   "height": !!int |-
-    125
+    126
   "width": !!int |-
     488
   "yaml": |-
@@ -3064,7 +3064,7 @@
         Blah, blah, blah
 "dafile-url-for-temporary":
   "height": !!int |-
-    149
+    130
   "width": !!int |-
     488
   "yaml": |-
@@ -3455,7 +3455,7 @@
       % endif
 "date-difference":
   "height": !!int |-
-    261
+    263
   "width": !!int |-
     488
   "yaml": |-
@@ -3563,7 +3563,7 @@
                           data={'ship_type': 'Tug'})
 "dead-end":
   "height": !!int |-
-    136
+    138
   "width": !!int |-
     488
   "yaml": |-
@@ -3597,7 +3597,7 @@
   "yaml": ""
 "decoration":
   "height": !!int |-
-    329
+    331
   "width": !!int |-
     488
   "yaml": |-
@@ -3607,7 +3607,7 @@
     yesno: has_children
 "def":
   "height": !!int |-
-    245
+    226
   "width": !!int |-
     488
   "yaml": "def: my_explanation\nmako: |\n  <%def name=\"explain(fruit)\">\n  ${ fruit\
@@ -3671,7 +3671,7 @@
       `default screen parts` feature.
 "default-validation-messages":
   "height": !!int |-
-    278
+    254
   "width": !!int |-
     488
   "yaml": |-
@@ -3683,7 +3683,7 @@
         No more than %s, please!
 "define":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -3902,7 +3902,7 @@
       final_screen
 "device":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -3981,7 +3981,7 @@
       [${ interview_url() }](${ interview_url() })
 "dialog-box":
   "height": !!int |-
-    154
+    122
   "width": !!int |-
     488
   "yaml": |-
@@ -4329,7 +4329,7 @@
     attachment code: |\n  [apples, oranges, grapes]"
 "document-cache-invalidate":
   "height": !!int |-
-    682
+    684
   "width": !!int |-
     488
   "yaml": "mandatory: True\ncode: |\n  client = \"Jane Doe\"\n  benefits = \"G-432\"\
@@ -4363,7 +4363,7 @@
     mandatory: True
 "document-docx-from-rtf":
   "height": !!int |-
-    639
+    641
   "width": !!int |-
     488
   "yaml": "question: Here is your document.\nattachments:\n  - name: Summary of Benefits\n\
@@ -4406,7 +4406,7 @@
       user_email = 'user@aol.com'
 "document-file":
   "height": !!int |-
-    639
+    641
   "width": !!int |-
     488
   "yaml": |-
@@ -4434,7 +4434,7 @@
     mandatory: True
 "document-language":
   "height": !!int |-
-    711
+    689
   "width": !!int |-
     488
   "yaml": "initial: True\ncode: |\n  set_language('es')\n---\nmandatory: True\nlanguage:\
@@ -4449,7 +4449,7 @@
     \    field variables:\n      - food_list"
 "document-links":
   "height": !!int |-
-    595
+    596
   "width": !!int |-
     488
   "yaml": |-
@@ -4667,7 +4667,7 @@
     mandatory: True
 "document-variable-name":
   "height": !!int |-
-    746
+    748
   "width": !!int |-
     488
   "yaml": |-
@@ -4704,7 +4704,7 @@
                            attachments=[hello_file])
 "document-variable-name-link":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -4916,7 +4916,7 @@
       fruit['a'].seed_info.tally['b'].molecules.append(DAObject("fruit['a'].seed_info.tally['b'].molecules[8]"))
 "edit-list":
   "height": !!int |-
-    361
+    359
   "width": !!int |-
     488
   "yaml": "mandatory: True\nquestion: |\n  All done\nsubquestion: |\n  The people\
@@ -4965,7 +4965,7 @@
     \  person.there_is_another = False"
 "edit-list-non-editable":
   "height": !!int |-
-    245
+    246
   "width": !!int |-
     488
   "yaml": |-
@@ -5439,7 +5439,7 @@
       final_screen
 "error-help":
   "height": !!int |-
-    656
+    659
   "width": !!int |-
     488
   "yaml": |-
@@ -5451,7 +5451,7 @@
         [the administrator](mailto:admin@example.com).
 "error-help-language":
   "height": !!int |-
-    656
+    659
   "width": !!int |-
     488
   "yaml": "metadata:\n  error help:\n    en: |\n      We are sorry.\n      An error\
@@ -5483,7 +5483,7 @@
       - Exit: leave
 "exists":
   "height": !!int |-
-    154
+    122
   "width": !!int |-
     488
   "yaml": |-
@@ -5594,7 +5594,7 @@
     mandatory: True
 "exit-url":
   "height": !!int |-
-    154
+    122
   "width": !!int |-
     488
   "yaml": |-
@@ -5680,7 +5680,7 @@
     question: |\n  We have finished the quest."
 "external_files":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -7011,7 +7011,7 @@
           gave it to me.
 "flash":
   "height": !!int |-
-    184
+    185
   "width": !!int |-
     488
   "yaml": |-
@@ -7106,7 +7106,7 @@
     \ lacinia nisl interdum, egestas turpis non,\n      fringilla felis."
 "font-awesome":
   "height": !!int |-
-    192
+    194
   "width": !!int |-
     488
   "yaml": |-
@@ -7122,7 +7122,7 @@
       So you can sleep well tonight! :bed:
 "for_fruit":
   "height": !!int |-
-    128
+    130
   "width": !!int |-
     488
   "yaml": |-
@@ -7405,7 +7405,7 @@
       We are done.
 "formatting":
   "height": !!int |-
-    348
+    350
   "width": !!int |-
     488
   "yaml": "question: |\n  Here is your document.\nsubquestion: |\n  It illustrates\
@@ -7494,7 +7494,7 @@
         - favorite_fungus
 "function":
   "height": !!int |-
-    129
+    131
   "width": !!int |-
     488
   "yaml": |-
@@ -7677,7 +7677,7 @@
     \ me about your\n  ${ pet }.  Do you have any other\n  pets?\nyesno: pet.there_is_another"
 "gather-dict-value":
   "height": !!int |-
-    286
+    262
   "width": !!int |-
     488
   "yaml": |-
@@ -8584,7 +8584,7 @@
         input type: area
 "grid2":
   "height": !!int |-
-    370
+    386
   "width": !!int |-
     488
   "yaml": |-
@@ -8667,7 +8667,7 @@
           label width: 3
 "grid5":
   "height": !!int |-
-    370
+    402
   "width": !!int |-
     488
   "yaml": |-
@@ -8741,7 +8741,7 @@
         grid: 2
 "grid6":
   "height": !!int |-
-    370
+    402
   "width": !!int |-
     488
   "yaml": |-
@@ -8874,7 +8874,7 @@
           breakpoint: ${ breakpoint }
 "grid9":
   "height": !!int |-
-    262
+    270
   "width": !!int |-
     488
   "yaml": |-
@@ -9057,7 +9057,7 @@
         hide if: has_fruit
 "html":
   "height": !!int |-
-    296
+    264
   "width": !!int |-
     488
   "yaml": |-
@@ -9135,7 +9135,7 @@
       % endif
 "image-sets":
   "height": !!int |-
-    326
+    328
   "width": !!int |-
     488
   "yaml": |-
@@ -9149,7 +9149,7 @@
           money: commerce.svg
 "images":
   "height": !!int |-
-    150
+    152
   "width": !!int |-
     488
   "yaml": |-
@@ -9211,7 +9211,7 @@
     yesno: prefer_fruit
 "indent":
   "height": !!int |-
-    488
+    490
   "width": !!int |-
     488
   "yaml": |-
@@ -9386,7 +9386,7 @@
     yesno: ready_to_proceed
 "interview-url-refer":
   "height": !!int |-
-    183
+    184
   "width": !!int |-
     488
   "yaml": |-
@@ -9457,7 +9457,7 @@
       - Fruit: favorite_vegetable
 "interview_url_action":
   "height": !!int |-
-    216
+    218
   "width": !!int |-
     488
   "yaml": |-
@@ -9639,7 +9639,7 @@
       json_response(dict(pie=dessert))
 "js_url_action":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -9664,7 +9664,7 @@
       dessert = fruit + " pie"
 "js_variables":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -9813,7 +9813,7 @@
       del menu_items
 "language_from_browser":
   "height": !!int |-
-    65
+    66
   "width": !!int |-
     488
   "yaml": |-
@@ -9838,7 +9838,7 @@
     mandatory: True
 "lastfirst":
   "height": !!int |-
-    216
+    218
   "width": !!int |-
     488
   "yaml": |-
@@ -9878,7 +9878,7 @@
       - Harvard: "http://www.harvard.edu/"
 "list-collect":
   "height": !!int |-
-    625
+    577
   "width": !!int |-
     488
   "yaml": |-
@@ -9997,7 +9997,7 @@
       person.gathered = True
 "lists":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -10019,7 +10019,7 @@
       set_live_help_status(availability='available', mode='help', partner_roles=['advocate'])
 "loading-legal":
   "height": !!int |-
-    189
+    191
   "width": !!int |-
     488
   "yaml": |-
@@ -10027,7 +10027,7 @@
       - docassemble.base.legal
 "loading-util":
   "height": !!int |-
-    192
+    194
   "width": !!int |-
     488
   "yaml": |-
@@ -10035,7 +10035,7 @@
       - docassemble.base.util
 "log":
   "height": !!int |-
-    184
+    185
   "width": !!int |-
     488
   "yaml": |-
@@ -10139,7 +10139,7 @@
       - Favorite vegetable: favorite_vegetable
 "mako-01":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -10155,7 +10155,7 @@
       favorite_vegetable = 'potatoes'
 "mako-02":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -10170,7 +10170,7 @@
       % endif
 "mako-03":
   "height": !!int |-
-    176
+    178
   "width": !!int |-
     488
   "yaml": |-
@@ -10190,7 +10190,7 @@
       % endif
 "mako-04":
   "height": !!int |-
-    176
+    178
   "width": !!int |-
     488
   "yaml": |-
@@ -10214,7 +10214,7 @@
       % endif
 "mako-05":
   "height": !!int |-
-    104
+    106
   "width": !!int |-
     488
   "yaml": |-
@@ -10292,7 +10292,7 @@
       They are juicy and sweet.
 "mako-09":
   "height": !!int |-
-    152
+    154
   "width": !!int |-
     488
   "yaml": |-
@@ -10367,7 +10367,7 @@
       Then look for the pantry. That is where they keep the food.
 "manual-attachment-list":
   "height": !!int |-
-    293
+    291
   "width": !!int |-
     488
   "yaml": |-
@@ -10379,7 +10379,7 @@
     manual attachment list: True
 "markdown":
   "height": !!int |-
-    846
+    849
   "width": !!int |-
     488
   "yaml": "question: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown allows\
@@ -10393,7 +10393,7 @@
     \ learn more.\nmandatory: True"
 "markdown-demo":
   "height": !!int |-
-    805
+    782
   "width": !!int |-
     488
   "yaml": |-
@@ -10439,7 +10439,7 @@
       your :child_care: children.
 "menu-item":
   "height": !!int |-
-    95
+    96
   "width": !!int |-
     488
   "yaml": "mandatory: True\ncode: |\n  menu_items = [ action_menu_item('Visit Cow',\
@@ -10501,7 +10501,7 @@
     mandatory: True
 "metadata":
   "height": !!int |-
-    227
+    228
   "width": !!int |-
     488
   "yaml": |-
@@ -10729,7 +10729,7 @@
       package.
 "ml-export":
   "height": !!int |-
-    13
+    22
   "width": !!int |-
     488
   "yaml": |-
@@ -10805,7 +10805,7 @@
       package.
 "modules":
   "height": !!int |-
-    128
+    129
   "width": !!int |-
     488
   "yaml": |-
@@ -10864,7 +10864,7 @@
     yesno: user_wants_to_sue
 "name-company-question":
   "height": !!int |-
-    208
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -11168,7 +11168,7 @@
     \  - Favorite fungus: mushroom"
 "noun-plural":
   "height": !!int |-
-    208
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -11223,7 +11223,7 @@
         step: 0.001
 "number-formatting":
   "height": !!int |-
-    240
+    242
   "width": !!int |-
     488
   "yaml": |-
@@ -12167,7 +12167,7 @@
     sets: all_done
 "path-and-mimetype":
   "height": !!int |-
-    521
+    470
   "width": !!int |-
     488
   "yaml": |-
@@ -12810,7 +12810,7 @@
           {'m': 'Male', 'f': 'Female', 'o': 'Other'}
 "qr-code":
   "height": !!int |-
-    444
+    420
   "width": !!int |-
     488
   "yaml": |-
@@ -13172,7 +13172,7 @@
         max: 10
 "range-log":
   "height": !!int |-
-    240
+    241
   "width": !!int |-
     488
   "yaml": |-
@@ -13190,7 +13190,7 @@
         scale: logarithmic
 "raw-html":
   "height": !!int |-
-    188
+    240
   "width": !!int |-
     488
   "yaml": |-
@@ -13332,7 +13332,7 @@
           ${ petition_text }
 "redis":
   "height": !!int |-
-    221
+    199
   "width": !!int |-
     488
   "yaml": "objects:\n  r: DARedis\n---\nmandatory: True\ncode: |\n  key = r.key('my_variable')\n\
@@ -13341,7 +13341,7 @@
     \  \n  The value is \"${ r.get(key).decode() }\"."
 "redis-data":
   "height": !!int |-
-    571
+    547
   "width": !!int |-
     488
   "yaml": |-
@@ -13408,7 +13408,7 @@
       - tree: RelationshipTree
 "reload":
   "height": !!int |-
-    154
+    122
   "width": !!int |-
     488
   "yaml": |-
@@ -13444,7 +13444,7 @@
       - cat_food_cans_needed
 "response":
   "height": !!int |-
-    13
+    23
   "width": !!int |-
     488
   "yaml": |-
@@ -13527,7 +13527,7 @@
     resume button label: Keep going
 "review":
   "height": !!int |-
-    530
+    538
   "width": !!int |-
     488
   "yaml": |-
@@ -13579,6 +13579,42 @@
     mandatory: True
     code: |
       menu_items = [ action_menu_item('Review Answers', 'review_answers') ]
+"review-10":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: |
+      Review your answers
+    review:
+      - note: |
+          Please review your favorite fruits
+          and vegetables.
+      - Edit:
+          - favorite_fruit
+        button: |
+          #### Favorite fruit
+
+          You said your favorite
+          fruit was **${ favorite_fruit }**.
+      - Edit:
+          - favorite_vegetable
+        button: |
+          #### Favorite vegetable
+
+          You said your favorite
+          fruit was **${ favorite_vegetable }**.
+        css class: bg-warning-subtle
+      - note: |
+          #### Best fruits
+
+          ${ fruit_list.table }
+
+          ${ fruit_list.add_action() }
+        css class: bg-secondary-subtle
+    continue button field: show_review_screen
 "review-2":
   "height": !!int |-
     258
@@ -13824,7 +13860,7 @@
     \  final_screen"
 "review-side-note":
   "height": !!int |-
-    302
+    306
   "width": !!int |-
     488
   "yaml": |-
@@ -14249,7 +14285,7 @@
     \ to go eat some\n  ${ favorite_vegetable }\n  now."
 "sections-keywords-get-sections":
   "height": !!int |-
-    180
+    4854
   "width": !!int |-
     488
   "yaml": "sections:\n  - intro: Introduction\n  - about: About you\n    subsections:\n\
@@ -14533,7 +14569,7 @@
       client: Individual
 "server-capabilities":
   "height": !!int |-
-    465
+    466
   "width": !!int |-
     488
   "yaml": |-
@@ -14699,7 +14735,7 @@
       set_parts(title='Example Inc.', logo='<img src="' + company_logo.url_for() + '" style="height: 20px; width: 157px;">')
 "set-parts":
   "height": !!int |-
-    193
+    194
   "width": !!int |-
     488
   "yaml": |-
@@ -14784,7 +14820,7 @@
       set_parts(subtitle='This is the subtitle part.', pre='This is the pre part.', submit='This is the submit part.', post='This is the post part.', under='This is the under part.', right='This is the right part.', exit_link='leave', exit_label='Exit label', help_label='Help label', continue_button_label='Continue button label', back_button_label='Back button label')
 "show-login":
   "height": !!int |-
-    107
+    96
   "width": !!int |-
     488
   "yaml": |-
@@ -15133,7 +15169,7 @@
       building: DAList.using(object_type=Thing, minimum_number=2)
 "space-underscore":
   "height": !!int |-
-    130
+    129
   "width": !!int |-
     488
   "yaml": |-
@@ -15198,7 +15234,7 @@
       ${ static_image(image_name + '.svg') }
 "subdivision-type":
   "height": !!int |-
-    304
+    306
   "width": !!int |-
     488
   "yaml": "mandatory: True\nquestion: |\n  Geography lesson\nsubquestion: |\n  % for\
@@ -15601,7 +15637,7 @@
       % endfor
 "table-markdown":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": "mandatory: true\nquestion: |\n  Your fruit inventory\nsubquestion: |\n\
@@ -15634,7 +15670,7 @@
     \  Potato   |4     \n  Brocolli |3     \n  Beet     |6"
 "table-markdown-unaligned":
   "height": !!int |-
-    290
+    289
   "width": !!int |-
     488
   "yaml": |-
@@ -15683,7 +15719,7 @@
           row_item.seeds * 2
 "table-read-only":
   "height": !!int |-
-    362
+    361
   "width": !!int |-
     488
   "yaml": |-
@@ -15923,7 +15959,7 @@
                           'content': content_two}])
 "target-code-template":
   "height": !!int |-
-    211
+    213
   "width": !!int |-
     488
   "yaml": |-
@@ -16077,7 +16113,7 @@
       ${ disclaimer.content }
 "terminal-screen":
   "height": !!int |-
-    101
+    102
   "width": !!int |-
     488
   "yaml": |-
@@ -16308,7 +16344,7 @@
           timezone_list()
 "title-case":
   "height": !!int |-
-    125
+    126
   "width": !!int |-
     488
   "yaml": |-
@@ -16322,7 +16358,7 @@
     sets: all_done
 "today":
   "height": !!int |-
-    96
+    64
   "width": !!int |-
     488
   "yaml": |-
@@ -16385,7 +16421,7 @@
         interview_flowers_done
 "under":
   "height": !!int |-
-    267
+    269
   "width": !!int |-
     488
   "yaml": |-
@@ -16432,7 +16468,7 @@
       update_terms({'zombie pigman': 'A nether dweller', 'nether': 'The underworld'})
 "upload":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": "question: |\n  Please upload a picture of yourself.\nfields:\n  - Picture:\
@@ -16453,7 +16489,7 @@
           "image/jpeg, image/png"
 "upload-max-image-size":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -16471,7 +16507,7 @@
     mandatory: True
 "upload-max-image-size-features":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -16479,7 +16515,7 @@
       maximum image size: 100
 "upload-max-image-size-type":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -16498,7 +16534,7 @@
     mandatory: True
 "upload-max-image-size-type-features":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -16507,7 +16543,7 @@
       image upload type: jpeg
 "upload-multiple":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -16536,7 +16572,7 @@
         file css class: None
 "upload-show":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -16547,7 +16583,7 @@
     mandatory: True
 "upload-show-width":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -16636,7 +16672,7 @@
       That is splendid news!
 "user-is-trustee":
   "height": !!int |-
-    160
+    161
   "width": !!int |-
     488
   "yaml": |-
@@ -16753,7 +16789,7 @@
       the Marauder's Map.
 "validation-messages":
   "height": !!int |-
-    278
+    254
   "width": !!int |-
     488
   "yaml": |-
@@ -16990,7 +17026,7 @@
     mandatory: True
 "zip-file":
   "height": !!int |-
-    515
+    483
   "width": !!int |-
     488
   "yaml": |-
@@ -17183,7 +17219,7 @@
         % endif
 "button-checkboxes":
   "height": !!int |-
-    328
+    332
   "width": !!int |-
     488
   "yaml": |-
@@ -18374,7 +18410,7 @@
       [plaintiff.document, defendant.document]
 "get-time":
   "height": !!int |-
-    125
+    126
   "width": !!int |-
     488
   "yaml": |-
@@ -18839,7 +18875,7 @@
       Thank you for that information.
 "indexdemoquery":
   "height": !!int |-
-    158
+    134
   "width": !!int |-
     488
   "yaml": |-
@@ -19838,7 +19874,7 @@
     \ \n  % endfor"
 "objects-from-file-dadict":
   "height": !!int |-
-    184
+    186
   "width": !!int |-
     488
   "yaml": "code: |\n  fruitseeds = objects_from_file(\"fruitseeds.yml\")\n---\nmandatory:\
@@ -19847,7 +19883,7 @@
     \  ${ fruitseeds[fruit] }\n  in number.\n  \n  % endfor"
 "objects-from-file-gather":
   "height": !!int |-
-    186
+    154
   "width": !!int |-
     488
   "yaml": "code: |\n  fruitseeds = objects_from_file(\"fruitseeds.yml\", gathered=False,\
@@ -20051,7 +20087,7 @@
       `${ user.sms_number(country=user.phone_country) }`.
 "predict-activity":
   "height": !!int |-
-    208
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -20079,7 +20115,7 @@
         using: present_activity
 "predict-activity-activity":
   "height": !!int |-
-    208
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -20548,7 +20584,7 @@
       content file: sample.cpp
 "raw-data-example":
   "height": !!int |-
-    296
+    238
   "width": !!int |-
     488
   "yaml": "code: |\n  raw_data = objects_from_file(\"raw_data.yml\", recursive=False)\n\
@@ -20794,7 +20830,7 @@
       ${ output }
 "run-python-module-tests":
   "height": !!int |-
-    286
+    262
   "width": !!int |-
     488
   "yaml": "code: |\n  output, return_code = run_python_module('tests.py', ['-v'])\n\
@@ -20803,7 +20839,7 @@
     \ % endif\n  \n  ${ indent(output) }"
 "save-continue-later":
   "height": !!int |-
-    210
+    211
   "width": !!int |-
     488
   "yaml": "default screen parts:\n  under: |\n    % if show_save_resume_message:\n\
@@ -21172,7 +21208,7 @@
       ${ favorite_vegetable }.
 "subdoc-params":
   "height": !!int |-
-    362
+    339
   "width": !!int |-
     488
   "yaml": |-
@@ -21327,6 +21363,45 @@
     \ luminism manierism surrealism, avant-garde performance art\n  neoclassicism\
     \ hard-edge painting neo-impressionism, nouveau realisme\n  eclecticism tonalism.\n\
     \  \n  ${ end_accordion() }\ncontinue button field: intro"
+"testaccordion4":
+  "height": !!int |-
+    246
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - docassemble.demo.accordion
+    ---
+    features:
+      css: docassemble.demo:data/static/accordion.css
+    ---
+    question: |
+      Tell me about your preferences
+    fields:
+      - raw html: |
+          ${ start_accordion('Pets', showing=True) }
+      - Favorite cat: favorite_cat
+        show if:
+          code: ask_about_pets
+      - Favorite dog: favorite_dog
+        show if:
+          code: ask_about_pets
+      - raw html: |
+          ${ next_accordion('Food') }
+      - Favorite fruit: favorite_fruit
+        required: False
+      - Favorite vegetable: favorite_vegetable
+        required: False
+      - raw html: |
+          ${ next_accordion('Aesthetics') }
+      - Fashion aesthetic: fashion_aesthetic
+        required: False
+      - Decor aesthetic: decor_aesthetic
+        required: False
+      - raw html: ${ end_accordion() }
+    ---
+    code: |
+      ask_about_pets = False
 "testcards":
   "height": !!int |-
     334
@@ -21480,7 +21555,7 @@
       - Restart: restart
 "testgeolocate":
   "height": !!int |-
-    186
+    162
   "width": !!int |-
     488
   "yaml": |-
@@ -21534,7 +21609,7 @@
         datatype: date
 "universal-document":
   "height": !!int |-
-    507
+    549
   "width": !!int |-
     488
   "yaml": "features:\n  use catchall: True\n---\ngeneric object: DACatchAll\nquestion:\
