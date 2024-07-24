@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.111](https://github.com/jhpyle/docassemble/releases/tag/v1.4.111) - 2024-07-23
+
+
+### Fixed
+- Word sidebar uploads did not save in the selected project.
+
 ## [1.4.110](https://github.com/jhpyle/docassemble/releases/tag/v1.4.110) - 2024-07-22
 
 
