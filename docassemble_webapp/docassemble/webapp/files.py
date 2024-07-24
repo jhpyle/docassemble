@@ -357,11 +357,12 @@ class SavedFile:
     def write_content(self, content, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
+        the_directory = directory_for(self, kwargs.get('project', 'default'))
         if kwargs.get('binary', False):
-            with open(os.path.join(self.directory, filename), 'wb') as ifile:
+            with open(os.path.join(the_directory, filename), 'wb') as ifile:
                 ifile.write(content)
         else:
-            with open(os.path.join(self.directory, filename), 'w', encoding='utf-8') as ifile:
+            with open(os.path.join(the_directory, filename), 'w', encoding='utf-8') as ifile:
                 ifile.write(content)
         if kwargs.get('save', True):
             self.save()
@@ -369,8 +370,9 @@ class SavedFile:
     def write_as_json(self, obj, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
+        the_directory = directory_for(self, kwargs.get('project', 'default'))
         # logmessage("write_as_json: writing to " + os.path.join(self.directory, filename))
-        with open(os.path.join(self.directory, filename), 'w', encoding='utf-8') as ifile:
+        with open(os.path.join(the_directory, filename), 'w', encoding='utf-8') as ifile:
             json.dump(obj, ifile, sort_keys=True, indent=2)
         if kwargs.get('save', True):
             self.save()

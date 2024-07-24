@@ -19654,7 +19654,7 @@ def playground_office_addin():
             if char == ',':
                 start_index = char_index
                 break
-        area.write_content(codecs.decode(bytearray(content[start_index:], encoding='utf-8'), 'base64'), filename=filename, binary=True)
+        area.write_content(codecs.decode(bytearray(content[start_index:], encoding='utf-8'), 'base64'), filename=filename, binary=True, project=project_to_use)
         area.finalize()
         if use_html:
             if pg_var_file is None:

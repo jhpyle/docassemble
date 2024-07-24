@@ -164,7 +164,7 @@ def write_ml_source(playground, playground_number, current_project, filename, fi
                 the_entry['key'] = record.key
             output[parts[2]].append(the_entry)
         if len(output) > 0:
-            playground.write_as_json(output, filename=os.path.join(directory_for(playground, current_project), filename))
+            playground.write_as_json(output, filename=filename, project=current_project)
             if finalize:
                 playground.finalize()
             return True

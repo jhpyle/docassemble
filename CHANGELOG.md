@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.4.111] - 2024-07-23
+
+### Fixed
+- Word sidebar uploads did not save in the selected project.
+
 ## [1.4.110] - 2024-07-22
 
 ### Added
