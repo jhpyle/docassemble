@@ -3481,8 +3481,9 @@ Required privileges:
 Responses on failure:
 
  - [403] "Access Denied" if the API key did not authenticate.
- - [400] "File not included." if a file is not uploaded with the
-   request.
+ - [400] "No filename supplied." if a filename was not provided in the
+   `i` parameter.
+ - [400] "Error finding interview" if the interview could not be loaded.
 
 Response on success: [200]
 
