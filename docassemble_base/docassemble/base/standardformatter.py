@@ -3527,7 +3527,9 @@ def input_for(status, field, embedded=False, floating_label=None):
                 input_type = 'datetime-local'
             step_string = ''
             if field.datatype in ['integer', 'float', 'currency', 'number']:
-                input_type = 'text" inputmode="numeric" pattern="[\-\d.,]*'  # noqa: W605
+                if field.datatype != 'currency':
+                    extra_class += ' danumeric'
+                input_type = 'text" inputmode="numeric" pattern="[\-\d.]*'  # noqa: W605
                 if hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step']:
                     step_string = ' step="' + str(status.extras['step'][field.number]) + '"'
                 else:

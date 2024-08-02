@@ -7145,6 +7145,7 @@ def index(action_argument=None, refer=None):
     vars_set = set()
     old_values = {}
     new_values = {}
+    no_input_values = {}
     if ('_email_attachments' in post_data and '_attachment_email_address' in post_data) or '_download_attachments' in post_data:
         should_assemble = True
     error_messages = []
@@ -7176,10 +7177,12 @@ def index(action_argument=None, refer=None):
                         checkbox_field = k
                         break
                 post_data.add(checkbox_field, checkbox_value)
+                no_input_values[checkbox_field] = checkbox_value
         empty_fields = field_info['hiddens']
-        for empty_field in empty_fields:
+        for empty_field, data_type in empty_fields.items():
             if empty_field not in post_data:
                 post_data.add(empty_field, 'None')
+                no_input_values[empty_field] = 'None'
         ml_info = field_info['ml_info']
         field_list = interview_status.get_fields_and_sub_fields_and_collect_fields(user_dict)
         authorized_fields = [from_safeid(field.saveas) for field in field_list if hasattr(field, 'saveas')]
@@ -7583,7 +7586,7 @@ def index(action_argument=None, refer=None):
                     data = repr('')
             elif known_datatypes[real_key] == 'integer':
                 raw_data = raw_data.replace(',', '')
-                if raw_data.strip() == '':
+                if raw_data.strip() in ('', 'None'):
                     raw_data = '0'
                 try:
                     test_data = int(raw_data)
@@ -7599,7 +7602,7 @@ def index(action_argument=None, refer=None):
             elif known_datatypes[real_key] in ('number', 'float', 'currency', 'range'):
                 raw_data = raw_data.replace('%', '')
                 raw_data = raw_data.replace(',', '')
-                if raw_data == '':
+                if raw_data in ('', 'None'):
                     raw_data = 0.0
                 try:
                     test_data = float(raw_data)
@@ -7673,7 +7676,7 @@ def index(action_argument=None, refer=None):
                     else:
                         data = repr(test_data)
             elif known_datatypes[real_key] == 'raw':
-                if raw_data == "None" and set_to_empty is not None:
+                if raw_data == "None" and (set_to_empty is not None or (orig_key in no_input_values and no_input_values[orig_key] == 'None')):
                     test_data = None
                     data = "None"
                 else:
@@ -7683,7 +7686,7 @@ def index(action_argument=None, refer=None):
                 if isinstance(raw_data, str):
                     raw_data = BeautifulSoup(raw_data, "html.parser").get_text('\n')
                     raw_data = re.sub(r'\\', '', raw_data)
-                if raw_data == "None" and set_to_empty is not None:
+                if raw_data == "None" and (set_to_empty is not None or (orig_key in no_input_values and no_input_values[orig_key] == 'None')):
                     test_data = None
                     data = "None"
                 else:
@@ -7753,7 +7756,7 @@ def index(action_argument=None, refer=None):
                     data = repr('')
             elif known_datatypes[orig_key] == 'integer':
                 raw_data = raw_data.replace(',', '')
-                if raw_data.strip() == '':
+                if raw_data.strip() in ('', 'None'):
                     raw_data = '0'
                 try:
                     test_data = int(raw_data)
@@ -7769,7 +7772,7 @@ def index(action_argument=None, refer=None):
             elif known_datatypes[orig_key] in ('number', 'float', 'currency', 'range'):
                 raw_data = raw_data.replace(',', '')
                 raw_data = raw_data.replace('%', '')
-                if raw_data == '':
+                if raw_data in ('', 'None'):
                     raw_data = '0.0'
                 test_data = float(raw_data)
                 data = "float(" + repr(raw_data) + ")"
@@ -7817,7 +7820,7 @@ def index(action_argument=None, refer=None):
                     else:
                         data = repr(test_data)
             elif known_datatypes[orig_key] == 'raw':
-                if raw_data == "None" and set_to_empty is not None:
+                if raw_data == "None" and (set_to_empty is not None or (orig_key in no_input_values and no_input_values[orig_key] == 'None')):
                     test_data = None
                     data = "None"
                 else:
@@ -7827,7 +7830,7 @@ def index(action_argument=None, refer=None):
                 if isinstance(raw_data, str):
                     raw_data = BeautifulSoup(raw_data.strip(), "html.parser").get_text('\n')
                     raw_data = re.sub(r'\\', '', raw_data)
-                if raw_data == "None" and set_to_empty is not None:
+                if raw_data == "None" and (set_to_empty is not None or (orig_key in no_input_values and no_input_values[orig_key] == 'None')):
                     test_data = None
                     data = "None"
                 else:
@@ -11437,16 +11440,26 @@ def index(action_argument=None, refer=None):
             }
           }
         });
-        $('.dacurrency').on('blur', function(){
+        $('.dacurrency').on('change', function(){
           var theVal = $(this).val().toString();
           if (theVal.indexOf('.') >= 0){
-            theVal = theVal.replace(',', '');
+            theVal = theVal.replaceAll(/[^0-9\.\-]/g, '');
             var num = parseFloat(theVal);
             var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """).toString();
             if (cleanNum != 'NaN') {
               $(this).val(cleanNum);
             }
+            else {
+              $(this).val(theVal);
+            }
           }
+          else {
+            $(this).val(theVal.replaceAll(/[^0-9\.\-]/g, ''));
+          }
+        });
+        $('.danumeric').on('change', function(){
+          var theVal = $(this).val().toString();
+          $(this).val(theVal.replaceAll(/[^0-9\.\-]/g, ''));
         });
         // iOS will truncate text in `select` options. Adding an empty optgroup fixes that
         if (navigator.userAgent.match(/(iPad|iPhone|iPod touch);/i)) {
