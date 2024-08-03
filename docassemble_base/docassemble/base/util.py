@@ -9642,6 +9642,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     ocr_resolution = get_config("ocr dpi")
     if ocr_resolution is None:
         ocr_resolution = '300'
+    ocr_resolution = str(int(float(ocr_resolution)*11.0))
     lang = get_ocr_language(language)
     if isinstance(image_file, DAFile):
         image_file = [image_file]
@@ -9656,7 +9657,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                 directory = tempfile.mkdtemp(prefix='SavedFile')
                 temp_directory_list.append(directory)
                 prefix = os.path.join(directory, 'page')
-                args = [pdf_to_ppm, '-r', str(ocr_resolution)]
+                args = [pdf_to_ppm, '-scale-to', str(ocr_resolution)]
                 if f is not None:
                     args.extend(['-f', str(f)])
                 if l is not None:
@@ -9671,7 +9672,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
                 try:
-                    result = subprocess.run(args, timeout=3600, check=False).returncode
+                    result = subprocess.run(args, timeout=3600, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
                 except subprocess.TimeoutExpired:
                     result = 1
                     logmessage("ocr_file: call to pdftoppm took too long")
@@ -9718,6 +9719,7 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):  # noqa
     ocr_resolution = get_config("ocr dpi")
     if ocr_resolution is None:
         ocr_resolution = '300'
+    ocr_resolution = str(int(float(ocr_resolution)*11.0))
     file_list = []
     temp_directory_list = []
     for doc in image_file:
@@ -9729,7 +9731,7 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):  # noqa
                 directory = tempfile.mkdtemp(prefix='SavedFile')
                 temp_directory_list.append(directory)
                 prefix = os.path.join(directory, 'page')
-                args = [pdf_to_ppm, '-r', str(ocr_resolution)]
+                args = [pdf_to_ppm, '-scale-to', str(ocr_resolution)]
                 if f is not None:
                     args.extend(['-f', str(f)])
                 if l is not None:
@@ -9744,7 +9746,7 @@ def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):  # noqa
                     args.extend(['-H', str(H)])
                 args.extend(['-png', path, prefix])
                 try:
-                    result = subprocess.run(args, timeout=3600, check=False).returncode
+                    result = subprocess.run(args, timeout=3600, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
                 except subprocess.TimeoutExpired:
                     result = 1
                     logmessage("read_qr: call to pdftoppm took too long")
@@ -10853,6 +10855,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
     ocr_resolution = get_config("ocr dpi")
     if ocr_resolution is None:
         ocr_resolution = '300'
+    ocr_resolution = str(int(float(ocr_resolution)*11.0))
     langs = get_available_languages()
     if language is None:
         language = get_language()
@@ -10926,14 +10929,19 @@ def make_png_for_pdf_path(path, prefix, resolution, pdf_to_ppm, page=None):
     test_path = basefile + prefix + '-in-progress'
     with open(test_path, 'a', encoding='utf-8'):
         os.utime(test_path, None)
+    if prefix == 'page':
+        flag = '-scale-to'
+        resolution = int(float(resolution)*11.0)
+    else:
+        flag = '-r'
     if page is None:
         try:
-            result = subprocess.run([str(pdf_to_ppm), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600, check=False).returncode
+            result = subprocess.run([str(pdf_to_ppm), flag, str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
         except subprocess.TimeoutExpired:
             result = 1
     else:
         try:
-            result = subprocess.run([str(pdf_to_ppm), '-f', str(page), '-l', str(page), '-r', str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600, check=False).returncode
+            result = subprocess.run([str(pdf_to_ppm), '-f', str(page), '-l', str(page), flag, str(resolution), '-png', str(path), str(basefile + prefix)], timeout=3600, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
         except subprocess.TimeoutExpired:
             result = 1
     if os.path.isfile(test_path):
@@ -11070,7 +11078,7 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
                 args.extend(['-H', str(H)])
             args.extend(['-singlefile', '-png', str(path), str(output_file.name)])
             try:
-                result = subprocess.run(args, timeout=120, check=False).returncode
+                result = subprocess.run(args, timeout=120, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode
             except subprocess.TimeoutExpired:
                 result = 1
             if result > 0:
