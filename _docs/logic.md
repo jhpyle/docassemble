@@ -1555,9 +1555,21 @@ Here is an example that illustrates how `initial` blocks work:
 {% include side-by-side.html demo="initial" %}
 
 Note in this example that from screen to screen, the `counter`
-increments from 1 to 2 and then to 4.  The counter does not count the
+increments from 1 to 3 and then to 6. The counter does not count the
 number of screens displayed, but rather the number of times the
-interview logic was evaluated.  The "passes" through the interview are:
+interview logic was evaluated. The number of times the interview logic
+gets evaluated is hard to predict, but you can count on it being
+evaluated many times, so you need to make sure you write your logic in
+an [idempotent](#idempotency) manner.
+
+On every screen load, the interview logic is evaluated prior to
+processing the input in order to ensure that the input is responding
+to whatever the current `question` is. **docassemble** needs to
+evaluate the interview logic in order to know what the current
+`question` is. It is then evaluated after the input is processed, so
+that the user can be presented with the next `question`. In addition,
+the interview logic will be re-evaluated when an undefined variable is
+encountered and a `code` block provides the value of a variable.
 
 1. The interview logic is evaluated, but the evaluation stops when the
    undefined variable `fruit` is encountered.  The interview then

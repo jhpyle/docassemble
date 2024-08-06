@@ -3,6 +3,21 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.4.112](https://github.com/jhpyle/docassemble/releases/tag/v1.4.112) - 2024-08-02
+
+
+### Changed
+- The default value of a non-`required` multiple-choice text field is
+  now `''` instead of `'None'`. The default value when the field is
+  not filled out is based on its `datatype`, e.g., `0` for `datatype:
+  integer`. The default data type is `text`.
+
+
+### Fixed
+- The `rendering font` feature had been inadvertently disabled.
+- Commas entered into numeric fields were causing the field not to
+  validate; now any invalid characters are removed.
+
 ## [1.4.111](https://github.com/jhpyle/docassemble/releases/tag/v1.4.111) - 2024-07-23
 
 
