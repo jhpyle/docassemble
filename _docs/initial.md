@@ -123,25 +123,23 @@ the "Exit" link can be modified.  (The "Exit" menu option is displayed
 when the [`show login` configuration directive] is set to `False` or
 the [`show login` metadata specifier] in an interview is set to
 `False`.)  The value can be either `exit`, `leave,` or `logout`.  If
-it is `exit`, then when the user clicks the link, they will be logged
-out (if they are logged in) and their interview answers will be
-deleted from the server.  If it is `leave`, the user will be logged
-out (if they are logged in), but the interview answers will not be
-deleted from the server.  (It can be important to keep the interview
-answers on the server if [background tasks] are still running.)  If it
-is `logout`, then if the user is logged in, the user will be logged
-out, but if the user is not logged in, this will have the same effect
-as `leave`.
+it is `exit`, then when the user clicks the link, their interview
+answers will be deleted from the server, and the user will be
+redirected to the `exit url` (see below). If `exit link` is `leave`,
+the user will be redirected to the `exit url`, and their interview
+answers will remain intact. (It can be important to keep the interview
+answers on the server if [background tasks] are still running.) If
+`exit link` is `logout`, then if the user is logged in, the user will
+be logged out and then redirected to the `exit url`, but if the user
+is not logged in, this will have the same effect as `leave`.
 
 <a name="exit url"></a>If an `exit url` is provided, the user will be
-redirected to the given URL.  If no `exit url` is provided, the user
-will be directed to the [`exitpage`] if the `exit link` is `exit` or
-`leave`, and directed to the login page if the user is logged in and
-`exit link` is `logout`.  The `exit url` also functions as an
-interview-level default value in place of the system-wide
-[`exitpage`], which is used by the [`command()`] function and used on
-[special pages] that show `buttons` or `choices` that allows users to
-`exit` or `leave`.
+redirected to the given URL when they click the "Exit" link. If no
+`exit url` is provided, the user will be directed to the [`exitpage`].
+The `exit url` also functions as an interview-level default value in
+place of the system-wide [`exitpage`], which is used by the
+[`command()`] function and used on [special pages] that show `buttons`
+or `choices` that allows users to `exit` or `leave`.
 
 <a name="exit label"></a>If `exit label` is provided, the given text
 will be used in place of the word "Exit" on the "Exit" menu option.
