@@ -2764,6 +2764,14 @@ def comma_and_list_es(*pargs, **kwargs):
     return comma_and_list_en(*pargs, **kwargs)
 
 
+def comma_and_list_de(*pargs, **kwargs):
+    if 'and_string' not in kwargs:
+        kwargs['and_string'] = 'und'
+    if 'oxford' not in kwargs:
+        kwargs['oxford'] = False
+    return comma_and_list_en(*pargs, **kwargs)
+
+
 def comma_and_list_en(*pargs, **kwargs):
     """Returns an English-language listing of the arguments.  If the first argument is a list,
     that list is used.  Otherwise, the arguments are treated as individual items in the list.
@@ -3822,7 +3830,8 @@ language_functions = {
     },
     'comma_and_list': {
         'en': comma_and_list_en,
-        'es': comma_and_list_es
+        'es': comma_and_list_es,
+        'de': comma_and_list_de
     },
     'comma_list': {
         'en': comma_list_en

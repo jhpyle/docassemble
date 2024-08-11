@@ -8415,7 +8415,7 @@ def index(action_argument=None, refer=None):
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     if interview_status.question.question_type == "interview_exit":
         exit_link = title_info.get('exit link', 'exit')
-        if exit_link in ('exit', 'leave', 'logout'):
+        if exit_link in ('exit', 'leave', 'logout', 'exit_logout'):
             interview_status.question.question_type = exit_link
     if interview_status.question.question_type == "exit":
         manual_checkout(manual_filename=yaml_filename)
@@ -31487,7 +31487,7 @@ def handle_csrf_error(the_error):
             referer = str(request.referrer)
         except:
             referer = None
-        if referer:
+        if referer and referer != 'None':
             flash(word("Input not processed because the page expired."), "success")
             return redirect(referer)
     return server_error(the_error)

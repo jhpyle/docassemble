@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.5.0] - 2024-08-
+
+### Changed
+- Upgraded Python dependencies. Note that if you are using third-party
+  Python packages, you make encounter dependency conflicts. Although
+  these version upgrades did not require any changes to
+  **docassemble** core code, it is possible that your interviews will
+  need to be updated.
+- Upgraded Font Awesome.
+- If `ask_object_type` is used and `object_type` is also set, the
+  `object_type` will be ignored.
+- When converting PDF to PNG, the resolution will be what it would be
+  if the long edge of each page was scaled to 11 inches.
+- The `exit link` can be set to `exit_logout` so that the user is
+  logged out in addition to the session being deleted.
+
+### Fixed
+- The Jinja2 `safe` filter can be used to insert content that contains
+  Jinja2 templating features.
+- Issue with keyboard navigation where the `focus-visible` indication
+  was not appearing on radio buttons and checkboxes.
+
 ## [1.4.112] - 2024-08-02
 
 ### Changed

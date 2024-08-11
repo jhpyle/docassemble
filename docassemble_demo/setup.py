@@ -62,7 +62,7 @@ setup(name='docassemble.demo',
           'docassemble.base==1.4.112',
           "googledrivedownloader==0.4",
           "ics==0.7.2",
-          "matplotlib==3.8.2"
+          "matplotlib==3.9.1.post1"
       ],
       zip_safe=False,
       package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo')

@@ -1811,26 +1811,31 @@ class DAList(DAObject):
             del kwargs['complete_attribute']
         if not hasattr(self, 'complete_attribute'):
             self.complete_attribute = None
-        if 'ask_object_type' in kwargs and kwargs['ask_object_type']:
-            self.ask_object_type = True
-            self.object_type = None
-            self.object_type_parameters = {}
+        if 'ask_object_type' in kwargs:
+            if kwargs['ask_object_type']:
+                self.ask_object_type = True
+                self.object_type = None
+                self.object_type_parameters = {}
+            else:
+                self.ask_object_type = False
             del kwargs['ask_object_type']
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
         super().init(*pargs, **kwargs)
 
     def initializeObject(self, *pargs, **kwargs):
-        """Creates a new object and creates an entry in the list for it.
-        The first argument is the index to set.
-        Takes an optional second argument, which is the type of object
-        the new object should be.  If no object type is provided, the
-        object type given by .object_type is used, and if that is not
-        set, DAObject is used.
+        """Creates a new object and creates an entry in the list for
+        it. The first argument is the index to set. Takes an optional
+        second argument, which is the type of object the new object
+        should be. If no object type is provided, the object type
+        given by .object_type is used. If .ask_object_type is used,
+        the .new_object_type is sought. Otherwise, DAObject is used.
 
         """
         objectFunction = None
         pargs = list(pargs)
+        if len(pargs) == 0 or not isinstance(pargs[0], int) or pargs[0] < 0:
+            raise DAError("initializeObject: first parameter must be an integer (0 or greater)")
         index = pargs.pop(0)
         if len(pargs) > 0:
             objectFunction = pargs.pop(0)
@@ -1840,7 +1845,15 @@ class DAList(DAObject):
                 new_obj_parameters[key] = val
             objectFunction = objectFunction.object_type
         if objectFunction is None:
-            if self.object_type is not None:
+            if self.ask_object_type:
+                if isinstance(self.new_object_type, DAObjectPlusParameters):
+                    objectFunction = self.new_object_type.object_type
+                    new_obj_parameters = self.new_object_type.parameters
+                elif isinstance(self.new_object_type, type):
+                    objectFunction = self.new_object_type
+                else:
+                    raise DAError("new_object_type must be an object type")
+            elif self.object_type is not None:
                 objectFunction = self.object_type
                 for key, val in self.object_type_parameters.items():
                     new_obj_parameters[key] = val
@@ -1853,6 +1866,8 @@ class DAList(DAObject):
             self.elements.append(None)
         self[index] = newobject
         self.there_are_any = True
+        if objectFunction is None and self.ask_object_type and hasattr(self, 'new_object_type'):
+            delattr(self, 'new_object_type')
         return newobject
 
     def set_object_type(self, object_type):
@@ -2108,7 +2123,15 @@ class DAList(DAObject):
             objectFunction = pargs.pop(0)
         new_obj_parameters = {}
         if objectFunction is None:
-            if self.object_type is not None:
+            if self.ask_object_type:
+                if isinstance(self.new_object_type, DAObjectPlusParameters):
+                    objectFunction = self.new_object_type.object_type
+                    new_obj_parameters = self.new_object_type.parameters
+                elif isinstance(self.new_object_type, type):
+                    objectFunction = self.new_object_type
+                else:
+                    raise DAError("new_object_type must be an object type")
+            elif self.object_type is not None:
                 objectFunction = self.object_type
                 for key, val in self.object_type_parameters.items():
                     new_obj_parameters[key] = val
@@ -2119,6 +2142,8 @@ class DAList(DAObject):
         newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **new_obj_parameters)
         self.elements.append(newobject)
         self.there_are_any = True
+        if objectFunction is None and self.ask_object_type and hasattr(self, 'new_object_type'):
+            delattr(self, 'new_object_type')
         return newobject
 
     def append(self, *pargs, **kwargs):
@@ -2536,7 +2561,7 @@ class DAList(DAObject):
                 del self.gathered
             else:
                 return True
-        if item_object_type is None and self.object_type is not None:
+        if item_object_type is None and self.object_type is not None and not self.ask_object_type:
             item_object_type = self.object_type
             item_object_parameters = self.object_type_parameters
         elif isinstance(item_object_type, DAObjectPlusParameters):
@@ -2666,7 +2691,7 @@ class DAList(DAObject):
             if num_to_add > 10:
                 raise DAError("Attempt to fill up more than 10 items")
             for i in range(0, num_to_add):  # pylint: disable=unused-variable
-                if self.object_type is None:
+                if self.object_type is None or self.ask_object_type:
                     self.elements.append(None)
                 else:
                     self.appendObject(self.object_type, **self.object_type_parameters)
@@ -2675,7 +2700,7 @@ class DAList(DAObject):
             if num_to_add > 10:
                 raise DAError("Attempt to fill up more than 10 items")
             for i in range(0, num_to_add):
-                if self.object_type is None:
+                if self.object_type is None or self.ask_object_type:
                     self.elements.append(None)
                 else:
                     self.appendObject(self.object_type, **self.object_type_parameters)
@@ -2987,6 +3012,10 @@ class DADict(DAObject):
         if 'ask_object_type' in kwargs:
             if kwargs['ask_object_type']:
                 self.ask_object_type = True
+                self.object_type = None
+                self.object_type_parameters = {}
+            else:
+                self.ask_object_type = False
             del kwargs['ask_object_type']
         if not hasattr(self, 'ask_object_type'):
             self.ask_object_type = False
@@ -3166,9 +3195,10 @@ class DADict(DAObject):
         """Creates a new object and creates an entry in the dictionary for it.
         The first argument is the name of the dictionary key to set.
         Takes an optional second argument, which is the type of object
-        the new object should be.  If no object type is provided, the
-        object type given by .object_type is used, and if that is not
-        set, DAObject is used.
+        the new object should be. If no object type is provided, the
+        object type given by .object_type is used. If .ask_object_type is
+        used, a .new_object_type will be asked for and used. Otherwise,
+        DAObject is used.
 
         """
         objectFunction = None
@@ -3182,7 +3212,15 @@ class DADict(DAObject):
                 new_obj_parameters[key] = val
             objectFunction = objectFunction.object_type
         if objectFunction is None:
-            if self.object_type is not None:
+            if self.ask_object_type:
+                if isinstance(self.new_object_type, DAObjectPlusParameters):
+                    objectFunction = self.new_object_type.object_type
+                    new_obj_parameters = self.new_object_type.parameters
+                elif isinstance(self.new_object_type, type):
+                    objectFunction = self.new_object_type
+                else:
+                    raise DAError("new_object_type must be an object type")
+            elif self.object_type is not None:
                 objectFunction = self.object_type
                 for key, val in self.object_type_parameters.items():
                     new_obj_parameters[key] = val
@@ -3193,6 +3231,8 @@ class DADict(DAObject):
         newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', *pargs, **new_obj_parameters)
         self.elements[entry] = newobject
         self.there_are_any = True
+        if objectFunction is None and self.ask_object_type and hasattr(self, 'new_object_type'):
+            delattr(self, 'new_object_type')
         return newobject
 
     def new(self, *pargs, **kwargs):
@@ -3207,6 +3247,10 @@ class DADict(DAObject):
                     self.new(item, **kwargs)
             else:
                 new_obj_parameters = {}
+                if self.ask_object_type:
+                    if parg not in self.elements:
+                        self[parg] = None
+                    continue
                 if self.object_type is not None:
                     item_object_type = self.object_type
                     for key, val in self.object_type_parameters.items():
@@ -3621,7 +3665,7 @@ class DADict(DAObject):
                 return True
         if not self.auto_gather:
             return self.gathered
-        if item_object_type is None and self.object_type is not None:
+        if item_object_type is None and self.object_type is not None and not self.ask_object_type:
             item_object_type = self.object_type
             new_item_parameters = self.object_type_parameters
         elif isinstance(item_object_type, DAObjectPlusParameters):
@@ -3713,7 +3757,7 @@ class DADict(DAObject):
         if hasattr(self, 'new_item_value'):
             delattr(self, 'new_item_value')
         for elem in self._sorted_elements_values():
-            if self.object_type is not None and self.complete_attribute is not None:
+            if (self.object_type is not None or self.ask_object_type) and self.complete_attribute is not None:
                 for attrib in self._complete_attributes():
                     complex_getattr(elem, attrib)
             else:
@@ -3730,10 +3774,13 @@ class DADict(DAObject):
 
     def __getitem__(self, index):
         if index not in self.elements:
-            if self.object_type is None or docassemble.base.functions.this_thread.probing:
+            if (self.object_type is None and not self.ask_object_type) or docassemble.base.functions.this_thread.probing:
                 var_name = object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "]"
                 raise DAIndexError("name '" + var_name + "' is not defined")
-            self.initializeObject(index, self.object_type, **self.object_type_parameters)
+            if self.ask_object_type:
+                self.elements[index] = None
+            else:
+                self.initializeObject(index, self.object_type, **self.object_type_parameters)
             return self.elements[index]
         return self.elements[index]
 
