@@ -12,7 +12,7 @@
     <meta name="{{ key }}" content="{{ config['SOCIAL'][key] }}">
 {%- endif %}
 {%- endfor %}
-    <meta itemprop="name" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+    <meta itemprop="name" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title | striptags | e }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
 {%- if 'description' in config['SOCIAL'] %}
     <meta itemprop="description" content="{{ config['SOCIAL']['description'] }}">
 {%- endif %}
@@ -27,9 +27,9 @@
     <meta name="twitter:{{ key }}" content="{{ config['SOCIAL']['twitter'][key] }}">
 {%- endif %}
 {%- endfor %}
-    <meta name="twitter:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+    <meta name="twitter:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title | striptags | e  }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
 {%- if 'image' in config['SOCIAL']['og'] %}
-    <meta name="og:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
+    <meta name="og:title" content="{% if page_title %}{{ config['BRAND_NAME'] }}: {{ page_title | striptags | e  }}{% else %}{{ config['BRAND_NAME'] }}{% endif %}">
 {%- for key in config['SOCIAL']['og'] %}
 {%- if key not in ('locale', 'url') %}
     <meta name="og:{{ key }}" content="{{ config['SOCIAL']['og'][key] }}">
