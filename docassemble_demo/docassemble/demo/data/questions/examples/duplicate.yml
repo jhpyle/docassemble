@@ -23,11 +23,11 @@ attachment:
 ---
 event: duplicate_session
 code: |
-  session_id = create_session(user_info().filename)
-  set_session_variables(user_info().filename, session_id,
+  session_id = create_session(current_context().filename)
+  set_session_variables(current_context().filename, session_id,
                         all_variables(simplify=False), 
                         overwrite=True)
-  set_session_variables(user_info().filename, session_id,
+  set_session_variables(current_context().filename, session_id,
                         {"_internal['answered']": _internal['answered'], 
                          "_internal['answers']": _internal['answers'],
                          "_internal['device_local']": _internal['device_local'],

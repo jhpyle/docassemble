@@ -1,9 +1,15 @@
 import sys
 import os
 import re
+import math
+import psutil
 separator = re.compile(r' *[,;] *')
 
 if __name__ == "__main__":
+    try:
+        total_memory = int(math.ceil(psutil.virtual_memory().total / 1024 ** 3))
+    except:
+        total_memory = 2
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
     from docassemble.base.config import daconfig, parse_redis_uri
@@ -19,6 +25,14 @@ if __name__ == "__main__":
         print('export DAWEBSERVER="nginx"')
     if daconfig.get('run oauthlib on http', False):
         print('export OAUTHLIB_INSECURE_TRANSPORT=1')
+    if not ('max celery processes' in daconfig and isinstance(daconfig['max celery processes'], int) and daconfig['max celery processes'] > 0):
+        if total_memory > 4:
+            daconfig['max celery processes'] = int(total_memory / 2)
+        else:
+            daconfig['max celery processes'] = 2
+    print('DAMAXCELERYWORKERS=' + str(daconfig['max celery processes']))
+    if 'celery processes' in daconfig and isinstance(daconfig['celery processes'], int):
+        print('DACELERYWORKERS=' + str(daconfig['celery processes']))
     if '--limited' in sys.argv:
         sys.exit(0)
     if 'other os locales' in daconfig and isinstance(daconfig['other os locales'], list):
@@ -45,8 +59,6 @@ if __name__ == "__main__":
             print('export DAMAXCONTENTLENGTH=' + str(max_content_length))
     else:
         print('DAMAXCONTENTLENGTH=' + str(16 * 1024 * 1024))
-    if 'celery processes' in daconfig and isinstance(daconfig['celery processes'], int):
-        print('DACELERYWORKERS=' + str(daconfig['celery processes']))
     if 'debian packages' in daconfig and isinstance(daconfig['debian packages'], list) and daconfig.get('ubuntu packages', None) is None:
         daconfig['ubuntu packages'] = daconfig['debian packages']
         del daconfig['debian packages']

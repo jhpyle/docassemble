@@ -13,7 +13,7 @@ question: |
   Enter a date.
 subquestion: |
   The session ID of this interview is
-  `${ user_info().session }`.
+  `${ current_context().session }`.
 fields:
   - Date: date_variable
     datatype: date

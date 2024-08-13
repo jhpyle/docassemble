@@ -21,7 +21,7 @@ echo "initialize: initialize starting" >&2
 RESTOREFROMBACKUP=true
 
 if [ -f /var/run/docassemble/da_running ] || [ -f /var/run/docassemble/status-rabbitmq-running ]; then
-    echo "initialize: unsafe shutdown detected; will not restore from backup"
+    echo "initialize: unsafe shutdown detected; will not restore from backup" >&2
     RESTOREFROMBACKUP=false
 fi
 
@@ -459,6 +459,7 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's#{{REDIS}}#'"${REDIS:-null}"'#' \
         -e 's#{{RABBITMQ}}#'"${RABBITMQ:-null}"'#' \
         -e 's@{{DACELERYWORKERS}}@'"${DACELERYWORKERS:-null}"'@' \
+        -e 's@{{DAMAXCELERYWORKERS}}@'"${DAMAXCELERYWORKERS:-null}"'@' \
         -e 's@{{TIMEZONE}}@'"${TIMEZONE:-null}"'@' \
         -e 's/{{EC2}}/'"${EC2:-false}"'/' \
         -e 's/{{COLLECTSTATISTICS}}/'"${COLLECTSTATISTICS:-false}"'/' \
@@ -1569,6 +1570,7 @@ chown -R www-data:www-data /var/www/.config
 chown -R www-data:www-data /var/www/.texlive2021
 
 function stopfunc {
+    echo "initialize: Beginning the stop process" >&2
     rm -f "/var/run/docassemble/ready"
     if [[ ! $CONTAINERROLE =~ .*:(all):.* ]]; then
         su -c "source \"${DA_ACTIVATE}\" && python -m docassemble.webapp.deregister \"${DA_CONFIG_FILE}\"" www-data

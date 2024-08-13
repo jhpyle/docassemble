@@ -10,7 +10,7 @@ objects:
 ---
 mandatory: True
 code: |
-  log_key = r.key('log:' + user_info().session)
+  log_key = r.key('log:' + current_context().session)
   messages = list()
 ---
 mandatory: True

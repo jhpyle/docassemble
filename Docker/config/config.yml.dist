@@ -70,6 +70,7 @@ timezone: {{TIMEZONE}}
 redis: {{REDIS}}
 rabbitmq: {{RABBITMQ}}
 celery processes: {{DACELERYWORKERS}}
+max celery processes: {{DAMAXCELERYWORKERS}}
 voicerss:
   enable: False
   key: ae8734983948ebc98239e9898f998432

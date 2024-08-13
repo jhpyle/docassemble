@@ -43,10 +43,10 @@ if [[ $PGVERSION == 16* ]]; then
     PGVERSION=16
 fi
 
-chown -R postgres.postgres /etc/postgresql
-chown -R postgres.postgres /var/lib/postgresql
-chown -R postgres.postgres /var/run/postgresql
-chown -R postgres.postgres /var/log/postgresql
+chown -R postgres:postgres /etc/postgresql
+chown -R postgres:postgres /var/lib/postgresql
+chown -R postgres:postgres /var/run/postgresql
+chown -R postgres:postgres /var/log/postgresql
 
 function stopfunc {
     if [[ ! $CONTAINERROLE =~ .*:(all):.* ]]; then
@@ -60,7 +60,7 @@ function stopfunc {
 	PGBACKUPDIR="${DA_ROOT}/backup/postgres"
 	mkdir -p "$PGBACKUPDIR"
     fi
-    chown postgres.postgres "$PGBACKUPDIR"
+    chown postgres:postgres "$PGBACKUPDIR"
     su postgres -c 'psql -Atc "SELECT datname FROM pg_database" postgres' | grep -v -e template -e postgres | awk -v backupdir="$PGBACKUPDIR" '{print "cd /tmp; su postgres -c \"pg_dump -F c -f " backupdir "/" $1 " " $1 "\""}' | bash
     if [ "${S3ENABLE:-false}" == "true" ]; then
 	s4cmd dsync "$PGBACKUPDIR" "s3://${S3BUCKET}/postgres"

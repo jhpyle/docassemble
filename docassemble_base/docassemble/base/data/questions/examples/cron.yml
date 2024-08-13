@@ -29,6 +29,6 @@ subquestion: |
   long enough to see the counter
   increase!
 
-  `${ user_info().session }`
+  `${ current_context().session }`
 buttons:
   - Refresh: refresh
