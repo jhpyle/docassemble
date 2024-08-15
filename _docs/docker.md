@@ -137,9 +137,9 @@ the basic [Docker] command line.
 # <a name="install"></a>Installing Docker
 
 First, make sure you are running [Docker] on a computer or virtual
-computer with at least 4GB of memory and 20GB of hard drive space.
-The **docassemble** installation will use up about 10GB of space, and
-you should always have at least 10GB free when you are running
+computer with at least 4GB of memory and 40GB of hard drive space.
+The **docassemble** installation will use up about 20GB of space, and
+you should always have at least 20GB free when you are running
 **docassemble**.
 
 If you have a Windows PC, follow the
@@ -176,10 +176,10 @@ Linux, you many need to do `sudo systemctl start docker`, `sudo
 service docker start`, or `sudo /etc/init.d/docker start`.
 
 The operating system that runs inside of the **docassemble** Docker
-container is Ubuntu 22.04. This is a fairly recent version of
+container is Ubuntu 24.04. This is a fairly recent version of
 Ubuntu. When using [Docker], it is recommended that you run a recent
 version of [Docker] and its dependencies ([containerd] and
-[runC]). Ubuntu 22 and Debian 11 are known to work well. (If you run
+[runC]). Ubuntu 22 and Debian 12 are known to work well. (If you run
 Docker on Mac or Windows, it will likely start a virtual machine and
 then deploy the **docassemble** Docker container inside that virtual
 machine; the operating system of that virtual machine, which is likely
@@ -192,6 +192,12 @@ likely that you will encounter problems, if not right away then at a
 later point in time. The software in the **docassemble** image and
 Python packages is continually updated, and the latest versions of
 software may expect the latest versions of operating system.
+
+As of August 2024, Ubuntu 24.04's `docker.io` package has a problem
+with AppArmor interfering with the functionality of [`docker
+stop`]. If you use Ubuntu 24.04 as the operating system on which to
+run Docker, follow the instructions on Docker's web site for
+installing the Community Edition.
 
 If you are using [Docker Desktop], it is recommended that you go to
 Settings and change the Docker Engine settings so that the
