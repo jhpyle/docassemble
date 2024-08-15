@@ -1358,9 +1358,17 @@ your container for the new configuration to take effect.
   `RABBITMQ`. See the [`rabbitmq`] configuration directive.
 * <a name="DACELERYWORKERS"></a>`DACELERYWORKERS`: By default, the
   number of Celery workers is based on the number of CPUs on the
-  machine. If you want to set a different value, set
-  `DACELERYWORKERS` to integer greater than or equal to 1. See the
+  machine and its total memory. If you want to set a different value,
+  set `DACELERYWORKERS` to integer greater than or equal to 1. See the
   [`celery processes`] configuration directive.
+* <a name="DAMAXCELERYWORKERS"></a>`DACELERYWORKERS`: By default, the
+  number of Celery workers scales with the number of CPUs on the
+  machine (one process per CPU reported by `nproc`) and is limited by
+  the total memory (one process for every 2GB). If you want the number
+  of Celery workers to scale based on the number of CPUs but the
+  memory-based limit is to restrictive, you can set
+  `DAMAXCELERYWORKERS` to integer greater than or equal to 1. See the
+  [`max celery processes`] configuration directive.
 * <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
   server generates an error, the error message will contain an e-mail
   address that the user can contact for help. This e-mail address

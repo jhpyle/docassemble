@@ -2885,13 +2885,26 @@ signature pen thickness scaling factor: 0.5
 
 When users supply PDF files and **docassemble** includes those files
 within a [document], the PDF pages are converted to PNG images in
-order to be included within RTF files. The `png resolution` directive
-defines the dots per inch to be used during this conversion.
+order to be included within DOCX and RTF files. The `png resolution`
+directive defines the dots per inch to be used during this conversion.
+
+{% highlight yaml %}
+png resolution: 500
+{% endhighlight %}
 
 PDF files are also converted to PNG for previewing within the web app,
 but at a lower resolution. The `png screen resolution` directive
 defines the dots per inch to be used for conversion of PDF pages to
 PNG files for display in the web browser.
+
+{% highlight yaml %}
+png screen resolution: 72
+{% endhighlight %}
+
+When converting page images, the actual DPI used will be scaled based
+on the page size. If the long edge of the page is 11 inches and the
+`png resolution` is 500, then the DPI will be 500. However if the long
+edge of the page is 22 inches, the DPI will be 250.
 
 ## <a name="ocr dpi"></a>OCR resolution
 
@@ -2904,8 +2917,12 @@ else, set the `ocr dpi` directive:
 ocr dpi: 500
 {% endhighlight %}
 
-## <a name="retype password"></a>Controlling whether registering users need to retype their passwords
+The actual DPI used will be scaled based on the page size. If the long
+edge of the page is 11 inches and the `ocr dpi` is 500, then the DPI
+will be 500. However if the long edge of the page is 22 inches, the
+DPI will be 250.
 
+## <a name="retype password"></a>Controlling whether registering users need to retype their passwords
 
 By default, users when registering must type in their passwords twice.
 To allow users to register after only typing the password once, you
@@ -4917,20 +4934,62 @@ process by setting the `image upload type` to `png`, `jpeg`, or `bmp`.
 image upload type: jpeg
 {% endhighlight %}
 
-## <a name="celery processes"></a>Number of concurrent background tasks
+## <a name="celery processes"></a><a name="max celery processes"></a>Number of concurrent background tasks
 
 **docassemble** uses [Celery] to execute background tasks. The
 [Celery] system is able to execute multiple tasks concurrently. The
-number of concurrent processes is limited by default to the number of
-CPU cores on the machine. If you want to increase the number of
-processes, set the `celery processes` directive.
+number of concurrent workers is set by default to the number of CPU
+cores on the machine, except that the number of workers will not be
+larger than the number of gigabytes of total memory divided by 2. For
+example:
+
+* If a machine has 4 CPU cores and 16GB of RAM, four [Celery] workers
+  will be started (CPU limited)
+* If a machine has 32 CPU cores and 16GB of RAM, eight [Celery]
+  workers will be started (memory limited).
+
+The number of CPUs is determined by calling `nproc --all`. Note that
+the result may be the same or may be different from the number of
+`vCPUs` that a virtual machine has.
+
+If you want to manually override this formula, set the `celery
+processes` directive.
 
 {% highlight yaml %}
 celery processes: 15
 {% endhighlight %}
 
-This value will be passed directly to [Celery]'s [`worker_concurrency`]
-configuration variable.
+This will cause 15 [Celery] workers to be spawned.
+
+Note that there are two [Celery] systems: one called `celerysingle` with a
+single worker, and one called `celery` with one or more workers. The
+`celerysingle` system is used for background processes that will
+perform parallel processing and use every CPU in the machine; it would
+be dangerous to run more than one such process at a time. The `celery`
+system is used for all other tasks, which [Celery] may in parallel on
+all the available worker processes. Thus if the `celery processes` is
+`15`, the [`worker_concurrency`] of one system will be `1` for
+`celerysingle` and `14` for `celery`. You can see this if you do `ps
+ax | grep celery` on the server.
+
+If you want the number of [Celery] processes to scale with CPU but you
+think your system can handle more concurrency than the standard
+formula would provide, you can set a higher maximum:
+
+{% highlight yaml %}
+max celery processes: 10
+{% endhighlight %}
+
+This setting will mean that:
+
+* If a machine has 8 CPUs and 4GB of RAM, the number of celery
+  processes will be 8 (`1` for `celerysingle` and `7` for `celery`).
+* If a machine has 32 CPUs and 4GB of RAM, the number of celery
+  processes will be 10 (`1` for `celerysingle` and `9` for `celery`).
+
+It is important not to spawn too many [Celery] workers because each of
+them loads software into its own memory space, which could cause your
+memory to be exhausted.
 
 ## <a name="run oauthlib on http"></a>Using oauthlib on http servers
 

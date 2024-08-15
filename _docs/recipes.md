@@ -2416,7 +2416,8 @@ Here is an example of a Python module that, when installed on a
 # pre-load
 
 from docassemble.webapp.app_object import app
-from flask import render_template_string, Markup
+from flask import render_template_string
+from markupsafe import Markup
 
 @app.route('/hello', methods=['GET'])
 def hello_endpoint():
@@ -2457,7 +2458,7 @@ variables that the `base_templates/base.html` uses. You can customize
 different parts of the page by setting these values. The exception is
 `planet`, which is a variable that is used in the HTML for the
 `/hello` page. Note that in order to insert raw HTML using keyword
-parameters, you need to use [Flask]'s `Markup()` function.
+parameters, you need to use the `Markup()` function.
 
 [Flask] only permits one template folder, and the template folder in
 the **docassemble** app is the one in `docassemble.webapp`. This

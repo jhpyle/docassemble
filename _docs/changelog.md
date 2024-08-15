@@ -3,6 +3,42 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.0](https://github.com/jhpyle/docassemble/releases/tag/v1.5.0) - 2024-08-14
+
+
+### Added
+- The `max celery processes` Configuration directive.
+
+
+### Changed
+- Upgraded Python dependencies. Note that if you are using third-party
+  Python packages, you may encounter dependency conflicts. Although
+  these version upgrades did not require any changes to
+  **docassemble** core code, it is possible that your interviews will
+  need to be updated.
+- Upgraded Font Awesome.
+- If `ask_object_type` is used and `object_type` is also set, the
+  `object_type` will be ignored.
+- When converting PDF to PNG, the resolution will be what it would be
+  if the long edge of each page was scaled to 11 inches.
+- The `exit link` can be set to `exit_logout` in order to log the user
+  out in addition to deleting the user's session.
+
+
+### Fixed
+- The Jinja2 `safe` filter can be used to insert content that contains
+  Jinja2 templating features.
+- Issue with keyboard navigation where the `focus-visible` indication
+  was not appearing on radio buttons and checkboxes.
+- On machines with a large number of CPU cores but limited memory, so
+  many `celery` workers could be spawned that the system's memory
+  could be exhausted, unless the Configuration sets a lower number of
+  `celery processes`. Now, the number of `celery` workers spawned by
+  default will not be greater than the number of gigabytes of total
+  memory divided by two. This limit can be overridden by setting `max
+  celery processes` to a different limit, or by setting `celery
+  processes` to a specific number of workers.
+
 ## [1.4.112](https://github.com/jhpyle/docassemble/releases/tag/v1.4.112) - 2024-08-02
 
 

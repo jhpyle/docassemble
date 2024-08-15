@@ -131,7 +131,10 @@ answers will remain intact. (It can be important to keep the interview
 answers on the server if [background tasks] are still running.) If
 `exit link` is `logout`, then if the user is logged in, the user will
 be logged out and then redirected to the `exit url`, but if the user
-is not logged in, this will have the same effect as `leave`.
+is not logged in, this will have the same effect as `leave`. If `exit
+link` is `exit_logout`, the user's interview answers will be deleted,
+they will be logged out if they are logged in, and they will be
+redirected to the `exit url`.
 
 <a name="exit url"></a>If an `exit url` is provided, the user will be
 redirected to the given URL when they click the "Exit" link. If no

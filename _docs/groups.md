@@ -906,6 +906,34 @@ However, this would set `location.new_object_type` to a piece of text
 `City`).  Thus, when setting `.new_object_type` (or `.object_type`),
 make sure to use [Python] code.
 
+If you don't want to use a `buttons` interface, you can use code such
+as the following to set the `.new_object_type` attribute to a Python
+class.
+
+{% highlight yaml %}
+question: |
+  Do you know the full address of the
+  ${ ordinal(location.current_index()) }
+  location?
+fields:
+  - Type: location.new_object_type_selection
+    choices:
+      - I know the full address
+      - I only know the city
+---
+code: |
+  if location.new_object_type_selection == 'I know the full address':
+    location.new_object_type = Address
+  else:
+    location.new_object_type = City
+  del location.new_object_type_selection
+{% endhighlight %}
+
+Running `del location.new_object_type_selection` causes
+`location.new_object_type_selection` to be undefined. This ensures that
+the next time `location.new_object_type` is sought, the `question` will
+be asked again.
+
 Note that there are two questions that ask about attributes of the
 list items:
 
@@ -950,6 +978,34 @@ over the "What is the address" question, and it will be asked.  If the
 attribute **docassemble** needs is `.address`, only the "What is the
 address" question is capable of defining that, so only that question
 will be asked.
+
+If you set `.ask_object_type` to `True` and you want **docassemble**
+to query for the `.new_object_type`, you need to trigger the list
+gathering process by directly or indirectly calling `.gather()` on the
+list. If you try to bypass the list gathering process, you may
+encounter problems. For example, this will result in an error:
+
+{% highlight yaml %}
+objects:
+  - mylist: DAlist.using(ask_object_type=True, there_are_any=True)
+---
+mandatory: True
+code: |
+  mylist[0].favorite_fruit
+{% endhighlight %}
+
+Instead, make sure the interview logic triggers the list gathering
+process. For example:
+
+{% highlight yaml %}
+objects:
+  - mylist: DAlist.using(ask_object_type=True, there_are_any=True)
+---
+mandatory: True
+code: |
+  for item in mylist:
+    item.favorite_fruit
+{% endhighlight %}
 
 # <a name="gather dictionary"></a>Gathering information into dictionaries
 
