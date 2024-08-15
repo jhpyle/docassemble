@@ -8353,11 +8353,14 @@ class Interview:
             if has_roles is not None:
                 return len(set(roles).intersection(set(has_roles))) > 0
         if is_anonymous:
+            unique_sessions = False
             require_login = False
             for metadata in self.metadata:
                 if 'require login' in metadata:
                     require_login = bool(metadata['require login'])
-            if require_login:
+                if 'sessions are unique' in metadata:
+                    unique_sessions = bool(metadata['sessions are unique'])
+            if require_login or unique_sessions:
                 return False
         return True
 
@@ -8419,11 +8422,14 @@ class Interview:
             if has_roles is not None:
                 return len(set(roles).intersection(set(has_roles))) > 0
         if is_anonymous:
+            unique_sessions = False
             require_login = False
             for metadata in self.metadata:
                 if 'require login' in metadata:
                     require_login = bool(metadata['require login'])
-            if require_login:
+                if 'sessions are unique' in metadata:
+                    unique_sessions = bool(metadata['sessions are unique'])
+            if require_login or unique_sessions:
                 return False
         return True
 

@@ -6863,7 +6863,7 @@ def index(action_argument=None, refer=None):
             session_id = None
             if reset_interview == 2:
                 delete_session_sessions()
-            if (not reset_interview) and (unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) and current_user.has_role(*unique_sessions))):
+            if (not reset_interview) and (unique_sessions is True or (isinstance(unique_sessions, list) and len(unique_sessions) > 0 and current_user.has_role(*unique_sessions))):
                 session_id, encrypted = get_existing_session(yaml_filename, secret)
             if session_id is None:
                 user_code, user_dict = reset_session(yaml_filename, secret)
@@ -31797,7 +31797,7 @@ class AdminInterview:
         return self.interview != interview
 
     def can_use(self):
-        if self.require_login and current_user.is_anonymous:
+        if (self.require_login or self.unique_sessions) and current_user.is_anonymous:
             return False
         if self.roles is None:
             return True
@@ -31869,6 +31869,7 @@ def set_admin_interviews():
                         menu_item.label = item['label']
                         menu_item.roles = item['roles']
                         menu_item.require_login = item['require_login']
+                        menu_item.unique_sessions = item['unique_sessions']
                         admin_interviews.append(menu_item)
                     elif 'interview' in item and isinstance(item['interview'], str):
                         try:
@@ -31945,6 +31946,13 @@ def set_admin_interviews():
                             for metadata in interview.metadata:
                                 if 'require login' in metadata:
                                     admin_interview.require_login = bool(metadata['require login'])
+                        admin_interview.unique_sessions = False
+                        if 'sessions are unique' in item and item['sessions are unique'] is not None:
+                            admin_interview.unique_sessions = bool(item['sessions are unique'])
+                        else:
+                            for metadata in interview.metadata:
+                                if 'sessions are unique' in metadata:
+                                    admin_interview.unique_sessions = bool(metadata['sessions are unique'])
                         admin_interviews.append(admin_interview)
                     else:
                         logmessage("item in administrative interviews must contain a valid interview name")

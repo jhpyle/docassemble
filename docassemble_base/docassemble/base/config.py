@@ -617,6 +617,7 @@ def load(**kwargs):
                         else:
                             new_item['roles'] = None
                         new_item['require_login'] = bool(item.get('require login', False))
+                        new_item['unique_sessions'] = bool(item.get('sessions are unique', False))
                         new_admin_interviews.append(new_item)
                     else:
                         config_error("Unrecognized item in administrative interviews.")

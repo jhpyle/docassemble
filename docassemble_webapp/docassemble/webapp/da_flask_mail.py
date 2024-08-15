@@ -41,6 +41,7 @@ class Message(FlaskMessage):
                  recipients=None,
                  body=None,
                  html=None,
+                 alts={},
                  sender=None,
                  cc=None,
                  bcc=None,
@@ -52,6 +53,6 @@ class Message(FlaskMessage):
                  mail_options=None,
                  rcpt_options=None):
         null_sender = sender is None
-        super().__init__(subject, recipients, body, html, sender, cc, bcc, attachments, reply_to, date, charset, extra_headers, mail_options, rcpt_options)
+        super().__init__(subject, recipients, body, html, alts, sender, cc, bcc, attachments, reply_to, date, charset, extra_headers, mail_options, rcpt_options)
         if null_sender:
             self.sender = None
