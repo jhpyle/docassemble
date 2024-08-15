@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.1](https://github.com/jhpyle/docassemble/releases/tag/v1.5.1) - 2024-08-15
+
+
+### Fixed
+- Problem with sending email due to change in Flask-Mail.
+- The effect of `sessions are unique` was changed to be more like
+  the effect of `require login`.
+
 ## [1.5.0](https://github.com/jhpyle/docassemble/releases/tag/v1.5.0) - 2024-08-14
 
 
