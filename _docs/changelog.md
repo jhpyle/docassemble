@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.2](https://github.com/jhpyle/docassemble/releases/tag/v1.5.2) - 2024-08-16
+
+
+### Fixed
+- Dark mode CSS visibility problem introduced by the fix in 1.5.0 that
+  addressed the `focus-visible` problem.
+
 ## [1.5.1](https://github.com/jhpyle/docassemble/releases/tag/v1.5.1) - 2024-08-15
 
 
