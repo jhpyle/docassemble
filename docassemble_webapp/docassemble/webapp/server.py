@@ -11443,7 +11443,7 @@ def index(action_argument=None, refer=None):
         $('.dacurrency').on('change', function(){
           var theVal = $(this).val().toString();
           if (theVal.indexOf('.') >= 0){
-            theVal = theVal.replaceAll(/[^0-9\.\-]/g, '');
+            theVal = theVal.replaceAll(/[\$,\(\)]/g, '');
             var num = parseFloat(theVal);
             var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """).toString();
             if (cleanNum != 'NaN') {
@@ -11459,7 +11459,7 @@ def index(action_argument=None, refer=None):
         });
         $('.danumeric').on('change', function(){
           var theVal = $(this).val().toString();
-          $(this).val(theVal.replaceAll(/[^0-9\.\-]/g, ''));
+          $(this).val(theVal.replaceAll(/[\$,\(\)]/g, ''));
         });
         // iOS will truncate text in `select` options. Adding an empty optgroup fixes that
         if (navigator.userAgent.match(/(iPad|iPhone|iPod touch);/i)) {

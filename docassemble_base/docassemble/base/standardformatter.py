@@ -1976,6 +1976,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     random.shuffle(pairlist)
                 found_default = False
                 last_group = None
+                if status.question.question_variety == "radio":
+                    output += '                <div class="da-field-group da-field-radio">'
                 for pair in pairlist:
                     if using_opt_groups and pair.get('group') != last_group:
                         if last_group is not None:
@@ -2004,12 +2006,14 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                         found_default = True
                     if status.question.question_variety == "radio":
-                        output += '                <div class="row"><div class="col">' + help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + css_color + '" data-color="' + css_color + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="da-to-labelauty' + css_class + '" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value=' + fix_double_quote(str(pair['key'])) + ischecked + '/>', helptext, status) + '</div></div>\n'
+                        output += help_wrap('<input aria-label="' + formatted_item + '" alt="' + formatted_item + '" data-color="' + css_color + '" data-color="' + css_color + '" data-labelauty="' + my_escape(the_icon) + formatted_item + '|' + my_escape(the_icon) + formatted_item + '" class="da-to-labelauty' + css_class + '" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="radio" value=' + fix_double_quote(str(pair['key'])) + ischecked + '/>', helptext, status)
                     else:
                         if css_class:
                             css_class = 'class="' + css_class.strip() + '"'
                         inner_fieldlist.append('<option value=' + fix_double_quote(str(pair['key'])) + ischecked + css_class + '>' + markdown_to_html(str(pair['label']), status=status, trim=True, escape='option', do_terms=False) + '</option>')
                     id_index += 1
+                if status.question.question_variety == "radio":
+                    output += '</div>\n'
                 if status.question.question_variety != "radio" and found_default:
                     inner_fieldlist = inner_fieldlist[1:]
                 if status.question.question_variety in ["dropdown", "combobox"]:
