@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.5.3] - 2024-08-18
+
+### Fixed
+- Upgraded `nltk` because version 3.8.2 was deleted from PyPI.
+- Extended the wait time for server restarts to wait for all of the
+  background processes to finish restarting.
+
 ## [1.5.2] - 2024-08-16
 
 ### Fixed

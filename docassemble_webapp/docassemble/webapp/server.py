@@ -4630,6 +4630,14 @@ def call_sync():
         counter -= 1
 
 
+def reset_process_running():
+    check_args = SUPERVISORCTL + ['-s', 'http://localhost:9001', 'status', 'reset']
+    output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()  # pylint: disable=unused-variable
+    if re.search(r'RUNNING', output.decode()):
+        return True
+    return False
+
+
 def formatted_current_time():
     if current_user.timezone:
         the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
@@ -17029,7 +17037,7 @@ def update_package_wait():
           data: 'csrf_token=""" + my_csrf + """',
           success: daUpdateCallback,
           error: daBadCallback,
-          timeout: 10000,
+          timeout: 2000,
           dataType: 'json'
         });
         return true;
@@ -17061,7 +17069,7 @@ def update_package_ajax():
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 # logmessage("update_package_ajax: success")
-                if (hasattr(the_result, 'restart') and not the_result.restart) or START_TIME > session['serverstarttime']:
+                if (hasattr(the_result, 'restart') and not the_result.restart) or (START_TIME > session['serverstarttime'] and not (SINGLE_SERVER and reset_process_running())):
                     return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
                 return jsonify(success=True, status='waiting')
             if hasattr(the_result, 'error_message'):
@@ -17337,7 +17345,7 @@ def update_package():
     else:
         limitation = ''
     allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
-    response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name.startswith('docassemble') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
+    response = make_response(render_template('pages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name == 'docassemble' or y.package.name.startswith('docassemble.') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -29254,15 +29262,15 @@ def api_package_update_status():
         the_result = result.get()
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
-                if the_result.restart and START_TIME <= task_info['server_start_time']:
+                if the_result.restart and (START_TIME <= task_info['server_start_time'] or (SINGLE_SERVER and reset_process_running())):
                     return jsonify(status='working')
-                r.delete(the_key)
+                r.expire(the_key, 30)
                 return jsonify(status='completed', ok=True, log=summarize_results(the_result.results, the_result.logmessages, html=False))
             if hasattr(the_result, 'error_message'):
-                r.delete(the_key)
+                r.expire(the_key, 30)
                 return jsonify(status='completed', ok=False, error_message=str(the_result.error_message))
             if hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
-                r.delete(the_key)
+                r.expire(the_key, 30)
                 return jsonify(status='completed', ok=False, error_message=summarize_results(the_result.results, the_result.logmessages, html=False))
             r.expire(the_key, 30)
             return jsonify(status='completed', ok=False, error_message=str("No error message.  Result is " + str(the_result)))
@@ -29532,7 +29540,7 @@ def api_restart_status():
     if task_data is None:
         return jsonify(status='unknown')
     task_info = json.loads(task_data.decode())
-    if START_TIME <= task_info['server_start_time']:
+    if START_TIME <= task_info['server_start_time'] or (SINGLE_SERVER and reset_process_running()):
         return jsonify(status='working')
     r.expire(the_key, 30)
     return jsonify(status='completed')

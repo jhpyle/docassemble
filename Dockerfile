@@ -72,7 +72,7 @@ bash -c \
    idna==3.7 \
    joblib==1.4.2 \
    josepy==1.14.0 \
-   nltk==3.8.2 \
+   nltk==3.9.1 \
    parsedatetime==2.6 \
    pycparser==2.22 \
    pyOpenSSL==24.2.1 \

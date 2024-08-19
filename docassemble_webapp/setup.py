@@ -172,7 +172,7 @@ install_requires = [
     "namedentities==1.9.4",
     "netifaces==0.11.0",
     "nh3==0.2.18",
-    "nltk==3.8.2",
+    "nltk==3.9.1",
     "num2words==0.5.13",
     "numpy==2.0.1",
     "oauth2client==4.1.3",
