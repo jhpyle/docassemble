@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.4](https://github.com/jhpyle/docassemble/releases/tag/v1.5.4) - 2024-08-20
+
+
+### Fixed
+- Downgraded `uWSGI` due to issues with workers not being killed
+  promptly during the restart process.
+
 ## [1.5.3](https://github.com/jhpyle/docassemble/releases/tag/v1.5.3) - 2024-08-18
 
 
