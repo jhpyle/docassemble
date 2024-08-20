@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.5.4] - 2024-08-20
+
+### Fixed
+- Downgraded `uWSGI` due to issues with workers not being killed
+  promptly during the restart process.
+
 ## [1.5.3] - 2024-08-18
 
 ### Fixed

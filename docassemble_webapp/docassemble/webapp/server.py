@@ -537,7 +537,8 @@ NOTIFICATION_CONTAINER = daconfig.get('alert container html', '<div class="datop
 NOTIFICATION_MESSAGE = daconfig.get('alert html', '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>')
 
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
-SINGLE_SERVER = USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTAINERROLE', 'all') + ':')
+SINGLE_SERVER = daconfig.get('single server', USING_SUPERVISOR and bool(':all:' in ':' + os.environ.get('CONTAINERROLE', 'all') + ':'))
+
 
 audio_mimetype_table = {'mp3': 'audio/mpeg', 'ogg': 'audio/ogg'}
 
@@ -17069,7 +17070,7 @@ def update_package_ajax():
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
                 # logmessage("update_package_ajax: success")
-                if (hasattr(the_result, 'restart') and not the_result.restart) or (START_TIME > session['serverstarttime'] and not (SINGLE_SERVER and reset_process_running())):
+                if (hasattr(the_result, 'restart') and not the_result.restart) or (START_TIME > session['serverstarttime'] and not reset_process_running()):
                     return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
                 return jsonify(success=True, status='waiting')
             if hasattr(the_result, 'error_message'):
@@ -29262,7 +29263,7 @@ def api_package_update_status():
         the_result = result.get()
         if isinstance(the_result, ReturnValue):
             if the_result.ok:
-                if the_result.restart and (START_TIME <= task_info['server_start_time'] or (SINGLE_SERVER and reset_process_running())):
+                if the_result.restart and (START_TIME <= task_info['server_start_time'] or reset_process_running()):
                     return jsonify(status='working')
                 r.expire(the_key, 30)
                 return jsonify(status='completed', ok=True, log=summarize_results(the_result.results, the_result.logmessages, html=False))
@@ -29540,7 +29541,7 @@ def api_restart_status():
     if task_data is None:
         return jsonify(status='unknown')
     task_info = json.loads(task_data.decode())
-    if START_TIME <= task_info['server_start_time'] or (SINGLE_SERVER and reset_process_running()):
+    if START_TIME <= task_info['server_start_time'] or reset_process_running():
         return jsonify(status='working')
     r.expire(the_key, 30)
     return jsonify(status='completed')

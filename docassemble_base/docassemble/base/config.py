@@ -624,6 +624,8 @@ def load(**kwargs):
             daconfig['administrative interviews'] = new_admin_interviews
         else:
             del daconfig['administrative interviews']
+    if 'single server' in daconfig:
+        daconfig['single server'] = bool(daconfig['single server'])
     if 'session lifetime seconds' in daconfig:
         try:
             daconfig['session lifetime seconds'] = int(daconfig['session lifetime seconds'])
