@@ -1094,6 +1094,8 @@ class InterviewStatus:
                         if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename:
                             if filename['width'] and filename['height']:
                                 height = str(width_value * (filename['height']/filename['width'])) + str(width_units)
+                            else:
+                                height = 'auto'
                         else:
                             height = 'auto'
                         if the_url is not None:
@@ -7130,6 +7132,7 @@ class Question:
                             docassemble.base.functions.reset_context()
                             with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False) as docx_file:
                                 the_template.save(docx_file.name)
+                                docassemble.base.file_docx.fix_docx(docx_file.name)
                                 if result['update_references']:
                                     docassemble.base.pandoc.update_references(docx_file.name)
                                 if 'pdf' in result['formats_to_use']:

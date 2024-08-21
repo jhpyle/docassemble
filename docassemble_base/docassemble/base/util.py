@@ -10368,9 +10368,11 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
     docassemble.base.functions.reset_context()
     if output_format == 'docx':
         docx_template.save(output_path)
+        docassemble.base.file_docx.fix_docx(output_path)
     elif output_format == 'pdf':
         temp_file = tempfile.NamedTemporaryFile()
         docx_template.save(temp_file.name)
+        docassemble.base.file_docx.fix_docx(temp_file.name)
         if not isinstance(pdf_options, dict):
             pdf_options = {}
         result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), owner_password=pdf_options.get('owner_password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False), filename=filename)
@@ -10379,6 +10381,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
     elif output_format == 'md':
         temp_file = tempfile.NamedTemporaryFile()
         docx_template.save(temp_file.name)
+        docassemble.base.file_docx.fix_docx(temp_file.name)
         result = docassemble.base.pandoc.word_to_markdown(temp_file.name, 'docx')
         if not result:
             raise DAError("Unable to convert docx to Markdown")

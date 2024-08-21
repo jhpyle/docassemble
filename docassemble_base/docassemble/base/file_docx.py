@@ -6,6 +6,8 @@ import stat
 import mimetypes
 import tempfile
 import string
+import shutil
+import zipfile
 from collections import deque
 from copy import deepcopy
 from xml.sax.saxutils import escape as html_escape
@@ -751,3 +753,19 @@ def concatenate_files(path_list):
 
 def sanitize_xml(text):
     return re.sub(r'{([{%#])', '{' + zerowidth + r'\1', re.sub(r'([}%#])}', r'\1' + zerowidth + '}', text))
+
+
+def fix_docx(path):
+    seen = set()
+    problem_present = False
+    with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx") as new_docx_file:
+        with zipfile.ZipFile(path, mode='r') as doc:
+            with zipfile.ZipFile(new_docx_file.name, compression=zipfile.ZIP_DEFLATED, mode='w') as zf:
+                for item in doc.infolist():
+                    if item.filename in seen:
+                        problem_present = True
+                        continue
+                    seen.add(item.filename)
+                    zf.writestr(item, doc.read(item))
+        if problem_present:
+            shutil.copyfile(new_docx_file.name, path)
