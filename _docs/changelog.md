@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.5](https://github.com/jhpyle/docassemble/releases/tag/v1.5.5) - 2024-08-20
+
+
+### Fixed
+- Adjusted for an issue with `python-docx` and/or `docxcompose`
+  creating corrupt DOCX files when the DOCX template was created by
+  LibreOffice.
+
 ## [1.5.4](https://github.com/jhpyle/docassemble/releases/tag/v1.5.4) - 2024-08-20
 
 
