@@ -98,7 +98,7 @@ bash -c \
 && ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base \
 && mv /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/syslogng/syslog-ng.conf \
 && ln -s /usr/share/docassemble/syslogng/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf \
-&& cp /usr/share/docassemble/local3.10/lib/python3.10/site-packages/mod_wsgi/server/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.10 \
+&& { if [[ '$(dpkg --print-architecture)' == 'amd64' ]]; then cp /usr/share/docassemble/local3.10/lib/python3.10/site-packages/mod_wsgi/server/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.10; else cp /usr/share/docassemble/local3.10/lib/python3.10/site-packages/mod_wsgi/server/mod_wsgi-py310.cpython-310-aarch64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.10; fi; } \
 && rm -f /usr/lib/apache2/modules/mod_wsgi.so \
 && ln -s /usr/lib/apache2/modules/mod_wsgi.so-3.10 /usr/lib/apache2/modules/mod_wsgi.so \
 && rm -f /etc/cron.daily/apt-compat \
@@ -106,7 +106,7 @@ bash -c \
 && sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars \
 && sed -i '/session    required     pam_loginuid.so/c\#session    required   pam_loginuid.so' /etc/pam.d/cron \
 && LANG=en_US.UTF-8 \
-&& a2dismod ssl \
+&& { a2dismod ssl \
 ; a2enmod rewrite \
 ; a2enmod xsendfile \
 ; a2enmod proxy \
@@ -114,7 +114,7 @@ bash -c \
 ; a2enmod proxy_wstunnel \
 ; a2enmod headers \
 ; a2enconf docassemble \
-; echo 'export TERM=xterm' >> /etc/bash.bashrc"
+; echo 'export TERM=xterm' >> /etc/bash.bashrc; }"
 
 USER www-data
 RUN bash -c \
