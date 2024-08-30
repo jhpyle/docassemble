@@ -13238,7 +13238,7 @@ def index(action_argument=None, refer=None):
     pipe.execute()
     if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
         inputkey = 'da:input:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
-        r.publish(inputkey, json.dumps({'message': 'newpage', key: key}))
+        r.publish(inputkey, json.dumps({'message': 'newpage', 'key': key}))
     if is_json:
         data = {'browser_title': interview_status.tabtitle, 'lang': interview_language, 'csrf_token': generate_csrf(), 'steps': steps, 'allow_going_back': allow_going_back, 'message_log': docassemble.base.functions.get_message_log(), 'id_dict': question_id_dict}
         data.update(interview_status.as_data(user_dict))
@@ -17512,7 +17512,7 @@ def create_playground_package():
                     break
     file_list = {}
     the_directory = directory_for(area['playgroundpackages'], current_project)
-    file_list['playgroundpackages'] = sorted([re.sub(r'^docassemble.', r'', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    file_list['playgroundpackages'] = sorted([re.sub(r'^docassemble\.', r'', f) for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     the_choices = []
     for file_option in file_list['playgroundpackages']:
         the_choices.append((file_option, file_option))
@@ -20905,7 +20905,7 @@ def playground_packages():
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     editable_files = []
     for a_file in files:
-        editable_files.append({'name': re.sub(r'^docassemble.', r'', a_file), 'modtime': os.path.getmtime(os.path.join(the_directory, a_file))})
+        editable_files.append({'name': re.sub(r'^docassemble\.', r'', a_file), 'modtime': os.path.getmtime(os.path.join(the_directory, a_file))})
     assign_opacity(editable_files)
     editable_file_listing = [x['name'] for x in editable_files]
     if request.method == 'GET' and not the_file and not is_new:
@@ -20913,8 +20913,8 @@ def playground_packages():
         if not current_file.startswith('docassemble.'):
             current_file = 'docassemble.' + current_file
             set_current_file(current_project, 'packages', current_file)
-        if re.sub(r'^docassemble.', r'', current_file) in editable_file_listing:
-            the_file = re.sub(r'^docassemble.', r'', current_file)
+        if re.sub(r'^docassemble\.', r'', current_file) in editable_file_listing:
+            the_file = re.sub(r'^docassemble\.', r'', current_file)
         else:
             delete_current_file(current_project, 'packages')
             if len(editable_files) > 0:
@@ -20928,7 +20928,7 @@ def playground_packages():
         set_current_file(current_project, 'packages', 'docassemble.' + the_file)
     if the_file == '' and len(file_list['playgroundpackages']) and not is_new:
         the_file = file_list['playgroundpackages'][0]
-        the_file = re.sub(r'^docassemble.', r'', the_file)
+        the_file = re.sub(r'^docassemble\.', r'', the_file)
     old_info = {}
     branch_info = []
     github_http = None
@@ -24913,7 +24913,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 metadata = {}
                 tags = set()
             if include_dict:
-                if dictionary['_internal']['starttime']:
+                if dictionary['_internal']['starttime'] and isinstance(dictionary['_internal']['starttime'], datetime.datetime):
                     utc_starttime = dictionary['_internal']['starttime']
                     starttime = nice_date_from_utc(dictionary['_internal']['starttime'], timezone=the_timezone)
                 else:

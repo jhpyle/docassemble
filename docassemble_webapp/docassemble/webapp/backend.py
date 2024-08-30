@@ -183,7 +183,7 @@ def user_is_developer(user_id):
 
 
 def absolute_filename(the_file):
-    match = re.match(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*):(.*)', the_file)
+    match = re.match(r'^docassemble\.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*):(.*)', the_file)
     # logmessage("absolute_filename call: " + the_file)
     if match:
         if not user_is_developer(match.group(1)):

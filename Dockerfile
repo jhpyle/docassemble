@@ -12,6 +12,7 @@ bash -c \
 && cp /tmp/docassemble/Docker/cgi-bin/index.sh /usr/lib/cgi-bin/ \
 && cp /tmp/docassemble/Docker/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng.conf \
 && cp /tmp/docassemble/Docker/syslog-ng-docker.conf /usr/share/docassemble/webapp/syslog-ng-docker.conf \
+&& cp /tmp/docassemble/Docker/smart-multi-line.fsm /usr/share/syslog-ng/smart-multi-line.fsm \
 && cp /tmp/docassemble/Docker/docassemble-syslog-ng.conf /usr/share/docassemble/webapp/docassemble-syslog-ng.conf \
 && cp /tmp/docassemble/Docker/apache.logrotate /etc/logrotate.d/apache2 \
 && cp /tmp/docassemble/Docker/nginx.logrotate /etc/logrotate.d/nginx \

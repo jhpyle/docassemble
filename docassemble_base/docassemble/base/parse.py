@@ -2281,6 +2281,19 @@ class Question:
                 self.interview.options['checkin interval'] = data['features']['checkin interval']
             if 'hide corner interface' in data['features']:
                 self.interview.options['hide corner interface'] = data['features']['hide corner interface']
+            if 'auto jinja filter' in data['features']:
+                if isinstance(data['features']['auto jinja filter'], list):
+                    the_list = data['features']['auto jinja filter']
+                elif not isinstance(data['features']['auto jinja filter'], str):
+                    raise DASourceError("A features section auto jinja filter entry must be a list or plain text." + self.idebug(data))
+                else:
+                    the_list = [data['features']['auto jinja filter']]
+                if 'auto jinja filter' not in self.interview.options:
+                    self.interview.options['auto jinja filter'] = []
+                for expression in the_list:
+                    if not isinstance(expression, str):
+                        raise DASourceError("A features section auto jinja filter entry must be plain text." + self.idebug(data))
+                    self.interview.options['auto jinja filter'].append(compile(expression, '<auto jinja filter>', 'eval'))
             for key in ('javascript', 'css'):
                 if key in data['features']:
                     if isinstance(data['features'][key], list):
@@ -7090,6 +7103,10 @@ class Question:
                                 result['template'].current_rendering_part = result['template'].docx._part
                             docassemble.base.functions.set_context('docx', template=result['template'])
                             docassemble.base.functions.this_thread.misc['docx_subdocs'] = []
+                            docassemble.base.functions.this_thread.misc['auto jinja filter'] = []
+                            if 'auto jinja filter' in self.interview.options:
+                                for item in self.interview.options['auto jinja filter']:
+                                    docassemble.base.functions.this_thread.misc['auto jinja filter'].append(eval(item, the_user_dict))
                             try:
                                 the_template = result['template']
                                 template_loop_count = 0
@@ -10500,6 +10517,8 @@ def ampersand_filter(value):
     value = docassemble.base.file_docx.sanitize_xml(value)
     if '<w:r>' in value or '</w:t>' in value:
         return re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)
+    for auto_filter in docassemble.base.functions.this_thread.misc.get('auto jinja filter', []):
+        value = auto_filter(value)
     return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)))
 
 

@@ -4245,7 +4245,7 @@ def package_template_filename(the_file, **kwargs):
         if package is not None:
             parts = [package, the_file]
     if len(parts) == 2:
-        m = re.search(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
+        m = re.search(r'^docassemble\.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
             abs_file = server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))  # pylint: disable=assignment-from-none
@@ -4291,7 +4291,7 @@ def package_data_filename(the_file, return_nonexistent=False):
     if len(parts) == 2:
         if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
             return None
-        m = re.search(r'^docassemble.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
+        m = re.search(r'^docassemble\.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])

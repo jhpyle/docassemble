@@ -3187,6 +3187,8 @@ def input_for(status, field, embedded=False, floating_label=None):
             if hasattr(field, 'inputtype') and field.inputtype == 'combobox' and not embedded:
                 if placeholdertext == '':
                     first_option += '<option value="">' + option_escape(word('Select one')) + '</option>'
+                elif floating_label is not None:
+                    first_option += '<option value=""></option>'
                 else:
                     first_option += '<option value="">' + option_escape(str(status.hints[field.number].replace('\n', ' '))) + '</option>'
             else:

@@ -22,14 +22,14 @@ from docassemble.webapp.app_socket import app, db, socketio  # noqa: E402
 from docassemble.webapp.backend import nice_utc_date, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session  # noqa: E402
 from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset  # noqa: E402
 from docassemble.webapp.users.models import UserModel, ChatLog  # noqa: E402
-from docassemblekvsession import KVSessionExtension  # noqa: E402 # pylint: disable=wrong-import-error
-from flask import session, request  # noqa: E402 # pylint: disable=wrong-import-error
-from flask_socketio import join_room  # noqa: E402 # pylint: disable=wrong-import-error
-from simplekv.memory.redisstore import RedisStore  # noqa: E402 # pylint: disable=wrong-import-error
-from sqlalchemy import select  # noqa: E402 # pylint: disable=wrong-import-error
-from sqlalchemy.orm import sessionmaker, joinedload  # noqa: E402 # pylint: disable=wrong-import-error
-import netifaces as ni  # noqa: E402 # pylint: disable=import-error # pylint: disable=wrong-import-error
-import redis  # noqa: E402 # pylint: disable=wrong-import-error
+from docassemblekvsession import KVSessionExtension  # noqa: E402
+from flask import session, request  # noqa: E402
+from flask_socketio import join_room  # noqa: E402
+from simplekv.memory.redisstore import RedisStore  # noqa: E402
+from sqlalchemy import select  # noqa: E402
+from sqlalchemy.orm import sessionmaker, joinedload  # noqa: E402
+import netifaces as ni  # noqa: E402 # pylint: disable=import-error
+import redis  # noqa: E402
 
 store = RedisStore(docassemble.webapp.daredis.r_store)
 kv_session = KVSessionExtension(store, app)
@@ -100,9 +100,8 @@ def background_thread(sid=None, user_id=None, temp_user_id=None):
     else:
         with session_scope() as dbsession:
             person = dbsession.execute(select(UserModel).options(joinedload(UserModel.roles)).filter_by(id=user_id)).scalar()
-        user_is_temp = False
-    if not (person is not None and person.timezone is not None):
-        r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
+        user_is_temp = person is not None
+    r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset)
 
     partners = set()
     pubsub = r.pubsub()
@@ -1084,7 +1083,13 @@ if __name__ == '__main__':
                 host = daconfig['websockets ip']
             else:
                 ifaces = [iface for iface in ni.interfaces() if iface != 'lo']
-                host = ni.ifaddresses(ifaces[0])[ni.AF_INET][0]['addr']
+                host = None
+                for interface in ifaces:
+                    info = ni.ifaddresses(interface)
+                    if ni.AF_INET in info and len(info[ni.AF_INET]) > 0 and 'addr' in info[ni.AF_INET][0]:
+                        host = info[ni.AF_INET][0]['addr']
+                        break
+                assert host is not None
             socketio.run(app, host=host, port=daconfig.get('websockets port', 5000))
         except:
             logmessage("Could not find the external IP address")
