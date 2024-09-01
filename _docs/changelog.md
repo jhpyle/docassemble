@@ -3,6 +3,16 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.6](https://github.com/jhpyle/docassemble/releases/tag/v1.5.6) - 2024-09-01
+
+
+### Added
+- The `auto jinja filter` option under `features`.
+
+
+### Fixed
+- Adapted `syslog-ng` to Ubuntu 24.04.
+
 ## [1.5.5](https://github.com/jhpyle/docassemble/releases/tag/v1.5.5) - 2024-08-20
 
 

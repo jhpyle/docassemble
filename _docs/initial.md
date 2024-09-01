@@ -2590,6 +2590,62 @@ features:
 This will cause the web application to run the JavaScript for the
 `ssn` and `iso639language` custom data types.
 
+## <a name="auto jinja filter"></a>Jinja2 filters to apply automatically
+
+You can write your own custom [Jinja2] filters using
+[`register_jinja_filter()`], but if you would like to apply a text
+transformation to all [Jinja2] variable interpolations automatically,
+you can use the `auto jinja filter` feature to specify a Python
+function that should be used to transform all text being inserted into
+the document.
+
+For example, suppose you have a Python file `my_filters.py`,
+containing this:
+
+{% highlight python %}
+import re
+
+__all__ = ['animal']
+
+def animal(text):
+    return re.sub(r'\b(dog|fish|turtle)\b', 'cat', text)
+{% endhighlight %}
+
+Suppose you have a DOCX file `animal_testimonial.docx` that contains
+the following:
+
+> {% raw %}{{ testimonial }} {% endraw %}`
+
+You can then write a YAML file like this:
+
+{% highlight yaml %}
+modules:
+  - .my_filters
+---
+features:
+  auto jinja filter: animal
+---
+question: |
+  Describe to me what your favorite animal is and why you like it so much.
+fields:
+  - Favorite animal essay: testimonal
+---
+mandatory: True
+question: |
+  Final document
+attachment:
+  docx template file: animal_testimonial.docx
+{% endhighlight %}
+
+Any mention of the words "dog," "fish," or "turtle" in the
+`testimonal` will be replaced by the word "cat" in the output.
+
+The result will be as though you used [`register_jinja_filter()`] to
+make a filter from the `animal()` function and then your DOCX file
+contained:
+
+> {% raw %}{{ testimonial | animal }} {% endraw %}`
+
 [Bootstrap popover feature]: https://getbootstrap.com/docs/5.2/components/popovers/
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
@@ -2835,3 +2891,5 @@ This will cause the web application to run the JavaScript for the
 [combining multiple interviews into one]: {{ site.baseurl }}/docs/logic.html#multiple interviews
 [pikepdf]: https://pikepdf.readthedocs.io/en/latest/
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
+[`register_jinja_filter()`]: {{ site.baseurl }}/docs/documents.html#register_jinja_filter
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/

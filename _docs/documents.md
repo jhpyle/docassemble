@@ -1161,6 +1161,9 @@ starts and the server loads modules.  That is why the line `#
 pre-load` is at the top.  Also note that `register_jinja_filter` is
 not exported when you do `from docassemble.base.util import *`.
 
+If you have a filter that you want to apply to all Jinja2 variable
+interpolations, see [`auto jinja filter`].
+
 ## <a name="macros"></a>Inserting blocks of text more than once in a document
 
 [Jinja2] supports the use of "[macros]," which are like [Python]
@@ -2309,3 +2312,4 @@ interview, see the [`cache documents` feature].
 [font list tool]: https://demo.docassemble.org/start/demo/fontlist/
 [pikepdf]: https://pikepdf.readthedocs.io/en/latest/
 [`attachment options`]: #attachment options
+[`auto jinja filter`]: {{ site.baseurl }}/docs/initial.html#auto jinja filter
