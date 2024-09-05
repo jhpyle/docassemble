@@ -3,6 +3,24 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.7](https://github.com/jhpyle/docassemble/releases/tag/v1.5.7) - 2024-09-05
+
+
+### Changed
+- Migrated from CodeMirror 5 to CodeMirror 6. Searching is now
+  accomplished with Ctrl-f. Dark mode support is improved. The
+  mixed-mode syntax highlighting of Python code in `code` blocks is no
+  longer available. (CodeMirror 6 is a complete rewrite.) Pressing F11
+  for full-screen mode and Ctrl-space for autocomplete are still
+  available.
+- The `GoogleAPI` class can now be used with ARM processors.
+- The "Share" button in the Playground now copies the hyperlink to the
+  clipboard when you click it.
+
+
+### Fixed
+- The `floating label` labels are now visible on comboboxes.
+
 ## [1.5.6](https://github.com/jhpyle/docassemble/releases/tag/v1.5.6) - 2024-09-01
 
 

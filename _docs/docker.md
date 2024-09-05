@@ -98,10 +98,8 @@ You can test out **docassemble** on a PC or a Mac, but for serious,
 long-term deployment, it is worthwhile to run it in the cloud, or on a
 dedicated on-premises server. Running [Docker] on a machine that shuts
 down or restarts frequently could lead to [database corruption]. Also,
-if you are using [Docker Desktop], **docassemble** will not run
-reliably if you have a processor that is not in the `amd64` family. If
-your processor is an Apple M1 chip, or other ARM-based microprocessor,
-you should [build the image first](#build) and then [`docker run`] it.
+if you are using [Docker Desktop], **docassemble** may not run
+reliably if you have a processor that is not in the `amd64` family.
 
 If you have never deployed a Linux-based virtual machine in the cloud
 before, this might be a good opportunity to learn. The ability to use
@@ -3004,16 +3002,12 @@ docker push yourdockerhubusername/mydocassemble
 # <a name="arm"></a>ARM support
 
 Using **docassemble** on the [ARM] architecture is considered
-experimental. The images on [Docker Hub] are `amd64`-only, so if you
-want to run **docassemble** on [ARM], you will need to use `docker
-build` to build the `jhpyle/docassemble-os` and `jhpyle/docassemble`
-images. The known issues with [ARM] compatibility are:
+experimental. The known issues with [ARM] compatibility are:
 
-* The `DAGoogleAPI` object cannot be used because the dependency
-  package it relies on causes a C memory allocation error to be
-  raised.
-* Google Chrome is not installed if the architecture is [ARM], so you
-  cannot use headless Chrome for web browser automation.
+* Google Chrome is not installed if the architecture is [ARM], so the
+  `mmdc()` function will not work.
+* For the same reason, you cannot use headless Chrome for web browser
+  automation running inside the Docker container.
 
 # <a name="upgrading"></a>Upgrading docassemble when using Docker
 

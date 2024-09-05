@@ -3714,9 +3714,6 @@ the [Configuration].
 
 ### <a name="DAGoogleAPI setup"></a>Setup process
 
-The `DAGoogleAPI` object only functions on the `amd64` architecture,
-so if you are using an [ARM] server, you cannot use `DAGoogleAPI`.
-
 In order for your site to communicate with Google, you will need to
 create an account on the [Google Developers Console] and create an
 "app."  Within this app, you will need to create a [service account].
@@ -7592,7 +7589,6 @@ the `_uid` of the table rather than the `id`.
 [Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.html#markdown to docx
 [qpdf]: https://qpdf.sourceforge.net/
 [PyPDF2]: https://pythonhosted.org/PyPDF2/
-[ARM]: https://en.wikipedia.org/wiki/ARM_architecture
 [`button colors`]: {{ site.baseurl }}/docs/config.html#button colors
 [action]: {{ site.baseurl }}/docs/background.html#url_action
 [actions]: {{ site.baseurl }}/docs/background.html#url_action
