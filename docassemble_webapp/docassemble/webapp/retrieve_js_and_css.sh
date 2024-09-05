@@ -42,11 +42,6 @@ rm -rf bootstrap-fileinput/.git*
 rm -r bootstrap-slider
 git clone https://github.com/seiyria/bootstrap-slider
 rm -rf bootstrap-slider/.git*
-rm -rf codemirror
-wget http://codemirror.net/codemirror.zip
-unzip codemirror.zip
-rm -f codemirror.zip
-mv codemirror-* codemirror
 # need to use old version of jquery-labelauty
 # rm -rf jquery-labelauty
 # git clone https://github.com/fntneves/jquery-labelauty

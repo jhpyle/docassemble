@@ -4,8 +4,7 @@
     <meta charset="utf-8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-{{ extra_meta }}
+    <meta name="viewport" content="width=device-width, initial-scale=1">{{ extra_meta }}
     <title>{% if tab_title %}{{ tab_title }}{% else %}{{ config['APP_NAME'] }}{% endif %}</title>
 {%- for key in config['SOCIAL'] %}
 {%- if key not in ('og', 'twitter', 'fb') %}

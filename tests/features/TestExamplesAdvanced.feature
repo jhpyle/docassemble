@@ -317,3 +317,9 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Translated text"
     And I should see the phrase "My office is on the opposite side of the Netherlands."
+
+  Scenario: Test the interview "Mermaid"
+    Given I start the interview "docassemble.base:data/questions/examples/mermaid.yml"
+    Then I should see the phrase "Give me some names."
+    And I click the button "Continue"
+    Then I should see the phrase "Here is your diagram."

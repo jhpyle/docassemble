@@ -99,8 +99,9 @@
             <div class="col-sm-8 col-md-8 col-lg-8 col-xl-8">
               <h2>{{ form.readme.label }}</h2>
               <div class="da-form-group">
-                <label class="form-label" for="{{ form.readme.id }}">{{ word("The README.md file for the package") }}</label>
-                <textarea rows="24" cols="80" id="{{ form.readme.id }}" name="{{ form.readme.id }}">{{ form.readme.data }}</textarea>
+                <label class="form-label" for="readme_content">{{ word("The README.md file for the package") }}</label>
+                <div id="playground_content_container" class="pgreadme"></div>
+                {{ myrender_hidden_field(form.readme, value="") }}
               </div>
               {%- if pypi_message %}
               <div class="card mb-3">

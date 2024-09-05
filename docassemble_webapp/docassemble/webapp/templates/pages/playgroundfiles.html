@@ -34,7 +34,7 @@
             <div class="daonright">
               <a tabindex="15" title="{{ word('Sync with OneDrive') }}" class="btn {{ config['BUTTON_STYLE'] }}success mb-2" href="{{ url_for('sync_with_onedrive', project=current_project, next=url_for('playground_files', project=current_project, section=section)) }}"><i class="fa-brands fa-windows"></i>&nbsp;{{ word('Sync') }}</a>
             </div>
-            {%- endif %}            
+            {%- endif %}
             <h3>{{ list_header }}</h3>
           </div>
           {%- if files %}
@@ -108,11 +108,9 @@
                 <div class="col-lg-6">
                   {{ render_addon_field(formtwo.file_name, tabindex=579) }}
                 </div>
-                <div class="col-lg-6">
-                  {{ render_addon_field(formtwo.search_term, tabindex=590, autocomplete="off", extra='<button title="' + word('Previous result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchPrevious"><i class="fa-solid fa-chevron-left"></i></button><button title="' + word('Next result') + '" class="btn btn-outline-secondary da-no-outline pointer" id="daSearchNext"><i class="fa-solid fa-chevron-right"></i></button>') }}
-                </div>
               </div>
-              <textarea rows="24" cols="80" id="file_content" name="file_content" tabindex="580">{{ content }}</textarea>
+              <div id="playground_content_container"></div>
+              {{ myrender_hidden_field(formtwo.file_content, value="") }}
               <div class="form-actions mt-2 ml-1">
                 {{ render_submit_field(formtwo.submit, tabindex=600, class="ms-1 btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS'], data={'disable-button': 0}) }}
                 {% if is_new == 'False' %}<a tabindex="605" class="btn {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_' + section, userid=userid, filename=current_file, current_project=current_project, attach='1') }}" data-disable-button="0">{{ word("Download") }}</a> <a tabindex="610" class="btn {{ config['BUTTON_STYLE'] }}danger {{ config['BUTTON_CLASS'] }}" href="{{ url_for('playground_files', section=section, delete=current_file, project=current_project) }}" data-disable-button="0">{{ word('Delete') }}</a>{% endif %}
@@ -125,7 +123,7 @@
 {%- if active_file %}
           <div class="col-md-4 pgright">
             <div id="playgroundbox" class="card bg-body-tertiary playgroundbox">
-              <div class="card-header bg-body-secondary">{{ word('Variables, etc. from') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select bg-info">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="dabadge btn btn-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a></h3>
+              <div class="card-header bg-body-secondary">{{ word('From') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select bg-info">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="dabadge btn btn-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a>&nbsp;<a title="{{ word('Show report of names and associated questions') }}" class="dabadge btn btn-secondary da-larger-badge" data-bs-toggle="modal" href="" id="daVariablesReportLauncher" data-bs-target="#daVariablesReport"><i class="fa-solid fa-list"></i></a>
               </div>
               <div class="card-body" id="daplaygroundcard">
                 <table id="daplaygroundtable" class="daplaygroundtable">
@@ -134,6 +132,22 @@
             </div>
           </div>
 {%- endif %}
+          <div class="modal" id="daVariablesReport" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">{{ word("Names and questions") }}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ word("Close") }}"></button>
+                </div>
+                <div class="modal-body">
+                  <p>{{ word("Loading . . .") }}</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ word("Close") }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
 {%- endblock %}
 {%- block bottom %}
       <div class="mt-2"><a tabindex="620" href="{{ url_for('playground_page', project=current_project) }}" class="btn {{ config['BUTTON_STYLE'] }}secondary"><i class="fa-solid fa-chevron-left"></i>&nbsp;{{ word("Back to Playground") }}</a></div>

@@ -7317,12 +7317,6 @@ Feature: Example interviews
   # Scenario: Test the interview "Edit list" 4
   #   Given I start the interview "docassemble.base:data/questions/examples/edit-list-non-editable.yml"
 
-  Scenario: Test the interview "Mermaid"
-    Given I start the interview "docassemble.base:data/questions/examples/mermaid.yml"
-    Then I should see the phrase "Give me some names."
-    And I click the button "Continue"
-    Then I should see the phrase "Here is your diagram."
-
   Scenario: Test the interview "Non-progressive Navigation"
     Given I start the interview "docassemble.base:data/questions/examples/sections-non-progressive.yml"
     Then I should see the phrase "Welcome to the interview"

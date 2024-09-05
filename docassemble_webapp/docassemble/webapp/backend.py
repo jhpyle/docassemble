@@ -5,7 +5,6 @@ import json
 import math
 import os
 import pickle
-import platform
 import re
 import sys
 import time
@@ -47,8 +46,7 @@ import docassemble.webapp.machinelearning
 import docassemble.webapp.setup
 import docassemble.webapp.user_database
 import docassemble.webapp.worker
-if platform.machine() == 'x86_64':
-    import docassemble.webapp.google_api
+import docassemble.webapp.google_api
 
 if DEBUG_BOOT:
     boot_log("backend: starting")
@@ -626,8 +624,7 @@ def cloud_custom(provider, config):
 docassemble.base.functions.update_server(cloud=cloud,
                                          cloud_custom=cloud_custom)
 
-if platform.machine() == 'x86_64':
-    docassemble.base.functions.update_server(google_api=docassemble.webapp.google_api)
+docassemble.base.functions.update_server(google_api=docassemble.webapp.google_api)
 
 if DEBUG_BOOT:
     boot_log("backend: finished obtaining cloud object")

@@ -794,6 +794,8 @@ def custom_register():
         User = db_adapter.UserClass
         user_class_fields = User.__dict__
         user_fields = {}
+        user_auth_fields = {}
+        user_email_fields = {}
 
         # Create a UserEmail object using Form fields that have a corresponding UserEmail field
         if db_adapter.UserEmailClass:
@@ -2293,17 +2295,17 @@ def proc_example_list(example_list, package, directory, examples):
                 else:
                     initial_block = 0
                 if start_block > initial_block:
-                    result['before_html'] = highlight("\n---\n".join(blocks[initial_block:start_block]) + "\n---", YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
+                    result['before_html'] = highlight("\n---\n".join(blocks[initial_block:start_block]) + "\n---", YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight'))
                     has_context = True
                 else:
                     result['before_html'] = ''
                 if len(blocks) > end_block:
-                    result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
+                    result['after_html'] = highlight("---\n" + "\n---\n".join(blocks[end_block:len(blocks)]), YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight'))
                     has_context = True
                 else:
                     result['after_html'] = ''
                 result['source'] = "\n---\n".join(blocks[start_block:end_block])
-                result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
+                result['html'] = highlight(result['source'], YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight'))
                 result['has_context'] = has_context
             else:
                 logmessage("proc_example_list: no blocks in " + example_file)
@@ -2364,6 +2366,7 @@ def get_request_url():
             'scheme': request.scheme,
             'url': request.url,
             'url_root': request.url_root}
+
 
 def fresh_dictionary():
     the_dict = copy.deepcopy(initial_dict)
@@ -4039,7 +4042,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             message_to_use = error_message
         else:
             message_to_use = title_documentation['generic error']['doc']
-        content += '\n                  <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
+        content += '\n                <tr><td class="playground-warning-box"><div class="alert alert-' + error_style + '">' + message_to_use + '</div></td></tr>'
     vocab_dict = {}
     vocab_set = (names_used | functions | classes | modules | fields_used | set(key for key in base_name_info if not re.search(r'\.', key)) | set(key for key in name_info if not re.search(r'\.', key)) | set(templates) | set(static) | set(sources) | set(avail_modules) | set(interview.images.keys()))
     vocab_set = set(i for i in vocab_set if not extraneous_var.search(i))
@@ -4175,15 +4178,17 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     info['url'] = the_ref
                 images_list.append(info)
         if use_playground:
-            return {'undefined_names': list(sorted(undefined_names)), 'var_list': var_list, 'functions_list': functions_list, 'classes_list': classes_list, 'modules_list': modules_list, 'modules_available_list': modules_available_list, 'templates_list': templates_list, 'sources_list': sources_list, 'images_list': images_list, 'static_list': static_list}, sorted(vocab_set), vocab_dict
-        return {'undefined_names': list(sorted(undefined_names)), 'var_list': var_list, 'functions_list': functions_list, 'classes_list': classes_list, 'modules_list': modules_list, 'images_list': images_list}, sorted(vocab_set), vocab_dict
+            return {'undefined_names': list(sorted(undefined_names)), 'var_list': var_list, 'functions_list': functions_list, 'classes_list': classes_list, 'modules_list': modules_list, 'modules_available_list': modules_available_list, 'templates_list': templates_list, 'sources_list': sources_list, 'images_list': images_list, 'static_list': static_list}, sorted(vocab_set), vocab_dict, []
+        return {'undefined_names': list(sorted(undefined_names)), 'var_list': var_list, 'functions_list': functions_list, 'classes_list': classes_list, 'modules_list': modules_list, 'images_list': images_list}, sorted(vocab_set), vocab_dict, []
+    ac_list = []
     if len(undefined_names) > 0:
-        content += '\n                  <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Undefined names') + infobutton('undefined') + '</h4></td></tr>'
         for var in sorted(undefined_names):
-            content += '\n                  <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger btn-sm playground-variable">' + var + '</a></td></tr>'
+            content += '\n                <tr><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-danger btn-sm playground-variable">' + var + '</a></td></tr>'
             vocab_dict[var] = var
+            ac_list.append({"label": var, "type": "variable"})
     if len(names_used) > 0:
-        content += '\n                  <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Variables') + infobutton('variables') + '</h4></td></tr>'
         has_parent = {}
         has_children = set()
         for var in names_used:
@@ -4214,8 +4219,9 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             else:
                 class_type = 'btn-primary'
                 title = ''
-            content += '\n                  <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-sm ' + class_type + ' playground-variable">' + var + '</a>'
+            content += '\n                <tr' + hide_it + '><td>' + search_button(var, field_origins, name_origins, interview.source, all_sources) + '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" ' + title + 'class="btn btn-sm ' + class_type + ' playground-variable">' + var + '</a>'
             vocab_dict[var] = var
+            ac_list.append({"label": var, "type": "variable"})
             if var in has_children:
                 content += '&nbsp;<a tabindex="0" class="dashowattributes" role="button" data-name="' + noquote(var) + '" title=' + json.dumps(attr_documentation) + '><i class="fa-solid fa-ellipsis-h"></i></a>'
             if var in name_info and 'type' in name_info[var] and name_info[var]['type']:
@@ -4244,11 +4250,12 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             content += '\n                  </ul>'
             content += '\n                </td></tr>'
     if len(functions) > 0:
-        content += '\n                  <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Functions') + infobutton('functions') + '</h4></td></tr>'
         for var in sorted(functions):
             if var in name_info:
-                content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
+                content += '\n                <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-warning playground-variable">' + name_info[var]['tag'] + '</a>'
             vocab_dict[var] = name_info[var]['insert']
+            ac_list.append({"label": var, "type": "function"})
             if var in name_info and 'doc' in name_info[var] and name_info[var]['doc']:
                 if 'git' in name_info[var] and name_info[var]['git']:
                     git_link = noquote("<a class='float-end' target='_blank' href='" + name_info[var]['git'] + "'><i class='fa-solid fa-code'></i></a>")
@@ -4257,10 +4264,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" title="' + var + git_link + '"><i class="fa-solid fa-info-circle"></i></a>'  # data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             content += '</td></tr>'
     if len(classes) > 0:
-        content += '\n                  <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Classes') + infobutton('classes') + '</h4></td></tr>'
         for var in sorted(classes):
-            content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-info playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" class="btn btn-sm btn-info playground-variable">' + name_info[var]['name'] + '</a>'
             vocab_dict[var] = name_info[var]['insert']
+            ac_list.append({"label": var, "type": "class"})
             if name_info[var]['bases']:
                 content += '&nbsp;<span data-ref="' + noquote(name_info[var]['bases'][0]) + '" class="daparenthetical">(' + name_info[var]['bases'][0] + ')</span>'
             if name_info[var]['doc']:
@@ -4285,10 +4293,11 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 content += '</tbody></table></div>'
             content += '</td></tr>'
     if len(modules) > 0:
-        content += '\n                  <tr><td><h4>' + word('Modules defined') + infobutton('modules') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Modules defined') + infobutton('modules') + '</h4></td></tr>'
         for var in sorted(modules):
-            content += '\n                  <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" role="button" class="btn btn-sm btn-success playground-variable">' + name_info[var]['name'] + '</a>'
+            content += '\n                <tr><td><a tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(name_info[var]['insert']) + '" role="button" class="btn btn-sm btn-success playground-variable">' + name_info[var]['name'] + '</a>'
             vocab_dict[var] = name_info[var]['insert']
+            ac_list.append({"label": var, "type": "keyword"})
             if name_info[var]['doc']:
                 if 'git' in name_info[var] and name_info[var]['git']:
                     git_link = noquote("<a class='float-end' target='_blank' href='" + name_info[var]['git'] + "'><i class='fa-solid fa-code'></i></a>")
@@ -4297,34 +4306,38 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 content += '&nbsp;<a tabindex="0" class="dainfosign" role="button" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="auto" data-bs-content="' + name_info[var]['doc'] + '" data-bs-title="' + noquote(var) + git_link + '"><i class="fa-solid fa-info-circle"></i></a>'  # data-bs-selector="true" title=' + json.dumps(word_documentation) + '
             content += '</td></tr>'
     if len(avail_modules) > 0:
-        content += '\n                  <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Modules available in Playground') + infobutton('playground_modules') + '</h4></td></tr>'
         for var in avail_modules:
-            content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="btn btn-sm btn-success playground-variable">.' + noquote(var) + '</a>'
+            content += '\n                <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert=".' + noquote(var) + '" class="btn btn-sm btn-success playground-variable">.' + noquote(var) + '</a>'
             vocab_dict[var] = var
+            ac_list.append({"label": var, "type": "keyword"})
             content += '</td></tr>'
     if len(templates) > 0:
-        content += '\n                  <tr><td><h4>' + word('Templates') + infobutton('templates') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Templates') + infobutton('templates') + '</h4></td></tr>'
         for var in templates:
-            content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
+            content += '\n                <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             vocab_dict[var] = var
+            ac_list.append({"label": var, "type": "keyword"})
             content += '</td></tr>'
     if len(static) > 0:
-        content += '\n                  <tr><td><h4>' + word('Static files') + infobutton('static') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Static files') + infobutton('static') + '</h4></td></tr>'
         for var in static:
-            content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
+            content += '\n                <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             vocab_dict[var] = var
+            ac_list.append({"label": var, "type": "keyword"})
             content += '</td></tr>'
     if len(sources) > 0:
-        content += '\n                  <tr><td><h4>' + word('Source files') + infobutton('sources') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Source files') + infobutton('sources') + '</h4></td></tr>'
         for var in sources:
-            content += '\n                  <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
+            content += '\n                <tr><td><a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-secondary playground-variable">' + noquote(var) + '</a>'
             vocab_dict[var] = var
+            ac_list.append({"label": var, "type": "keyword"})
             content += '</td></tr>'
     if len(interview.images) > 0:
-        content += '\n                  <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
+        content += '\n                <tr><td><h4>' + word('Decorations') + infobutton('decorations') + '</h4></td></tr>'
         show_images = not bool(cloud and len(interview.images) > 10)
         for var in sorted(interview.images):
-            content += '\n                  <tr><td>'
+            content += '\n                <tr><td>'
             the_ref = get_url_from_file_reference(interview.images[var].get_reference())
             if the_ref is None:
                 content += '<a role="button" tabindex="0" title=' + json.dumps(word("This image file does not exist")) + ' data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-danger playground-variable">' + noquote(var) + '</a>'
@@ -4333,15 +4346,20 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                     content += '<img class="daimageicon" src="' + the_ref + '">&nbsp;'
                 content += '<a role="button" tabindex="0" data-name="' + noquote(var) + '" data-insert="' + noquote(var) + '" class="btn btn-sm btn-primary playground-variable">' + noquote(var) + '</a>'
             vocab_dict[var] = var
+            ac_list.append({"label": var, "type": "keyword"})
             content += '</td></tr>'
     if show_messages:
-        content += "\n                  <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
+        content += "\n                <tr><td><br><em>" + word("Type Ctrl-space to autocomplete.") + "</em></td><tr>"
     if show_jinja_help:
-        content += "\n                  <tr><td><h4 class=\"mt-2\">" + word("Using Jinja2") + infobutton('jinja2') + "</h4>\n                  " + re.sub("table-striped", "table-bordered", docassemble.base.util.markdown_to_html(word("Jinja2 help template"), trim=False, do_terms=False)) + "</td><tr>"
-    for item in base_name_info:
-        if item not in vocab_dict and not base_name_info.get('exclude', False):
-            vocab_dict[item] = base_name_info.get('insert', item)
-    return content, sorted(vocab_set), vocab_dict
+        content += "\n                <tr><td><h4 class=\"mt-2\">" + word("Using Jinja2") + infobutton('jinja2') + "</h4>\n                  " + re.sub("table-striped", "table-bordered", docassemble.base.util.markdown_to_html(word("Jinja2 help template"), trim=False, do_terms=False)) + "</td><tr>"
+    for item, item_info in base_name_info.items():
+        if item not in vocab_dict and not item_info.get('exclude', False):
+            vocab_dict[item] = item_info.get('insert', item)
+            if 'insert' in item_info and '()' in item_info['insert']:
+                ac_list.append({"label": var, "type": "function"})
+            else:
+                ac_list.append({"label": var, "type": "variable"})
+    return content, sorted(vocab_set), vocab_dict, ac_list
 
 
 def ocr_google_in_background(image_file, raw_result, user_code):
@@ -13208,7 +13226,7 @@ def index(action_argument=None, refer=None):
         if (not hasattr(interview_status.question, 'source_code')) or interview_status.question.source_code is None:
             output += '          <p>' + word('unavailable') + '</p>'
         else:
-            output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
+            output += highlight(interview_status.question.source_code, YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight'))
         if len(interview_status.seeking) > 1:
             output += '          <h4>' + word('How question came to be asked') + '</h4>' + "\n"
             output += get_history(interview, interview_status)
@@ -13415,7 +13433,7 @@ def get_history(interview, interview_status):
                 if (not hasattr(stage['question'], 'source_code')) or stage['question'].source_code is None:
                     output += word('(embedded question, source code not available)')
                 else:
-                    output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight'))
+                    output += highlight(stage['question'].source_code, YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight'))
             elif 'variable' in stage:
                 output += '          <h5>Needed definition of <code class="da-variable-needed">' + str(stage['variable']) + "</code>" + the_time + "</h5>\n"
             elif 'done' in stage:
@@ -19431,19 +19449,13 @@ def config_page():
     if content is None:
         return ('File not found', 404)
     (disk_total, disk_used, disk_free) = shutil.disk_usage(daconfig['config file'])  # pylint: disable=unused-variable
-    if keymap:
-        kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
-    else:
-        kbOpt = ''
-        kbLoad = ''
     python_version = daconfig.get('python version', word('Unknown'))
     system_version = daconfig.get('system version', word('Unknown'))
     if python_version == system_version:
         version = word("Version") + " " + str(python_version)
     else:
         version = word("Version") + " " + str(python_version) + ' (Python); ' + str(system_version) + ' (' + word('system') + ')'
-    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_css=Markup('\n    <link href="' + url_for('static', filename='codemirror/lib/codemirror.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/search/matchesonscrollbar.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/display/fullscreen.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='codemirror/addon/scroll/simplescrollbars.css', v=da_version) + '" rel="stylesheet">\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="codemirror/lib/codemirror.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/searchcursor.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/scroll/annotatescrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/search/matchesonscrollbar.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/display/fullscreen.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/addon/edit/matchbrackets.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="codemirror/mode/yaml/yaml.js", v=da_version) + '"></script>\n    ' + kbLoad + '<script>\n      daTextArea=document.getElementById("config_content");\n      daTextArea.value = JSON.parse(atob("' + safeid(json.dumps(content)) + '"));\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "yaml", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: true, lineNumbers: true, matchBrackets: true});\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n      daCodeMirror.setOption("viewportMargin", Infinity);\n    </script>'), form=form), 200)
+    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>\n    <script>\n      var daAutoComp = [];\n      var daCm = daNewEditor($("#config_container")[0], JSON.parse(atob("' + safeid(json.dumps(content)) + '")), "yml", ' + json.dumps(keymap) + ', false);\n        $("#config_form").bind("submit", function(){\n        $("#config_content").val(daCm.state.doc.toString());\n        return true;\n      });\n    </script>'), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -19471,7 +19483,7 @@ def view_source():
         logmessage("view_source: no source: " + str(errmess))
         return ('File not found', 404)
     header = source_path
-    response = make_response(render_template('pages/view_source.html', version_warning=None, bodyclass='daadminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.min.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="bg-light highlight dahighlight dafullheight")))), 200)
+    response = make_response(render_template('pages/view_source.html', version_warning=None, bodyclass='daadminbody', tab_title="Source", page_title="Source", extra_css=Markup('\n    <link href="' + url_for('static', filename='app/pygments.min.css') + '" rel="stylesheet">'), header=header, contents=Markup(highlight(source.content, YamlLexer(), HtmlFormatter(cssclass="highlight dahighlight dafullheight")))), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -19704,9 +19716,9 @@ def playground_office_addin():
         docassemble.base.functions.this_thread.current_info = the_current_info
         interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
         if use_html:
-            variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=project_to_use)
+            variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=project_to_use)
             return jsonify({'success': True, 'current_project': project_to_use, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
-        variables_json, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, current_project=project_to_use)
+        variables_json, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, current_project=project_to_use)
         return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
     parent_origin = re.sub(r'^(https?://[^/]+)/.*', r'\1', daconfig.get('office addin url', get_base_url()))
     response = make_response(render_template('pages/officeaddin.html', current_project=project_to_use, page_title=word("Docassemble Office Add-in"), tab_title=word("Office Add-in"), parent_origin=parent_origin, form=uploadform), 200)
@@ -19920,7 +19932,7 @@ def playground_files():
     editable_files = []
     convertible_files = []
     trainable_files = {}
-    mode = "yaml"
+    mode = "yml"
     for a_file in files:
         extension, mimetype = get_ext_and_mimetype(a_file)
         if (mimetype and mimetype in ok_mimetypes) or (extension and extension in ok_extensions) or (mimetype and mimetype.startswith('text')):
@@ -19955,17 +19967,11 @@ def playground_files():
     if the_file in editable_file_listing:
         set_current_file(current_project, section, the_file)
     if the_file != '':
-        extension, mimetype = get_ext_and_mimetype(the_file)
-        if mimetype and mimetype in ok_mimetypes:
-            mode = ok_mimetypes[mimetype]
-        elif extension and extension in ok_extensions:
-            mode = ok_extensions[extension]
-        elif mimetype and mimetype.startswith('text'):
-            mode = 'null'
-    if mode != 'markdown':
+        mode, mimetype = get_ext_and_mimetype(the_file)
+    if mode != 'md':
         active_file = None
     if section == 'modules':
-        mode = 'python'
+        mode = 'py'
     formtwo.original_file_name.data = the_file
     formtwo.file_name.data = the_file
     if the_file != '' and os.path.isfile(os.path.join(the_directory, the_file)):
@@ -20013,12 +20019,12 @@ def playground_files():
         list_header = word("Existing module files")
         edit_header = word('Edit module files')
         description = 'You can use this page to add Python module files (.py files) that you want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> or <a target="_blank" href="https://docassemble.org/docs/initial.html#imports"><code>imports</code></a>.'
-        lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight')) + """<p>If you wish to refer to this module from another package, you can use a fully qualified reference.</p>""" + highlight('---\nmodules:\n  - ' + "docassemble.playground" + str(playground_user.id) + project_name(current_project) + "." + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='bg-light highlight dahighlight')))
+        lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight')) + """<p>If you wish to refer to this module from another package, you can use a fully qualified reference.</p>""" + highlight('---\nmodules:\n  - ' + "docassemble.playground" + str(playground_user.id) + project_name(current_project) + "." + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight')))
         after_text = None
     if scroll:
         extra_command = """
         if ($("#file_name").val().length > 0){
-          daCodeMirror.focus();
+          daCm.focus();
         }
         else{
           $("#file_name").focus()
@@ -20026,14 +20032,11 @@ def playground_files():
         scrollBottom();"""
     else:
         extra_command = ""
-    if keymap:
-        kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
-    else:
-        kbOpt = ''
-        kbLoad = ''
     extra_js = """
+    <script src=""" + json.dumps(url_for('static', filename="app/cm6.js", v=da_version)) + """></script>
     <script>
+      var daAutoComp = [];
+      var daCm;
       var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
       var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
       Object.defineProperty(String.prototype, "daSprintf", {
@@ -20154,8 +20157,6 @@ def playground_files():
           return "";
         },
       });
-      var daCodeMirror;
-      var daTextArea;
       var vocab = [];
       var currentFile = """ + json.dumps(the_file) + """;
       var daIsNew = """ + ('true' if is_new else 'false') + """;
@@ -20163,8 +20164,7 @@ def playground_files():
       var daSection = """ + '"' + section + '";' + """
       var attrs_showing = Object();
       var currentProject = """ + json.dumps(current_project) + """;
-""" + indent_by(variables_js(form='formtwo'), 6) + """
-""" + indent_by(search_js(form='formtwo'), 6) + """
+""" + indent_by(variables_js(form='formtwo', current_project=current_project), 6) + """
       var daExpireSession = null;
       function resetExpireSession(){
         if (daExpireSession != null){
@@ -20218,10 +20218,11 @@ def playground_files():
             return false;
           }
         });
-        daTextArea = document.getElementById("file_content");
-        daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: """ + ('{name: "markdown", underscoresBreakWords: false}' if mode == 'markdown' else json.dumps(mode)) + """, """ + kbOpt + """tabSize: 2, tabindex: 580, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: """ + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """});
+        daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob(""" + json.dumps(safeid(json.dumps(content))) + """)), """ + json.dumps(mode) + """, """ + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """);
+        $(daCm.dom).attr("tabindex", 580);
+        $("#file_content").val(daCm.state.doc.toString());
         $(window).bind("beforeunload", function(){
-          daCodeMirror.save();
+          $("#file_content").val(daCm.state.doc.toString());
           $("#formtwo").trigger("checkform.areYouSure");
         });
         $("#daDelete").click(function(event){
@@ -20231,7 +20232,7 @@ def playground_files():
         });
         $("#formtwo").areYouSure(""" + json.dumps(json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")})) + """);
         $("#formtwo").bind("submit", function(e){
-          daCodeMirror.save();
+          $("#file_content").val(daCm.state.doc.toString());
           $("#formtwo").trigger("reinitialize.areYouSure");
           if (daSection != 'modules' && !daIsNew){
             var extraVariable = ''
@@ -20261,42 +20262,24 @@ def playground_files():
           }
           return true;
         });
-        daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});
-        daCodeMirror.setOption("coverGutterNextToScrollbar", true);
-        searchReady();
         variablesReady();
         fetchVars(false);""" + extra_command + """
       });
-      searchReady();
       $('#uploadfile').on('change', function(){
         var fileName = $(this).val();
         fileName = fileName.replace(/.*\\\\/, '');
         fileName = fileName.replace(/.*\\//, '');
         $(this).next('.custom-file-label').html(fileName);
       });
+      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport($("#daVariables").val()); })
     </script>"""
-    if keymap:
-        kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js") + '"></script>\n    '
-    else:
-        kbOpt = ''
-        kbLoad = ''
     any_files = bool(len(editable_files) > 0)
     back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fa-solid fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
-    cm_mode = ''
-    if mode == 'null':
-        modes = []
-    elif mode == 'htmlmixed':
-        modes = ['css', 'xml', 'htmlmixed']
-    else:
-        modes = [mode]
-    for the_mode in modes:
-        cm_mode += '\n    <script src="' + url_for('static', filename="codemirror/mode/" + the_mode + "/" + ('damarkdown' if the_mode == 'markdown' else the_mode) + ".js", v=da_version) + '"></script>'
     if current_user.id != playground_user.id:
         header += " / " + playground_user.email
     if current_project != 'default':
         header += " / " + current_project
-    response = make_response(render_template('pages/playgroundfiles.html', current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_mode + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=playground_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(playground_user.id) + project_name(current_project), own_playground=bool(playground_user.id == current_user.id)), 200)
+    response = make_response(render_template('pages/playgroundfiles.html', current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=playground_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(playground_user.id) + project_name(current_project), own_playground=bool(playground_user.id == current_user.id)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -21400,12 +21383,6 @@ def playground_packages():
             }
           }
         });"""
-    if keymap:
-        kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
-    else:
-        kbOpt = ''
-        kbLoad = ''
     any_files = len(editable_files) > 0
     back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fa-solid fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
@@ -21414,8 +21391,10 @@ def playground_packages():
     else:
         pypi_message = None
     extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    '
-    extra_js += kbLoad
-    extra_js += """<script>
+    extra_js += '<script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>' + """
+    <script>
+      var daAutoComp = [];
+      var daCm;
       var existingPypiVersion = """ + json.dumps(pypi_version) + """;
       var isNew = """ + json.dumps(is_new) + """;
       var existingFiles = """ + json.dumps(files) + """;
@@ -21452,20 +21431,20 @@ def playground_packages():
             event.preventDefault();
           }
         });
-        daTextArea = document.getElementById("readme");
-        var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {mode: "markdown", """ + kbOpt + """tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: """ + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """});
+        daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob(""" + json.dumps(safeid(json.dumps(form.readme.data))) + """)), "md", """ + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """);
+        $(daCm.dom).attr("tabindex", 70);
+        $("#readme").val(daCm.state.doc.toString());
+        $(daCm.dom).attr("id", "readme_content");
         $(window).bind("beforeunload", function(){
-          daCodeMirror.save();
+          $("#readme").val(daCm.state.doc.toString());
           $("#form").trigger("checkform.areYouSure");
         });
         $("#form").areYouSure(""" + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + """);
         $("#form").bind("submit", function(){
-          daCodeMirror.save();
+          $("#readme").val(daCm.state.doc.toString());
           $("#form").trigger("reinitialize.areYouSure");
           return true;
         });
-        daCodeMirror.setOption("extraKeys", { Tab: function(cm){ var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});
-        daCodeMirror.setOption("coverGutterNextToScrollbar", true);""" + extra_command + """
       });
     </script>"""
     if github_use_ssh:
@@ -21599,187 +21578,28 @@ def playground_redirect():
 
 def upload_js():
     return """
-        $("#uploadlink").on('click', function(event){
-          $("#uploadlabel").click();
-          event.preventDefault();
-          return false;
-        });
-        $("#uploadlabel").on('click', function(event){
-          event.stopPropagation();
-          event.preventDefault();
-          $("#uploadfile").click();
-          return false;
-        });
-        $("#uploadfile").on('click', function(event){
-          event.stopPropagation();
-        });
-        $("#uploadfile").on('change', function(event){
-          $("#fileform").submit();
-        });"""
+      $("#uploadlink").on('click', function(event){
+        $("#uploadlabel").click();
+        event.preventDefault();
+        return false;
+      });
+      $("#uploadlabel").on('click', function(event){
+        event.stopPropagation();
+        event.preventDefault();
+        $("#uploadfile").click();
+        return false;
+      });
+      $("#uploadfile").on('click', function(event){
+        event.stopPropagation();
+      });
+      $("#uploadfile").on('change', function(event){
+        $("#fileform").submit();
+      });"""
 
 
-def search_js(form=None):
-    if form is None:
-        form = 'form'
-    return """
-var origPosition = null;
-var searchMatches = null;
-
-function searchReady(){
-  $("#""" + form + """ input[name='search_term']").on("focus", function(event){
-    origPosition = daCodeMirror.getCursor('from');
-  });
-  $("#""" + form + """ input[name='search_term']").change(update_search);
-  $("#""" + form + """ input[name='search_term']").on("keydown", enter_search);
-  $("#""" + form + """ input[name='search_term']").on("keyup", update_search);
-  $("#daSearchPrevious").click(function(event){
-    var query = $("#""" + form + """ input[name='search_term']").val();
-    if (query.length == 0){
-      clear_matches();
-      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
-      return;
-    }
-    origPosition = daCodeMirror.getCursor('from');
-    var sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findPrevious();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
-    }
-    else{
-      var lastLine = daCodeMirror.lastLine()
-      var lastChar = daCodeMirror.lineInfo(lastLine).text.length
-      origPosition = { line: lastLine, ch: lastChar, xRel: 1 }
-      sc = daCodeMirror.getSearchCursor(query, origPosition);
-      show_matches(query);
-      var found = sc.findPrevious();
-      if (found){
-        daCodeMirror.setSelection(sc.from(), sc.to());
-        scroll_to_selection();
-        $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
-      }
-      else{
-        $("#""" + form + """ input[name='search_term']").addClass("da-search-error");
-      }
-    }
-    event.preventDefault();
-    return false;
-  });
-  $("#daSearchNext").click(function(event){
-    var query = $("#""" + form + """ input[name='search_term']").val();
-    if (query.length == 0){
-      clear_matches();
-      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
-      return;
-    }
-    origPosition = daCodeMirror.getCursor('to');
-    var sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findNext();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
-    }
-    else{
-      origPosition = { line: 0, ch: 0, xRel: 1 }
-      sc = daCodeMirror.getSearchCursor(query, origPosition);
-      show_matches(query);
-      var found = sc.findNext();
-      if (found){
-        daCodeMirror.setSelection(sc.from(), sc.to());
-        scroll_to_selection();
-        $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
-      }
-      else{
-        $("#""" + form + """ input[name='search_term']").addClass("da-search-error");
-      }
-    }
-    event.preventDefault();
-    return false;
-  });
-}
-
-function show_matches(query){
-  clear_matches();
-  if (query.length == 0){
-    daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-    $("#""" + form + """ input[name='search_term']").removeClass("da-search-error");
-    return;
-  }
-  searchMatches = daCodeMirror.showMatchesOnScrollbar(query);
-}
-
-function clear_matches(){
-  if (searchMatches != null){
-    try{
-      searchMatches.clear();
-    }
-    catch(err){}
-  }
-}
-
-function scroll_to_selection(){
-  daCodeMirror.scrollIntoView(daCodeMirror.getCursor('from'))
-  var t = daCodeMirror.charCoords(daCodeMirror.getCursor('from'), "local").top;
-  daCodeMirror.scrollTo(null, t);
-}
-
-function enter_search(event){
-  var theCode = event.which || event.keyCode;
-  if(theCode == 13) {
-    event.preventDefault();
-    $("#daSearchNext").click();
-    return false;
-  }
-}
-
-function update_search(event){
-  var query = $(this).val();
-  if (query.length == 0){
-    clear_matches();
-    daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
-    $(this).removeClass("da-search-error");
-    return;
-  }
-  var theCode = event.which || event.keyCode;
-  if(theCode == 13) {
-    event.preventDefault();
-    return false;
-  }
-  var sc = daCodeMirror.getSearchCursor(query, origPosition);
-  show_matches(query);
-
-  var found = sc.findNext();
-  if (found){
-    daCodeMirror.setSelection(sc.from(), sc.to());
-    scroll_to_selection();
-    $(this).removeClass("da-search-error");
-  }
-  else{
-    origPosition = { line: 0, ch: 0, xRel: 1 }
-    sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findNext();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $(this).removeClass("da-search-error");
-    }
-    else{
-      $(this).addClass("da-search-error");
-    }
-  }
-}
-
-"""
-
-
-def variables_js(form=None, office_mode=False):
+def variables_js(form=None, office_mode=False, current_project=None):
+    if current_project is None:
+        current_project = 'default'
     playground_user = get_playground_user()
     output = """
 function activatePopovers(){
@@ -21835,48 +21655,24 @@ function activateVariables(){
         form = 'form'
     output += """
   $(".playground-variable").on("click", function(event){
-    daCodeMirror.replaceSelection($(this).data("insert"), "around");
-    daCodeMirror.focus();
+    daCm.dispatch(daCm.state.replaceSelection($(this).data("insert"), "around"));
+    daCm.focus();
   });
 
   $(".dasearchicon").on("click", function(event){
     var query = $(this).data('name');
     if (query == null || query.length == 0){
-      clear_matches();
-      daCodeMirror.setCursor(daCodeMirror.getCursor('from'));
+      daCm.dispatch({selection: {anchor: daCm.state.selection.main.head}})
       return;
     }
-    origPosition = daCodeMirror.getCursor('to');
-    $("#""" + form + """ input[name='search_term']").val(query);
-    var sc = daCodeMirror.getSearchCursor(query, origPosition);
-    show_matches(query);
-    var found = sc.findNext();
-    if (found){
-      daCodeMirror.setSelection(sc.from(), sc.to());
-      scroll_to_selection();
-      $("#form input[name='search_term']").removeClass('da-search-error');
-    }
-    else{
-      origPosition = { line: 0, ch: 0, xRel: 1 }
-      sc = daCodeMirror.getSearchCursor(query, origPosition);
-      show_matches(query);
-      var found = sc.findNext();
-      if (found){
-        daCodeMirror.setSelection(sc.from(), sc.to());
-        scroll_to_selection();
-        $("#""" + form + """ input[name='search_term']").removeClass('da-search-error');
-      }
-      else{
-        $("#""" + form + """ input[name='search_term']").addClass('da-search-error');
-      }
-    }
+    daStartNewSearch(daCm, query);
     event.preventDefault();
     return false;
   });
 }
 
 var interviewBaseUrl = '""" + url_for('index', reset='1', cache='0', i='docassemble.playground' + str(playground_user.id) + ':.yml') + """';
-var shareBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(playground_user.id) + ':.yml') + """';
+var shareBaseUrl = '""" + url_for('index', i='docassemble.playground' + str(playground_user.id) + ':.yml', _external=True) + """';
 
 function updateRunLink(){
   if (currentProject == 'default'){
@@ -21890,7 +21686,7 @@ function updateRunLink(){
 }
 
 function fetchVars(changed){
-  daCodeMirror.save();
+  $("#playground_content").val(daCm.state.doc.toString());
   updateRunLink();
   $.ajax({
     type: "POST",
@@ -21905,6 +21701,13 @@ function fetchVars(changed){
       }
       if (data.current_project != null){
         currentProject = data.current_project;
+      }
+      if (data.ac_list != null){
+        daAutoComp.length = 0;
+        let n = data.ac_list.length;
+        for(let i = 0; i < n; i++){
+          daAutoComp.push(data.ac_list[i]);
+        }
       }
       if (data.variables_html != null){
         $("#daplaygroundtable").html(data.variables_html);
@@ -21926,6 +21729,79 @@ function variablesReady(){
   });
 }
 
+function daFetchVariableReportCallback(data){
+  var translations = """ + json.dumps({'in mako': word("in mako"), 'mentioned in': word("mentioned in"), 'defined by': word("defined by")}) + """;
+  var modal = $("#daVariablesReport .modal-body");
+  if (modal.length == 0){
+    console.log("No modal body on page");
+    return;
+  }
+  if (!data.success){
+    $(modal).html('<p>""" + word("Failed to load report") + """</p>');
+    return;
+  }
+  var yaml_file = data.yaml_file;
+  modal.empty();
+  var accordion = $('<div>');
+  accordion.addClass("accordion");
+  accordion.attr("id", "varsreport");
+  var n = data.items.length;
+  for (var i = 0; i < n; ++i){
+    var item = data.items[i];
+    if (item.questions.length){
+      var accordionItem = $('<div>');
+      accordionItem.addClass("accordion-item");
+      var accordionItemHeader = $('<h2>');
+      accordionItemHeader.addClass("accordion-header");
+      accordionItemHeader.attr("id", "accordionItemheader" + i);
+      accordionItemHeader.html('<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + i + '" aria-expanded="false" aria-controls="collapse' + i + '">' + item.name + '</button>');
+      accordionItem.append(accordionItemHeader);
+      var collapse = $("<div>");
+      collapse.attr("id", "collapse" + i);
+      collapse.attr("aria-labelledby", "accordionItemheader" + i);
+      collapse.data("bs-parent", "#varsreport");
+      collapse.addClass("accordion-collapse");
+      collapse.addClass("collapse");
+      var accordionItemBody = $("<div>");
+      accordionItemBody.addClass("accordion-body");
+      var m = item.questions.length;
+      for (var j = 0; j < m; j++){
+        var h5 = $("<h5>");
+        h5.html(item.questions[j].usage.map(x => translations[x]).join(','));
+        var pre = $("<pre>");
+        pre.html(item.questions[j].source_code);
+        accordionItemBody.append(h5);
+        accordionItemBody.append(pre);
+        if (item.questions[j].yaml_file != yaml_file){
+          var p = $("<p>");
+          p.html(""" + json.dumps(word("from")) + """ + ' ' + item.questions[j].yaml_file);
+          accordionItemBody.append(p);
+        }
+      }
+      collapse.append(accordionItemBody);
+      accordionItem.append(collapse);
+      accordion.append(accordionItem);
+    }
+  }
+  modal.append(accordion);
+}
+
+function daFetchVariableReport(theFile=currentFile){
+  url = """ + json.dumps(url_for('variables_report', project=current_project)) + """ + "&file=" + theFile;
+  $("#daVariablesReport .modal-body").html('<p>""" + word("Loading . . .") + """</p>');
+  $.ajax({
+    type: "GET",
+    url: url,
+    success: daFetchVariableReportCallback,
+    xhrFields: {
+      withCredentials: true
+    },
+    error: function(xhr, status, error){
+      $("#daVariablesReport .modal-body").html('<p>""" + word("Failed to load report") + """</p>');
+    }
+  });
+}
+
 $( document ).ready(function() {
   $(document).on('keydown', function(e){
     if (e.which == 13){
@@ -21933,7 +21809,7 @@ $( document ).ready(function() {
       if (tag == "INPUT"){
         e.preventDefault();
         e.stopPropagation();
-        $(".CodeMirror textarea").focus();
+        daCm.focus();
         return false;
       }
     }
@@ -21970,7 +21846,7 @@ def variables_report():
     the_current_info = current_info(yaml=yaml_file, req=request, action=None, device_id=request.cookies.get('ds', None))
     docassemble.base.functions.this_thread.current_info = the_current_info
     interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
-    variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)  # pylint: disable=unused-variable
+    variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)  # pylint: disable=unused-variable
     results = []
     result_dict = {}
     for name in vocab_list:
@@ -22042,8 +21918,8 @@ def playground_variables():
         the_current_info = current_info(yaml='docassemble.playground' + str(playground_user.id) + project_name(current_project) + ':' + active_file, req=request, action=None, device_id=request.cookies.get('ds', None))
         docassemble.base.functions.this_thread.current_info = the_current_info
         interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
-        variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)  # pylint: disable=unused-variable
-        return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list, current_project=current_project)
+        variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, current_project=current_project)  # pylint: disable=unused-variable
+        return jsonify(success=True, variables_html=variables_html, vocab_list=vocab_list, current_project=current_project, ac_list=ac_list)
     return jsonify(success=False, reason=2)
 
 
@@ -22564,7 +22440,7 @@ def playground_page():
                 the_current_info['session'] = session_id_to_use
                 docassemble.base.functions.this_thread.current_info = the_current_info
                 interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
-                variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)  # pylint: disable=unused-variable
+                variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)  # pylint: disable=unused-variable
                 if form.submit.data:
                     flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.', 'success', is_ajax=is_ajax)
                 else:
@@ -22577,7 +22453,7 @@ def playground_page():
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
             if is_ajax:
-                return jsonify(variables_html=variables_html, vocab_list=vocab_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages, active_file=active_file, active_interview_url=url_for('index', i=active_interview_string))
+                return jsonify(variables_html=variables_html, vocab_list=vocab_list, ac_list=ac_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages, active_file=active_file, active_interview_url=url_for('index', i=active_interview_string))
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
@@ -22616,7 +22492,7 @@ def playground_page():
     the_current_info['session'] = session_id_to_use
     docassemble.base.functions.this_thread.current_info = the_current_info
     interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
-    variables_html, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
+    variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
     pulldown_files = [x['name'] for x in files]
     define_examples()
     if is_fictitious or is_new or is_default:
@@ -22765,11 +22641,7 @@ function resetExpireSession(){
     alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
   }, """ + str(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
 }
-
-""" + variables_js() + """
-
-""" + search_js() + """
-
+""" + variables_js(current_project=current_project) + """
 function activateExample(id, scroll){
   var info = exampleData[id];
   $("#da-example-source").html(info['html']);
@@ -22815,80 +22687,6 @@ function activateExample(id, scroll){
   $("#da-example-source-after").addClass("dainvisible");
 }
 
-function daFetchVariableReportCallback(data){
-  var translations = """ + json.dumps({'in mako': word("in mako"), 'mentioned in': word("mentioned in"), 'defined by': word("defined by")}) + """;
-  var modal = $("#daVariablesReport .modal-body");
-  if (modal.length == 0){
-    console.log("No modal body on page");
-    return;
-  }
-  if (!data.success){
-    $(modal).html('<p>""" + word("Failed to load report") + """</p>');
-    return;
-  }
-  var yaml_file = data.yaml_file;
-  console.log(yaml_file)
-  modal.empty();
-  var accordion = $('<div>');
-  accordion.addClass("accordion");
-  accordion.attr("id", "varsreport");
-  var n = data.items.length;
-  for (var i = 0; i < n; ++i){
-    var item = data.items[i];
-    if (item.questions.length){
-      var accordionItem = $('<div>');
-      accordionItem.addClass("accordion-item");
-      var accordionItemHeader = $('<h2>');
-      accordionItemHeader.addClass("accordion-header");
-      accordionItemHeader.attr("id", "accordionItemheader" + i);
-      accordionItemHeader.html('<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse' + i + '" aria-expanded="false" aria-controls="collapse' + i + '">' + item.name + '</button>');
-      accordionItem.append(accordionItemHeader);
-      var collapse = $("<div>");
-      collapse.attr("id", "collapse" + i);
-      collapse.attr("aria-labelledby", "accordionItemheader" + i);
-      collapse.data("bs-parent", "#varsreport");
-      collapse.addClass("accordion-collapse");
-      collapse.addClass("collapse");
-      var accordionItemBody = $("<div>");
-      accordionItemBody.addClass("accordion-body");
-      var m = item.questions.length;
-      for (var j = 0; j < m; j++){
-        var h5 = $("<h5>");
-        h5.html(item.questions[j].usage.map(x => translations[x]).join(','));
-        var pre = $("<pre>");
-        pre.html(item.questions[j].source_code);
-        accordionItemBody.append(h5);
-        accordionItemBody.append(pre);
-        if (item.questions[j].yaml_file != yaml_file){
-          var p = $("<p>");
-          p.html(""" + json.dumps(word("from")) + """ + ' ' + item.questions[j].yaml_file);
-          accordionItemBody.append(p);
-        }
-      }
-      collapse.append(accordionItemBody);
-      accordionItem.append(collapse);
-      accordion.append(accordionItem);
-    }
-  }
-  modal.append(accordion);
-}
-
-function daFetchVariableReport(){
-  url = """ + json.dumps(url_for('variables_report', project=current_project)) + """ + "&file=" + currentFile;
-  $("#daVariablesReport .modal-body").html('<p>""" + word("Loading . . .") + """</p>');
-  $.ajax({
-    type: "GET",
-    url: url,
-    success: daFetchVariableReportCallback,
-    xhrFields: {
-      withCredentials: true
-    },
-    error: function(xhr, status, error){
-      $("#daVariablesReport .modal-body").html('<p>""" + word("Failed to load report") + """</p>');
-    }
-  });
-}
-
 function saveCallback(data){
   if (data.action && data.action == 'reload'){
     location.reload(true);
@@ -22908,6 +22706,13 @@ function saveCallback(data){
   history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
   $("#daVariables").val(data.active_file);
   $("#share-link").attr('href', data.active_interview_url);
+  if (data.ac_list != null){
+    daAutoComp.length = 0;
+    let n = data.ac_list.length;
+    for(let i = 0; i < n; i++){
+      daAutoComp.push(data.ac_list[i]);
+    }
+  }
   if (data.variables_html != null){
     $("#daplaygroundtable").html(data.variables_html);
     activateVariables();
@@ -22937,9 +22742,25 @@ function enableButtons(){
   $("a.dasubmitbutton").removeClass('dadisabled');
 }
 
+function flash(message, priority){
+  if (priority == null){
+    priority = 'info'
+  }
+  if (!$("#daflash").length){
+    $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
+  }
+  $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
+  if (priority == 'success'){
+    setTimeout(function(){
+      $("#daflash .alert-success").hide(300, function(){
+        $(self).remove();
+      });
+    }, 3000);
+  }
+}
+
 $( document ).ready(function() {
   variablesReady();
-  searchReady();
   resetExpireSession();
   $("#playground_name").on('change', function(){
     var newFileName = $(this).val();
@@ -22954,13 +22775,29 @@ $( document ).ready(function() {
     }
     return;
   });
+  $("#share-link").click(function(event){
+    const shareLink = document.getElementById('share-link');
+    const url = shareLink.getAttribute('href');
+    const tempInput = document.createElement('input');
+    tempInput.value = url;
+    document.body.appendChild(tempInput);
+
+    tempInput.select();
+    tempInput.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    document.body.removeChild(tempInput);
+
+    flash(""" + json.dumps(word('Link copied to clipboard.')) + """, "success");
+    event.preventDefault();
+    return false;
+  });
   $("#daRun").click(function(event){
     if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == ''){
       $("#form button[name='submit']").click();
       event.preventDefault();
       return false;
     }
-    daCodeMirror.save();
+    $("#playground_content").val(daCm.state.doc.toString());
     disableButtonsUntilCallback();
     $.ajax({
       type: "POST",
@@ -22981,7 +22818,7 @@ $( document ).ready(function() {
   });
   var thisWindow = window;
   $("#daRunSyncGD").click(function(event){
-    daCodeMirror.save();
+    $("#playground_content").val(daCm.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
     if ($('#form').hasClass('dirty') && !confirm(""" + json.dumps(word("There are unsaved changes.  Are you sure you wish to leave this page?")) + """)){
       event.preventDefault();
@@ -22998,7 +22835,7 @@ $( document ).ready(function() {
     return true;
   });
   $("#daRunSyncOD").click(function(event){
-    daCodeMirror.save();
+    $("#playground_content").val(daCm.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
     if ($('#form').hasClass('dirty') && !confirm(""" + json.dumps(word("There are unsaved changes.  Are you sure you wish to leave this page?")) + """)){
       event.preventDefault();
@@ -23015,7 +22852,7 @@ $( document ).ready(function() {
     return true;
   });
   $("#form button[name='submit']").click(function(event){
-    daCodeMirror.save();
+    $("#playground_content").val(daCm.state.doc.toString());
     if (validForm == false || isNew == true || originalFileName != $("#playground_name").val() || $("#playground_name").val().trim() == ""){
       return true;
     }
@@ -23049,31 +22886,35 @@ $( document ).ready(function() {
   });
 
   $(".da-example-copy").on("click", function(event){
-    if (daCodeMirror.somethingSelected()){
-      daCodeMirror.replaceSelection("");
+    if (daCm.state.selection.ranges.some(r => !r.empty)){
+      daCm.dispatch(daCm.state.replaceSelection(""))
     }
     var id = $(".da-example-active").data("example");
-    var curPos = daCodeMirror.getCursor();
+    var curPos = daCm.state.selection.main.head;
     var notFound = 1;
-    var insertLine = daCodeMirror.lastLine();
-    daCodeMirror.eachLine(curPos.line, insertLine, function(line){
-      if (notFound){
-        if (line.text.substring(0, 3) == "---" || line.text.substring(0, 3) == "..."){
-          insertLine = daCodeMirror.getLineNumber(line)
-          //console.log("Found break at line number " + insertLine)
-          notFound = 0;
-        }
+    var curLine = daCm.state.doc.lineAt(curPos).number;
+    let pos = 0;
+    for (let lines = daCm.state.doc.iterLines(from=curLine); !lines.next().done && notFound; pos++) {
+      let { value } = lines;
+      if (value.substring(0, 3) == "---" || value.substring(0, 3) == "..."){
+        notFound = 0;
       }
-    });
+    }
+    let replacementText = "---\\n" + exampleData[id]['source'] + "\\n";
+    var newPos;
     if (notFound){
-      daCodeMirror.setSelection({'line': insertLine, 'ch': null});
-      daCodeMirror.replaceSelection("\\n---\\n" + exampleData[id]['source'] + "\\n", "around");
+      newPos = daCm.state.doc.length;
+      replacementText = "\\n" + replacementText;
     }
     else{
-      daCodeMirror.setSelection({'line': insertLine, 'ch': 0});
-      daCodeMirror.replaceSelection("---\\n" + exampleData[id]['source'] + "\\n", "around");
+      if (pos > 0){
+        pos--;
+      }
+      newPos = daCm.state.doc.line(curLine + pos).from;
     }
-    daCodeMirror.focus();
+    daCm.dispatch({selection: {anchor: newPos, head: newPos}});
+    daCm.dispatch(daCm.state.replaceSelection(replacementText, "around"))
+    daCm.focus();
     event.preventDefault();
     return false;
   });
@@ -23114,7 +22955,8 @@ $( document ).ready(function() {
     $("#da-example-source-after").addClass("dainvisible");
   });
   if ($("#playground_name").val().length > 0){
-    daCodeMirror.focus();
+    daCm.focus();
+    $("#form").trigger("reset");
   }
   else{
     $("#playground_name").focus()
@@ -23127,7 +22969,6 @@ $( document ).ready(function() {
 
   activateVariables();
   updateRunLink();
-  origPosition = daCodeMirror.getCursor();
   daShowConsoleMessages();
   if (currentFile != ''){
     history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
@@ -23135,44 +22976,16 @@ $( document ).ready(function() {
 });
 """
     any_files = len(files) > 0
-    cm_setup = """
-    <script>
-      var word_re = /[\w$]+/
-      $( document ).ready(function(){
-        CodeMirror.registerHelper("hint", "yaml", function(editor, options){
-          var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
-          var end = cur.ch, start = end;
-          while (start && word_re.test(curLine.charAt(start - 1))) --start;
-          var curWord = start != end && curLine.slice(start, end);
-          var list = [];
-          if (curWord){
-            var n = vocab.length;
-            for (var i = 0; i < n; ++i){
-              if (vocab[i].indexOf(curWord) == 0){
-                list.push(vocab[i]);
-              }
-            }
-          }
-          return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
-        });""" + upload_js() + """
-      });
-    </script>"""  # noqa: W605
-    if keymap:
-        kbOpt = 'keyMap: "' + keymap + '", cursorBlinkRate: 0, '
-        kbLoad = '<script src="' + url_for('static', filename="codemirror/keymap/" + keymap + ".js", v=da_version) + '"></script>\n    '
-    else:
-        kbOpt = ''
-        kbLoad = ''
     page_title = word("Playground")
     if current_user.id != playground_user.id:
         page_title += " / " + playground_user.email
     if current_project != 'default':
         page_title += " / " + current_project
-    extra_js = '<script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + kbLoad + cm_setup + '<script>\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      daTextArea = document.getElementById("playground_content");\n      var daCodeMirror = CodeMirror.fromTextArea(daTextArea, {specialChars: /[\\u00a0\\u0000-\\u001f\\u007f-\\u009f\\u00ad\\u061c\\u200b-\\u200f\\u2028\\u2029\\ufeff]/, mode: "' + ('yamlmixed' if daconfig.get('test yamlmixed mode') else 'yamlmixed') + '", ' + kbOpt + 'tabSize: 2, tabindex: 70, autofocus: false, lineNumbers: true, matchBrackets: true, lineWrapping: ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + '});\n      $(window).bind("beforeunload", function(){daCodeMirror.save(); $("#form").trigger("checkform.areYouSure");});\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){daCodeMirror.save(); $("#form").trigger("reinitialize.areYouSure"); return true;});\n      daCodeMirror.setSize(null, null);\n      daCodeMirror.setOption("extraKeys", { Tab: function(cm) { var spaces = Array(cm.getOption("indentUnit") + 1).join(" "); cm.replaceSelection(spaces); }, "Ctrl-Space": "autocomplete", "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); }, "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }});\n      daCodeMirror.setOption("coverGutterNextToScrollbar", true);\n' + indent_by(ajax, 6) + '\n'
+    extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>\n    <script>' + upload_js() + '\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      var daAutoComp = JSON.parse(atob("' + safeid(json.dumps(ac_list)) + '"));\n      var daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob("' + safeid(json.dumps(content)) + '")), "yml", ' + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + ');\n      $("#playground_content").val(daCm.state.doc.toString());\n      $(daCm.dom).attr("tabindex", 70);\n      $(window).bind("beforeunload", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("checkform.areYouSure");\n      });\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("reinitialize.areYouSure");\n        return true;\n      });' + indent_by(ajax, 6) + '\n'
     if pg_ex['encoded_data_dict'] is not None:
-        extra_js += '       exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n'
+        extra_js += '      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n'
     extra_js += '      $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'
-    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(playground_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=playground_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form), own_playground=bool(playground_user.id == current_user.id)), 200)
+    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(playground_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=playground_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form), own_playground=bool(playground_user.id == current_user.id), action=url_for('playground_page', project=current_project)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -23483,7 +23296,7 @@ def css_bundle():
 def playground_css_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['codemirror', 'lib', 'codemirror.css'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.css'], ['codemirror', 'addon', 'display', 'fullscreen.css'], ['codemirror', 'addon', 'scroll', 'simplescrollbars.css'], ['codemirror', 'addon', 'hint', 'show-hint.css'], ['app', 'pygments.min.css'], ['bootstrap-fileinput', 'css', 'fileinput.min.css']]:
+    for parts in [['app', 'pygments.min.css'], ['bootstrap-fileinput', 'css', 'fileinput.min.css']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23505,7 +23318,7 @@ def js_bundle():
 def playground_js_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['areyousure', 'jquery.are-you-sure.js'], ['codemirror', 'lib', 'codemirror.js'], ['codemirror', 'addon', 'search', 'searchcursor.js'], ['codemirror', 'addon', 'scroll', 'annotatescrollbar.js'], ['codemirror', 'addon', 'search', 'matchesonscrollbar.js'], ['codemirror', 'addon', 'display', 'fullscreen.js'], ['codemirror', 'addon', 'edit', 'matchbrackets.js'], ['codemirror', 'addon', 'hint', 'show-hint.js'], ['codemirror', 'mode', 'yaml', 'yaml.js'], ['codemirror', 'mode', 'python', 'python.js'], ['yamlmixed', 'yamlmixed.js'], ['codemirror', 'mode', 'markdown', 'markdown.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js']]:
+    for parts in [['areyousure', 'jquery.are-you-sure.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -30240,7 +30053,7 @@ def api_interview_data():
     else:
         use_playground = False
         current_project = 'default'
-    variables_json, vocab_list, vocab_dict = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, use_playground=use_playground, current_project=current_project)  # pylint: disable=unused-variable
+    variables_json, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, use_playground=use_playground, current_project=current_project)  # pylint: disable=unused-variable
     return jsonify({'names': variables_json, 'vocabulary': list(vocab_list)})
 
 

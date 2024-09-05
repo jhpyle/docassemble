@@ -28,6 +28,11 @@
     this.options = $.extend({}, $.fn.combobox.defaults, options);
     this.template = this.options.template || this.template;
     this.$source = $(element);
+    if (this.$source.hasClass("da-combobox-floating")) {
+      this.$label = this.$source.next("label");
+    } else {
+      this.$label = null;
+    }
     this.$container = this.setup();
     this.$element = this.$container.find("input[type=text]");
     this.$target = this.$container.find("input[type=hidden]");
@@ -36,7 +41,11 @@
       this.$target.prop("disabled", true);
     }
     this.$button = this.$container.find(".dacomboboxtoggle");
-    this.$menu = $(this.options.menu).insertAfter(this.$element);
+    if (this.$float) {
+      this.$menu = $(this.options.menu).insertAfter(this.$float);
+    } else {
+      this.$menu = $(this.options.menu).insertAfter(this.$element);
+    }
     this.matcher = this.options.matcher || this.matcher;
     this.sorter = this.options.sorter || this.sorter;
     this.highlighter = this.options.highlighter || this.highlighter;
@@ -56,6 +65,18 @@
       var combobox = $(this.template());
       this.$source.before(combobox);
       this.$source.hide();
+      if (this.$label) {
+        this.$float = $('<div class="form-floating"></div>');
+        var innerText = this.$label.text();
+        var inputElement = combobox.find('input[type="text"]');
+        inputElement.attr("placeholder", innerText);
+        inputElement.detach();
+        this.$label.detach();
+        this.$float.append(inputElement, this.$label);
+        this.$float.insertBefore(combobox.find("div.input-group-append"));
+      } else {
+        this.$float = null;
+      }
       return combobox;
     },
 

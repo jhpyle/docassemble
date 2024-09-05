@@ -12,11 +12,12 @@
               {%- endfor %}
           </ul>
           {%- endif %}
-          <form action="" method="POST" role="form" class="daconfigform">
+          <form action="" method="POST" role="form" class="daconfigform" id="config_form">
             {{ form.hidden_tag() }}
-            <div class="da-form-group">
-              <textarea rows="24" cols="80" id="config_content" name="config_content"></textarea>
+            <div class="da-form-group" id="config_container">
+              {# <textarea rows="24" cols="80" id="config_content_old" name="config_content"></textarea> #}
             </div>
+            <input type="hidden" name="config_content" id="config_content" value="" />
             {{ render_submit_field(form.submit, class="btn " + config['BUTTON_STYLE'] + "primary " + config['BUTTON_CLASS']) }}
             {{ render_submit_field(form.cancel, class="btn " + config['BUTTON_STYLE'] + "secondary " + config['BUTTON_CLASS']) }}
           </form>
