@@ -2892,10 +2892,7 @@ Each of these repositories contains a `Dockerfile`. The
 `jhpyle/docassemble` repository depends on
 `jhpyle/docassemble-os`. (The `jhpyle/docassemble-os` repository is
 separate because it contains operating system files and takes a long
-time to build. If you are on the `amd64` platform and you want to
-modify the Docker image, you can download
-the `jhpyle/docassemble-os` image and then `docker build` the
-`jhpyle/docassemble` repository only.)
+time to build.
 
 To make changes to the operating system or the operating system
 packages that are installed inside the container, edit the
