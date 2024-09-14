@@ -17,7 +17,6 @@ try:
 except ImportError:
     from backports import zoneinfo
 import requests
-import pycurl  # pylint: disable=import-error
 from docassemble.base.config import daconfig
 from docassemble.base.error import DAError
 from docassemble.base.generate_key import random_alphanumeric
@@ -274,17 +273,14 @@ class SavedFile:
     def fetch_url(self, url, **kwargs):
         filename = kwargs.get('filename', self.filename)
         self.fix()
-        cookiefile = tempfile.NamedTemporaryFile(suffix='.txt')
-        f = open(os.path.join(self.directory, filename), 'wb')
-        c = pycurl.Curl()  # pylint: disable=c-extension-no-member
-        c.setopt(c.URL, url)
-        c.setopt(c.FOLLOWLOCATION, True)
-        c.setopt(c.WRITEDATA, f)
-        c.setopt(pycurl.USERAGENT, 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36')  # pylint: disable=c-extension-no-member
-        c.setopt(pycurl.COOKIEFILE, cookiefile.name)  # pylint: disable=c-extension-no-member
-        c.perform()
-        c.close()
-        cookiefile.close()
+        try:
+            with requests.get(url, stream=True, timeout=60) as r:
+                r.raise_for_status()
+                with open(os.path.join(self.directory, filename), 'wb') as fp:
+                    for chunk in r.iter_content(8192):
+                        fp.write(chunk)
+        except requests.exceptions.HTTPError as err:
+            raise DAError("from_url: Error %s" % (str(err),))
         self.save()
 
     def fetch_url_post(self, url, post_args, **kwargs):
@@ -294,7 +290,7 @@ class SavedFile:
         if r.status_code != 200:
             raise DAError('fetch_url_post: retrieval from ' + url + 'failed')
         with open(os.path.join(self.directory, filename), 'wb') as fp:
-            for block in r.iter_content(1024):
+            for block in r.iter_content(8192):
                 fp.write(block)
         self.save()
 

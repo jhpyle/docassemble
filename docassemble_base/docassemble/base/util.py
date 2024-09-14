@@ -22,7 +22,6 @@ import time
 import types
 import zipfile
 import base64
-import pycurl  # pylint: disable=import-error
 import requests
 import yaml
 from requests_oauthlib import OAuth2Session
@@ -1878,6 +1877,24 @@ class DAList(DAObject):
         else:
             self.object_type = object_type
             self.object_type_parameters = {}
+
+    def cancel_add_or_edit(self):
+        unique_id = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+        if 'event_stack' in docassemble.base.functions.this_thread.internal and unique_id in docassemble.base.functions.this_thread.internal['event_stack']:
+            new_stack = []
+            for item in docassemble.base.functions.this_thread.internal['event_stack'][unique_id]:
+                if 'arguments' in item:
+                    if 'list' in item['arguments'] and item['arguments']['list'] == self.instanceName:
+                        continue
+                    if 'group' in item['arguments'] and item['arguments']['group'] == self.instanceName:
+                        continue
+                if 'action' in item and item['action'].startswith(self.instanceName + '['):
+                    continue
+                new_stack.append(item)
+            docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
+        if self.complete_elements().number() != self.number_gathered():
+            self.pop()
+        self.delattr('doing_gathered_and_complete', '_necessary_length', 'there_is_one_other')
 
     def gathered_and_complete(self):
         """Ensures all items in the list are complete and then returns True."""
@@ -5291,20 +5308,14 @@ class DAFile(DAObject):
     def from_url(self, url):
         """Makes the contents of the file the contents of the given URL."""
         self.retrieve()
-        cookiefile = tempfile.NamedTemporaryFile(suffix='.txt')
-        the_path = self.file_info['path']
-        with open(the_path, 'wb') as f:
-            c = pycurl.Curl()  # pylint: disable=c-extension-no-member
-            c.setopt(c.URL, url)
-            c.setopt(c.FOLLOWLOCATION, True)
-            c.setopt(c.WRITEDATA, f)
-            c.setopt(pycurl.USERAGENT, server.daconfig.get('user agent', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'))  # pylint: disable=c-extension-no-member
-            c.setopt(pycurl.COOKIEFILE, cookiefile.name)  # pylint: disable=c-extension-no-member
-            c.perform()
-            status_code = c.getinfo(pycurl.HTTP_CODE)  # pylint: disable=c-extension-no-member
-            c.close()
-        if status_code >= 400:
-            raise DAError("from_url: Error %s" % (status_code,))
+        try:
+            with requests.get(url, stream=True, timeout=60) as r:
+                r.raise_for_status()
+                with open(self.file_info['path'], 'wb') as fp:
+                    for chunk in r.iter_content(8192):
+                        fp.write(chunk)
+        except requests.exceptions.HTTPError as err:
+            raise DAError("from_url: Error %s" % (str(err),))
         self.retrieve()
 
     def uses_acroform(self):

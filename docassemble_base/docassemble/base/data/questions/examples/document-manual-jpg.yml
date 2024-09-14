@@ -18,6 +18,7 @@ code: |
                      "green")
   my_image.initialize(filename="green.jpg")
   im.save(my_image.path(), format='JPEG')
+  del im
 ---
 question: Your document is ready.
 attachment:

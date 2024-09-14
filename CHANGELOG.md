@@ -1,13 +1,27 @@
 # Change Log
 
+## [1.5.8] - 2024-09-14
+
+### Added
+- The `.cancel_add_or_edit()` method of `DAList`.
+
+### Fixed
+- Replaced `pycurl` with `requests` because it was causing problems
+  for the `.from_url()` method of `DAFile`.
+- The browser's use of dark mode is now remembered as part of the
+  session data.
+- Pressing Tab to navigate to the CodeMirror editor now focuses the
+  editor appropriately.
+
 ## [1.5.7] - 2024-09-05
 
 ### Changed
-- Migrated from CodeMirror 5 to CodeMirror 6. Searching is now
-  accomplished with Ctrl-f. Dark mode support is improved. The
-  mixed-mode syntax highlighting of Python code in `code` blocks is no
-  longer available. (CodeMirror 6 is a complete rewrite.) Pressing F11
-  for full-screen mode and Ctrl-space for autocomplete are still
+- Migrated the text editor in the Playground and the Configuration
+  from CodeMirror 5 to CodeMirror 6. Searching is now accomplished
+  with Ctrl-f. Dark mode support is improved. The mixed-mode syntax
+  highlighting of Python code in `code` blocks is no longer
+  available. (CodeMirror 6 is a complete rewrite.) Pressing F11 for
+  full-screen mode and Ctrl-space for autocomplete are still
   available.
 - The `GoogleAPI` class can now be used with ARM processors.
 - The "Share" button in the Playground now copies the hyperlink to the

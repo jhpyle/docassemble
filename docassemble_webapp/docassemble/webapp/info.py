@@ -203,7 +203,6 @@ system_packages = [
     "pycparser",
     "pycryptodome",
     "pycryptodomex",
-    "pycurl",
     "Pygments",
     "PyJWT",
     "PyLaTeX",

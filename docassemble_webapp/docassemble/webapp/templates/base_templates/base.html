@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_language }}">
+<html lang="{{ current_language }}"{% if color_scheme == 'dark' %} data-bs-theme="dark"{% endif%}>
   <head>
     <meta charset="utf-8">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -181,8 +181,31 @@
     <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
       {%- if config['AUTO_COLOR_SCHEME'] %}
+      var daCurrentColorScheme = "{{ color_scheme }}";
+      var daDesiredColorScheme;
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        daDesiredColorScheme = "dark"
+      }
+      else {
+        daDesiredColorScheme = "light";
+      }
+      if (daCurrentColorScheme != daDesiredColorScheme){
+        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme);
+        $.ajax({
+          type: "PATCH",
+          url: "{{ url_for('change_color_scheme') }}",
+          xhrFields: {
+            withCredentials: true
+          },
+          data: 'scheme=' + daDesiredColorScheme,
+          success: function(data){
+            daCurrentColorScheme = data.scheme;
+          },
+          error: function(xhr, status, error){
+            console.log("Unable to change desired color scheme.")
+          },
+          dataType: 'json'
+        });
       }
       {%- endif %}
       var daWhichButton = null;

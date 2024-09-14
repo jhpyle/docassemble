@@ -1,0 +1,71 @@
+metadata:
+  title: Cancel Add or Edit
+  short title: cancel
+  documentation: "https://docassemble.org/docs/groups.html#cancel_add_edit"
+  example start: 6
+  example end: 8
+---
+objects:
+  - fruits: DAList.using(object_type=Thing, complete_attribute='complete')
+---
+code: |
+  fruits[i].name.text
+  fruits[i].seeds
+  fruits[i].complete = True
+---
+question: |
+  Are there any fruits?
+yesno: fruits.there_are_any
+---
+question: |
+  Are there any more fruits?
+yesno: fruits.there_is_another
+---
+table: fruits.table
+rows: fruits
+columns:
+  - Name: row_item.name.text
+  - Seeds: row_item.seeds
+edit:
+  - name.text
+  - seeds
+show if empty: |
+  No fruits yet.
+---
+question: |
+  What is the name of the ${ ordinal(i) } fruit?
+fields:
+  - Name: fruits[i].name.text
+action buttons:
+  - label: Cancel
+    action: fruits.cancel
+    color: secondary
+    show if: fruits.has_been_gathered()
+---
+question: |
+  How many seeds does ${ fruits[i] } have?
+fields:
+  - Seeds: fruits[i].seeds
+    datatype: integer
+action buttons:
+  - label: Cancel
+    action: fruits.cancel
+    color: secondary
+    show if: fruits.has_been_gathered()
+---
+event: fruits.cancel
+code: |
+  fruits.cancel_add_or_edit()
+---
+mandatory: True
+question: |
+  Fruit table
+subquestion: |
+  ${ fruits.table }
+
+  ${ fruits.add_action(label="Add a fruit") }
+continue button field: fruits.shown
+---
+mandatory: True
+question: |
+  Thank you for creating a table of fruits.

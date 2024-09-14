@@ -67,7 +67,7 @@ review:
       * ${ y }
       % endfor
 ---
-field: person.revisit
+continue button field: person.revisit
 question: |
   Edit the people
 subquestion: |

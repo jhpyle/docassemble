@@ -2606,7 +2606,11 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '" itemscope itemtype="http://schema.org/WebPage">\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    ' + ('<link rel="shortcut icon" href="' + url_for('favicon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_FAVICON'] else '') + ('<link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_APPLE_TOUCH_ICON'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="32x32">\n    ' if app.config['USE_FAVICON_MD'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="16x16">\n    ' if app.config['USE_FAVICON_SM'] else '') + ('<link rel="manifest" href="' + url_for('favicon_site_webmanifest', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_SITE_WEBMANIFEST'] else '') + ('<link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external, **app.config['FAVICON_PARAMS']) + '" color="' + app.config['FAVICON_MASK_COLOR'] + '">\n    ' if app.config['USE_SAFARI_PINNED_TAB'] else '') + '<meta name="msapplication-TileColor" content="' + app.config['FAVICON_TILE_COLOR'] + '">\n    <meta name="theme-color" content="' + app.config['FAVICON_THEME_COLOR'] + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
+    if session.get('color_scheme', 'light') == 'dark':
+        color_scheme_part = ' data-bs-theme="dark"'
+    else:
+        color_scheme_part = ''
+    output = '<!DOCTYPE html>\n<html lang="' + interview_language + '" itemscope itemtype="http://schema.org/WebPage"' + color_scheme_part + '>\n  <head>\n    <meta charset="utf-8">\n    <meta name="mobile-web-app-capable" content="yes">\n    <meta name="apple-mobile-web-app-capable" content="yes">\n    <meta http-equiv="X-UA-Compatible" content="IE=edge">\n    <meta name="viewport" content="width=device-width, initial-scale=1">\n    ' + ('<link rel="shortcut icon" href="' + url_for('favicon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_FAVICON'] else '') + ('<link rel="apple-touch-icon" sizes="180x180" href="' + url_for('apple_touch_icon', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_APPLE_TOUCH_ICON'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_md', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="32x32">\n    ' if app.config['USE_FAVICON_MD'] else '') + ('<link rel="icon" type="image/png" href="' + url_for('favicon_sm', _external=external, **app.config['FAVICON_PARAMS']) + '" sizes="16x16">\n    ' if app.config['USE_FAVICON_SM'] else '') + ('<link rel="manifest" href="' + url_for('favicon_site_webmanifest', _external=external, **app.config['FAVICON_PARAMS']) + '">\n    ' if app.config['USE_SITE_WEBMANIFEST'] else '') + ('<link rel="mask-icon" href="' + url_for('favicon_safari_pinned_tab', _external=external, **app.config['FAVICON_PARAMS']) + '" color="' + app.config['FAVICON_MASK_COLOR'] + '">\n    ' if app.config['USE_SAFARI_PINNED_TAB'] else '') + '<meta name="msapplication-TileColor" content="' + app.config['FAVICON_TILE_COLOR'] + '">\n    <meta name="theme-color" content="' + app.config['FAVICON_THEME_COLOR'] + '">\n    <script defer src="' + url_for('static', filename='fontawesome/js/all.min.js', v=da_version, _external=external) + '"></script>' + bootstrap_part + '\n    <link href="' + url_for('static', filename='app/bundle.css', v=da_version, _external=external) + '" rel="stylesheet">'
     if debug:
         output += '\n    <link href="' + url_for('static', filename='app/pygments.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     page_title = page_title.replace('\n', ' ').replace('"', '&quot;').strip()
@@ -6589,6 +6593,16 @@ def test_embed():
     return response
 
 
+@app.route("/color_scheme", methods=['PATCH'])
+@csrf.exempt
+def change_color_scheme():
+    patch_data = request.form.copy()
+    if 'scheme' in patch_data and patch_data['scheme'] in ('light', 'dark'):
+        session['color_scheme'] = patch_data['scheme']
+        return jsonify({'scheme': patch_data['scheme']})
+    return ('{"scheme": "light"}', 200)
+
+
 @app.route("/launch", methods=['GET'])
 def launch():
     # setup_translation()
@@ -8753,12 +8767,35 @@ def index(action_argument=None, refer=None):
         index_params_external['_external'] = True
         if daconfig.get("auto color scheme", True) and not is_js:
             color_scheme = """\
+      var daCurrentColorScheme = """ + json.dumps(session.get('color_scheme', 'light')) + """
+      var daDesiredColorScheme;
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        daDesiredColorScheme = "dark"
+      }
+      else {
+        daDesiredColorScheme = "light";
+      }
+      if (daCurrentColorScheme != daDesiredColorScheme){
+        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme);
+        $.ajax({
+          type: "PATCH",
+          url: """ + json.dumps(url_for('change_color_scheme')) + """,
+          xhrFields: {
+            withCredentials: true
+          },
+          data: 'scheme=' + daDesiredColorScheme,
+          success: function(data){
+            daCurrentColorScheme = data.scheme;
+          },
+          error: function(xhr, status, error){
+            console.log("Unable to change desired color scheme.")
+          },
+          dataType: 'json'
+        });
       }
 """
         else:
-            color_scheme = ""
+            color_scheme = ''
         the_js = color_scheme + """\
       if (typeof($) == 'undefined'){
         var $ = jQuery.noConflict();
@@ -13511,7 +13548,7 @@ def utility_processor():
 
     def in_debug():
         return DEBUG
-    return {'word': docassemble.base.functions.word, 'in_debug': in_debug, 'user_designator': user_designator, 'get_part': get_part, 'current_language': lang}
+    return {'word': docassemble.base.functions.word, 'in_debug': in_debug, 'user_designator': user_designator, 'get_part': get_part, 'current_language': lang, 'color_scheme': session.get('color_scheme', 'light')}
 
 
 @app.route('/speakfile', methods=['GET'])
@@ -20220,6 +20257,9 @@ def playground_files():
         });
         daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob(""" + json.dumps(safeid(json.dumps(content))) + """)), """ + json.dumps(mode) + """, """ + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """);
         $(daCm.dom).attr("tabindex", 580);
+        $(daCm.dom).on('focus', function(){
+          daCm.focus();
+        });
         $("#file_content").val(daCm.state.doc.toString());
         $(window).bind("beforeunload", function(){
           $("#file_content").val(daCm.state.doc.toString());
@@ -21433,6 +21473,9 @@ def playground_packages():
         });
         daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob(""" + json.dumps(safeid(json.dumps(form.readme.data))) + """)), "md", """ + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """);
         $(daCm.dom).attr("tabindex", 70);
+        $(daCm.dom).on('focus', function(){
+          daCm.focus();
+        });
         $("#readme").val(daCm.state.doc.toString());
         $(daCm.dom).attr("id", "readme_content");
         $(window).bind("beforeunload", function(){
@@ -22981,7 +23024,7 @@ $( document ).ready(function() {
         page_title += " / " + playground_user.email
     if current_project != 'default':
         page_title += " / " + current_project
-    extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>\n    <script>' + upload_js() + '\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      var daAutoComp = JSON.parse(atob("' + safeid(json.dumps(ac_list)) + '"));\n      var daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob("' + safeid(json.dumps(content)) + '")), "yml", ' + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + ');\n      $("#playground_content").val(daCm.state.doc.toString());\n      $(daCm.dom).attr("tabindex", 70);\n      $(window).bind("beforeunload", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("checkform.areYouSure");\n      });\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("reinitialize.areYouSure");\n        return true;\n      });' + indent_by(ajax, 6) + '\n'
+    extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>\n    <script>' + upload_js() + '\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      var daAutoComp = JSON.parse(atob("' + safeid(json.dumps(ac_list)) + '"));\n      var daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob("' + safeid(json.dumps(content)) + '")), "yml", ' + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + ');\n      $("#playground_content").val(daCm.state.doc.toString());\n      $(daCm.dom).attr("tabindex", 70);\n      $(daCm.dom).on("focus", function(){\n        daCm.focus();\n      });\n      $(window).bind("beforeunload", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("checkform.areYouSure");\n      });\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("reinitialize.areYouSure");\n        return true;\n      });' + indent_by(ajax, 6) + '\n'
     if pg_ex['encoded_data_dict'] is not None:
         extra_js += '      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n'
     extra_js += '      $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'
