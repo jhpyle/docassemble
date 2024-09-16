@@ -321,6 +321,11 @@ img.example {
     background-color: white;
 }
 
+[data-bs-theme=dark] img.example {
+    @include box-shadow(0px 0px 6px rgba(255,255,255,.3), inset 0px 0px 0px rgba(255,255,255,.8));
+    background-color: #212529;
+}
+
 img.full-width {
     width: 100%;
     height: auto;
@@ -412,6 +417,18 @@ div.col-md-5 > figure > pre {
     width: 100%;
     display: table;
     padding: 10px;
+}
+
+[data-bs-theme=dark] {
+    .bgcolor {
+	background-color: rgb(33, 37, 41);
+	color: rgb(222, 226, 230);
+    }
+
+    .bgcolortwo {
+	background-color: rgb(33, 37, 41);
+	color: rgb(222, 226, 230);
+    }
 }
 
 .bgimg-1 {
@@ -603,14 +620,38 @@ div.col-md-5 > figure > pre {
     color: #555;
 }
 
+[data-bs-theme=dark] {
+  .daexample:hover .dafull {
+    background-color: #aaa;
+  }
+
+  .daexample .dafull:hover {
+    background-color: #999;
+  }
+
+  .daexample .dafull a {
+    color: #333;
+  }
+
+  .daexample .dafull a:focus,
+  .daexample .dafull a:hover {
+    color: #111;
+  }
+}
+
 pre {
-    margin: 0;
-    padding: 9.5px;
-    word-break: break-all;
-    word-wrap: break-word;
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  margin: 0;
+  padding: 9.5px;
+  word-break: break-all;
+  word-wrap: break-word;
+  background-color: #f5f5f5;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+[data-bs-theme=dark] pre {
+  background-color: #151515;
+  border: 1px solid #333;
 }
 
 ul.interiortoc a.ml-2 {
@@ -623,4 +664,25 @@ ul.interiortoc a.ml-2 {
     border-left-color: #ccc;
     border-left-width: 0.25em;
     padding-left: 0.5em;
+}
+
+.da-chat-status-label {
+    width: 6em;
+    font-size: 14px;
+    margin-bottom: 4px;
+    margin-right: 8px;
+}
+
+.daobservebutton {
+    font-size: 14px;
+    margin-bottom: 4px;
+    margin-left: 4px;
+}
+
+.dainfosign {
+    color: rgb(49, 112, 143);
+}
+
+.daquestionsign {
+    color: #5cb85c;
 }

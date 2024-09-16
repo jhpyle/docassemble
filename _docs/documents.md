@@ -152,7 +152,7 @@ like this in a word processor (depending on the user's software):
 If the user clicks the "Preview" tab, an HTML version of the document
 will be visible:
 
-![document screenshot]({{ site.baseurl }}/img/document-example-preview.png)
+{% include image.html alt="document screenshot" src="document-example-preview.png" class="maybe-full-width" %}
 
 ## <a name="docx"></a>Creating DOCX files from Markdown
 

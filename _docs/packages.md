@@ -307,7 +307,7 @@ such package actually exists.)
    branch if you wish to install a different branch of the repository.
 5. Click "Update."
 
-![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
+{% include image.html alt="GitHub Install" src="github-install.png" class="maybe-full-width" %}
 
 If you want to install from a private [Github] repository, you will
 need a URL that points to your repository and that includes
@@ -345,7 +345,7 @@ other files.
 2. Under "Zip File," upload the `.zip` file you want to install.
 3. Click "Update."
 
-![Zip Install]({{ site.baseurl }}/img/zip-install.png){: .maybe-full-width }
+{% include image.html alt="Zip Install" src="zip-install.png" class="maybe-full-width" %}
 
 ## <a name="pypi_install"></a>Installing through PyPI
 
@@ -361,11 +361,11 @@ the `docassemble-baseball` package:
    field.
 4. Click "Update."
 
-![PyPI Install]({{ site.baseurl }}/img/pypi-install.png){: .maybe-full-width }
+{% include image.html alt="PyPI Install" src="pypi-install.png" class="maybe-full-width" %}
 
-Once a version of a package is installed on [PyPI], it
-exists there permanently.  When you install a version of a package on
-[PyPI], the version will automatically increment.
+Once a version of a package is installed on [PyPI], it exists there
+permanently. When you install a version of a package on [PyPI], the
+version will automatically increment.
 
 ## <a name="package permissions"></a>Permissions on packages
 
@@ -434,9 +434,8 @@ Next, go to the ["Packages" folder] of the **docassemble**
 [Playground] and open the package you want to publish (e.g.,
 `docassemble-baseball`).
 
-Press the ![PyPI]({{ site.baseurl
-}}/img/playground-packages-button-pypi.png) button to publish the
-package to [PyPI].
+Press the <a class="btn btn-warning" href="javascript:return(0)">PyPI</a> 
+button to publish the package to [PyPI].
 
 If your package already exists on [PyPI], then pressing the Publish
 button will increment the version of your package.  This is necessary
@@ -450,18 +449,18 @@ If the publishing was successful, then at the bottom of the page
 describing your package, you should see a message that the package now
 exists on [PyPI].
 
-![PyPI Published]({{ site.baseurl }}/img/playground-packages-pypi-published.png){: .maybe-full-width }
+{% include image.html alt="PyPI Published" src="playground-packages-pypi-published.png" class="maybe-full-width" %}
 
 You can click on the link to see what the package looks like on [PyPI].
 
-![PyPi Page]({{ site.baseurl }}/img/playground-packages-on-pypi.png){: .maybe-full-width }
+{% include image.html alt="PyPi Page" src="playground-packages-on-pypi.png" class="maybe-full-width" %}
 
 Now, on the **docassemble** menu (of this server or another server),
 you can go to Package Management and
 [install the package](#pypi_install) by typing in
 "docassemble.baseball" into the "Package on PyPI" field.
 
-![PyPi Install]({{ site.baseurl }}/img/pypi-install.png){: .maybe-full-width }
+{% include image.html alt="PyPi Install" src="pypi-install.png" class="maybe-full-width" %}
 
 ## <a name="github"></a>Publishing on GitHub
 
@@ -492,25 +491,26 @@ servers with the same [GitHub] account, so long as the [`appname`] on
 each **docassemble** server is different.)
 
 To publish a package on [GitHub], go to the [Packages area] of the
-[Playground] and press the ![GitHub]({{ site.baseurl
-}}/img/playground-packages-button-github.png) button.  You will be asked
-for a "commit message."  This is a brief, one-line message that
-describes the changes made to your package since the last time you
-"committed" changes.  Each "commit" is like a snapshot, and the history
-of "commit" messages is a record of the development of your project.
+[Playground] and press the 
+<a class="btn btn-warning" href="javascript:return(0)">GitHub</a> 
+button.  You will be asked for a "commit message."  This is a brief,
+one-line message that describes the changes made to your package since
+the last time you "committed" changes.  Each "commit" is like a
+snapshot, and the history of "commit" messages is a record of the
+development of your project.
 
-![Commit]({{ site.baseurl }}/img/playground-packages-github-commit.png){: .maybe-full-width }
+{% include image.html alt="Commit" src="playground-packages-github-commit.png" class="maybe-full-width" %}
 
 When you press the "Commit" button after writing the commit message,
 your package will be "pushed" to a [GitHub] repository in your
 account.  If a repository does not already exist on [GitHub] with the
 name of your package, a new repository will be created.
 
-![GitHub published]({{ site.baseurl }}/img/playground-packages-github-published.png){: .maybe-full-width }
+{% include image.html alt="GitHub published" src="playground-packages-github-published.png" class="maybe-full-width" %}
 
 You can follow the hyperlink to your package's page on [GitHub].
 
-![GitHub repository]({{ site.baseurl }}/img/playground-packages-github-repository.png){: .maybe-full-width }
+{% include image.html alt="GitHub repository" src="playground-packages-github-repository.png" class="maybe-full-width" %}
 
 After your first commit, [GitHub] reports that there have been two
 commits; this is because the initial creation of the repository caused
@@ -521,7 +521,7 @@ Once your package is on [GitHub], then on the **docassemble** menu,
 you can go to Package Management and
 [install the package](#github_install) using its [GitHub] URL.
 
-![GitHub Install]({{ site.baseurl }}/img/github-install.png){: .maybe-full-width }
+{% include image.html alt="GitHub Install" src="github-install.png" class="maybe-full-width" %}
 
 ## <a name="github_how_works"></a>How GitHub integration works
 

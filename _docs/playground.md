@@ -10,31 +10,27 @@ or more "files" and then run an interview with one click.
 
 # <a name="components"></a>Components of the Playground page
 
-![playground]({{ site.baseurl }}/img/playground.png){: .maybe-full-width }
+{% include image.html alt="Playground" src="playground.png" class="maybe-full-width" %}
 
 ## <a name="interview_files"></a>The [YAML] text editor
 
 The main area of the Playground consists of an in-browser text editor
 with which you can edit [YAML]&nbsp;[interview] files.
 
-![playground]({{ site.baseurl }}/img/playground-main.png){: .maybe-full-width }
+{% include image.html alt="Playground" src="playground-main.png" class="maybe-full-width" %}
 
 When using the editor, you can press the F11 key to enter full-screen
 mode.  Press the Esc key to exit full-screen mode.
 
-To create a new [YAML] file, click the <i class="glyphicon
-glyphicon-plus-sign" aria-hidden="true"></i> icon.
+To create a new [YAML] file, click the
+{% include button.html class="fa-solid fa-plus-circle" text="Add" %}
+button.
 
-To upload a [YAML] file, click <i class="glyphicon glyphicon-upload"
-aria-hidden="true"></i> Upload.  The filename of the file you upload
-will be used as the name of the file in the Playground.  If a file
-exists with the same name, it will be overwritten.
-
-To download the [YAML] file that is currently displayed, click <i
-class="glyphicon glyphicon-download" aria-hidden="true"></i> Download.
-Note that if there are unsaved changes, the changes will _not_ be
-reflected in the downloaded file; you would need to press the Save
-button first in order to download the changed file.
+To upload a [YAML] file, click the
+{% include button.html class="fa-solid fa-upload" text="Upload" %}
+button.  The filename of the file you upload will be used as the name
+of the file in the Playground.  If a file exists with the same name,
+it will be overwritten.
 
 You can use multiple files to organize parts of a single interview.
 For example, if you have a file called "interview.yml" and a file called
@@ -77,7 +73,7 @@ to all interviews.
 ### Inserting names into the editor
 
 You can also insert names into the text editor by clicking the button
-for the name in the list in the [Variables, etc.] area of the
+for the name in the list in the [Variables] area of the
 Playground.
 
 When you are using the text editor, you can start typing a name and
@@ -121,7 +117,7 @@ file: small_claims_complaint.md` within an [`attachments`] specifier.
 {% include scroll-image.html image="playground-templates-page-clipped.png" %}
 
 When you edit a [Markdown] file in the Templates folder, the
-"Variables, etc." sidebar is shown, so that you can have access to the
+"Variables" sidebar is shown, so that you can have access to the
 list of variables in any of your interview files.
 
 In the Templates folder, you can upload files.  Markdown and YAML
@@ -189,36 +185,37 @@ into a [Python package] that can be downloaded as a ZIP file,
 installed on the server, or published to [PyPI].
 
 You can keep track of one or more packages in the Packages folder.  Each
-package has its own tab.  To create a new package, click "<i
-class="glyphicon glyphicon-plus-sign" aria-hidden="true"></i> Add."
+package has its own tab.  To create a new package, click the
+{% include button.html class="fa-solid fa-plus-circle" text="Add" %}
+button.
 
-To view a different package, select it from the <i class="glyphicon glyphicon-briefcase"
-aria-hidden="true"></i> pull-down menu.
-
-To download the current package as a Zip file, click
-"<i class="glyphicon glyphicon-download" aria-hidden="true"></i>
-Download."
+To view a different package, select it from the 
+<a href="javascript:return(0)"><i class="fa-solid fa-briefcase"></i></a> pull-down menu.
 
 If you have an existing package that was created using
 **docassemble**, you can upload its contents into the Playground by
-clicking "<i class="glyphicon glyphicon-upload"
-aria-hidden="true"></i> Upload" and uploading a ZIP file.  The ZIP
-file should contain a single directory called, for example,
-`docassemble-packagename`, and this directory needs to contain the
-`setup.py` file and a `docassemble` directory.  If the directory
-structure is different, **docassemble** may not be able to read your
-ZIP file.  Note: this will work as expected if all of your modules are
-in the folder `docassemble-packagename/docassemble/packagename`, and
-templates are in the folder
+clicking the
+{% include button.html class="fa-solid fa-upload" text="Upload" %}
+button and uploading a ZIP file.  The ZIP file should contain a single
+directory called, for example, `docassemble-packagename`, and this
+directory needs to contain the `setup.py` file and a `docassemble`
+directory.  If the directory structure is different, **docassemble**
+may not be able to read your ZIP file.  Note: this will work as
+expected if all of your modules are in the folder
+`docassemble-packagename/docassemble/packagename`, and templates are
+in the folder
 `docassemble-packagename/docassemble/packagename/data/templates`, etc.
 If you created subfolders within these folders, **docassemble** will
 not know where to put your files.
 
 <a name="pull"></a>If there is a package on [GitHub] or [PyPI] and you
 would like to bring the contents of that package into your Playground,
-click "<i class="glyphicon glyphicon-cloud" aria-hidden="true"></i>
-Pull."  This imports package files in much the same way as the Upload
-feature does, and has the same limitations.
+click the 
+{% include button.html class="fa-solid fa-cloud-download-alt" text="Pull" %}
+button.
+
+This imports package files in much the same way as the Upload feature
+does, and has the same limitations.
 
 {% include scroll-image.html image="playground-packages-page-clipped.png" %}
 
@@ -289,8 +286,9 @@ At the bottom of the page, you can press one of the following buttons:
 * **Install**: Saves the package definition, creates a ZIP file
   containing the package, and installs that ZIP file on the server.
 * **PyPI**: Publishes the package on [PyPI] so that other people
-  can install it.  This will not be displayed unless you have set up
-  the [PyPI configuration].
+  can install it. This will not be displayed unless you have set up
+  the [PyPI configuration], and it will only succeed if the user has
+  provided a valid username and password in the user's [profile].
 * **GitHub**: Publishes the package on [GitHub] so that you can manage
   versions of your package, and also so that other people can install
   it.  This will not be displayed unless you have set up the [GitHub
@@ -314,11 +312,11 @@ for more information.
 For more information on managing [Python packages] within
 **docassemble**, see [packages].
 
-## <a name="variables"></a>The Variables, etc. area
+## <a name="variables"></a>The Variables sidebar
 
-![variables]({{ site.baseurl }}/img/playground-variables.png)
+{% include image.html alt="Variables" src="playground-variables.png" %}
 
-The "Variables, etc." area is a coding aid.  It contains a list of
+The "Variables" sidebar is a coding aid.  It contains a list of
 variables and other names that are available for use in your
 interview.  Clicking on one of the names will insert the name into the
 text editor.  You may find this helpful if you are not sure of the
@@ -360,43 +358,47 @@ The area lists the following types of names (which are color-coded):
 * Decorations: decorations defined with [`images`] or [`image sets`]
   that are available for inclusion with [`decoration`] or [emoji] markup.
 
-By default, the "Variables, etc." area shows variables for the [YAML]
+By default, the "Variables" sidebar shows variables for the [YAML]
 file you are currently editing.  However, if the [YAML] file you are
 editing is a component of an interview, the information in the
-"Variables, etc." will not be complete.  At the top of the "Variables,
-etc." area, you can select a different file that should be used for
-purposes of populating the "Variables, etc." section.  Usually the
-file you want to select here is the "top level" file for your
-interview, which [`include`]s the file you are editing.
+"Variables" will not be complete.  At the top of the "Variables" area,
+you can select a different file that should be used for purposes of
+populating the "Variables" section.  Usually the file you want to
+select here is the "top level" file for your interview, which
+[`include`]s the file you are editing.
 
 ## <a name="icons"></a>Meaning of icons
 
-* Clicking ![magnifying glass]({{ site.baseurl
-  }}/img/playground-icon-magnifying-glass.png) next to a variable name
+* Clicking <i class="fa-solid fa-search"></i> next to a variable name
   will search the [text editor] for the variable name.
-* Clicking ![information]({{ site.baseurl
-  }}/img/playground-icon-info.png) shows a pop-up containing
-  information about the item and a link to the item's documentation.
-* Clicking ![cog]({{ site.baseurl }}/img/playground-icon-cog.png)
+* Clicking <span class="dainfosign"><i class="fa-solid fa-info-circle"></i></span>
+  shows a pop-up containing information about the item and a link to
+  the item's documentation.
+* Clicking <span class="dainfosign"><i class="fa-solid fa-cog"></i></span>
   reveals the methods of an [object].
-* Clicking ![question mark]({{ site.baseurl
-  }}/img/playground-icon-question-mark.png) next to a category name
-  shows information about that category.
+* Clicking <span class="daquestionsign"><i class="fa-solid fa-question-circle"></i></span>
+  next to a category name shows information about that category.
 
 ## <a name="buttons"></a>The buttons
 
-![buttons]({{ site.baseurl }}/img/playground-buttons.png){: .maybe-full-width }
+{% include image.html alt="Buttons" src="playground-buttons.png" class="maybe-full-width" %}
 
-The "Save" button will save the interview and do nothing more.
+The <a class="btn btn-primary">Save</a> button will save the interview and do nothing more.
 
-The "Save and Run" button will save the interview and run the
+The <a class="btn btn-warning">Save and Run</a> button will save the interview and run the
 interview in another window.
 
-The "Delete" button will remove the interview from the Playground.
+The <a class="btn btn-info">Download</a> button will download the file
+that is currently being edited. Note that if there are unsaved
+changes, the changes will _not_ be reflected in the downloaded file;
+you would need to press the Save button first in order to download the
+changed file.
 
-To give a link to the interview to someone else, right-click on the
-"<i class="glyphicon glyphicon-link" aria-hidden="true"></i> Share"
-button and copy the URL to your clipboard.
+The <a class="btn btn-danger">Delete</a> button will remove the interview from the Playground.
+
+To give a link to the interview to someone else, click the
+<a class="btn btn-sm btn-secondary"><i class="fa-regular fa-copy"></i>&nbsp;Share</a> button to copy the
+URL to your clipboard.
 
 Note that users do not need to log in to be able to run interviews
 using these links.  If you want to protect your interviews during
@@ -420,23 +422,25 @@ Playground is a development environment.  If you want to share a link
 that will be stable, install a package and share a link to the
 interview in that package.
 
-If you look at the URL available from the "Share" link, you will see
-that it points to the `/interview` endpoint on your server and
-includes an `i` parameter.  The `i` parameter (`i` for "interview")
-refers to the name of your YAML file.  It will be something like
-`docassemble.playground1:myinterview.yml` where `1` is your user ID.
-If your interview is in a "project" inside your Playground, and the
-project is called `testing`, the name of the interview will be
-something like `docassemble.playground1testing:myinterview.yml`.  If
-you you put your interview into a [package] called
-`docassemble.missouri`, the `i` parameter will be something like
+If you look at the URL available from the
+<a class="btn btn-sm btn-secondary"><i class="fa-regular fa-copy"></i>&nbsp;Share</a>
+link, you will see that it points to the `/interview` endpoint on your
+server and includes an `i` parameter.  The `i` parameter (`i` for
+"interview") refers to the name of your YAML file.  It will be
+something like `docassemble.playground1:myinterview.yml` where `1` is
+your user ID.  If your interview is in a "project" inside your
+Playground, and the project is called `testing`, the name of the
+interview will be something like
+`docassemble.playground1testing:myinterview.yml`.  If you you put your
+interview into a [package] called `docassemble.missouri`, the `i`
+parameter will be something like
 `docassemble.missouri:data/questions/myinterview.yml`.  The
 `data/questions` refers to a subdirectory inside of the
 `docassemble.missouri` [package].
 
 ## <a name="examples"></a>The examples area
 
-![example area]({{ site.baseurl }}/img/playground-example-area.png){: .maybe-full-width }
+{% include image.html alt="Example area" src="playground-example-area.png" class="maybe-full-width" %}
 
 The part of the page below the text editor is an interactive area where
 you can browse example blocks that demonstrate various features of
@@ -471,14 +475,14 @@ bundled into a [package].  You can give yourself a "blank slate" in
 your Playground by creating a "Project."
 
 To manage your projects, click "Playground <i class="fas
-fa-caret-down"></i>" in the upper left corner .
+fa-caret-down"></i>" in the upper left corner.
 
 ![Playground]({{ site.baseurl }}/img/playground-projects-caret.png)
 
 This will open a menu listing the projects that are enabled on your
 site.
 
-![Playground Projects]({{ site.baseurl }}/img/playground-projects-caret-open.png)
+{% include image.html alt="Playground Projects" src="playground-projects-caret-open.png" %}
 
 This control will allow you to switch among your projects.  For
 example, if you click "custody," you will be taken to your "custody"
@@ -492,7 +496,7 @@ At first, your only project will be the "Default Playground" project,
 so you will only see "Manage Projects" on the projects menu.  If you
 click "Manage Projects," you will be taken to the Projects page.
 
-![Projects]({{ site.baseurl }}/img/playground-projects-manage.png)
+{% include image.html alt="Projects" src="playground-projects-manage.png" %}
 
 On this page, you can "Add a New Project," rename existing projects,
 delete existing projects, or choose a new active project.
@@ -507,7 +511,7 @@ If [`enable sharing playgrounds`] is set to true in the
 can enter the Playground of any other user with `admin` or `developer`
 privileges.
 
-![Browse Other Playgrounds]({{ site.baseurl }}/img/playground-browse.png)
+{% include image.html alt="Browse Other Playgrounds" src="playground-browse.png" %}
 
 By default, [`enable sharing playgrounds`] is set to false and this
 feature is not available.
@@ -516,9 +520,9 @@ feature is not available.
 
 If you are new to **docassemble**, a good way to learn is by using the
 "Wizard" to construct a document assembly interview.  To launch the
-wizard, click the "Wizard" button.
-
-![buttons]({{ site.baseurl }}/img/playground-wizard.png)
+wizard, click the
+{% include button.html class="fa-solid fa-magic" text="Wizard" %}
+button.
 
 The Wizard allows you to upload one or more documents in Microsoft
 Word format in which you have indicated with double curly brackets the
@@ -588,24 +592,24 @@ synchronization.  Initially, you should choose the option
 of your Google Drive called "docassemble" containing the following
 subfolders:
 
-* "questions" (corresponding to the [question file editor] above)
-* "templates" (corresponding to the [Templates folder] above)
-* "static" (corresponding to the [Static files folder] above)
-* "sources" (corresponding to the [Sources folder] above)
-* "modules" (corresponding to the [Modules folder] above)
+* `questions` (corresponding to the [question file editor] above)
+* `templates` (corresponding to the [Templates folder] above)
+* `static` (corresponding to the [Static files folder] above)
+* `sources` (corresponding to the [Sources folder] above)
+* `modules` (corresponding to the [Modules folder] above)
 
 Now, when you go to the Playground, you will see a button that looks
 like this:
 
-![Playground GD Sync]({{ site.baseurl }}/img/playground-gd-sync.png)
+{% include button.html class="fa-brands fa-google-drive" text="Sync" %}
 
 When you go into a "folder," you will see a button that looks like this:
 
-![Playground Files GD Sync]({{ site.baseurl }}/img/playground-files-gd-sync.png)
+<a class="btn btn-success"><i class="fa-brands fa-google-drive"></i>&nbsp;Sync</a>
 
 Pressing any of these buttons will trigger a synchronization process.
 
-![Playground GD Sync and Run]({{ site.baseurl }}/img/playground-gd-sync-and-run.png)
+<a class="btn btn-warning"><i class="fa-brands fa-google-drive"></i>&nbsp;Sync and Run</a>
 
 Pressing the "Sync and Run" button is like "Save and Run" except it
 triggers a synchronization process and then starts an interview in
@@ -693,10 +697,10 @@ you expect.
 
 If you use [`docx template file`] and you edit your templates using
 Microsoft Word, you can install a sidebar into Microsoft Word that
-functions much like the [Variables, etc.] area of the
+functions much like the [Variables] area of the
 Playground.
 
-![Sidebar in Word Online]({{ site.baseurl }}/img/playground-word-online-sidebar.png){: .maybe-full-width }
+{% include image.html alt="Sidebar in Word Online" src="playground-word-online-sidebar.png" class="maybe-full-width" %}
 
 To enable the sidebar in Microsoft Word, first go to [Utilities] and
 [download the XML manifest file].  This small data file represents an
@@ -769,15 +773,14 @@ Playground.
 
 ## <a name="word addin using"></a>Using the Playground sidebar
 
-The Word sidebar behaves much like the [Variables, etc.]
-area.  There is an upload button ![upload button]({{ site.baseurl
-}}/img/playground-word-online-sidebar-upload.png) in the
-upper-right-hand corner that will upload the document you are editing
-to the [Templates folder] of the Playground.  After the upload, it
-will refresh the sidebar.  This can be helpful because if the
-interview you are working on uses the DOCX template you are editing,
-the variables that you are referencing in the DOCX file will be
-reflected in the sidebar.
+The Word sidebar behaves much like the [Variables]
+area.  There is an upload button <a class="btn btn-sm btn-primary"><i class="fa-solid fa-upload"></i></a>
+in the upper-right-hand corner that will upload the document you are
+editing to the [Templates folder] of the Playground.  After the
+upload, it will refresh the sidebar.  This can be helpful because if
+the interview you are working on uses the DOCX template you are
+editing, the variables that you are referencing in the DOCX file will
+be reflected in the sidebar.
 
 ### <a name="word addin autocomplete"></a>Autocomplete
 
@@ -788,7 +791,7 @@ auto-complete suggestions in the white box in the sidebar.  You can
 click one of the choices in the white box to complete the name.  To
 make the white box bigger, click the scrollbar.  The values offered by
 the "autocomplete" feature are the same as the buttons listed under
-[Variables, etc.] in the Playground (some built-in Python functions
+[Variables] in the Playground (some built-in Python functions
 are also available).
 
 ### <a name="word addin jinja2"></a>Assistance with using Jinja2
@@ -817,7 +820,7 @@ them after 60-90 seconds.
 If the interview with the infinite loop is in the Playground, and the
 code with the infinite loop runs at the beginning of the interview,
 the editing screen will not load at all.  This is due to the fact that
-the Playground page's [Variables, etc.] feature needs to
+the Playground page's [Variables] feature needs to
 run the interview in order to figure out what variables are in use.
 To get around this, you need to edit the URL that accesses the
 interview.  If your interview is `myinterview.yml`, the URL that edits
@@ -903,7 +906,7 @@ Then the editing screen will load.
 [XML manifest file]: {{ site.baseurl }}/docs/admin.html#word addin manifest
 [Store]: https://appsource.microsoft.com
 [Jinja2]: {{ site.baseurl }}/docs/documents.html#docx template file
-[Variables, etc.]: #variables
+[Variables]: #variables
 [Utilities]: {{ site.baseurl }}/docs/admin.html#utilities
 [`office addin url`]: {{ site.baseurl }}/docs/config.html#office addin url
 [uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/

@@ -8004,7 +8004,7 @@ developer account on the server.)
 
 Then, go to the [modules folder] of the [Playground].
 
-![modules folder]({{ site.baseurl }}/img/docassemble-modules.png)
+{% include image.html alt="modules folder" src="docassemble-modules.png" %}
 
 Then, type the following [Python] code into the text box:
 
@@ -8015,7 +8015,7 @@ def plus_one(number):
 
 The screen should look like this:
 
-![sample function]({{ site.baseurl }}/img/docassemble-sample-function.png)
+{% include image.html alt="sample function" src="docassemble-sample-function.png" %}
 
 Then, press the "Save" button at the bottom of the screen. This will
 create a [Python module] called `test`. (The text file is called
@@ -8093,7 +8093,7 @@ If you write your own functions and they are called from markup inside
 functions objects in place of arguments when the arguments are
 undefined. For example, consider a a template that contains:
 
-{% highlight text %}
+{% highlight jinja %}
 {% raw %}
 {%p if claiming_damages %}
 You owe me {{ currency(compute_damages(amount_owed, demand_interest)) }}.

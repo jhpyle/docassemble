@@ -379,7 +379,7 @@ In addition, when you define the [`dispatch`] directive, your users
 can see a list of available interviews by going to the URL `/list` on
 the site. They will see a page like this:
 
-![Interview list]({{ site.baseurl }}/img/interviewlist.png){: .maybe-full-width }
+{% include image.html alt="Interview list" src="interviewlist.png" class="maybe-full-width" %}
 
 If you want to take advantage of the `/start/` shortcuts but you do
 not want the interview listed in the interview list, set `unlisted:
@@ -5065,12 +5065,22 @@ If you change the `timezone`, you need to do a `docker stop` and
 
 ## <a name="pypi"></a>Sharing packages on PyPI
 
-If you want users of your server to be able to publish packages to
-[PyPI] from the [packages folder] of the [Playground], set `pypi` to `True`:
+If you want users of your server with `developer` privleges to be able
+to publish packages to [PyPI] from the [packages folder] of the
+[Playground], set `pypi` to `True`:
 
 {% highlight yaml %}
 pypi: True
 {% endhighlight %}
+
+Then, a user with `developer` privileges can configure a [PyPI]
+username and password on their [Profile]. Typically, the username is
+`__token__` and the password is a long security token beginning with
+`pypi-`. This is available from [PyPI] when you create an account and
+create an API token. If using `twine` from the command line, you would
+set up this username and password in a `.pypirc` file. **docassemble**
+runs `twine` to upload to [PyPI] and it passes this username and
+password to `twine`.
 
 You can also tweak the operation of **docassemble**'s interaction with
 [PyPI] by setting the following optional directives (which you should
@@ -6837,3 +6847,4 @@ and Facebook API keys.
 [ElastiCache for Redis]: https://aws.amazon.com/elasticache/redis/
 [`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
+[Profile]: {{ site.baseurl }}/docs/users.html#profile
