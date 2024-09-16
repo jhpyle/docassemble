@@ -1,8 +1,18 @@
 #! /bin/bash
+if [[ "$1" = "dark" ]]; then
+    export DARKMODE=true
+    IMGDIR="imgdark"
+else
+    IMGDIR="img"
+fi
+
 #tempfile=`mktemp /tmp/XXXXXXX.png`
 datafile=`mktemp /tmp/XXXXXXX.txt`
 featurefile=tests/features/Screenshots.feature
 echo -e -n "Feature: screenshots\n  Make screenshots" > $featurefile
+if [ "$DARKMODE" = true ]; then
+    echo -e -n "\n\n  Scenario: enter dark mode\n    Given I switch to dark mode" >> $featurefile
+fi
 
 shopt -s nullglob
 for path in docassemble_base/docassemble/base/data/questions/examples/*.yml docassemble_demo/docassemble/demo/data/questions/examples/*.yml
@@ -261,7 +271,7 @@ do
     then
 	continue
     fi
-    if [ -f ~/gh-pages-da/img/examples/$tfile.png -a ~/gh-pages-da/img/examples/$tfile.png -nt $path ]
+    if [ -f ~/gh-pages-da/${IMGDIR}/examples/$tfile.png -a ~/gh-pages-da/${IMGDIR}/examples/$tfile.png -nt $path ]
     then
         continue
     fi
@@ -413,40 +423,47 @@ do
          "$tfile" = "navbar-language" -o \
          "$tfile" = "preview" ]
     then
-	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 488x9999 ~/gh-pages-da/img/examples/$tfile.png
+	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 -resize 488x9999 ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     elif [ "$tfile" = "radio-list-mobile" -o \
            "$tfile" = "sections-small-screen-dropdown" -o \
 	   "$tfile" = "sections-small-screen-false" ]
     then
-	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
+	convert $tempfile -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     elif [ "$tfile" = "markdown" -o "$tfile" = "allow-emailing-true" -o "$tfile" = "allow-emailing-false" -o "$tfile" = "markdown-demo" -o "$tfile" = "document-links" -o "$tfile" = "document-links-limited" -o "$tfile" = "allow-downloading-true" ]
     then
-	convert $tempfile -crop 488x999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
+	convert $tempfile -crop 488x999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     elif [ "$tfile" = "inverse-navbar" ]
     then
-	convert $tempfile -crop 1005x260+0+0 ~/gh-pages-da/img/examples/$tfile.png
+	convert $tempfile -crop 1005x260+0+0 ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     elif [ "$tfile" = "fields" -o "$tfile" = "attachment-code" -o "$tfile" = "attachment-simple" -o "$tfile" = "document-markup" -o "$tfile" = "document-variable-name" -o "$tfile" = "document-cache-invalidate" -o "$tfile" = "address-autocomplete-test"  -o "$tfile" = "address-autocomplete-test" -o "$tfile" = "table-width" -o "$tfile" = "document-language" -o "$tfile" = "allow-downloading-true" -o "$tfile" = "allow-downloading-true-zip-filename" -o "$tfile" = "document-docx" -o "$tfile" = "document-docx-from-rtf" -o "$tfile" = "document-file" -o "$tfile" = "google-sheet-3" ]
     then
-	convert $tempfile -crop 488x1999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
+	convert $tempfile -crop 488x1999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     elif [ "$tfile" = "language-functions" -o "$tfile" = "daobject-language-functions" ]
     then
-	convert $tempfile -crop 488x4999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
+	convert $tempfile -crop 488x4999+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     else
-	convert $tempfile -crop 488x630+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/img/examples/$tfile.png
+	convert $tempfile -crop 488x630+259+92 -background white -splice 0x1 -background black -splice 0x1 -trim +repage -chop 0x1 ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     fi
-    touch ~/gh-pages-da/img/examples/$tfile.png
+    touch ~/gh-pages-da/${IMGDIR}/examples/$tfile.png
     rm -f $tempfile
 done < $datafile
 rm -f $datafile
 
 if [ -d ~/gh-pages-da ]
 then
-    ./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples ~/gh-pages-da/img/examples > ~/gh-pages-da/_data/example.yml
-    ./get_yaml_from_example.py docassemble_demo/docassemble/demo/data/questions/examples ~/gh-pages-da/img/examples >> ~/gh-pages-da/_data/example.yml
-    #rsync -auv docassemble_webapp/docassemble/webapp/static/examples ~/gh-pages-da/img/
+    if [ "$DARKMODE" != true ]; then
+	./get_yaml_from_example.py docassemble_base/docassemble/base/data/questions/examples ~/gh-pages-da/img/examples > ~/gh-pages-da/_data/example.yml
+	./get_yaml_from_example.py docassemble_demo/docassemble/demo/data/questions/examples ~/gh-pages-da/img/examples >> ~/gh-pages-da/_data/example.yml
+    fi
     list_of_files=`mktemp /tmp/XXXXXXX.txt`
     grep '^    - ' docassemble_base/docassemble/base/data/questions/example-list.yml | sed 's/^    - \(.*\)/\1.png/' > $list_of_files
-    rsync -auv --files-from=$list_of_files ~/gh-pages-da/img/examples docassemble_webapp/docassemble/webapp/static/examples/
+    if [ "$DARKMODE" = true ]; then
+	rsync -auv --files-from=$list_of_files ~/gh-pages-da/${IMGDIR}/examples docassemble_webapp/docassemble/webapp/static/examplesdark/
+    else
+	rsync -auv --files-from=$list_of_files ~/gh-pages-da/${IMGDIR}/examples docassemble_webapp/docassemble/webapp/static/examples/
+    fi
     rm $list_of_files
-    psql -h localhost -T 'class="table table-striped"' -U docassemble -P footer=off -P border=0 -Hc "select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'" docassemble > ~/gh-pages-da/_includes/db-schema.html
+    if [ "$DARKMODE" != true ]; then
+	psql -h localhost -T 'class="table table-striped"' -U docassemble -P footer=off -P border=0 -Hc "select table_name, column_name, data_type, character_maximum_length, column_default from information_schema.columns where table_schema='public'" docassemble > ~/gh-pages-da/_includes/db-schema.html
+    fi
 fi

@@ -1,4 +1,5 @@
 import time
+import os
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
@@ -69,10 +70,16 @@ def before_all(context):
         options = Options()
         options.add_argument("--window-size=1005,9999")
         options.add_argument("--headless")
+        if os.environ.get('DARKMODE', False):
+            options.add_argument('--force-dark-mode')
+            options.add_argument('--enable-features=WebContentsForceDark')
         context.browser = MyChrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     else:
         options = Options()
         options.add_argument("--start-maximized")
+        if os.environ.get('DARKMODE', False):
+            options.add_argument('--force-dark-mode')
+            options.add_argument('--enable-features=WebContentsForceDark')
         context.browser = MyChrome(service=ChromeService(ChromeDriverManager().install()), options=options)
     context.da_path = default_path
     context.wait_seconds = default_wait_seconds

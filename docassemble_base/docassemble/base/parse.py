@@ -7507,7 +7507,10 @@ class Question:
                                         if isinstance(item, dict):
                                             new_field_data.update(item)
                                     the_field_data = new_field_data
-                                result['field_data'] = copy.deepcopy(pickleable_objects(the_user_dict))
+                                # result['field_data'] = copy.copy(pickleable_objects(the_user_dict))
+                                result['field_data'] = {}
+                                for var_name, var_value in pickleable_objects(the_user_dict).items():
+                                    result['field_data'][var_name] = var_value
                                 self.interview.populate_non_pickleable(result['field_data'])
                                 if 'alpha' not in result['field_data']:
                                     raise DAError("problem with field data")

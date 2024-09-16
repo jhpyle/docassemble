@@ -1,17 +1,24 @@
 # Change Log
 
-## [1.5.8] - 2024-09-14
+## [1.5.8] - 2024-09-16
 
 ### Added
 - The `.cancel_add_or_edit()` method of `DAList`.
 
+### Changed
+- The browser's use of dark mode is now remembered as part of the
+  session data, and screenshots in the Playground match the mode.
+- Upgraded `cryptography` and `flask-cors`.
+- When `docx template file` is used with `fields`, Jinja2 can now make
+  changes to objects in the interview answers.
+
 ### Fixed
 - Replaced `pycurl` with `requests` because it was causing problems
   for the `.from_url()` method of `DAFile`.
-- The browser's use of dark mode is now remembered as part of the
-  session data.
 - Pressing Tab to navigate to the CodeMirror editor now focuses the
   editor appropriately.
+- Problem with pushing to GitHub from Playground, introduced in last
+  version.
 
 ## [1.5.7] - 2024-09-05
 

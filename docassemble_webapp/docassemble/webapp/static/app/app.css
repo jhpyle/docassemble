@@ -505,6 +505,11 @@ img.da-example-screenshot {
     background-color: white;
 }
 
+[data-bs-theme=dark] img.da-example-screenshot {
+    border-color: #333333;
+    background-color: #212529;
+}
+
 .da-example-link {
     cursor: pointer;
 }

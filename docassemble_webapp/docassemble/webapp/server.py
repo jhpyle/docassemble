@@ -2606,7 +2606,7 @@ def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootst
         bootstrap_part = '\n    <link href="' + url_for('static', filename='bootstrap/css/bootstrap.min.css', v=da_version, _external=external) + '" rel="stylesheet">'
     else:
         bootstrap_part = '\n    <link href="' + bootstrap_theme + '" rel="stylesheet">'
-    if session.get('color_scheme', 'light') == 'dark':
+    if session.get('color_scheme', 0):
         color_scheme_part = ' data-bs-theme="dark"'
     else:
         color_scheme_part = ''
@@ -6593,14 +6593,20 @@ def test_embed():
     return response
 
 
+@app.route("/dark_mode", methods=['GET'])
+def force_dark_mode():
+    session['color_scheme'] = 2
+    return ('', 200)
+
+
 @app.route("/color_scheme", methods=['PATCH'])
 @csrf.exempt
 def change_color_scheme():
     patch_data = request.form.copy()
-    if 'scheme' in patch_data and patch_data['scheme'] in ('light', 'dark'):
-        session['color_scheme'] = patch_data['scheme']
-        return jsonify({'scheme': patch_data['scheme']})
-    return ('{"scheme": "light"}', 200)
+    if 'scheme' in patch_data and patch_data['scheme'] in ('0', '1', '2'):
+        session['color_scheme'] = int(patch_data['scheme'])
+        return jsonify({'scheme': session['color_scheme']})
+    return ('{"scheme": 0}', 200)
 
 
 @app.route("/launch", methods=['GET'])
@@ -8765,18 +8771,18 @@ def index(action_argument=None, refer=None):
                 location_bar = url_for('index', **index_params)
         index_params_external = copy.copy(index_params)
         index_params_external['_external'] = True
-        if daconfig.get("auto color scheme", True) and not is_js:
+        if session.get('color_scheme', 0) < 2 and daconfig.get("auto color scheme", True) and not is_js:
             color_scheme = """\
-      var daCurrentColorScheme = """ + json.dumps(session.get('color_scheme', 'light')) + """
+      var daCurrentColorScheme = """ + str(session.get('color_scheme', 0)) + """;
       var daDesiredColorScheme;
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        daDesiredColorScheme = "dark"
+        daDesiredColorScheme = 1;
       }
       else {
-        daDesiredColorScheme = "light";
+        daDesiredColorScheme = 0;
       }
       if (daCurrentColorScheme != daDesiredColorScheme){
-        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme);
+        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme ? 'dark': 'light');
         $.ajax({
           type: "PATCH",
           url: """ + json.dumps(url_for('change_color_scheme')) + """,
@@ -13548,7 +13554,7 @@ def utility_processor():
 
     def in_debug():
         return DEBUG
-    return {'word': docassemble.base.functions.word, 'in_debug': in_debug, 'user_designator': user_designator, 'get_part': get_part, 'current_language': lang, 'color_scheme': session.get('color_scheme', 'light')}
+    return {'word': docassemble.base.functions.word, 'in_debug': in_debug, 'user_designator': user_designator, 'get_part': get_part, 'current_language': lang, 'color_scheme': session.get('color_scheme', 0)}
 
 
 @app.route('/speakfile', methods=['GET'])
@@ -21312,7 +21318,7 @@ def playground_packages():
         extra_command = "        scrollBottom();"
     else:
         extra_command = ""
-    extra_command += upload_js() + """
+    extra_command += indent_by(upload_js(), 2) + """\
         $("#daCancelPyPI").click(function(event){
           var daWhichButton = this;
           $("#pypi_message_div").hide();
@@ -21487,7 +21493,7 @@ def playground_packages():
           $("#readme").val(daCm.state.doc.toString());
           $("#form").trigger("reinitialize.areYouSure");
           return true;
-        });
+        });""" + extra_command + """
       });
     </script>"""
     if github_use_ssh:
@@ -22692,6 +22698,7 @@ function activateExample(id, scroll){
   $("#da-example-source-after").html(info['after_html']);
   $("#da-example-image-link").attr("href", info['interview']);
   $("#da-example-image").attr("src", info['image']);
+  $("#da-example-image-dark").attr("srcset", info['image'].replace('/examples/', '/examplesdark/'));
   if (info['documentation'] != null){
     $("#da-example-documentation-link").attr("href", info['documentation']);
     $("#da-example-documentation-link").removeClass("da-example-hidden");
@@ -31646,7 +31653,7 @@ def define_examples():
         return
     example_html.append('        </div>')
     example_html.append('        <div class="col-md-4 da-example-source-col"><h5 class="mb-1">' + word('Source') + '<a href="#" tabindex="0" class="dabadge btn btn-success da-example-copy">' + word("Insert") + '</a></h5><div id="da-example-source-before" class="dainvisible"></div><div id="da-example-source"></div><div id="da-example-source-after" class="dainvisible"></div><div><a tabindex="0" class="da-example-hider" id="da-show-full-example">' + word("Show context of example") + '</a><a tabindex="0" class="da-example-hider dainvisible" id="da-hide-full-example">' + word("Hide context of example") + '</a></div></div>')
-    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" target="_blank" class="dabadge btn btn-primary da-example-documentation da-example-hidden" id="da-example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="da-example-image-link"><img title=' + json.dumps(word("Click to try this interview")) + ' class="da-example-screenshot" id="da-example-image"></a></div>')
+    example_html.append('        <div class="col-md-6"><h5 class="mb-1">' + word("Preview") + '<a href="#" target="_blank" class="dabadge btn btn-primary da-example-documentation da-example-hidden" id="da-example-documentation-link">' + word("View documentation") + '</a></h5><a href="#" target="_blank" id="da-example-image-link"><picture><source media="(prefers-color-scheme: dark)" id="da-example-image-dark" /><img title=' + json.dumps(word("Click to try this interview")) + ' class="da-example-screenshot" id="da-example-image" /></picture></a></div>')
     pg_ex['encoded_data_dict'] = safeid(json.dumps(data_dict))
     pg_ex['encoded_example_html'] = Markup("\n".join(example_html))
 

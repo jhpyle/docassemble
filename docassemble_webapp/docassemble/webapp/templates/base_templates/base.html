@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_language }}"{% if color_scheme == 'dark' %} data-bs-theme="dark"{% endif%}>
+<html lang="{{ current_language }}"{% if color_scheme %} data-bs-theme="dark"{% endif%}>
   <head>
     <meta charset="utf-8">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -180,17 +180,17 @@
 
     <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
     <script>
-      {%- if config['AUTO_COLOR_SCHEME'] %}
-      var daCurrentColorScheme = "{{ color_scheme }}";
+      {%- if config['AUTO_COLOR_SCHEME'] and color_scheme < 2 %}
+      var daCurrentColorScheme = {{ color_scheme }};
       var daDesiredColorScheme;
       if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        daDesiredColorScheme = "dark"
+        daDesiredColorScheme = 1;
       }
       else {
-        daDesiredColorScheme = "light";
+        daDesiredColorScheme = 0;
       }
       if (daCurrentColorScheme != daDesiredColorScheme){
-        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme);
+        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme ? 'dark' : 'light');
         $.ajax({
           type: "PATCH",
           url: "{{ url_for('change_color_scheme') }}",

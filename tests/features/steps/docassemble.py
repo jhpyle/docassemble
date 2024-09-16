@@ -39,6 +39,11 @@ def change_wait_seconds(context, secs):
     context.wait_seconds = float(secs)
 
 
+@step(r'I switch to dark mode')
+def switch_to_dark_mode(context):
+    context.browser.get(context.da_path + "/dark_mode")
+
+
 @step(r'I click inside the signature area')
 def click_inside(context):
     elem = WebDriverWait(context.browser, 10).until(
