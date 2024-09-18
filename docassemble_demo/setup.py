@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 setup(name='docassemble.demo',
-      version='1.5.8',
+      version='1.5.9',
       python_requires='>=3.9',
       description=('A demonstration package for docassemble.'),
       long_description=read("README.md"),
@@ -58,8 +58,8 @@ setup(name='docassemble.demo',
       packages=find_packages(),
       namespace_packages=['docassemble'],
       install_requires=[
-          'docassemble==1.5.8',
-          'docassemble.base==1.5.8',
+          'docassemble==1.5.9',
+          'docassemble.base==1.5.9',
           "googledrivedownloader==0.4",
           "ics==0.7.2",
           "matplotlib==3.9.1.post1"
