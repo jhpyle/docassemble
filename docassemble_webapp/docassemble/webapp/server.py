@@ -29654,7 +29654,7 @@ def api_playground():
         do_restart = true_or_false(request.args.get('restart', True))
         if 'filename' not in request.args:
             return jsonify_with_status("Missing filename.", 400)
-    if folder not in ('questions', 'sources', 'static', 'templates', 'modules'):
+    if folder not in ('questions', 'sources', 'static', 'templates', 'modules', 'packages'):
         return jsonify_with_status("Invalid folder.", 400)
     if project != 'default' and project not in get_list_of_projects(user_id):
         return jsonify_with_status("Invalid project.", 400)
@@ -29665,6 +29665,46 @@ def api_playground():
     else:
         section = folder
     docassemble.base.functions.this_thread.current_info['user'] = {'is_anonymous': False, 'theid': user_id}
+    if folder == 'packages':
+        if request.method != 'GET' or not app.config['ENABLE_PLAYGROUND']:
+            return ('File not found', 404)
+        the_directory = directory_for(SavedFile(user_id, fix=True, section='playgroundpackages'), project)
+        if not os.path.isdir(the_directory):
+            return ('File not found', 404)
+        the_filename = request.args.get('filename', request.args.get('package', None))
+        if the_filename is None:
+            return jsonify(sorted([f for f in os.listdir(the_directory) if f.startswith('docassemble') and os.path.isfile(os.path.join(the_directory, f))]))
+        the_package = re.sub(r'^docassemble\.', '', secure_filename_spaces_ok(the_filename))
+        filename = os.path.join(the_directory, 'docassemble.' + the_package)
+        if not os.path.isfile(filename):
+            return ('File not found', 404)
+        playground_user = get_user_object(user_id)
+        info = {}
+        with open(filename, 'r', encoding='utf-8') as fp:
+            content = fp.read()
+            info = standardyaml.load(content, Loader=standardyaml.FullLoader)
+        for field in ('dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files'):
+            if field not in info:
+                info[field] = []
+        info['dependencies'] = list(x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp'))
+        info['modtime'] = os.path.getmtime(filename)
+        author_info = {}
+        author_info['author name and email'] = name_of_user(playground_user, include_email=True)
+        author_info['author name'] = name_of_user(playground_user)
+        author_info['author email'] = playground_user.email
+        author_info['first name'] = playground_user.first_name
+        author_info['last name'] = playground_user.last_name
+        author_info['id'] = playground_user.id
+        nice_name = 'docassemble-' + str(the_package) + '.zip'
+        if playground_user.timezone:
+            the_timezone = playground_user.timezone
+        else:
+            the_timezone = get_default_timezone()
+        fix_ml_files(author_info['id'], project)
+        zip_file = docassemble.webapp.files.make_package_zip(the_package, info, author_info, the_timezone, current_project=project)
+        response = send_file(zip_file.name, mimetype='application/zip', as_attachment=True, download_name=nice_name)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+        return response
     pg_section = PlaygroundSection(section=section, project=project)
     if request.method == 'GET':
         if 'filename' not in request.args:
