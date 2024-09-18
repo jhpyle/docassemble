@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.9](https://github.com/jhpyle/docassemble/releases/tag/v1.5.9) - 2024-09-18
+
+
+### Fixed
+- Downgraded `pikepdf` to fix problem with populating PDF fields.
+
 ## [1.5.8](https://github.com/jhpyle/docassemble/releases/tag/v1.5.8) - 2024-09-16
 
 
