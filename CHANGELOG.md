@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.5.9] - 2024-09-18
+
+### Fixed
+- Downgraded `pikepdf` to fix problem with populating PDF fields.
+
 ## [1.5.8] - 2024-09-16
 
 ### Added
