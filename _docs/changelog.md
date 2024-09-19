@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.10](https://github.com/jhpyle/docassemble/releases/tag/v1.5.10) - 2024-09-19
+
+
+### Added
+- Option in the `/api/playground` GET endpoint for downloading the ZIP
+  file of a Playground package.
+
 ## [1.5.9](https://github.com/jhpyle/docassemble/releases/tag/v1.5.9) - 2024-09-18
 
 
