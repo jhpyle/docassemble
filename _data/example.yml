@@ -4481,15 +4481,18 @@
         This is a complaint.
 
         Blah, blah, blah
+        [PAGEBREAK]
+        This is the certificate of service.
 "document-links-limited":
   "height": !!int |-
-    531
+    526
   "width": !!int |-
     488
   "yaml": "mandatory: True\nquestion: |\n  This interview is all done.\nsubquestion:\
     \ |\n  Here is your document!\n  \n  ${ complaint }\n---\nattachment:\n  filename:\
     \ complaint\n  name: Complaint\n  variable name: complaint\n  content: |\n   \
-    \ This is a complaint.\n\n    Blah, blah, blah\n  valid formats:\n    - pdf"
+    \ This is a complaint.\n\n    Blah, blah, blah\n    [PAGEBREAK]\n    This is the\
+    \ certificate of service.\n  valid formats:\n    - pdf"
 "document-manual":
   "height": !!int |-
     495

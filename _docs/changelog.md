@@ -3,6 +3,24 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.11](https://github.com/jhpyle/docassemble/releases/tag/v1.5.11) - 2024-09-26
+
+
+### Changed
+- Different appearance when a document is reduced to a thumbnail
+  image.
+
+
+### Fixed
+- When a new Playground is initialized, the name of the YAML file was
+  missing in the sidebar dropdown and the share link.
+- When a "flash" message with the Bootstap color "success" was shown
+  at the top of the screen, the timeout for removing the message
+  could remove messages that the user had not yet had the opportunity
+  to read.
+- In a `review` screen, error messages about invalid variable names
+  were not shown in all cases where the variable name was invalid.
+
 ## [1.5.10](https://github.com/jhpyle/docassemble/releases/tag/v1.5.10) - 2024-09-19
 
 
