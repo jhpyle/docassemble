@@ -1961,3 +1961,33 @@ div.da-grid-container > div.dafieldpart > fieldset.da-field-checkboxes {
 [data-bs-theme=dark] #dasigcanvas {
     background-color: #777;
 }
+
+.da-paper-stack {
+    position: relative;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+.da-paper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.da-paper:nth-child(1) {
+    z-index: 10;
+}
+.da-paper:nth-child(2) {
+    transform: translate(5px, 5px);
+    z-index: 9;
+}
+.da-paper:nth-child(3) {
+    transform: translate(10px, 10px);
+    z-index: 8;
+}
+.da-paper:nth-child(4) {
+    transform: translate(15px, 15px);
+    z-index: 7;
+}

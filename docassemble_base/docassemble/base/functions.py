@@ -4123,11 +4123,16 @@ def force_ask(*pargs, **kwargs):
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
             this_thread.internal['event_stack'][unique_id] = []
     if kwargs.get('persistent', True):
+        for item in the_pargs:
+            if isinstance(item, str) and illegal_variable_name(item):
+                raise DAError("Illegal variable name")
         raise ForcedNameError(*the_pargs, user_dict=get_user_dict(), evaluate=kwargs.get('evaluate', False))
     force_ask_nameerror(the_pargs[0])
 
 
 def force_ask_nameerror(variable_name, priority=False):
+    if illegal_variable_name(variable_name):
+        raise DAError("Illegal variable name")
     raise DANameError("name '" + str(variable_name) + "' is not defined")
 
 
@@ -4159,6 +4164,8 @@ def force_gather(*pargs, forget_prior=False, evaluate=False):
             this_thread.internal['gather'].append({'var': variable_name, 'context': the_context})
         last_variable_name = variable_name
     if last_variable_name is not None:
+        if illegal_variable_name(last_variable_name):
+            raise DAError("Illegal variable name")
         raise ForcedNameError(last_variable_name, gathering=True, user_dict=the_user_dict)
 
 
@@ -4872,6 +4879,8 @@ def dispatch(var):
     """Shows a menu screen."""
     if not isinstance(var, str):
         raise DAError("dispatch() must be given a string")
+    if illegal_variable_name(var):
+        raise DAError("Illegal variable name")
     while value(var) != 'None':
         value(value(var))
         undefine(value(var))

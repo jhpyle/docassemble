@@ -10339,9 +10339,6 @@ def invalid_variable_name(varname):
         return True
     if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
         return True
-    varname = re.sub(r'[\.\[].*', '', varname)
-    if not valid_variable_match.match(varname):
-        return True
     return illegal_variable_name(varname)
 
 

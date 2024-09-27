@@ -1015,8 +1015,10 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
     if 'extension' in file_info and file_info['extension'] is not None:
         if re.match(r'.*%$', width):
             width_string = "width:" + width
+            stack_width_string = width_string
         else:
             width_string = "max-width:" + width
+            stack_width_string = "width:" + width
         if emoji:
             width_string += ';vertical-align: middle'
             alt_text = 'alt="" '
@@ -1056,22 +1058,35 @@ def image_url(file_reference, alt_text, width, emoji=False, question=None, exter
             if the_image_url is None:
                 return '[ERROR: File reference ' + str(file_reference) + ' cannot be displayed]'
             if 'filename' in file_info:
-                title = ' title="' + file_info['filename'] + '"'
+                title = ' title="' + file_info['filename']
+                if 'pages' in file_info and file_info['pages'] > 1:
+                    title += " (" + str(file_info['pages']) + " " + word('pages') + ")"
+                title += '"'
             else:
-                title = ''
+                if 'pages' in file_info and file_info['pages'] > 1:
+                    title = ' title="' + str(file_info['pages']) + " " + word('pages') + '"'
+                else:
+                    title = ''
             if alt_text == '':
                 the_alt_text = 'alt=' + json.dumps(word("Thumbnail image of document")) + ' '
             else:
                 the_alt_text = alt_text
             try:
                 with Pdf.open(file_info['path'] + '.pdf') as reader:
-                    layout_width = str(reader.pages[0].mediabox[2] - reader.pages[0].mediabox[0])
-                    layout_height = str(reader.pages[0].mediabox[3] - reader.pages[0].mediabox[1])
-                    output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" width=' + layout_width + ' height=' + layout_height + ' style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
+                    layout_width = reader.pages[0].mediabox[2] - reader.pages[0].mediabox[0]
+                    layout_height = reader.pages[0].mediabox[3] - reader.pages[0].mediabox[1]
+                    if width_string == 'width:100%':
+                        output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" width=' + str(layout_width) + ' height=' + str(layout_height) + ' style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
+                    else:
+                        if 'pages' in file_info and file_info['pages'] >= 1:
+                            extra_pages = min(2, file_info['pages'] - 1)
+                        else:
+                            extra_pages = 2
+                        aspect_ratio = 1.0*layout_width/layout_height
+                        stack_width_string += "; height: auto; aspect-ratio: " + str(aspect_ratio) + ";"
+                        output = '<div class="da-paper-stack" style="' + stack_width_string + '"><div class="da-paper"><a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon' + extra_class + '" width=' + str(layout_width) + ' height="' + str(layout_height) + '" style="width: 100%; height: auto" src="' + the_image_url + '"/></a></div>' + (('<div class="da-paper"></div>') * extra_pages) + '</div>'
             except:
                 output = '<a target="_blank"' + title + ' class="daimageref" href="' + the_url + '"><img ' + the_alt_text + 'class="daicon dapdfscreen' + extra_class + '" style="' + width_string + '; height: auto;" src="' + the_image_url + '"/></a>'
-            if 'pages' in file_info and file_info['pages'] > 1:
-                output += " (" + str(file_info['pages']) + " " + word('pages') + ")"
             return output
         return '<a target="_blank" class="daimageref" href="' + the_url + '">' + file_info['filename'] + '</a>'
     return '[Invalid image reference; reference=' + str(file_reference) + ', width=' + str(width) + ', filename=' + file_info.get('filename', 'unknown') + ']'

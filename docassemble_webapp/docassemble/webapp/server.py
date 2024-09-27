@@ -9447,10 +9447,11 @@ def index(action_argument=None, refer=None):
           $("#daflash").empty();
         }
         if (message != null){
-          $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
+          var newElement = $(daSprintf(daNotificationMessage, priority, message));
+          $("#daflash").append(newElement);
           if (priority == 'success'){
             setTimeout(function(){
-              $("#daflash .alert-success").hide(300, function(){
+              newElement.hide(300, function(){
                 $(this).remove();
               });
             }, 3000);
@@ -12558,11 +12559,14 @@ def index(action_argument=None, refer=None):
         daInitialized = true;
         daShowingHelp = 0;
         daSubmitter = null;
-        setTimeout(function(){
-          $("#daflash .alert-success").hide(300, function(){
-            $(self).remove();
-          });
-        }, 3000);
+        $("#daflash .alert-success").each(function(){
+          var oThis = this;
+          setTimeout(function(){
+            $(oThis).hide(300, function(){
+              $(self).remove();
+            });
+          }, 3000);
+        });
         if (doScroll){
           setTimeout(function () {
             if (daJsEmbed){
@@ -14936,10 +14940,11 @@ def observer():
           $("#daflash").empty();
         }
         if (message != null){
-          $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
+          var newElement = daSprintf(daNotificationMessage, priority, message);
+          $("#daflash").append(newElement);
           if (priority == 'success'){
             setTimeout(function(){
-              $("#daflash .alert-success").hide(300, function(){
+              $(newElement).hide(300, function(){
                 $(this).remove();
               });
             }, 3000);
@@ -15669,11 +15674,14 @@ def observer():
         });
         daInitialized = true;
         daShowingHelp = 0;
-        setTimeout(function(){
-          $("#daflash .alert-success").hide(300, function(){
-            $(self).remove();
-          });
-        }, 3000);
+        $("#daflash .alert-success").each(function(){
+          var oThis = this;
+          setTimeout(function(){
+            $(oThis).hide(300, function(){
+              $(self).remove();
+            });
+          }, 3000);
+        });
       }
       $( document ).ready(function(){
         daInitialize(1);
@@ -20295,11 +20303,14 @@ def playground_files():
                 }
                 resetExpireSession();
                 saveCallback(data);
-                setTimeout(function(){
-                  $("#daflash .alert-success").hide(300, function(){
-                    $(self).remove();
-                  });
-                }, 3000);
+                $("#daflash .alert-success").each(function(){
+                  var oThis = this;
+                  setTimeout(function(){
+                    $(oThis).hide(300, function(){
+                      $(self).remove();
+                    });
+                  }, 3000);
+                });
               },
               dataType: 'json'
             });
@@ -22414,6 +22425,7 @@ def playground_page():
             with open(filename, 'w', encoding='utf-8') as fp:
                 fp.write(content)
             playground.finalize()
+            files = sorted([{'name': f, 'modtime': os.path.getmtime(os.path.join(the_directory, f))} for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9].*[A-Za-z]$', f)], key=lambda x: x['name'])
     console_messages = []
     if request.method == 'POST' and the_file != '' and valid_form:
         if form.delete.data:
@@ -22544,7 +22556,7 @@ def playground_page():
     variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
     pulldown_files = [x['name'] for x in files]
     define_examples()
-    if is_fictitious or is_new or is_default:
+    if is_fictitious or is_new:
         new_active_file = word('(New file)')
         if new_active_file not in pulldown_files:
             pulldown_files.insert(0, new_active_file)
@@ -22799,10 +22811,11 @@ function flash(message, priority){
   if (!$("#daflash").length){
     $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
   }
-  $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
+  var newElement = $(daSprintf(daNotificationMessage, priority, message));
+  $("#daflash").append(newElement);
   if (priority == 'success'){
     setTimeout(function(){
-      $("#daflash .alert-success").hide(300, function(){
+      $(newElement).hide(300, function(){
         $(self).remove();
       });
     }, 3000);
@@ -22918,11 +22931,14 @@ $( document ).ready(function() {
         enableButtons();
         resetExpireSession();
         saveCallback(data);
-        setTimeout(function(){
-          $("#daflash .alert-success").hide(300, function(){
-            $(self).remove();
-          });
-        }, 3000);
+        $("#daflash .alert-success").each(function(){
+          var oThis = this;
+          setTimeout(function(){
+            $(oThis).hide(300, function(){
+              $(self).remove();
+            });
+          }, 3000);
+        });
       },
       dataType: 'json'
     });
@@ -23011,11 +23027,14 @@ $( document ).ready(function() {
   else{
     $("#playground_name").focus()
   }
-  setTimeout(function(){
-    $("#daflash .alert-success").hide(300, function(){
-      $(self).remove();
-    });
-  }, 3000);
+  $("#daflash .alert-success").each(function(){
+    var oThis = this;
+    setTimeout(function(){
+      $(oThis).hide(300, function(){
+        $(self).remove();
+      });
+    }, 3000);
+  });
 
   activateVariables();
   updateRunLink();
@@ -23270,10 +23289,11 @@ def server_error(the_error):
         if (!$("#daflash").length){
           $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
         }
-        $("#daflash").append(daSprintf(daNotificationMessage, priority, message));
+        var newElement = $(daSprintf(daNotificationMessage, priority, message));
+        $("#daflash").append(newElement);
         if (priority == 'success'){
           setTimeout(function(){
-            $("#daflash .alert-success").hide(300, function(){
+            $(newElement).hide(300, function(){
               $(self).remove();
             });
           }, 3000);
