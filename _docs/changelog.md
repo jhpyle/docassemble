@@ -3,6 +3,17 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.12](https://github.com/jhpyle/docassemble/releases/tag/v1.5.12) - 2024-09-30
+
+
+### Changed
+- Upgraded pikepdf.
+  
+
+### Fixed
+- Issue with `object_checkboxes` and `object_multiselect` when used as
+  elements in a `DAList` or `DADict`.
+
 ## [1.5.11](https://github.com/jhpyle/docassemble/releases/tag/v1.5.11) - 2024-09-26
 
 
