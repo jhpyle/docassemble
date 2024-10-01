@@ -10320,9 +10320,9 @@ def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
     elif method == 'index':
         index_name = parse_result['final_parts'][1][1:-1]
         if datatype in ('multiselect', 'checkboxes'):
-            commands.append(parse_result['final_parts'][0] + ".initializeObject(" + repr(index_name) + ", DADict, auto_gather=False)")
+            commands.append(parse_result['final_parts'][0] + ".initializeObject(" + index_name + ", DADict, auto_gather=False)")
         elif datatype in ('object_multiselect', 'object_checkboxes'):
-            commands.append(parse_result['final_parts'][0] + ".initializeObject(" + repr(index_name) + ", DAList, auto_gather=False)")
+            commands.append(parse_result['final_parts'][0] + ".initializeObject(" + index_name + ", DAList, auto_gather=False)")
     else:
         if datatype in ('multiselect', 'checkboxes'):
             commands.append(saveas + ' = DADict(' + repr(saveas) + ', auto_gather=False)')

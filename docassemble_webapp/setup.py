@@ -188,7 +188,7 @@ install_requires = [
     "passlib==1.7.4",
     "pdfminer.six==20240706",
     "phonenumbers==8.13.43",
-    "pikepdf==8.10.1",
+    "pikepdf==9.2.1",
     "pillow==10.4.0",
     "pkginfo==1.10.0",
     "pluggy==1.5.0",

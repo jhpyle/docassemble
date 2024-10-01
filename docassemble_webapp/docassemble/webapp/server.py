@@ -7437,12 +7437,13 @@ def index(action_argument=None, refer=None):
             try:
                 eval(objname, user_dict)
             except:
+                objname_tr = sub_indices(objname, user_dict)
                 safe_objname = safeid(objname)
                 if safe_objname in known_datatypes:
                     if known_datatypes[safe_objname] in ('object_multiselect', 'object_checkboxes'):
-                        docassemble.base.parse.ensure_object_exists(objname, 'object_checkboxes', user_dict)
+                        docassemble.base.parse.ensure_object_exists(objname_tr, 'object_checkboxes', user_dict)
                     elif known_datatypes[safe_objname] in ('multiselect', 'checkboxes'):
-                        docassemble.base.parse.ensure_object_exists(objname, known_datatypes[safe_objname], user_dict)
+                        docassemble.base.parse.ensure_object_exists(objname_tr, known_datatypes[safe_objname], user_dict)
     field_error = {}
     validated = True
     pre_user_dict = user_dict
@@ -7993,7 +7994,7 @@ def index(action_argument=None, refer=None):
                 logmessage("Received illegal variable name " + str(key))
                 continue
             if empty_fields[orig_key] in ('object_multiselect', 'object_checkboxes'):
-                docassemble.base.parse.ensure_object_exists(key, empty_fields[orig_key], user_dict)
+                docassemble.base.parse.ensure_object_exists(sub_indices(key, user_dict), empty_fields[orig_key], user_dict)
                 exec(key + '.clear()', user_dict)
                 exec(key + '.gathered = True', user_dict)
             elif empty_fields[orig_key] in ('object', 'object_radio'):
@@ -25775,7 +25776,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         user_dict['_internal']['command_cache'] = {}
                     if field.number not in user_dict['_internal']['command_cache']:
                         user_dict['_internal']['command_cache'][field.number] = []
-                    docassemble.base.parse.ensure_object_exists(saveas, field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number])
+                    docassemble.base.parse.ensure_object_exists(sub_indices(saveas, user_dict), field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][field.number])
                     saveas = saveas + '.gathered'
                     data = 'True'
                 if (user_entered_skip or (inp_lower == word('none') and hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes'))) and ((hasattr(field, 'disableothers') and field.disableothers) or (hasattr(field, 'datatype') and field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes')) or not (interview_status.extras['required'][field.number] or (question.question_type == 'multiple_choice' and hasattr(field, 'saveas')))):
@@ -25977,7 +25978,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                     user_dict['_internal']['command_cache'][the_field.number] = []
                                 if hasattr(the_field, 'datatype'):
                                     if the_field.datatype in ('object_multiselect', 'object_checkboxes'):
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                        docassemble.base.parse.ensure_object_exists(sub_indices(the_saveas, user_dict), the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.clear()')
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     elif the_field.datatype in ('object', 'object_radio'):
@@ -25986,7 +25987,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                         except:
                                             user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
                                     elif the_field.datatype in ('multiselect', 'checkboxes'):
-                                        docassemble.base.parse.ensure_object_exists(the_saveas, the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
+                                        docassemble.base.parse.ensure_object_exists(sub_indices(the_saveas, user_dict), the_field.datatype, user_dict, commands=user_dict['_internal']['command_cache'][the_field.number])
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + '.gathered = True')
                                     else:
                                         user_dict['_internal']['command_cache'][the_field.number].append(the_saveas + ' = None')
