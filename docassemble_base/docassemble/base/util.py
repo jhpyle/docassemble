@@ -1861,7 +1861,7 @@ class DAList(DAObject):
         for key, val in kwargs.items():
             new_obj_parameters[key] = val
         newobject = objectFunction(self.instanceName + '[' + repr(index) + ']', *pargs, **new_obj_parameters)
-        for pre_index in range(index):  # pylint: disable=unused-variable
+        for pre_index in range(len(self.elements), index):  # pylint: disable=unused-variable
             self.elements.append(None)
         self[index] = newobject
         self.there_are_any = True

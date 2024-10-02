@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.5.13] - 2024-10-01
+
+### Fixed
+- Issue with `object_checkboxes` and `object_multiselect` when used as
+  elements in a `DAList`.
+
 ## [1.5.12] - 2024-09-30
 
 ### Changed
