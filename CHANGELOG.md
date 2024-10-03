@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.5.14] - 2024-10-03
+
+### Fixed
+- Issue with `objects` block when a variable name is index of an
+  attribute.
+
 ## [1.5.13] - 2024-10-01
 
 ### Fixed

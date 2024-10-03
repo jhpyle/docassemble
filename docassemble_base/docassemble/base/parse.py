@@ -9475,7 +9475,7 @@ class Interview:
                                 except:
                                     pass
                                 user_dict["__object_type"] = eval(object_type_name, user_dict)
-                                if re.search(r"\.", variable):
+                                if re.search(r"\.([^\[]+)$", variable):
                                     m = re.search(r"(.*)\.(.*)", variable)
                                     variable = m.group(1)
                                     attribute = m.group(2)
