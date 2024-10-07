@@ -602,7 +602,7 @@ The `/etc/cron.daily/docassemble` script does the following:
 * The directory `/etc/letsencrypt` is copied to data storage as
   `letsencrypt.tar.gz`.
 * The log files are copied to data storage.
-* Each database that the PostgreSQL server hosts (except for ones with
+* Every database that the PostgreSQL server hosts (except for ones with
   `template` in the name) are dumped to the `postgres` folder in data
   storage using `pg_dump -F c`.
 * The `/var/lib/redis/dump.rdb` file is copied to data storage as the
@@ -1267,8 +1267,8 @@ your container for the new configuration to take effect.
 * <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
   [PostgreSQL] server. The default is `docassemble`.
 * <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
-  to the SQL server. The default is `abc123`. The password cannot
-  contain the character `#`.
+  to the SQL server. The default is `abc123`. Valid characters include
+  alphanumeric characters, `_`, `~`, `/`, `-`, `^`, `*`, `?`, and `!`.
 * <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
   database specifier. The default is `postgresql+psycopg2://`. This
   corresponds with the `prefix` of the [`db`] configuration directive.

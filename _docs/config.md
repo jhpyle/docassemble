@@ -1743,6 +1743,9 @@ particular SQL database should be used. For example, you would set
 these environment variables if you were using a cloud-based managed
 database system like [RDS].
 
+The password should only contain alphanumeric characters. The special
+characters `_`, `~`, `/`, `-`, `^`, `*`, `?`, and `!` may be used.
+
 Changing the `db` directives after you already have a working system
 can easily lead to an unbootable system. You should not change the
 values using the web-based front end unless you really know what you
