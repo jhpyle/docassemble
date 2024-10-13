@@ -33209,6 +33209,9 @@
 
    function daNewEditor(parent, initial_contents, mode, keymapping, lineWrapping) {
      let extensions = [basicSetup];
+     if (lineWrapping) {
+       extensions.push(EditorView.lineWrapping);
+     }
      function autoCompletions(context) {
        let word = context.matchBefore(/\w*/);
        if (word.from == word.to && !context.explicit) return null;

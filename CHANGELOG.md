@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.5.15] - 2024-10-13
+
+### Fixed
+- Problem with the `wrap lines in playground` feature.
+
 ## [1.5.14] - 2024-10-03
 
 ### Fixed
