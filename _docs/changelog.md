@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.15](https://github.com/jhpyle/docassemble/releases/tag/v1.5.15) - 2024-10-13
+
+
+### Fixed
+- Problem with the `wrap lines in playground` feature.
+
 ## [1.5.14](https://github.com/jhpyle/docassemble/releases/tag/v1.5.14) - 2024-10-03
 
 
