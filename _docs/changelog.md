@@ -3,6 +3,18 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.5.16](https://github.com/jhpyle/docassemble/releases/tag/v1.5.16) - 2024-10-16
+
+
+### Changed
+- The `address autocomplete` will now populate the `.sublocality`
+  field with `sublocality`, `sublocality_level_1`,
+  `sublocality_level_2`, whichever is first available.
+- URL parameters `utm_source`, `utm_medium`, `utm_campaign`,
+  `utm_term`, and `utm_content` will be preserved when analytics is
+  configured and the `/run` endpoint is used.
+- Upgraded Pandoc to version 3.5.11 (system upgrade required).
+
 ## [1.5.15](https://github.com/jhpyle/docassemble/releases/tag/v1.5.15) - 2024-10-13
 
 
