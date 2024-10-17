@@ -47,7 +47,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 install_requires = [
-    'docassemble==1.5.15',
+    'docassemble==1.5.16',
     "3to2==1.1.1",
     "aiohappyeyeballs==2.3.5",
     "aiohttp==3.10.3",
@@ -243,7 +243,7 @@ install_requires = [
 ]
 
 setup(name='docassemble.base',
-      version='1.5.15',
+      version='1.5.16',
       python_requires='>=3.9',
       description=('The base components of the docassemble system.'),
       long_description=read("README.md"),
