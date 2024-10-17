@@ -6734,6 +6734,13 @@ def update_current_info_with_session_info(the_current_info, session_info):
     the_current_info.update({'session': user_code, 'encrypted': encrypted})
 
 
+def remove_i_from_dict(the_dict):
+    the_dict = copy.copy(the_dict)
+    if 'i' in the_dict:
+        del the_dict['i']
+    return the_dict
+
+
 @app.route(index_path, methods=['POST', 'GET'])
 def index(action_argument=None, refer=None):
     # if refer is None and request.method == 'GET':
@@ -8753,19 +8760,19 @@ def index(action_argument=None, refer=None):
         if refer is None:
             location_bar = url_for('index', **index_params)
         elif refer[0] in ('start', 'run'):
-            location_bar = url_for('run_interview_in_package', package=refer[1], filename=refer[2])
+            location_bar = url_for('run_interview_in_package', package=refer[1], filename=refer[2], **remove_i_from_dict(index_params))
             page_sep = "#/"
         elif refer[0] in ('start_dispatch', 'run_dispatch'):
-            location_bar = url_for('run_interview', dispatch=refer[1])
+            location_bar = url_for('run_interview', dispatch=refer[1], **remove_i_from_dict(index_params))
             page_sep = "#/"
         elif refer[0] in ('start_directory', 'run_directory'):
-            location_bar = url_for('run_interview_in_package_directory', package=refer[1], directory=refer[2], filename=refer[3])
+            location_bar = url_for('run_interview_in_package_directory', package=refer[1], directory=refer[2], filename=refer[3], **remove_i_from_dict(index_params))
             page_sep = "#/"
         else:
             location_bar = None
             for k, v in daconfig['dispatch'].items():
                 if v == yaml_filename:
-                    location_bar = url_for('run_interview', dispatch=k)
+                    location_bar = url_for('run_interview', dispatch=k, **remove_i_from_dict(index_params))
                     page_sep = "#/"
                     break
             if location_bar is None:

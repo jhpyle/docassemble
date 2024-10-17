@@ -345,12 +345,12 @@ function daInitAutocomplete(info) {
       var opts = info[i][1];
       daAutocomplete[id] = new google.maps.places.Autocomplete(
         document.getElementById(id),
-        opts
+        opts,
       );
       google.maps.event.addListener(
         daAutocomplete[id],
         "place_changed",
-        daFillInAddressFor(id)
+        daFillInAddressFor(id),
       );
     }
   }, timePeriod);
@@ -414,7 +414,7 @@ function daAddMarker(map, marker_info, show_marker) {
   marker = new google.maps.Marker({
     position: new google.maps.LatLng(
       marker_info.latitude,
-      marker_info.longitude
+      marker_info.longitude,
     ),
     map: map.map,
     icon: marker_info.icon,
@@ -428,7 +428,7 @@ function daAddMarker(map, marker_info, show_marker) {
           map.infowindow.setContent(info);
           map.infowindow.open(map.map, marker);
         };
-      })(marker, marker_info.info)
+      })(marker, marker_info.info),
     );
   }
   if (show_marker) {
@@ -531,7 +531,7 @@ function daFillInAddress(origId) {
       var val = place.address_components[i][componentForm[addressType]];
       if (typeof val != "undefined") {
         document.getElementById(
-          id_for_part[componentTrans[addressType]]
+          id_for_part[componentTrans[addressType]],
         ).value = val;
         toChange.push("#" + id_for_part[componentTrans[addressType]]);
       }
@@ -596,6 +596,46 @@ function daFillInAddress(origId) {
     ) {
       document.getElementById(id_for_part["city"]).value =
         savedValues["administrative_area_level_3"];
+    }
+  }
+  if (
+    typeof id_for_part["sublocality"] != "undefined" &&
+    document.getElementById(id_for_part["sublocality"]) != null
+  ) {
+    if (
+      document.getElementById(id_for_part["sublocality"]).value == "" &&
+      typeof savedValues["sublocality_level_1"] != "undefined"
+    ) {
+      document.getElementById(id_for_part["sublocality"]).value =
+        savedValues["sublocality_level_1"];
+    }
+    if (
+      document.getElementById(id_for_part["sublocality"]).value == "" &&
+      typeof savedValues["sublocality_level_2"] != "undefined"
+    ) {
+      document.getElementById(id_for_part["sublocality"]).value =
+        savedValues["sublocality_level_2"];
+    }
+    if (
+      document.getElementById(id_for_part["sublocality"]).value == "" &&
+      typeof savedValues["sublocality_level_3"] != "undefined"
+    ) {
+      document.getElementById(id_for_part["sublocality"]).value =
+        savedValues["sublocality_level_3"];
+    }
+    if (
+      document.getElementById(id_for_part["sublocality"]).value == "" &&
+      typeof savedValues["sublocality_level_4"] != "undefined"
+    ) {
+      document.getElementById(id_for_part["sublocality"]).value =
+        savedValues["sublocality_level_4"];
+    }
+    if (
+      document.getElementById(id_for_part["sublocality"]).value == "" &&
+      typeof savedValues["sublocality_level_5"] != "undefined"
+    ) {
+      document.getElementById(id_for_part["sublocality"]).value =
+        savedValues["sublocality_level_5"];
     }
   }
   if (
