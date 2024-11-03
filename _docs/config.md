@@ -4964,16 +4964,16 @@ celery processes: 15
 
 This will cause 15 [Celery] workers to be spawned.
 
-Note that there are two [Celery] systems: one called `celerysingle` with a
-single worker, and one called `celery` with one or more workers. The
-`celerysingle` system is used for background processes that will
-perform parallel processing and use every CPU in the machine; it would
-be dangerous to run more than one such process at a time. The `celery`
-system is used for all other tasks, which [Celery] may in parallel on
-all the available worker processes. Thus if the `celery processes` is
-`15`, the [`worker_concurrency`] of one system will be `1` for
-`celerysingle` and `14` for `celery`. You can see this if you do `ps
-ax | grep celery` on the server.
+Note that there are two [Celery] systems: one called `celerysingle`
+with a single worker, and one called `celery` with one or more
+workers. The `celerysingle` system is used for background processes
+that will perform parallel processing and use every CPU in the
+machine; it would be dangerous to run more than one such process at a
+time. The `celery` system is used for all other tasks, which [Celery]
+may run in parallel on all the available worker processes. Thus, if
+the `celery processes` is `15`, the [`worker_concurrency`] will be `1`
+for `celerysingle` and `14` for `celery`. You can see this if you do
+`ps ax | grep celery` on the server.
 
 If you want the number of [Celery] processes to scale with CPU but you
 think your system can handle more concurrency than the standard

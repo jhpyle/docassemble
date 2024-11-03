@@ -16,7 +16,7 @@ follow the installation instructions on this page.  If you do not
 already have [Docker], you can install [Docker] on your machine
 whether you have a Mac, a PC, or a Linux machine.
 
-For example, on a Windows 10 machine, once you install
+For example, on a Windows 11 machine, once you install
 [Docker for Windows], you simply go to Windows PowerShell and type:
 
 {% highlight bash %}
@@ -26,6 +26,12 @@ docker run -d -p 80:80 jhpyle/docassemble
 Then, after a few minutes, the application will be available in your
 browser at http://localhost.
 
+If the machine is already using port 80, you can do something like
+`docker run -d -p 8080:80 jhpyle/docassemble` to run **docassemble**
+on http://localhost:8080. You could also set up a [reverse proxy] on
+the web server so that users can access the **docassemble**
+application through the web server through a standard port.
+
 Even if you want to put **docassemble** into production, it is
 recommended that you [install it using Docker] -- ideally on an [EC2]
 virtual machine hosted by [Amazon Web Services].  **docassemble**
@@ -34,9 +40,14 @@ Azure] services such as [Azure blob storage] for persistent storage.
 It also supports [S3]-compatible object storage services.
 
 The primary reason you might want to install **docassemble** manually
-on a machine is if you want it to run on a server for which the HTTP
-and HTTPS ports are serving other applications.  ([Docker] can only
-use the HTTP and HTTPS ports if it has exclusive use of them.)
+on a machine is if [Docker]'s container/host separation interferes
+with a customized setup that you want to use. For example, you might
+want the **docassemble** server to use the NGINX, PostgreSQL, Redis,
+RabbitMQ, Celery, and/or `cron` servers that are already running on
+the machine. If you install **docassemble** manually, then when
+`supervisord` starts up, the `initialize` service will see that these
+servers are already running, and they will not be started using
+`supervisord`.
 
 # <a name="minimum"></a>Minimum system requirements
 
@@ -1795,3 +1806,4 @@ All of these system administration headaches can be avoided by
 [Telnyx]: https://telnyx.com/
 [Keycloak]: https://www.keycloak.org/
 [Zitadel]: https://zitadel.com
+[reverse proxy]: {{ site.baseurl }}/docs/docker.html#forwarding

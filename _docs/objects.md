@@ -6221,7 +6221,7 @@ functionality of ordinary object instances, but with the added feature
 that particular attributes (or attributes of sub-objects) will
 synchronize with a [SQL] database.
 
-Using the `SQLObject` feature requires:
+The `SQLObject` is an expert feature. Using it requires:
 
 * Knowing how [SQL] databases work;
 * Knowing how to create a [SQL] database;
@@ -6236,16 +6236,16 @@ Here is an example of the use of `SQLObject`:
 
 The `Customer` and `Bank` classes are defined in the `demodb.py` file.
 `Customer` is a subclass of `Individual` and `SQLObject` (using
-[multiple inheritance].  `Bank` is a subclass of `Person` and
-`SQLObject`.  Behind every `Customer` is a row in a [SQL] table listing
-customers.  Behind every `Bank` is a row in a [SQL] table listing banks.
-These tables are in a separate [SQL] database from the database where
-**docassemble**'s interview answers are stored.  This [SQL] database can
-be any database capable of being accessed using [SQLAlchemy].  The
-database tables can be pre-existing (e.g., a database for a case
-management system) or created for the sole purpose of storing data from
-interviews.  If the tables do not exist, [SQLAlchemy] will create them
-when the module loads.
+[multiple inheritance]).  `Bank` is a subclass of `Person` and
+`SQLObject`.  Behind every `Customer` is a row in a [SQL] table
+listing customers.  Behind every `Bank` is a row in a [SQL] table
+listing banks.  These tables are in a separate [SQL] database from the
+database where **docassemble**'s interview answers are stored.  This
+[SQL] database can be any database capable of being accessed using
+[SQLAlchemy].  The database tables can be pre-existing (e.g., a
+database for a case management system) or created for the sole purpose
+of storing data from interviews.  If the tables do not exist,
+[SQLAlchemy] will create them when the module loads.
 
 In the interview, the user is first asked for a unique identifier
 (SSN) about the `customer`.  If the the SSN matches the SSN of a
@@ -6779,10 +6779,10 @@ in the SQL database.  This allows you to use the interview answers as
 a kind of "staging area" for information before writing it to the SQL
 database.
 
-If an object is stored both in the interview answers and in Python,
-but then it changes inside the SQL server, then the next time the
-interview answers are retrieved, the attributes in the Python objects
-will be updated with the values in SQL.
+If an object is stored both in the interview answers and on the SQL
+server, and then the columns in the SQL record change, then the next
+time the interview answers are retrieved, the attributes in the Python
+objects will be updated with the values in SQL.
 
 However, if the item is deleted from SQL, then when the corresponding
 Python object is retrieved, it will become a "zombie" object.  It will
@@ -6811,11 +6811,13 @@ database columns is controlled by the [`db_get()`], [`db_set()`], and
 [`db_null()`] methods of the class.  The [`db_get()`] method takes a
 column name and tries to obtain a value for it from [Python] land.
 The [`db_set()`] method takes a column name and a value from [SQL]
-land and saves that value in [Python] land. For example, in the above
-[Python module], the `first_name` column is associated with
-`.name.first` attribute of the `Customer` object.  The [`db_null()`]
-method takes a column name and tries to delete the object attribute in
-[Python] land that is associated with the given column.
+land and saves that value in [Python] land. (Think of the verbs "get"
+and "set" as applying to attributes of the Python object, not columns
+in the SQL record.) For example, in the above [Python module], the
+`first_name` column is associated with `.name.first` attribute of the
+`Customer` object.  The [`db_null()`] method takes a column name and
+tries to delete the object attribute in [Python] land that is
+associated with the given column.
 
 When you initialize an object, you can give it the unique ID, and if
 a record exists in SQL with that unique ID, then the object will be
@@ -6831,7 +6833,7 @@ unique integer that never changes.  The `id` is set when the record is
 created in [SQL], using an auto-incrementing counter.  If you know the
 `id` of a record you can use it to initialize your object so that it
 is non-nascent from the start.  For example, here is a way to use a
-URL parameter (or in the alternative, a [`question`], to get the `id`
+URL parameter (or in the alternative, a [`question`]), to get the `id`
 for a customer record:
 
 {% highlight yaml %}
@@ -6856,7 +6858,7 @@ it, it will run [`db_set()`] and update information in [Python] based on
 the values of the columns in [SQL].
 
 For example, assume there is a customer in the [SQL] database with SSN
-122-23-2322, whose first name is John and whose last name is John Smith.
+122-23-2322, whose first name is John and whose last name is Smith.
 
 {% highlight yaml %}
 objects:
@@ -7069,6 +7071,51 @@ example because an attribute is not defined) then the [`SQLObject`]
 code will know that the column information does not exist.  You do not
 need to use `try`/`except` logic of your own in these methods; just
 follow the pattern above.
+
+## <a name="sqlobject pitfalls"></a>Pitfalls
+
+### Multiple Python objects associated with a single SQL record
+
+When using `SQLObject`, make sure that your interview logic does not
+create multiple separate Python objects associated with the same SQL
+record. If you do that, then if you change the attributes of one
+object, but not the other, the two objects will be in conflict with
+one another. Which attributes are saved to the server will be random,
+depending on which object is [pickle]d last.
+
+The `SQLObject` maintains an object cache under the `_internal`
+dictionary in the interview answers. When a `SQLObject` has an `id`, a
+reference to that object will be created in the cache. Methods like
+`.filter(),` `.all(),` and `.by_id()` and `.by_uid()` return
+references to this cache if the object is in the cache, rather than
+create new objects. The cache helps avoid the problem of multiple
+separate Python objects existing in the interview answers.
+
+### Concurrency
+
+Between the time when the screen starts loading (when data are copied
+from SQL data to Python) and the screen finishes loading (when data
+are copied from Python to SQL), no lock is placed on the SQL
+records. Suppose session A copies data from SQL to Python at time 0,
+session B copies data from the same SQL record to Python at time 1,
+session B writes changes to the SQL record at time 2, and session A
+writes changes to the SQL record at time 3. In this scenario, session
+A's changes would overwrite the changes that session B made.
+
+The same result would happen if a third-party application made changes
+to the SQL record instead of session B.
+
+However, suppose session A copies data from SQL to Python at time 0,
+session B copies data from the same SQL record to Python at time 1,
+session B writes changes to the SQL record at time 2, and then at time
+3 the interview logic of session A finishes without making any
+changes. In this scenario, session A would not overwrite the changes
+of session B, because from the perspective of session A, there is no
+need to take the time to write data to SQL, since nothing changed.
+
+If you expect that SQL records might be altered concurrently, using
+`SQLObject`s to synchronize between interview answers and a SQL
+database might not be sufficiently robust.
 
 ## <a name="sqlobject reference"></a>Reference guide
 
