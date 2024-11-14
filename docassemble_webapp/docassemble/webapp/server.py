@@ -11684,7 +11684,7 @@ def index(action_argument=None, refer=None):
         var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
           return new bootstrap.Popover(daPopoverTriggerEl, {trigger: """ + json.dumps(interview.options.get('popover trigger', 'focus')) + """, html: true});
         });
-        $('label a[data-bs-toggle="popover"], legend a[data-bs-toggle="popover"]').on('click', function(event){
+        $('label a[data-bs-toggle="popover"], legend a[data-bs-toggle="popover"], div[id*="_fieldset_label"] a[data-bs-toggle="popover"]').on('click', function(event){
           event.preventDefault();
           event.stopPropagation();
           var thePopover = bootstrap.Popover.getOrCreateInstance(this);

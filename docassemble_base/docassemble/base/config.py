@@ -996,6 +996,10 @@ def load(**kwargs):
         daconfig['web server'] = 'nginx'
     if 'table css class' not in daconfig or not isinstance(daconfig['table css class'], str):
         daconfig['table css class'] = 'table table-striped'
+    if 'use div as legend' in daconfig:
+        if not isinstance(daconfig['use div as legend'], bool):
+            config_error('The Configuration directive "use div as legend" must be True or False.')
+            del daconfig['use div as legend']
     if env_true_false('ENVIRONMENT_TAKES_PRECEDENCE'):
         messages = []
         for env_var, key in (('DBPREFIX', 'prefix'), ('DBNAME', 'name'), ('DBUSER', 'user'), ('DBPASSWORD', 'password'), ('DBHOST', 'host'), ('DBPORT', 'port'), ('DBTABLEPREFIX', 'table prefix'), ('DBBACKUP', 'backup'), ('DBSSLMODE', 'ssl mode'), ('DBSSLCERT', 'ssl cert'), ('DBSSLKEY', 'ssl key'), ('DBSSLROOTCERT', 'ssl root cert')):

@@ -2260,6 +2260,10 @@ class Question:
                 self.interview.options['hide standard menu'] = data['features']['hide standard menu']
             if 'labels above fields' in data['features'] and isinstance(data['features']['labels above fields'], bool):
                 self.interview.options['labels above'] = data['features']['labels above fields']
+            if 'use div as legend' in data['features']:
+                if not isinstance(data['features']['use div as legend'], bool):
+                    raise DASourceError('"use div as legend" in the "features" block must be either True or False.' + self.idebug(data))
+                self.interview.options['use div as legend'] = data['features']['use div as legend']
             if 'suppress autofill' in data['features'] and isinstance(data['features']['suppress autofill'], bool):
                 self.interview.options['suppress autofill'] = data['features']['suppress autofill']
             if 'floating labels' in data['features'] and isinstance(data['features']['floating labels'], bool):

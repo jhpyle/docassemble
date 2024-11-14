@@ -5,6 +5,7 @@ import random
 import codecs
 import datetime
 import locale
+import uuid
 from io import StringIO
 from html.parser import HTMLParser
 from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types, get_locale
@@ -566,10 +567,14 @@ def help_wrap(content, helptext, status):
     return help_wrapper % (content, noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)))
 
 
-def field_item(field, grid_info, pre=None, row=True, floating=False, classes=None, hidden_message=None, label_for=None, label_classes=None, label_content=None, grid_type=None, content_classes=None, content=None, side_note=None, under_text=None, use_fieldset=0, required=False):
+def field_item(field, grid_info, pre=None, row=True, floating=False, classes=None, hidden_message=None, label_for=None, label_classes=None, label_content=None, grid_type=None, content_classes=None, content=None, side_note=None, under_text=None, use_fieldset=0, required=False, use_div_as_legend=False, fieldset_label_id=None):
+    if fieldset_label_id is None:
+        fieldset_label_id = str(uuid.uuid4()) + '_fieldset_label'
     if use_fieldset:
         enclosing_type = 'fieldset'
-        label_type = 'legend'
+        aria_labelled_by = ' aria-labelledby="' + fieldset_label_id + '"'
+        label_type = 'div' if use_div_as_legend else 'legend'
+        label_id = ' id="' + fieldset_label_id + '"'
         if required:
             aria_req = 'aria-required="true" '
         else:
@@ -578,7 +583,9 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
             aria_req += 'role="radiogroup" '
     else:
         enclosing_type = 'div'
+        aria_labelled_by = ''
         label_type = 'label'
+        label_id = ''
         aria_req = ''
     if grid_info['_enabled']:
         grid_number = grid_info[field.number]['grid']
@@ -596,7 +603,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
                 label_style = ''
             if label_classes:
                 all_label_classes.append(label_classes)
-            label_text = '\n                  <' + label_type + label_style
+            label_text = '\n                  <' + label_type + label_id + label_style
             if label_for:
                 label_text += label_for
             if len(all_label_classes) > 0:
@@ -611,7 +618,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
                 label_text = None
         grid_label_above = label_text and not floating and not row and grid_type is None
         # update_parent_classes(fieldlist, grid_info[field.number]['index'], classes)
-        output = '                <' + enclosing_type + ' ' + aria_req
+        output = '                <' + enclosing_type + ' ' + aria_req + aria_labelled_by
         if pre:
             output += pre
         all_classes = ['da-grid-container']
@@ -699,7 +706,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
                 all_label_classes.append('col-' + daconfig['grid classes']['label width'] + ' col-form-label da-form-label datext-right')
             if label_classes:
                 all_label_classes.append(label_classes)
-            label_text = '\n                  <' + label_type
+            label_text = '\n                  <' + label_type + label_id
             if label_for:
                 label_text += label_for
             if len(all_label_classes) > 0:
@@ -712,7 +719,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
                 label_text = '<legend class="visually-hidden">' + str(hidden_message) + '</legend>'
             else:
                 label_text = None
-        output = '                <' + enclosing_type + ' ' + aria_req
+        output = '                <' + enclosing_type + ' ' + aria_req + aria_labelled_by
         if pre:
             output += pre
         all_classes = ['da-container']
@@ -799,6 +806,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         autofill = ''
     labels_above = status.question.interview.options.get('labels above', False)
     floating_labels = status.question.interview.options.get('floating labels', False)
+    use_div_as_legend = status.question.interview.options.get('use div as legend', 'feature not set')
+    if use_div_as_legend == 'feature not set':
+        use_div_as_legend = daconfig.get('use div as legend', False)
     if 'script' in status.extras and status.extras['script'] is not None:
         status.extra_scripts.append(status.extras['script'])
     if 'css' in status.extras and status.extras['css'] is not None:
@@ -983,7 +993,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             saveas_part = '<input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/>'
         else:
             saveas_part = ''
-        output += '            </div>\n            <form aria-labelledBy="dasigtitle" action="' + root + '" id="dasigform" method="POST">' + saveas_part + '<input type="hidden" id="da_sig_required" value="' + ('1' if status.extras['required'][0] else '0') + '"/><input type="hidden" id="da_ajax" name="ajax" value="0"/><input type="hidden" id="da_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
+        output += '            </div>\n            <form aria-labelledby="dasigtitle" action="' + root + '" id="dasigform" method="POST">' + saveas_part + '<input type="hidden" id="da_sig_required" value="' + ('1' if status.extras['required'][0] else '0') + '"/><input type="hidden" id="da_ajax" name="ajax" value="0"/><input type="hidden" id="da_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
         output += tracker_tag(status)
         output += '            </form>\n'
         output += '            <div class="d-block d-sm-none da-d-sm-none"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br></div>'
@@ -1802,50 +1812,55 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     label_for = ' for="' + escape_id(label_saveas) + '"'
                 else:
                     label_for = ''
+                fieldset_label_id = None
+                if use_fieldset and label_saveas:
+                    fieldset_label_id = escape_id(label_saveas) + '_' + str(uuid.uuid4()) + '_fieldset_label'
+                elif use_fieldset:
+                    fieldset_label_id = str(uuid.uuid4()) + '_fieldset_label'
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=class_def + side_note_parent + req_tag + field_class + ' da-field-container-nolabel', hidden_message=word("Answer here"), grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=class_def + side_note_parent + req_tag + field_class + ' da-field-container-nolabel', hidden_message=word("Answer here"), grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                     # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '' + side_note_parent + req_tag + field_class + ' da-field-container-nolabel">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field) + '</div>' + side_note + '\n                </div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                     # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field) + '</div>' + side_note + '\n                </div>\n')
                 elif floating_labels or (hasattr(field, 'floating_label') and status.extras['floating_label'][field.number]):
                     if (hasattr(field, 'datatype') and field.datatype in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
                         if status.labels[field.number] == '':
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                         else:
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, label_classes='form-label da-top-label', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, label_classes='form-label da-top-label', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                     else:
                         if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, label_content='', use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, label_content='', use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                             # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                         elif status.labels[field.number] == '':
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                             # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                         else:
                             floating_label = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True)
                             # logmessage("field is " + repr(field.number) + " and status labels is " + repr(status.labels[field.number]))
                             # logmessage("field is " + repr(field.number) + " and floating_label is " + repr(floating_label))
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, floating=True, classes=side_note_parent + req_tag + field_class + class_def, content=input_for(status, field, floating_label=strip_quote(to_text(floating_label, {}, []).strip())), side_note=side_note, label_for=label_for, label_content=floating_label, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, floating=True, classes=side_note_parent + req_tag + field_class + class_def, content=input_for(status, field, floating_label=strip_quote(to_text(floating_label, {}, []).strip())), side_note=side_note, label_for=label_for, label_content=floating_label, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                             # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group-floating form-floating mb-3' + side_note_parent + req_tag + field_class + class_def + '">\n                  ' + input_for(status, field, floating_label=strip_quote(to_text(floating_label, {}, []).strip())) + side_note + '\n                  <label ' + label_for + '>' + floating_label + '</label>\n                </div>\n')
                 elif labels_above or (hasattr(field, 'label_above_field') and status.extras['label_above_field'][field.number]):
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                     elif status.labels[field.number] == '':
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                     else:
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, label_classes='form-label da-top-label', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, label_classes='form-label da-top-label', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group' + side_note_parent + req_tag + field_class + class_def + '">\n                  <label class="form-label da-top-label"' + label_for + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end + '</label>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                 else:
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Check if applicable"), grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Check if applicable"), grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row dayesnospacing' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '"><span  class="visually-hidden">' + word("Check if applicable") + '</span><div class="offset-' + daconfig['grid classes']['label width'] + ' col-' + daconfig['grid classes']['field width'] + ' dafieldpart">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                     elif status.labels[field.number] == '':
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), grid_type='offset', content_classes='dafieldpart danolabel', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), grid_type='offset', content_classes='dafieldpart danolabel', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '"><span class="visually-hidden">' + word("Answer here") + '</span><div class="offset-' + daconfig['grid classes']['label width'] + ' col-' + daconfig['grid classes']['field width'] + ' dafieldpart danolabel">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                     else:
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, grid_type='horizontal', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, grid_type='horizontal', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required, use_div_as_legend=use_div_as_legend, fieldset_label_id=fieldset_label_id))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + side_note_parent + req_tag + field_class + class_def + '"><label' + label_for + ' class="col-' + daconfig['grid classes']['label width'] + ' col-form-label da-form-label datext-right">' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end + '</label><div class="col-' + daconfig['grid classes']['field width'] + ' dafieldpart">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
             if grid_info['_enabled'] and grid_info[field.number]['end']:
                 fieldlist.append('                </div>\n')
