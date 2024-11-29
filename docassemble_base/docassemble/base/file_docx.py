@@ -97,6 +97,10 @@ class InlineHyperlink:
 
 def fix_subdoc(masterdoc, subdoc_info):
     """Fix the images, styles, references, shapes, etc of a subdoc"""
+    for section in masterdoc.sections:
+        for part in section.part.package.parts:
+            if part.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml" and not isinstance(part._blob, bytes):
+                part._blob = part._blob.encode('utf-8')
     subdoc = subdoc_info['subdoc']
     change_numbering = subdoc_info['change_numbering']
     composer = Composer(masterdoc)  # Using docxcompose
