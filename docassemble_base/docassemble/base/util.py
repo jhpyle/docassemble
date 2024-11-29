@@ -6269,32 +6269,63 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
             the_iterable = the_iterable.complete_elements()
     contents = []
     if hasattr(the_iterable, 'items') and callable(the_iterable.items):
-        if isinstance(the_iterable, (OrderedDict, DAOrderedDict)):
-            for key in the_iterable:
-                user_dict_copy['row_item'] = the_iterable[key]
-                user_dict_copy['row_index'] = key
-                if table_info.show_incomplete:
-                    contents.append([table_safe_eval(x, user_dict_copy, table_info) for x in table_info.column])
-                else:
-                    contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
-        else:
-            for key in sorted(the_iterable):
-                user_dict_copy['row_item'] = the_iterable[key]
-                user_dict_copy['row_index'] = key
-                if table_info.show_incomplete:
-                    contents.append([table_safe_eval(x, user_dict_copy, table_info) for x in table_info.column])
-                else:
-                    contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
-    else:
-        indexno = 0
-        for item in the_iterable:
+        the_elements = list(the_iterable.items())
+        if table_info.filter_expression is not None:
+            new_elements = []
+            for indexno_item in the_elements:
+                user_dict_copy['row_item'] = indexno_item[1]
+                user_dict_copy['row_index'] = indexno_item[0]
+                if eval(table_info.filter_expression, user_dict_copy):
+                    new_elements.append(indexno_item)
+            the_elements = new_elements
+        if table_info.sort_key is not None:
+            if 'operator' not in user_dict_copy:
+                exec('import operator', user_dict_copy)
+            if 'functools' not in user_dict_copy:
+                exec('import functools', user_dict_copy)
+            sort_key = eval(table_info.sort_key, user_dict_copy)
+            sort_reverse = bool(eval(table_info.sort_reverse, user_dict_copy))
+            the_elements = list(sorted(the_elements, key=sort_key, reverse=sort_reverse))
+        elif not isinstance(the_iterable, (OrderedDict, DAOrderedDict)):
+            the_elements = list(sorted(the_elements, key=lambda y: y[0]))
+            if table_info.sort_reverse is not None and bool(eval(table_info.sort_reverse, user_dict_copy)):
+                the_elements = list(reversed(the_elements))
+        elif table_info.sort_reverse is not None and bool(eval(table_info.sort_reverse, user_dict_copy)):
+            the_elements = list(reversed(the_elements))
+        for indexno, item in the_elements:
             user_dict_copy['row_item'] = item
             user_dict_copy['row_index'] = indexno
             if table_info.show_incomplete:
                 contents.append([table_safe_eval(x, user_dict_copy, table_info) for x in table_info.column])
             else:
                 contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
-            indexno += 1
+    else:
+        the_elements = list(enumerate(the_iterable))
+        if table_info.filter_expression is not None:
+            new_elements = []
+            for indexno_item in the_elements:
+                user_dict_copy['row_item'] = indexno_item[1]
+                user_dict_copy['row_index'] = indexno_item[0]
+                if eval(table_info.filter_expression, user_dict_copy):
+                    new_elements.append(indexno_item)
+            the_elements = new_elements
+        if table_info.sort_key is not None:
+            if 'operator' not in user_dict_copy:
+                exec('import operator', user_dict_copy)
+            if 'functools' not in user_dict_copy:
+                exec('import functools', user_dict_copy)
+            sort_key = eval(table_info.sort_key, user_dict_copy)
+            sort_reverse = bool(eval(table_info.sort_reverse, user_dict_copy))
+            the_elements = list(sorted(the_elements, key=lambda y: sort_key(y[1]), reverse=sort_reverse))
+        elif table_info.sort_reverse is not None and bool(eval(table_info.sort_reverse, user_dict_copy)):
+            the_elements = list(reversed(the_elements))
+        for indexno, item in the_elements:
+            user_dict_copy['row_item'] = item
+            user_dict_copy['row_index'] = indexno
+            if table_info.show_incomplete:
+                contents.append([table_safe_eval(x, user_dict_copy, table_info) for x in table_info.column])
+            else:
+                contents.append([table_safe(eval(x, user_dict_copy)) for x in table_info.column])
     if table_info.is_editable and not editable:
         for cols in contents:
             cols.pop()
@@ -6517,23 +6548,63 @@ class DALazyTableTemplate(DALazyTemplate):
                 the_iterable = the_iterable.complete_elements()
         contents = []
         if hasattr(the_iterable, 'items') and callable(the_iterable.items):
-            for key in sorted(the_iterable):
-                user_dict_copy['row_item'] = the_iterable[key]
-                user_dict_copy['row_index'] = key
+            the_elements = list(the_iterable.items())
+            if self.table_info.filter_expression is not None:
+                new_elements = []
+                for indexno_item in the_elements:
+                    user_dict_copy['row_item'] = indexno_item[1]
+                    user_dict_copy['row_index'] = indexno_item[0]
+                    if eval(self.table_info.filter_expression, user_dict_copy):
+                        new_elements.append(indexno_item)
+                the_elements = new_elements
+            if self.table_info.sort_key is not None:
+                if 'operator' not in user_dict_copy:
+                    exec('import operator', user_dict_copy)
+                if 'functools' not in user_dict_copy:
+                    exec('import functools', user_dict_copy)
+                sort_key = eval(self.table_info.sort_key, user_dict_copy)
+                sort_reverse = bool(eval(self.table_info.sort_reverse, user_dict_copy))
+                the_elements = list(sorted(the_elements, key=sort_key, reverse=sort_reverse))
+            elif not isinstance(the_iterable, (OrderedDict, DAOrderedDict)):
+                the_elements = list(sorted(the_elements, key=lambda y: y[0]))
+                if self.table_info.sort_reverse is not None and bool(eval(self.table_info.sort_reverse, user_dict_copy)):
+                    the_elements = list(reversed(the_elements))
+            elif self.table_info.sort_reverse is not None and bool(eval(self.table_info.sort_reverse, user_dict_copy)):
+                the_elements = list(reversed(the_elements))
+            for indexno, item in the_elements:
+                user_dict_copy['row_item'] = item
+                user_dict_copy['row_index'] = indexno
                 if self.table_info.show_incomplete:
                     contents.append([self.export_safe_eval(x, user_dict_copy) for x in self.table_info.column])
                 else:
                     contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
         else:
-            indexno = 0
-            for item in the_iterable:
+            the_elements = list(enumerate(the_iterable))
+            if self.table_info.filter_expression is not None:
+                new_elements = []
+                for indexno_item in the_elements:
+                    user_dict_copy['row_item'] = indexno_item[1]
+                    user_dict_copy['row_index'] = indexno_item[0]
+                    if eval(self.table_info.filter_expression, user_dict_copy):
+                        new_elements.append(indexno_item)
+                the_elements = new_elements
+            if self.table_info.sort_key is not None:
+                if 'operator' not in user_dict_copy:
+                    exec('import operator', user_dict_copy)
+                if 'functools' not in user_dict_copy:
+                    exec('import functools', user_dict_copy)
+                sort_key = eval(self.table_info.sort_key, user_dict_copy)
+                sort_reverse = bool(eval(self.table_info.sort_reverse, user_dict_copy))
+                the_elements = list(sorted(the_elements, key=lambda y: sort_key(y[1]), reverse=sort_reverse))
+            elif self.table_info.sort_reverse is not None and bool(eval(self.table_info.sort_reverse, user_dict_copy)):
+                the_elements = list(reversed(the_elements))
+            for indexno, item in the_elements:
                 user_dict_copy['row_item'] = item
                 user_dict_copy['row_index'] = indexno
                 if self.table_info.show_incomplete:
                     contents.append([export_safe(eval(x, user_dict_copy)) for x in self.table_info.column])
                 else:
                     contents.append([self.export_safe_eval(x, user_dict_copy) for x in self.table_info.column])
-                indexno += 1
         if self.table_info.is_editable:
             for cols in contents:
                 cols.pop()

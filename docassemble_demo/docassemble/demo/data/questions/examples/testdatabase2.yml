@@ -1,0 +1,88 @@
+modules:
+  - docassemble.demo.demodb
+---
+objects:
+  - customer: Customer
+  - banks: DADict # dictionary that will store all bank objects with a common instance naming scheme, like banks[23].
+---
+question: |
+  What is the customer's SSN?
+fields:
+  - SSN: customer.ssn
+    default: 023-43-2412
+validation code: |
+  customer.db_read()
+---
+code: |
+  banks[i] = banks.initializeObject(i, Bank, id=i)
+  banks[i].db_read() # this causes the attributes to be defined
+---
+# This is the block that defines customer.bank based on "customer.bank_id",
+# which is a string that comes from the combobox. The string may be an integer
+# ID of an existing bank or a text name of a new bank. If the user wants to create
+# a new bank, this block will cause the "customer.bank_routing_number" question to
+# be asked.
+# Regardless of whether the user is picking an existing bank or a new bank, this
+# block will always define customer.bank as an object with an instanceName like banks[23]
+# where 23 is the database ID of the bank.
+code: |
+  try: # test if the customer.bank_id is an integer and is a valid integer for a bank existing in the database
+    assert Bank.id_exists(int(customer.bank_id))
+    customer.bank = banks[int(customer.bank_id)] # we know customer.bank_id refers to a valid integer, so we can use the previous code block to create an object in the banks DADict and set customer.bank as a reference to that object.
+  except (AssertionError, ValueError):
+    new_bank = Bank('new_bank', routing=customer.bank_routing_number)
+    new_bank.name.text = customer.bank_id
+    new_bank.db_save()
+    customer.bank = banks.initializeObject(new_bank.id, Bank, id=new_bank.id)
+    customer.bank.db_read()
+    del new_bank # we were just using new_bank as a tool for obtaining a new database ID.
+    del customer.bank_routing_number
+  del customer.bank_id
+---
+question: |
+  What is the name of ${ customer.possessive('bank') }?
+fields:
+  - Bank: customer.bank_id # this is always a string, but it may be an integer if the user selects from the pull-down
+    input type: combobox
+    code: Bank.pulldown_list() # this method returns the database ID and name of each bank in the database
+---
+# this question is asked if the bank is a new bank
+question: |
+  What routing number does ${ customer.bank_id } use?
+fields:
+  - Routing number: customer.bank_routing_number 
+---
+question: |
+  What is the customer's name?
+fields:
+  - First Name: customer.name.first
+  - Last Name: customer.name.last
+---
+question: |
+  What is the customer's address?
+fields:
+  - Address: customer.address.address
+    address autocomplete: True
+  - City: customer.address.city
+  - State: customer.address.state
+    code: |
+      states_list()
+  - Zip: customer.address.zip
+    required: False
+  - County: customer.address.county
+---
+mandatory: True
+code: |
+  customer.ssn
+  customer.name.first
+  customer.address.address
+  customer.bank
+---
+mandatory: True
+question: |
+  The customer is
+  ${ customer }
+  and the bank is
+  ${ customer.bank }
+buttons:
+  - Restart: restart

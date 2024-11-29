@@ -1,0 +1,81 @@
+metadata:
+  title: Sort table
+  short title: Sort
+  documentation: "https://docassemble.org/docs/initial.html#sort key"
+  example start: 7
+  example end: 7
+---
+objects:
+  - fruit: DAList.using(object_type=Thing, complete_attribute='complete')
+---
+question: |
+  Do you have any fruit?
+yesno: fruit.there_are_any
+---
+code: |
+  fruit[i].name.text
+  fruit[i].seeds
+  fruit[i].last_eaten
+  fruit[i].complete = True
+---
+question: |
+  What fruit should be added to the list?
+fields:
+  - Fruit: fruit[i].name.text
+  - Number of seeds: fruit[i].seeds
+    datatype: integer
+    min: 0
+---
+question: |
+  When did you last eat a ${ fruit[i] }?
+fields:
+  - Date: fruit[i].last_eaten
+    datatype: date
+---
+question: |
+  So far, the fruits include ${ fruit }.
+  Are there any others?
+yesno: fruit.there_is_another
+---
+table: fruit.table
+rows: fruit
+columns:
+  - Fruit Name: row_item
+  - Number of Seeds: row_item.seeds
+  - Last Eaten: row_item.last_eaten
+sort key: |
+  lambda y: y.last_eaten
+sort reverse: True
+filter: |
+  row_item.seeds > 0
+show if empty: |
+  You have never eaten any fruit.
+edit:
+  - name.text
+  - last_eaten
+---
+mandatory: True
+code: |
+  fruit.table
+  fruit.gather()
+  final_screen
+---
+event: final_screen
+question: |
+  Information about fruit
+subquestion: |
+  The order of fruits in your table is:
+
+  % for item in fruit:
+  1. ${ item }
+  % endfor
+
+  The sorted table looks like this:
+
+  ${ fruit.table }
+
+  ${ fruit.add_action() }
+
+  You can also [download this information].
+
+  [download this information]: ${ fruit.table.export('fruits.xlsx', title='Fruit').url_for() }

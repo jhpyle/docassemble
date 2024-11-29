@@ -3839,7 +3839,20 @@ class Question:
             empty_message = data.get('show if empty', True)
             if empty_message not in (True, False, None):
                 empty_message = TextObject(definitions + str(empty_message), question=self)
-            field_data = {'saveas': data['table'], 'extras': {'header': header, 'row': row, 'column': column, 'empty_message': empty_message, 'indent': data.get('indent', False), 'is_editable': is_editable, 'require_gathered': require_gathered, 'show_incomplete': show_incomplete, 'not_available_label': not_available_label}}
+            if 'sort key' in data:
+                sort_key = compile(str(data['sort key']), '<sort key code>', 'eval')
+                if 'sort reverse' in data:
+                    sort_reverse = compile(str(data['sort reverse']), '<sort reverse code>', 'eval')
+                else:
+                    sort_reverse = compile('False', '<sort reverse code>', 'eval')
+            else:
+                sort_key = None
+                sort_reverse = None
+            if 'filter' in data:
+                filter_expression = compile(str(data['filter']), '<filter code>', 'eval')
+            else:
+                filter_expression = None
+            field_data = {'saveas': data['table'], 'extras': {'header': header, 'row': row, 'column': column, 'empty_message': empty_message, 'indent': data.get('indent', False), 'is_editable': is_editable, 'require_gathered': require_gathered, 'show_incomplete': show_incomplete, 'not_available_label': not_available_label, 'sort_key': sort_key, 'sort_reverse': sort_reverse, 'filter_expression': filter_expression}}
             self.fields.append(Field(field_data))
             self.content = TextObject('')
             self.subcontent = TextObject('')
@@ -9648,6 +9661,9 @@ class Interview:
                         table_info.indent = " " * (4 * int(question.fields[0].extras['indent']))
                         table_info.table_width = self.table_width
                         table_info.empty_message = question.fields[0].extras['empty_message']
+                        table_info.sort_key = question.fields[0].extras['sort_key']
+                        table_info.sort_reverse = question.fields[0].extras['sort_reverse']
+                        table_info.filter_expression = question.fields[0].extras['filter_expression']
                         table_info.saveas = from_safeid(question.fields[0].saveas)
                         actual_saveas = substitute_vars(table_info.saveas, is_generic, the_x, iterators)
                         # docassemble.base.functions.this_thread.template_vars.append(actual_saveas)

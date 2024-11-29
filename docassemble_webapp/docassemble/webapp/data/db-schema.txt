@@ -1,7 +1,6 @@
 globalobjectstorage|value|text||
 emailattachment|index|integer||
 speaklist|key|character varying|250|
-jsonstorage|key|character varying|250|
 machinelearning|create_time|timestamp without time zone||
 supervisors|role|text||
 user|active|boolean||false
@@ -16,10 +15,10 @@ user_roles|role_id|integer||
 attachments|dictionary|text||
 user_auth|reset_password_token|character varying|100|''::character varying
 email|cc_addr|text||
-jsonstorage|persistent|boolean||false
 machinelearning|key|character varying|1024|
 package|gitsubdir|text||
 speaklist|language|character varying|10|
+jsonstorage|filename|character varying|255|
 userdictkeys|filename|character varying|255|
 user_roles|id|integer||nextval('user_roles_id_seq'::regclass)
 userdict|filename|character varying|255|
@@ -28,7 +27,6 @@ shortener|user_id|integer||
 tempuser|id|integer||nextval('tempuser_id_seq'::regclass)
 uploads|private|boolean||true
 machinelearning|id|integer||nextval('machinelearning_id_seq'::regclass)
-jsonstorage|data|jsonb||
 emailattachment|content_type|text||
 speaklist|phrase|text||
 globalobjectstorage|encrypted|boolean||true
@@ -36,7 +34,6 @@ globalobjectstorage|id|integer||nextval('globalobjectstorage_id_seq'::regclass)
 speaklist|id|integer||nextval('speaklist_id_seq'::regclass)
 emailattachment|id|integer||nextval('emailattachment_id_seq'::regclass)
 machinelearning|independent|text||
-jsonstorage|id|integer||nextval('jsonstorage_id_seq'::regclass)
 user_auth|password|character varying|255|''::character varying
 attachments|question|integer||
 package_auth|package_id|integer||
@@ -56,7 +53,6 @@ speaklist|type|character varying|20|
 emailattachment|upload|integer||
 alembic_version|version_num|character varying|32|
 globalobjectstorage|temp_user_id|integer||
-jsonstorage|modtime|timestamp without time zone||now()
 user_invite|role_id|integer||
 user|nickname|character varying|255|
 uploadsroleauth|uploads_indexno|integer||
@@ -79,6 +75,7 @@ user|password|character varying|255|''::character varying
 email|short|character varying|250|
 package|name|character varying|255|
 install|version|integer||
+jsonstorage|tags|text||
 userdictkeys|temp_user_id|integer||
 machinelearning|modtime|timestamp without time zone||
 chatlog|id|integer||nextval('chatlog_id_seq'::regclass)
@@ -102,6 +99,7 @@ package|id|integer||nextval('package_id_seq'::regclass)
 user|subdivisionsecond|character varying|255|
 chatlog|message|text||
 shortener|filename|character varying|255|
+jsonstorage|modtime|timestamp without time zone||now()
 userdict|encrypted|boolean||true
 email|all_addr|text||
 package|type|text||
@@ -119,7 +117,6 @@ uploadsroleauth|id|integer||nextval('uploadsroleauth_id_seq'::regclass)
 shortener|uid|character varying|250|
 user|modified_at|timestamp without time zone||
 chatlog|key|character varying|250|
-jsonstorage|tags|text||
 email|reply_to_addr|text||
 package|version|integer||1
 globalobjectstorage|user_id|integer||
@@ -132,6 +129,7 @@ install|package_id|integer||
 shortener|temp_user_id|integer||
 speaklist|digest|text||
 email|return_path_addr|text||
+jsonstorage|key|character varying|250|
 userdictkeys|key|character varying|250|
 package|packageversion|text||
 uploads|persistent|boolean||false
@@ -142,15 +140,15 @@ attachments|key|character varying|250|
 chatlog|temp_owner_id|integer||
 uploadsuserauth|user_id|integer||
 speaklist|voice|character varying|20|
-package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
 speaklist|encrypted|boolean||true
+package_auth|id|integer||nextval('package_auth_id_seq'::regclass)
 userdict|dictionary|text||
 objectstorage|key|character varying|1024|
 user|pypi_password|character varying|255|
 globalobjectstorage|key|character varying|1024|
 speaklist|filename|character varying|255|
 emailattachment|email_id|integer||
-jsonstorage|filename|character varying|255|
+jsonstorage|persistent|boolean||false
 user_auth|user_id|integer||
 package_auth|user_id|integer||
 userdict|modtime|timestamp without time zone||
@@ -159,8 +157,10 @@ user_invite|token|character varying|100|''::character varying
 user|last_login|timestamp without time zone||
 uploadsuserauth|id|integer||nextval('uploadsuserauth_id_seq'::regclass)
 userdictkeys|user_id|integer||
+jsonstorage|data|jsonb||
 chatlog|temp_user_id|integer||
 user|organization|character varying|255|
+jsonstorage|id|integer||nextval('jsonstorage_id_seq'::regclass)
 user|language|character varying|64|
 userdictkeys|indexno|integer||nextval('userdictkeys_indexno_seq'::regclass)
 shortener|index|integer||

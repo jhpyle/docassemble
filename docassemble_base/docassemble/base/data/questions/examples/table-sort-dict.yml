@@ -1,0 +1,74 @@
+metadata:
+  title: Sort dictionary
+  short title: Sort
+  documentation: "https://docassemble.org/docs/initial.html#sort key"
+  example start: 4
+  example end: 4
+---
+objects:
+  - income: DADict.using(object_type=DAObject,
+                         keys=['employment', 'benefits', 'interest', 'dividends', 'stocks'],
+                         complete_attribute='complete',
+                         there_is_another=False)
+---
+code: |
+  if income[i].receives:
+    income[i].amount
+  income[i].complete = True
+---
+question: |
+  Income from ${ i }
+fields:
+  - "Do you get income from ${ i }?": income[i].receives
+    datatype: yesnoradio
+  - "How much do you get from ${ i }?": income[i].amount
+    datatype: currency
+    show if: income[i].receives
+---
+table: income.table
+rows: income
+columns:
+  - Type: |
+      row_index
+  - Receives: |
+      'Yes' if row_item.receives else 'No'
+  - Amount: |
+      currency(row_item.amount) if row_item.receives else ''
+sort key: |
+  lambda y: y[1].amount if y[1].receives else 0.0
+filter: |
+  row_item.receives is False or row_item.amount < 100
+edit:
+  - receives
+delete buttons: False
+---
+question: |
+  What new income type would
+  you like to add?
+fields:
+  - Type: income.new_item_name
+---
+question: |
+  Do you want to add any
+  more income items?
+yesno: income.there_is_another
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  The income items are:
+  
+  % for key, val in income.items():
+  1. ${ key }
+  % endfor
+
+  The sorted and filtered table looks like this:
+  
+  ${ income.table }
+
+  ${ income.add_action() }
+
+  You can also [download this information].
+
+  [download this information]: ${ income.table.export('income.xlsx', title='Income').url_for() }

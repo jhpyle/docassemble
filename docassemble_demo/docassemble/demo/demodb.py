@@ -148,6 +148,16 @@ class Bank(Person, SQLObject):
         self._session.query(BankCustomerModel).filter(BankCustomerModel.bank_id == self.id, BankCustomerModel.customer_id == customer.id).delete()
         self._session.commit()
 
+    @classmethod
+    def pulldown_list(cls):
+        output = []
+        for db_entry in list(cls._session.query(BankModel).order_by(BankModel.name).all()):
+            output.append({"label": db_entry.name, "value": db_entry.id})
+        return output
+
+    @classmethod
+    def id_exists(cls, the_id):
+        return cls._session.query(BankModel).filter(BankModel.id == the_id).first() is not None
 
 class Customer(Individual, SQLObject):
     _model = CustomerModel

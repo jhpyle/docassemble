@@ -22,7 +22,7 @@ validation code: |
 question: |
   What is the bank's routing number?
 fields:
-  - SSN: bank.routing
+  - Routing number: bank.routing
     default: "234234223"
 validation code: |
   bank.db_read()
