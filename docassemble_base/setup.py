@@ -50,7 +50,7 @@ install_requires = [
     'docassemble==1.5.16',
     "3to2==1.1.1",
     "aiohappyeyeballs==2.3.5",
-    "aiohttp==3.10.3",
+    "aiohttp==3.10.11",
     "aiohttp-retry==2.8.3",
     "aiosignal==1.3.1",
     "alembic==1.13.2",
