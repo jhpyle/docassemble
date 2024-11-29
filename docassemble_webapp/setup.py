@@ -293,7 +293,7 @@ install_requires = [
     "webdriver-manager==4.0.2",
     "webencodings==0.5.1",
     "websocket-client==1.8.0",
-    "Werkzeug==3.0.3",
+    "Werkzeug==3.0.6",
     "wrapt==1.16.0",
     "wsproto==1.2.0",
     "WTForms==3.1.2",
