@@ -22522,7 +22522,7 @@ def playground_page():
                 variables_html = None
                 flash_message = flash_as_html(word('Saved at') + ' ' + the_time + '.  ' + word('Problem detected.'), message_type='error', is_ajax=is_ajax)
             if is_ajax:
-                return jsonify(variables_html=variables_html, vocab_list=vocab_list, ac_list=ac_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages, active_file=active_file, active_interview_url=url_for('index', i=active_interview_string))
+                return jsonify(variables_html=variables_html, vocab_list=vocab_list, ac_list=ac_list, flash_message=flash_message, current_project=current_project, console_messages=console_messages, active_file=active_file, active_interview_url=url_for('index', i=active_interview_string, _external=True))
         else:
             flash(word('Playground not saved.  There was an error.'), 'error')
     interview_path = None
