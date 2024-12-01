@@ -28,13 +28,6 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">jsonstorage</td>
-    <td align="left">key</td>
-    <td align="left">character varying</td>
-    <td align="right">250</td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
     <td align="left">machinelearning</td>
     <td align="left">create_time</td>
     <td align="left">timestamp without time zone</td>
@@ -133,13 +126,6 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">jsonstorage</td>
-    <td align="left">persistent</td>
-    <td align="left">boolean</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">false</td>
-  </tr>
-  <tr valign="top">
     <td align="left">machinelearning</td>
     <td align="left">key</td>
     <td align="left">character varying</td>
@@ -158,6 +144,13 @@
     <td align="left">language</td>
     <td align="left">character varying</td>
     <td align="right">10</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">jsonstorage</td>
+    <td align="left">filename</td>
+    <td align="left">character varying</td>
+    <td align="right">255</td>
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
@@ -217,13 +210,6 @@
     <td align="left">nextval('machinelearning_id_seq'::regclass)</td>
   </tr>
   <tr valign="top">
-    <td align="left">jsonstorage</td>
-    <td align="left">data</td>
-    <td align="left">jsonb</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
     <td align="left">emailattachment</td>
     <td align="left">content_type</td>
     <td align="left">text</td>
@@ -271,13 +257,6 @@
     <td align="left">text</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">jsonstorage</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('jsonstorage_id_seq'::regclass)</td>
   </tr>
   <tr valign="top">
     <td align="left">user_auth</td>
@@ -411,13 +390,6 @@
     <td align="left">integer</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
-    <td align="left">jsonstorage</td>
-    <td align="left">modtime</td>
-    <td align="left">timestamp without time zone</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">now()</td>
   </tr>
   <tr valign="top">
     <td align="left">user_invite</td>
@@ -570,6 +542,13 @@
     <td align="left">install</td>
     <td align="left">version</td>
     <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">jsonstorage</td>
+    <td align="left">tags</td>
+    <td align="left">text</td>
     <td align="right">&nbsp; </td>
     <td align="left">&nbsp; </td>
   </tr>
@@ -735,6 +714,13 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
+    <td align="left">jsonstorage</td>
+    <td align="left">modtime</td>
+    <td align="left">timestamp without time zone</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">now()</td>
+  </tr>
+  <tr valign="top">
     <td align="left">userdict</td>
     <td align="left">encrypted</td>
     <td align="left">boolean</td>
@@ -854,13 +840,6 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">jsonstorage</td>
-    <td align="left">tags</td>
-    <td align="left">text</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">&nbsp; </td>
-  </tr>
-  <tr valign="top">
     <td align="left">email</td>
     <td align="left">reply_to_addr</td>
     <td align="left">text</td>
@@ -945,6 +924,13 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
+    <td align="left">jsonstorage</td>
+    <td align="left">key</td>
+    <td align="left">character varying</td>
+    <td align="right">250</td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
     <td align="left">userdictkeys</td>
     <td align="left">key</td>
     <td align="left">character varying</td>
@@ -1015,18 +1001,18 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
-    <td align="left">package_auth</td>
-    <td align="left">id</td>
-    <td align="left">integer</td>
-    <td align="right">&nbsp; </td>
-    <td align="left">nextval('package_auth_id_seq'::regclass)</td>
-  </tr>
-  <tr valign="top">
     <td align="left">speaklist</td>
     <td align="left">encrypted</td>
     <td align="left">boolean</td>
     <td align="right">&nbsp; </td>
     <td align="left">true</td>
+  </tr>
+  <tr valign="top">
+    <td align="left">package_auth</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('package_auth_id_seq'::regclass)</td>
   </tr>
   <tr valign="top">
     <td align="left">userdict</td>
@@ -1072,10 +1058,10 @@
   </tr>
   <tr valign="top">
     <td align="left">jsonstorage</td>
-    <td align="left">filename</td>
-    <td align="left">character varying</td>
-    <td align="right">255</td>
-    <td align="left">&nbsp; </td>
+    <td align="left">persistent</td>
+    <td align="left">boolean</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">false</td>
   </tr>
   <tr valign="top">
     <td align="left">user_auth</td>
@@ -1134,6 +1120,13 @@
     <td align="left">&nbsp; </td>
   </tr>
   <tr valign="top">
+    <td align="left">jsonstorage</td>
+    <td align="left">data</td>
+    <td align="left">jsonb</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
     <td align="left">chatlog</td>
     <td align="left">temp_user_id</td>
     <td align="left">integer</td>
@@ -1146,6 +1139,13 @@
     <td align="left">character varying</td>
     <td align="right">255</td>
     <td align="left">&nbsp; </td>
+  </tr>
+  <tr valign="top">
+    <td align="left">jsonstorage</td>
+    <td align="left">id</td>
+    <td align="left">integer</td>
+    <td align="right">&nbsp; </td>
+    <td align="left">nextval('jsonstorage_id_seq'::regclass)</td>
   </tr>
   <tr valign="top">
     <td align="left">user</td>

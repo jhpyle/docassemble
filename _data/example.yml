@@ -15859,6 +15859,50 @@
     edit:
       - name.text
       - last_eaten
+"table-sort":
+  "height": !!int |-
+    122
+  "width": !!int |-
+    488
+  "yaml": |-
+    table: fruit.table
+    rows: fruit
+    columns:
+      - Fruit Name: row_item
+      - Number of Seeds: row_item.seeds
+      - Last Eaten: row_item.last_eaten
+    sort key: |
+      lambda y: y.last_eaten
+    sort reverse: True
+    filter: |
+      row_item.seeds > 0
+    show if empty: |
+      You have never eaten any fruit.
+    edit:
+      - name.text
+      - last_eaten
+"table-sort-dict":
+  "height": !!int |-
+    230
+  "width": !!int |-
+    488
+  "yaml": |-
+    table: income.table
+    rows: income
+    columns:
+      - Type: |
+          row_index
+      - Receives: |
+          'Yes' if row_item.receives else 'No'
+      - Amount: |
+          currency(row_item.amount) if row_item.receives else ''
+    sort key: |
+      lambda y: y[1].amount if y[1].receives else 0.0
+    filter: |
+      row_item.receives is False or row_item.amount < 100
+    edit:
+      - receives
+    delete buttons: False
 "table-width":
   "height": !!int |-
     705
@@ -21542,7 +21586,7 @@
     question: |
       What is the bank's routing number?
     fields:
-      - SSN: bank.routing
+      - Routing number: bank.routing
         default: "234234223"
     validation code: |
       bank.db_read()
@@ -21588,6 +21632,15 @@
       ${ customer }.
     buttons:
       - Restart: restart
+"testdatabase2":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    objects:
+      - customer: Customer
+      - banks: DADict # dictionary that will store all bank objects with a common instance naming scheme, like banks[23].
 "testgeolocate":
   "height": !!int |-
     162

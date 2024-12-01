@@ -1269,23 +1269,8 @@ You can also use `table` blocks with [`DADict`] objects:
 {% include side-by-side.html demo="table-dict" %}
 
 When `rows` refers to a [`DADict`], then in the `columns`, `row_index`
-represents the "key" and `row_item` represents the value of each item
-in the dictionary.
-
-You can pretend that the [Python expression]s under `columns` are
-evaluated in a context like this:
-
-{% highlight python %}
-for row_index in sorted(income):
-  row_item = fruit[row_index]
-  # evaluation takes place here
-{% endhighlight %}
-
-Note that running `sorted()` on a dictionary returns an alphabetically
-sorted list of keys of the dictionary.  In [Python], dictionaries are
-inherently unordered.  The keys are sorted is this fashion so that
-the order of the rows in a table does not change every time the table
-appears on the screen.
+represents the "key" and `row_item` represents the "value" of each
+item in the dictionary.
 
 <a name="require gathered"></a>By default, the display of a table
 will require that the table is gathered.  If you want to display a
@@ -1374,6 +1359,106 @@ editing an already-gathered [`DAList`] or [`DADict`].
 
 For more information about this feature, see the section on [editing
 an already-gathered list] in the section on [groups].
+
+## <a name="sort key"></a>Sorting and filtering items in a table
+
+If you have a `DAList` or a `DADict` and you want to display a table
+of some of the items, or display the items sorted in a different way,
+you can specify `sort key` and `filter` options.
+
+In a `table` definition where `rows` refers to a `DAList`, `sort key`
+refers to a function that takes a single parameter as input, namely an
+item in the list, and returns a value that should be used for
+sorting the list. When Python sorts the list, it will call this
+function on each item in the list. The `sort key` is passed to the
+`key` parameter of the Python [`sorted`] function.
+
+Any function name can be used. For example, writing `sort key: str`
+will use the `str()` function to convert each item in the list to
+text, and then alphabetize the rows based on that textual
+representation of each item.
+
+In most cases, though, you will want to write a [`lambda`]
+function. For example:
+
+{% include side-by-side.html demo="table-sort" %}
+
+This example uses
+{% highlight yaml %}
+sort key: |
+  lambda y: y.last_eaten
+{% endhighlight %}
+
+The `last_eaten` attribute is defined by a `datatype: date` field, so
+the rows will be presented to the user in date order.
+
+A [`lambda`] function is just like a Python function, except it
+doesn't have a name. Equivalently, you could load a `.py` module file
+that defines the following function:
+
+{% highlight python %}
+def get_last_eaten(y):
+    return y.last_eaten
+{% endhighlight %}
+
+and then you could write `sort key: get_last_eaten`. However, it is
+easier to just write `lambda y: y.last_eaten`.
+
+Note that the use of the variable name `y` is arbitrary. You could use
+any variable name you want (as long as it isn't a reserved Python
+keyword).
+
+<a name="sort reverse"></a>In a `table` definition, `sort reverse`
+indicates whether the rows will be sorted in reverse order. In the
+above example, `sort reverse: True` is used, which means the table
+will present the items in reverse chronological order. `sort reverse`
+can refer to `True`, `False`, or any Python expression. If `sort
+reverse` is omitted or it evaluates to a false value, the rows are
+sorted in forward order.
+
+<a name="filter"></a>If you want the `table` to present a filtered
+list of the items, you can set `filter` to a Python expression that
+should be evaluated to determine if the item should be included or
+not. In the above example, the expression is `row_item.seeds >
+0`. That means that the `table` will omit any items in the `fruit`
+list where the `seeds` attribute is zero. Like an item in the
+`columns`, the `filter` expression uses the special variables
+`row_item` and `row_index`. The expression is evaluated for each item
+in the list, and if the expression evaluates to a true value, the item
+is included in the table.
+
+If your `table` is editable, it is important to perform sorting and
+filtering using `sort key`, `sort reverse`, and `filter`, rather than
+by passing an expression to `rows` that returns an altered version of
+the underlying list. If you give `rows` an altered version of a
+`DAList` object, some of the editing features might not work
+correctly.
+
+Note that these sorting and filtering features do not alter the
+underlying `DAList` in any way; they only affect the way the `table`
+representation is displayed.
+
+### <a name="sort filter dict"></a>Sorting and filtering dictionaries
+
+The `sort key`, `sort reverse`, and `filter` features also work if the
+`rows` refers to a `DADict` object. The main difference is that the
+`sort key` function is given a Python `tuple` with two items, the
+dictionary key and the dictionary value. If you want to sort on the
+key of a dictionary item, access the first item; if you want to sort
+on the value of a dictionary item, access the second item.
+
+{% include side-by-side.html demo="table-sort-dict" %}
+
+In this example, the `sort key` expression is:
+
+{% highlight python %}
+lambda y: y[1].amount if y[1].receives else 0.0
+{% endhighlight %}
+
+Here, `y[1]` refers to the value of the dictionary item (a
+[`DAObject`]). The income items that are not received are listed as
+though their `amount` was zero, and then the other items are listed in
+`amount` order.
 
 # <a name="sections"></a>Defining the sections for the navigation bar
 
@@ -2887,9 +2972,11 @@ contained:
 [floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/
 [`pickle`]: https://docs.python.org/3/library/pickle.html
 [`mail`]: {{ site.baseurl }}/docs/config.html#mail multiple
-[GitHub repository]: {{ site.github.repository_url }}
 [combining multiple interviews into one]: {{ site.baseurl }}/docs/logic.html#multiple interviews
 [pikepdf]: https://pikepdf.readthedocs.io/en/latest/
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
 [`register_jinja_filter()`]: {{ site.baseurl }}/docs/documents.html#register_jinja_filter
 [Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
+[`lambda`]: https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions
+[`sorted`]: https://docs.python.org/3/library/functions.html#sorted
+[GitHub repository]: {{ site.github.repository_url }}

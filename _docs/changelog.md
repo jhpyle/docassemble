@@ -3,6 +3,25 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.6.0](https://github.com/jhpyle/docassemble/releases/tag/v1.6.0) - 2024-11-30
+
+
+### Added
+- The `filter`, `sort key`, and `sort reverse` options for `table` to
+  allow the presented table to be filtered and sorted.
+
+
+### Changed
+- Upgraded Python dependencies. Note that if you are using third-party
+  Python packages, you may encounter dependency conflicts. It is
+  possible that your interviews will need to be updated.
+- Upgraded Font Awesome, CodeMirror, and Socket.IO.
+
+
+### Fixed
+- The Share button in the Playground provided a relative URL instead
+  of an absolute URL.
+
 ## [1.5.16](https://github.com/jhpyle/docassemble/releases/tag/v1.5.16) - 2024-10-16
 
 
