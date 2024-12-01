@@ -1,5 +1,5 @@
 # mako/ast.py
-# Copyright 2006-2022 the Mako authors and contributors <see AUTHORS file>
+# Copyright 2006-2024 the Mako authors and contributors <see AUTHORS file>
 #
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -115,10 +115,10 @@ class PythonFragment(PythonCode):
         elif keyword in ["elif", "else"]:
             code = "if False:pass\n" + code + "pass"
         elif keyword == "except":
+            code = "try:pass\n" + code + "pass"
             thevar = re.sub(r'^.*(,| as)\s+([a-zA-z\_][0-9a-zA-Z\_]*):.*', r'\2', code)
             if thevar and thevar != code:
                 self.names_set = set([thevar])
-            code = "try:pass\n" + code + "pass"
         elif keyword == "with":
             code = code + "pass"
         else:

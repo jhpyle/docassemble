@@ -606,9 +606,9 @@ PAGINATION_LIMIT_PLUS_ONE = PAGINATION_LIMIT + 1
 
 # PLAYGROUND_MODULES_DIRECTORY = daconfig.get('playground_modules', )
 
-init_py_file = """
-__import__('pkg_resources').declare_namespace(__name__)
-"""
+# init_py_file = """
+# __import__('pkg_resources').declare_namespace(__name__)
+# """
 
 # if not os.path.isfile(os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble', '__init__.py')):
 #     with open(os.path.join(PLAYGROUND_MODULES_DIRECTORY, 'docassemble', '__init__.py'), 'a') as the_file:
@@ -2234,8 +2234,8 @@ def copy_playground_modules():
             for f in [f for f in os.listdir(mod_directory) if re.search(r'^[A-Za-z].*\.py$', f)]:
                 shutil.copyfile(os.path.join(mod_directory, f), os.path.join(local_dir, f))
             # shutil.copytree(mod_dir.directory, local_dir)
-            with open(os.path.join(local_dir, '__init__.py'), 'w', encoding='utf-8') as the_file:
-                the_file.write(init_py_file)
+            # with open(os.path.join(local_dir, '__init__.py'), 'w', encoding='utf-8') as the_file:
+            #     the_file.write(init_py_file)
 
 
 def proc_example_list(example_list, package, directory, examples):
@@ -17946,10 +17946,6 @@ def create_package():
     form = CreatePackageForm(request.form)
     if request.method == 'POST' and form.validate():
         pkgname = re.sub(r'^docassemble-', r'', form.name.data)
-        initpy = """\
-__import__('pkg_resources').declare_namespace(__name__)
-
-"""
         licensetext = """\
 The MIT License (MIT)
 
@@ -17986,7 +17982,7 @@ description_file = README
         setuppy = """\
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from fnmatch import fnmatchcase
 from distutils2.util import convert_path
 
@@ -18038,8 +18034,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       author_email=""" + repr(str(current_user.email)) + """,
       license='MIT',
       url='https://docassemble.org',
-      packages=find_packages(),
-      namespace_packages = ['docassemble'],
+      packages=find_namespace_packages(),
       zip_safe = False,
       package_data=find_package_data(where=os.path.join('docassemble', '""" + str(pkgname) + """', ''), package='docassemble.""" + str(pkgname) + """'),
      )
@@ -18147,8 +18142,6 @@ class Fruit(DAObject):
             the_file.write(setupcfg)
         with open(os.path.join(packagedir, 'MANIFEST.in'), 'w', encoding='utf-8') as the_file:
             the_file.write(manifestin)
-        with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w', encoding='utf-8') as the_file:
-            the_file.write(initpy)
         with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
             the_file.write('__version__ = "0.0.1"')
         with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w', encoding='utf-8') as the_file:

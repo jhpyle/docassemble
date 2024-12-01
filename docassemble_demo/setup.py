@@ -1,7 +1,7 @@
 import os
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 
 def read(fname):
@@ -55,14 +55,13 @@ setup(name='docassemble.demo',
       author_email='jhpyle@gmail.com',
       license='MIT',
       url='https://docassemble.org',
-      packages=find_packages(),
-      namespace_packages=['docassemble'],
+      packages=find_namespace_packages(),
       install_requires=[
           'docassemble==1.5.16',
           'docassemble.base==1.5.16',
           "googledrivedownloader==0.4",
           "ics==0.7.2",
-          "matplotlib==3.9.1.post1"
+          "matplotlib==3.9.3"
       ],
       zip_safe=False,
       package_data=find_package_data(where=os.path.join('docassemble', 'demo', ''), package='docassemble.demo')

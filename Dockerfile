@@ -54,38 +54,38 @@ bash -c \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
 && python3.10 -m venv --copies /usr/share/docassemble/local3.10 \
 && source /usr/share/docassemble/local3.10/bin/activate \
-&& pip install --upgrade pip==24.2 \
-&& pip install --upgrade wheel==0.44.0 \
-&& pip install --upgrade mod_wsgi==5.0.0 \
+&& pip install --upgrade pip==24.3.1 \
+&& pip install --upgrade wheel==0.45.1 \
+&& pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \
-   acme==2.11.0 \
-   certbot==2.11.0 \
-   certbot-apache==2.11.0 \
-   certbot-nginx==2.11.0 \
-   certifi==2024.7.4 \
-   cffi==1.17.0 \
-   charset-normalizer==3.3.2 \
+   acme==3.0.1 \
+   certbot==3.0.1 \
+   certbot-apache==3.0.1 \
+   certbot-nginx==3.0.1 \
+   certifi==2024.8.30 \
+   cffi==1.17.1 \
+   charset-normalizer==3.4.0 \
    click==8.1.7 \
    ConfigArgParse==1.7 \
-   configobj==5.0.8 \
-   cryptography==43.0.1 \
+   configobj==5.0.9 \
+   cryptography==44.0.0 \
    distro==1.9.0 \
-   idna==3.7 \
+   idna==3.10 \
    joblib==1.4.2 \
    josepy==1.14.0 \
    nltk==3.9.1 \
    parsedatetime==2.6 \
    pycparser==2.22 \
-   pyOpenSSL==24.2.1 \
-   pyparsing==3.1.2 \
-   pyRFC3339==1.1 \
+   pyOpenSSL==24.3.0 \
+   pyparsing==3.2.0 \
+   pyRFC3339==2.0.1 \
    python-augeas==1.1.0 \
-   pytz==2024.1 \
-   regex==2024.7.24 \
+   pytz==2024.2 \
+   regex==2024.11.6 \
    requests==2.32.3 \
    six==1.16.0 \
-   tqdm==4.66.5 \
-   urllib3==2.2.2 \
+   tqdm==4.67.1 \
+   urllib3==2.2.3 \
 && pip install \
    /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \

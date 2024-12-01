@@ -530,7 +530,7 @@ def publish_package(pkgname, info, author_info, current_project='default'):
     packagedir = os.path.join(directory, 'docassemble-' + str(pkgname))
     output = "Publishing docassemble." + pkgname + " to PyPI . . .\n\n"
     try:
-        output += subprocess.check_output(['python', 'setup.py', 'sdist'], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+        output += subprocess.check_output(['python', '-m', 'build', '.', '--sdist'], cwd=packagedir, stderr=subprocess.STDOUT).decode()
     except subprocess.CalledProcessError as err:
         output += err.output.decode()
     dist_dir = os.path.join(packagedir, 'dist')
@@ -603,10 +603,6 @@ def make_package_dir(pkgname, info, author_info, directory=None, current_project
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
     dependencies = ", ".join(map(lambda x: repr(x + get_version_suffix(x)), sorted(info['dependencies'])))
-    initpy = """\
-__import__('pkg_resources').declare_namespace(__name__)
-
-"""
     licensetext = str(info['license'])
     if re.search(r'MIT License', licensetext):
         licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(info.get('author_name', '')) + """
@@ -650,7 +646,7 @@ description_file = README.md
     setuppy = """\
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 from fnmatch import fnmatchcase
 from distutils.util import convert_path
 
@@ -703,8 +699,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       author_email=""" + repr(info.get('author_email', '')) + """,
       license=""" + repr(info.get('license', '')) + """,
       url=""" + repr(info['url'] if info['url'] else 'https://docassemble.org') + """,
-      packages=find_packages(),
-      namespace_packages=['docassemble'],
+      packages=find_namespace_packages(),
       install_requires=[""" + dependencies + """],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
@@ -799,9 +794,6 @@ machine learning training files, and other source files.
     with open(os.path.join(packagedir, 'MANIFEST.in'), 'w', encoding='utf-8') as the_file:
         the_file.write(manifestin)
     os.utime(os.path.join(packagedir, 'MANIFEST.in'), (info['modtime'], info['modtime']))
-    with open(os.path.join(packagedir, 'docassemble', '__init__.py'), 'w', encoding='utf-8') as the_file:
-        the_file.write(initpy)
-    os.utime(os.path.join(packagedir, 'docassemble', '__init__.py'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
         the_file.write("__version__ = " + repr(info.get('version', '')) + "\n")
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))
