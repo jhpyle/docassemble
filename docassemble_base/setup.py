@@ -1,7 +1,5 @@
 import os
-import sys
 from fnmatch import fnmatchcase
-from distutils.util import convert_path
 from setuptools import setup, find_namespace_packages
 
 
@@ -14,7 +12,7 @@ standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'
 
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
-    stack = [(convert_path(where), '', package)]
+    stack = [(os.path.normpath(where), '', package)]
     while stack:
         where, prefix, package = stack.pop(0)
         for name in os.listdir(where):
@@ -47,7 +45,6 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
     return out
 
 install_requires = [
-    'docassemble==1.6.0',
     "3to2==1.1.1",
     "aiohappyeyeballs==2.4.3",
     "aiohttp==3.11.8",
@@ -255,7 +252,7 @@ setup(name='docassemble.base',
       license='MIT',
       url='https://docassemble.org',
       install_requires=install_requires,
-      packages=find_namespace_packages(),
+      packages=find_namespace_packages(include=['docassemble.*']),
       zip_safe=False,
       package_data=find_package_data(where=os.path.join('docassemble', 'base', ''), package='docassemble.base'),
       )

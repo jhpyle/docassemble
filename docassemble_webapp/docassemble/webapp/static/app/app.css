@@ -219,7 +219,7 @@ i.da-chat-inactive:hover {
     margin-right: calc(var(--bs-gutter-x) * .5);
 }
 
-.da-grid-container.da-form-group-floating legend {
+.da-grid-container.da-form-group-floating div.da-legend {
     margin-left: calc(var(--bs-gutter-x) * .5);
     margin-right: calc(var(--bs-gutter-x) * .5);
 }
@@ -244,7 +244,7 @@ i.da-chat-inactive:hover {
     color: var(--bs-red);
 }
 
-legend.da-top-label {
+div.da-legend.da-top-label {
     font-size: inherit;
 }
 
@@ -789,7 +789,7 @@ div.dafieldpart > label:first-of-type {
     margin-top: 0px;
 }
 
-div.dafieldpart > legend:first-of-type {
+div.dafieldpart > div.da-legend:first-of-type {
     margin-top: 0px;
 }
 
@@ -957,7 +957,7 @@ img.da-sig-spinner {
     width: 100%;
 }
 
-.dafullwidth + legend {
+.dafullwidth + div.da-legend {
     width: 100%;
 }
 
@@ -1946,15 +1946,15 @@ div.form-text .daterm {
     margin-bottom: 0.5rem;
 }
 
-div.da-grid-container > div.dafieldpart > fieldset.da-field-radio {
+div.da-grid-container > div.dafieldpart > div.da-field-radio {
     margin-bottom: -0.5rem;
 }
 
-div.da-grid-container > div.dafieldpart > fieldset.da-field-checkbox {
+div.da-grid-container > div.dafieldpart > div.da-field-checkbox {
     margin-bottom: -0.5rem;
 }
 
-div.da-grid-container > div.dafieldpart > fieldset.da-field-checkboxes {
+div.da-grid-container > div.dafieldpart > div.da-field-checkboxes {
     margin-bottom: -0.5rem;
 }
 

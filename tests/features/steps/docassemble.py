@@ -513,10 +513,10 @@ def set_text_box_alt(context, num, value):
 @step(r'I click the "(?P<option>[^"]+)" option under "(?P<label>[^"]+)"')
 def set_mc_option_under(context, option, label):
     try:
-        div = context.browser.find_element(By.XPATH, '//legend[text()="' + label + '"]/following-sibling::div')
+        div = context.browser.find_element(By.XPATH, '//div[contains(@class, "da-legend")][text()="' + label + '"]/following-sibling::div')
     except:
         label += " "
-        div = context.browser.find_element(By.XPATH, '//legend[text()="' + label + '"]/following-sibling::div')
+        div = context.browser.find_element(By.XPATH, '//div[contains(@class, "da-legend")][text()="' + label + '"]/following-sibling::div')
     try:
         span = div.find_element(By.XPATH, './/span[text()="' + option + '"]')
     except:
@@ -538,10 +538,10 @@ def set_mc_option(context, choice):
 @step(r'I click the option "(?P<option>[^"]+)" under "(?P<label>[^"]+)"')
 def set_mc_option_under_pre(context, option, label):
     try:
-        div = context.browser.find_element(By.XPATH, '//legend[text()="' + label + '"]/following-sibling::div')
+        div = context.browser.find_element(By.XPATH, '//div[contains(@class, "da-legend")][text()="' + label + '"]/following-sibling::div')
     except:
         label += " "
-        div = context.browser.find_element(By.XPATH, '//legend[text()="' + label + '"]/following-sibling::div')
+        div = context.browser.find_element(By.XPATH, '//div[contains(@class, "da-legend")][text()="' + label + '"]/following-sibling::div')
     try:
         span = div.find_element(By.XPATH, './/span[text()="' + option + '"]')
     except:

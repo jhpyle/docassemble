@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.6.1] - 2024-12-07
+
+### Fixed
+- Rendering issue with radio buttons and checkboxes on Safari.
+
 ## [1.6.0] - 2024-11-30
 
 ### Added

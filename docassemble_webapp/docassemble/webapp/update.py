@@ -107,7 +107,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
     results = {}  # result of actions taken on a package. package name -> message
     if full:
         logmessage("check_for_updates: 0.5 after " + str(time.time() - start_time) + " seconds")
-        for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User', 'Marisol', 'sklearn', 'backports.zoneinfo', 'Flask-Babel', 'docassemble-backports', 'typing-extensions', 'Babel', 'pyasn1-modules', 'Pillow', 'email-validator', 'importlib-metadata', 'importlib-resources', 'prompt-toolkit', 'readme-renderer', 'parse-type', 'et-xmlfile'):
+        for package_name in ('psycopg2', 'pdfminer', 'pdfminer3k', 'py-bcrypt', 'pycrypto', 'constraint', 'distutils2', 'azure-storage', 'Flask-User', 'Marisol', 'sklearn', 'backports.zoneinfo', 'Flask-Babel', 'docassemble-backports', 'typing-extensions', 'Babel', 'pyasn1-modules', 'Pillow', 'email-validator', 'importlib-metadata', 'importlib-resources', 'prompt-toolkit', 'readme-renderer', 'parse-type', 'et-xmlfile', 'docassemble'):
             result = db.session.execute(delete(Package).filter_by(name=package_name))
             if result.rowcount > 0:
                 db.session.commit()
@@ -161,6 +161,10 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
         if 'pdfminer3k' in here_already:
             logmessage("check_for_updates: uninstalling pdfminer3k")
             uninstall_package(DummyPackage('pdfminer3k'), start_time=start_time)
+            changed = True
+        if 'docassemble' in here_already:
+            logmessage("check_for_updates: uninstalling docassemble")
+            uninstall_package(DummyPackage('docassemble'), start_time=start_time)
             changed = True
         if 'pdfminer.six' in here_already:
             try:

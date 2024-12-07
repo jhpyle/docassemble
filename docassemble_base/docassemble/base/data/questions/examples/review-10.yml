@@ -70,7 +70,7 @@ fields:
 question: |
   What is your favorite vegetable?
 fields:
-  - Favorite fruit: favorite_vegetable
+  - Favorite vegetable: favorite_vegetable
 ---
 table:
   fruit_list.table

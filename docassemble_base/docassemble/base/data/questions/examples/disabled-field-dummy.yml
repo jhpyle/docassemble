@@ -24,6 +24,8 @@ subquestion: |
 
   Your favorite vegetable is ${ favorite_vegetable }.
 
+  % if not defined('favorite_vegetable_placeholder'):
   Note that the variable
   `favorite_vegetable_placeholder` is not defined.
+  % endif
 mandatory: True

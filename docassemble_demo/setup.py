@@ -1,6 +1,5 @@
 import os
 from fnmatch import fnmatchcase
-from distutils.util import convert_path
 from setuptools import setup, find_namespace_packages
 
 
@@ -13,7 +12,7 @@ standard_exclude_directories = ('.*', 'CVS', '_darcs', os.path.join('.', 'build'
 
 def find_package_data(where='.', package='', exclude=standard_exclude, exclude_directories=standard_exclude_directories):
     out = {}
-    stack = [(convert_path(where), '', package)]
+    stack = [(os.path.normpath(where), '', package)]
     while stack:
         where, prefix, package = stack.pop(0)
         for name in os.listdir(where):
@@ -55,9 +54,8 @@ setup(name='docassemble.demo',
       author_email='jhpyle@gmail.com',
       license='MIT',
       url='https://docassemble.org',
-      packages=find_namespace_packages(),
+      packages=find_namespace_packages(include=['docassemble.*']),
       install_requires=[
-          'docassemble==1.6.0',
           'docassemble.base==1.6.0',
           "googledrivedownloader==0.4",
           "ics==0.7.2",

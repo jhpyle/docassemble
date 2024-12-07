@@ -16,8 +16,10 @@ question: Result of question
 subquestion: |
   Your favorite fruit is ${ favorite_fruit }.
 
+  % if not defined('favorite_vegetable'):
   The `favorite_vegetable` variable
   was not defined by the previous
   question because the field was
   disabled.
+  % endif
 mandatory: True

@@ -947,6 +947,11 @@ class DAObject:
         docassemble.base.functions.this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
         raise docassemble.base.functions.this_thread.misc['pending_error']
 
+    def raise_undefined_attribute_error(self, thename):
+        var_name = object.__getattribute__(self, 'instanceName') + "." + thename
+        docassemble.base.functions.this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
+        raise docassemble.base.functions.this_thread.misc['pending_error']
+
     def object_name(self, **kwargs):
         """Returns the instanceName attribute, or, if the instanceName contains attributes, returns a
         phrase.  E.g., case.plaintiff becomes "plaintiff in the case." """
@@ -2749,6 +2754,10 @@ class DAList(DAObject):
             # logmessage("Assuming it is there!")
             return self.elements[index]
 
+    def raise_undefined_index_error(self, index):
+        var_name = object.__getattribute__(self, 'instanceName') + '[' + str(index) + ']'
+        raise DAIndexError("name '" + var_name + "' is not defined")
+
     def __str__(self):
         self._trigger_gather()
         return str(self.comma_and_list())
@@ -3800,6 +3809,10 @@ class DADict(DAObject):
                 self.initializeObject(index, self.object_type, **self.object_type_parameters)
             return self.elements[index]
         return self.elements[index]
+
+    def raise_undefined_index_error(self, index):
+        var_name = object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "]"
+        raise DAIndexError("name '" + var_name + "' is not defined")
 
     def __setitem__(self, key, the_value):
         self.elements[key] = the_value

@@ -209,7 +209,11 @@
       var the_name = $object.attr("name");
       if (type == "radio") {
         $object.on("change", function () {
-          $object.parents("fieldset").first().find(".da-has-error").remove();
+          $object
+            .parents(".da-fieldset")
+            .first()
+            .find(".da-has-error")
+            .remove();
           var anyChecked = false;
           $('input.labelauty[name="' + the_name + '"]:enabled').each(
             function () {
@@ -251,7 +255,11 @@
         });
       } else {
         $object.on("change", function () {
-          $object.parents("fieldset").first().find(".da-has-error").remove();
+          $object
+            .parents(".da-fieldset")
+            .first()
+            .find(".da-has-error")
+            .remove();
           if ($(this).is(":checked")) {
             $(this)
               .next()
@@ -273,7 +281,7 @@
       }
 
       element.keydown(function (event) {
-        $object.parents("fieldset").first().find(".da-has-error").remove();
+        $object.parents(".da-fieldset").first().find(".da-has-error").remove();
         var theCode = event.which || event.keyCode;
         if (theCode === 40) {
           event.preventDefault();
