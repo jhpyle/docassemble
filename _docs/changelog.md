@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.6.1](https://github.com/jhpyle/docassemble/releases/tag/v1.6.1) - 2024-12-07
+
+
+### Fixed
+- Rendering issue with radio buttons and checkboxes on Safari.
+
 ## [1.6.0](https://github.com/jhpyle/docassemble/releases/tag/v1.6.0) - 2024-11-30
 
 

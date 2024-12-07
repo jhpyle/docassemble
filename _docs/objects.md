@@ -1056,6 +1056,33 @@ client.getattr_fresh('total_income')
 This should only be used on attributes that are defined by `code`
 blocks.
 
+<a name="DAObject.raise_undefined_attribute_error"></a>The
+`raise_undefined_attribute_error()` method raises the same type of
+exception that a `DAObject` raises when the interview logic requires a
+definition of an object attribute that is undefined.
+
+This can be useful when you are using the `@property` decorator to
+implement getter/setter methods.
+
+{% highlight python %}
+from docassemble.base.util import DAObject
+
+__all__ = ['MyObject']
+
+class MyObject(DAObject):
+
+  @property
+  def foo(self):
+    if not hasattr(self, '_foo'):
+      self.raise_undefined_attribute_error('foo')
+    return self._foo
+
+  @foo.setter
+  def foo(self, val):
+    self._foo = val
+
+{% endhighlight %}
+
 ### <a name="DAObjectlang"></a>Language methods
 
 <a name="DAObject.possessive"></a>The `possessive()` method is a
