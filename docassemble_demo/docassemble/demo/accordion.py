@@ -36,9 +36,7 @@ def _section_start(section_id, section, showing):
     return f"""\
       <div class="accordion-item">
         <h2 class="accordion-header">
-          <button class="accordion-button{collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{section_id}" aria-expanded="{expanded}" aria-controls="collapse-{section_id}">
-            {section}
-          </button>
+          <button class="accordion-button{collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{section_id}" aria-expanded="{expanded}" aria-controls="collapse-{section_id}">{section}</button>
         </h2>
         <div id="collapse-{section_id}" class="accordion-collapse collapse{show}" data-bs-parent="#{section_id}">
           <div class="accordion-body">

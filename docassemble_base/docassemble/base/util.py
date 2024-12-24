@@ -2983,7 +2983,7 @@ class DAList(DAObject):
             message = word(str(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
+        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + str(message) + '</a>'
 
     def hook_on_gather(self, *pargs, **kwargs):
         """Code that runs just before a list is marked as gathered."""
@@ -10300,6 +10300,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         classname = ''
     else:
         classname = ' ' + str(classname)
+
     if isinstance(icon, str):
         icon = re.sub(r'^(fa[a-z])-fa-', r'\1 fa-', icon)
         if not re.search(r'^fa[a-z] fa-', icon):

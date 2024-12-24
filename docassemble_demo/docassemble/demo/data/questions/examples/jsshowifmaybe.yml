@@ -7,10 +7,6 @@ metadata:
 ---
 question: |
   Please fill in the following information.
-subquestion: |
-  Try setting "Favorite fruit" to 
-  "apple" or "mango" (and unfocus the 
-  field) to see what happens.
 fields:
   - Favorite fruit: fruit
   - Favorite vegetable: vegetable

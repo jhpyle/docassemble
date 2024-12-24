@@ -901,7 +901,9 @@ def custom_register():
             return redirect(safe_reg_next)
 
         # Auto-login after register or redirect to login page
-        if 'reg_next' in request.args:
+        if register_form.next.data:
+            safe_reg_next = user_manager.make_safe_url_function(register_form.next.data)
+        elif register_form.reg_next.data:
             safe_reg_next = user_manager.make_safe_url_function(register_form.reg_next.data)
         else:
             safe_reg_next = _endpoint_url(user_manager.after_confirm_endpoint)
