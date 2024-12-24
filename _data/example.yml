@@ -19092,21 +19092,40 @@
     \ }`"
 "jsshowifmaybe":
   "height": !!int |-
-    504
+    440
   "width": !!int |-
     488
-  "yaml": "question: |\n  Please fill in the following information.\nsubquestion:\
-    \ |\n  Try setting \"Favorite fruit\" to \n  \"apple\" or \"mango\" (and unfocus\
-    \ the \n  field) to see what happens.\nfields:\n  - Favorite fruit: fruit\n  -\
-    \ Favorite vegetable: vegetable\n  - \"Do you like mushrooms?\": likes_mushrooms\n\
-    \    datatype: yesnomaybe\n  - Favorite mushroom: mushroom\n    js show if: |\n\
-    \      val(\"likes_mushrooms\") == true\n  - \"How could you now know?\": reason_why_unsure\n\
-    \    input type: area\n    js show if: |\n      val(\"likes_mushrooms\") == \"\
-    None\"\n---\nquestion: |\n  Thank you for that information.\nsubquestion: |\n\
-    \  You like ${ fruit } and ${ vegetable }.\n\n  % if likes_mushrooms is None:\n\
-    \  You said you don't know if you like\n  mushrooms. Your ridiculous explanation\n\
-    \  was:\n\n  ${ quote_paragraphs(reason_why_unsure) }\n  % elif likes_mushrooms:\n\
-    \  Your favorite mushroom is ${ mushroom }.\n  % endif\nmandatory: True"
+  "yaml": |-
+    question: |
+      Please fill in the following information.
+    fields:
+      - Favorite fruit: fruit
+      - Favorite vegetable: vegetable
+      - "Do you like mushrooms?": likes_mushrooms
+        datatype: yesnomaybe
+      - Favorite mushroom: mushroom
+        js show if: |
+          val("likes_mushrooms") == true
+      - "How could you now know?": reason_why_unsure
+        input type: area
+        js show if: |
+          val("likes_mushrooms") == "None"
+    ---
+    question: |
+      Thank you for that information.
+    subquestion: |
+      You like ${ fruit } and ${ vegetable }.
+
+      % if likes_mushrooms is None:
+      You said you don't know if you like
+      mushrooms. Your ridiculous explanation
+      was:
+
+      ${ quote_paragraphs(reason_why_unsure) }
+      % elif likes_mushrooms:
+      Your favorite mushroom is ${ mushroom }.
+      % endif
+    mandatory: True
 "language-functions":
   "height": !!int |-
     3058
@@ -21348,7 +21367,7 @@
       - Edit: favorite_cat
         button: |
           You said your favorite cat was
-          **${ favorite_fruit }**.
+          **${ favorite_cat }**.
       - Edit: favorite_vegetable
         button: |
           You said your favorite dog was
