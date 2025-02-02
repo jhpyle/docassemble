@@ -1462,7 +1462,7 @@ though their `amount` was zero, and then the other items are listed in
 
 # <a name="sections"></a>Defining the sections for the navigation bar
 
-You can use the [`navigation bar`] feature or the
+You can use the [`navigation`] bar feature or the
 [`nav.show_sections()`] function to show your users the "sections" of
 the interview and what the current section of the interview is.
 
@@ -2794,7 +2794,6 @@ contained:
 [Python names]: {{ site.baseurl }}/docs/fields.html#variable names
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
-[`navigation bar`]: #navigation bar
 [`navigation bar html`]: #navigation bar html
 [`nav.set_sections()`]: {{ site.baseurl }}/docs/functions.html#DANav.set_sections
 [action]: {{ site.baseurl }}/docs/functions.html#actions
