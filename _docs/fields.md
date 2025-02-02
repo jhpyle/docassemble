@@ -3637,7 +3637,7 @@ review:
 
 This enables you to use tables in your `review` screen.  Ordinarily,
 tables are always undefined (so that their contents always reflect the
-current state of the list, so a `review` screen would never display them.
+current state of the list), so a `review` screen would never display them.
 
 ### <a name="resume button label"></a>Customizing the Resume button
 
