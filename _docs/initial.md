@@ -1462,7 +1462,7 @@ though their `amount` was zero, and then the other items are listed in
 
 # <a name="sections"></a>Defining the sections for the navigation bar
 
-You can add use the [`navigation bar`] feature or the
+You can use the [`navigation bar`] feature or the
 [`nav.show_sections()`] function to show your users the "sections" of
 the interview and what the current section of the interview is.
 
