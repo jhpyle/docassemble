@@ -368,7 +368,7 @@ fields:
   : words
 {% endhighlight %}
 
-Note that many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `:`, `{`, `}`,
+Note that many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `{`, `}`,
 `[`, and `]`, have special meaning in [YAML], so if you use them in
 your text, make sure to use quotation marks or block quotes.
 
