@@ -66,11 +66,15 @@ class GoogleV3GeoCoder(GeoCoder):
                     for geo_type, addr_type in geo_types.items():
                         if geo_type in component['types'] and ((not hasattr(address, addr_type[0])) or getattr(address, addr_type[0]) in ('', None)) and addr_type[1] in component:
                             setattr(address, addr_type[0], component[addr_type[1]])
+                            if geo_type == 'postal_code' and ((not hasattr(address, 'zip')) or address.zip in ('', None)):
+                                address.zip = component[addr_type[1]]
                             found = True
                     if not found and 'long_name' in component:
                         for google_type in component['types']:
                             if (not hasattr(address, google_type)) or getattr(address, google_type) in ('', None):
                                 setattr(address, google_type, component['long_name'])
+            if hasattr(address, 'postal_code') and hasattr(address, 'postal_code_suffix') and ((not hasattr(address, 'zip4')) or address.zip4 in ('', None)):
+                address.zip4 = address.postal_code + '-' + address.postal_code_suffix
             geo_types = {
                 'administrative_area_level_1': 'state',
                 'administrative_area_level_2': 'county',
@@ -127,6 +131,14 @@ class GoogleV3GeoCoder(GeoCoder):
                 address.norm.city = address.norm.neighborhood
             if (not hasattr(address.norm_long, 'city')) and hasattr(address.norm_long, 'neighborhood'):
                 address.norm_long.city = address.norm_long.neighborhood
+            if (not hasattr(address.norm, 'zip')) and hasattr(address.norm, 'postal_code'):
+                address.norm.zip = address.norm.postal_code
+                if hasattr(address.norm, 'postal_code_suffix'):
+                    address.norm.zip4 = address.norm.postal_code + '-' + address.norm.postal_code_suffix
+            if (not hasattr(address.norm_long, 'zip')) and hasattr(address.norm_long, 'postal_code'):
+                address.norm_long.zip = address.norm_long.postal_code
+                if hasattr(address.norm_long, 'postal_code_suffix'):
+                    address.norm_long.zip4 = address.norm_long.postal_code + '-' + address.norm_long.postal_code_suffix
 
 
 class AzureMapsGeoCoder(GeoCoder):

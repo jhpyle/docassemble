@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.6.3] - 2025-02-16
+
+### Fixed
+- Setting `label above field: False` did not work as intended.
+- Running `.geocode()` will now set the `zip` attribute.
+
 ## [1.6.2] - 2024-12-24
 
 ### Fixed
@@ -61,7 +67,7 @@
 
 ### Changed
 - Upgraded pikepdf.
-  
+
 ### Fixed
 - Issue with `object_checkboxes` and `object_multiselect` when used as
   elements in a `DAList` or `DADict`.

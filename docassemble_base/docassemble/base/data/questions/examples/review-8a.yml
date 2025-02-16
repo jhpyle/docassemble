@@ -1,0 +1,63 @@
+metadata:
+  title: Review answers
+  short title: Review
+  example start: 1
+  example end: 7
+  documentation: "https://docassemble.org/docs/fields.html#review"
+---
+objects:
+  address: Address
+---
+event: review_answers
+question: |
+  Revisit your answers
+review:
+  - label: Edit
+    fields:
+      - address.address
+      - recompute:
+          - address.geocoding_reset
+          - address.county
+      - set:
+          - address.manually_edited: True
+    button: |
+      Your address is:
+
+      ${ address }
+
+      This address is located in
+      ${ address.county }.
+---
+question: |
+  What is your address?
+fields:
+  - "Street address": address.address
+    address autocomplete: True
+  - 'Apt/Unit': address.unit
+    required: False
+  - 'City': address.city
+  - 'State': address.state
+    code: states_list()
+  - 'Zip': address.zip
+---
+question: |
+  In which county in
+  ${ state_name(address.state) }
+  do you live?
+fields:
+  - County: address.county
+---
+sets: address.county
+code: |
+  address.geocode()
+---
+code: |
+  address.reset_geocoding()
+  address.geocoding_reset = True
+---
+mandatory: True
+question: All done
+subquestion: |
+  You live in ${ address.county }.
+
+  [Review your answers](${ url_action('review_answers')})
