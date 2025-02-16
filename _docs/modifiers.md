@@ -939,7 +939,7 @@ the ones that are later in the file first, unless an [`order` initial
 block] or a [`supersedes` modifier] alters that order.
 
 Sometimes, however, a block that **docassemble** tries to use to
-define a variable is one that you don't **docassemble** to even
+define a variable is one that you don't want **docassemble** to even
 consider when looking for a way to define a variable.
 
 This is particularly likely to happen when you have code that changes

@@ -3561,8 +3561,8 @@ assume that clicking the link didn't do anything, and the app is
 broken.
 
 There are three other special commands that you can use in a list of
-variables in a `review` item: `set`, `undefine`, and `invalidate`.
-The following example illustrates `set`:
+variables in a `review` item: `sets`, `undefine`, and `invalidate`.
+The following example illustrates `sets`:
 
 {% include side-by-side.html demo="review-8" %}
 
@@ -3578,7 +3578,7 @@ app.  However, if the user edits the underlying attributes of the
 address, you need to "reset" the geocoding in order to get it to run
 again.
 
-In the above interview, the `set` command sets `address.geocoded` to
+In the above interview, the `sets` command sets `address.geocoded` to
 `False`, which means that when the `address.county` is recomputed, and
 the [`.geocode()`] method is run again by the `code` block, then the
 [`.geocode()`] method will actually geocode the new address.
@@ -3637,7 +3637,7 @@ review:
 
 This enables you to use tables in your `review` screen.  Ordinarily,
 tables are always undefined (so that their contents always reflect the
-current state of the list, so a `review` screen would never display them.
+current state of the list), so a `review` screen would never display them.
 
 ### <a name="resume button label"></a>Customizing the Resume button
 
