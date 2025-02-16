@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.6.3](https://github.com/jhpyle/docassemble/releases/tag/v1.6.3) - 2025-02-16
+
+
+### Fixed
+- Setting `label above field: False` did not work as intended.
+- The `zip` attribute was not being set due to a change in
+  functionality of the Google geocoder.
+
 ## [1.6.2](https://github.com/jhpyle/docassemble/releases/tag/v1.6.2) - 2024-12-24
 
 
@@ -74,7 +82,7 @@ short_title: Change Log
 
 ### Changed
 - Upgraded pikepdf.
-  
+
 
 ### Fixed
 - Issue with `object_checkboxes` and `object_multiselect` when used as
