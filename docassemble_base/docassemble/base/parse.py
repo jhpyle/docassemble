@@ -7147,8 +7147,6 @@ class Question:
                                 # Copy over images, etc from subdoc to master template
                                 subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', [])  # Get the subdoc file list
                                 the_template_docx = the_template.docx
-                                for subdoc in subdocs:
-                                    docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
 
                             except TemplateError as the_error:
                                 if (not hasattr(the_error, 'filename')) or the_error.filename is None:
