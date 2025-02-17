@@ -3561,27 +3561,13 @@ assume that clicking the link didn't do anything, and the app is
 broken.
 
 There are three other special commands that you can use in a list of
-variables in a `review` item: `sets`, `undefine`, and `invalidate`.
-The following example illustrates `sets`:
+variables in a `review` item: `set`, `undefine`, and `invalidate`.
+The following example illustrates `set`:
 
-{% include side-by-side.html demo="review-8" %}
+{% include side-by-side.html demo="review-8a" %}
 
-This interview demonstrates how to re-do the geocoding of an
-[`Address`].  When you call [`.geocode()`] on an [`Address`] the
-first time, the address is geocoded and the `.geocoded` attribute
-of the object is changed from `False` to `True`.  If you call
-[`.geocode()`] on the object again, the first thing it does is check
-the `.geocoded` attribute, and if it is `True`, it will immediately
-return without doing anything.  This is useful for avoiding
-unnecessary API calls, which can slow down the responsiveness of your
-app.  However, if the user edits the underlying attributes of the
-address, you need to "reset" the geocoding in order to get it to run
-again.
-
-In the above interview, the `sets` command sets `address.geocoded` to
-`False`, which means that when the `address.county` is recomputed, and
-the [`.geocode()`] method is run again by the `code` block, then the
-[`.geocode()`] method will actually geocode the new address.
+In this interview, the `set` command sets
+`address.manually_edited` to `True` after the user edits the address.
 
 The `undefine` specifier causes the values to be undefined.  The
 `invalidate` specifier works like `undefine`, except that the original

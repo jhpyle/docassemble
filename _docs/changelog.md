@@ -8,8 +8,7 @@ short_title: Change Log
 
 ### Fixed
 - Setting `label above field: False` did not work as intended.
-- The `zip` attribute was not being set due to a change in
-  functionality of the Google geocoder.
+- Running `.geocode()` will now set the `zip` attribute.
 
 ## [1.6.2](https://github.com/jhpyle/docassemble/releases/tag/v1.6.2) - 2024-12-24
 
