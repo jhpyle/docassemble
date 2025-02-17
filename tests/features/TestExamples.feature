@@ -10308,10 +10308,12 @@ Feature: Example interviews
     And I should not see the phrase "Favorite fruit"
     And I should not see the phrase "Fashion aesthetic"
     And I click the button "Food"
+    And I wait 1 second
     And I set "Favorite fruit" to "mango"
     And I set "Favorite vegetable" to "turnip"
     And I should not see the phrase "Fashion aesthetic"
     And I click the button "Aesthetics"
+    And I wait 1 second
     And I set "Fashion aesthetic" to "Goth"
     And I set "Decor aesthetic" to "Victorian tea room"
     And I click the button "Continue"
