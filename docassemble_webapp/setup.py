@@ -70,7 +70,7 @@ install_requires = [
     "contourpy==1.3.1",
     "convertapi==2.0.0",
     "crayons==0.4.0",
-    "cryptography==44.0.0",
+    "cryptography==44.0.1",
     "cssselect2==0.7.0",
     "cycler==0.12.1",
     "defusedxml==0.7.1",
