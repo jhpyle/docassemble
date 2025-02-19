@@ -999,7 +999,7 @@ gathered `income` or `asset`, these [`code`] blocks will perform their
 function and deliver a definition without causing any non-idempotent
 questions to be asked.
 
-As a general rule, Let each [`code`] block serve a single purpose, or a
+As a general rule, let each [`code`] block serve a single purpose, or a
 set of closely-related purposes, and let it deliver its award (the
 defining of the variable sought) on the last line.  If you get into
 this habit, you will avoid hard-to-debug logic errors.
