@@ -181,7 +181,7 @@ file.
 {% include side-by-side.html demo="document-docx-from-rtf" %}
 
 Note that you can also assemble .docx files from templates that you
-compose in Mirosoft Word.  See the [`docx template file`] feature,
+compose in Microsoft Word.  See the [`docx template file`] feature,
 which is described [below](#docx template file).
 
 ## <a name="md"></a>Creating Markdown files from Markdown
