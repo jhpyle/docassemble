@@ -2100,7 +2100,7 @@ method takes an optional keyword argument, `width`.
 The method also takes an optional keyword argument `alt_text`, which
 can be used to set the [alt text] of images that appear in the web
 browser.  If an `alt_text` keyword argument is not supplied,
-[`get_alt_text()`] is called on the underling [`DAFile`] object to
+[`get_alt_text()`] is called on the underlying [`DAFile`] object to
 obtain the [alt text].  If no `alt_text` is defined for the file, no
 [alt text] is used.
 
@@ -2183,7 +2183,7 @@ call `show()` on itself.
 The method also takes an optional keyword argument `alt_text`, which
 can be used to set the [alt text] of images that appear in the web
 browser.  If an `alt_text` keyword argument is not supplied,
-[`get_alt_text()`] is called on the underling [`DAFile`] object to
+[`get_alt_text()`] is called on the underlying [`DAFile`] object to
 obtain the [alt text].  If no `alt_text` is defined for the file, no
 [alt text] is used.
 
