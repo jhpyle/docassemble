@@ -443,21 +443,21 @@ the next section).
 ## <a name="customization"></a>Additional customization of document formatting
 
 You can exercise greater control over document formatting by creating
-your own template files for [Pandoc].  The default template files are
+your own template files for [Pandoc]. The default template files are
 located in the [`docassemble.base`] package in the
 `docassemble/base/data/templates` directory.  The files include:
 
-* [`Legal-Template.tex`]: this is the [LaTeX] template that [Pandoc]
+* [`Legal-Template.tex`] - this is the [LaTeX] template that [Pandoc]
   uses to generate PDF files.
-* [`Legal-Template.yml`]: default [Pandoc] metadata for the
+* [`Legal-Template.yml`] - default [Pandoc] metadata for the
   [`Legal-Template.tex`] template, in [YAML] format.  Options passed
   through `metadata` items within an [`attachment`] will append or
   overwrite these default options.
-* [`Legal-Template.rtf`]: this is the template that [Pandoc] uses to
+* [`Legal-Template.rtf`] - this is the template that [Pandoc] uses to
   generate RTF files.
-* [`Legal-Template.docx`]: this is the reference file that [Pandoc] uses
-  to generate DOCX files.  You can edit this file to change default
-  styles, headers, and footers.
+* [`Legal-Template.docx`] - this is the reference file that [Pandoc]
+  uses to generate DOCX files.  You can edit this file to change
+  default styles, headers, and footers.
 
 To use your own template files, specify them using the following
 options to [`attachment`]:
