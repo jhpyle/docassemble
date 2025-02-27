@@ -270,11 +270,10 @@ system knows where to find the package.  For example, if
 include:
 
 {% highlight python %}
-install_requires=['docassemble.helloworld', 'kombu'],
-dependency_links=['git+https://github.com/jhpyle/docassemble-helloworld#egg=docassemble.helloworld-0.1'],
+install_requires=['docassemble-helloworld @ https://github.com/jhpyle/docassemble-helloworld/archive/main.zip', 'kombu'],
 {% endhighlight %}
 
-If you use the [Packages area] of the [Playground] to maintain your
+This is just one example. Different dependency situations might require a more advanced understanding of [pip's `install_requires` dependency specifiers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers). If you use the [Packages area] of the [Playground] to maintain your
 package, this is all handled for you.
 
 # <a name="installing"></a>Installing a package
