@@ -54,7 +54,7 @@ bash -c \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
 && python3.10 -m venv --copies /usr/share/docassemble/local3.10 \
 && source /usr/share/docassemble/local3.10/bin/activate \
-&& pip install --upgrade pip==24.3.1 \
+&& pip install --upgrade pip==25.0.1 \
 && pip install --upgrade wheel==0.45.1 \
 && pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \

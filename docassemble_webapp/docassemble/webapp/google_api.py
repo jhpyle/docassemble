@@ -1,3 +1,4 @@
+import sys
 import logging
 import json
 from google.oauth2 import service_account
@@ -13,7 +14,12 @@ credential_json = daconfig.get('google').get('service account credentials', None
 if credential_json is None:
     credential_info = None
 else:
-    credential_info = json.loads(credential_json, strict=False)
+    try:
+        credential_info = json.loads(credential_json, strict=False)
+    except Exception as err:
+        credential_info = None
+        sys.stderr.write("Unable to load google service account credentials:\n")
+        sys.stderr.write(str(err) + "\n")
 
 
 def google_api_credentials(scope):

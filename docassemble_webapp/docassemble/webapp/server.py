@@ -1036,7 +1036,7 @@ def custom_login():
         if app.config['AUTO_LOGIN'] is True:
             number_of_methods = 0
             the_method = None
-            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_ZITADEL_LOGIN', 'USE_TWITTER_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN'):
+            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_ZITADEL_LOGIN', 'USE_TWITTER_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN', 'USE_MINIORANGE_LOGIN'):
                 if app.config[login_method]:
                     number_of_methods += 1
                     the_method = re.sub(r'USE_(.*)_LOGIN', r'\1', login_method).lower()
@@ -1048,7 +1048,7 @@ def custom_login():
             return redirect(url_for('phone_login'))
         if the_method == 'google':
             return redirect(url_for('google_page', next=request.args.get('next', '')))
-        if the_method in ('facebook', 'twitter', 'auth0', 'keycloak', 'azure'):
+        if the_method in ('facebook', 'twitter', 'auth0', 'keycloak', 'azure', 'zitadel', 'miniorange'):
             return redirect(url_for('oauth_authorize', provider=the_method, next=request.args.get('next', '')))
     response = make_response(user_manager.render_function(user_manager.login_template,
                                                           form=login_form,
@@ -1269,6 +1269,11 @@ def url_for_interview(**args):
 
 app.jinja_env.globals.update(url_for=url_for, url_for_interview=url_for_interview)
 
+if DEBUG_BOOT:
+    boot_log("server: setting up logging")
+
+sys_logger = None
+
 
 def syslog_message(message):
     message = re.sub(r'\n', ' ', message)
@@ -1299,12 +1304,6 @@ def syslog_message(message):
 def syslog_message_with_timestamp(message):
     syslog_message(time.strftime("%Y-%m-%d %H:%M:%S") + " " + message)
 
-if DEBUG_BOOT:
-    boot_log("server: setting up logging")
-
-sys_logger = logging.getLogger('docassemble')
-sys_logger.setLevel(logging.DEBUG)
-
 LOGFORMAT = daconfig.get('log format', 'docassemble: ip=%(clientip)s i=%(yamlfile)s uid=%(session)s user=%(user)s %(message)s')
 
 
@@ -1322,9 +1321,10 @@ def add_log_handler():
             sys_logger.addHandler(stderr_log_handler)
         break
 
-add_log_handler()
-
 if not (in_celery or in_cron):
+    sys_logger = logging.getLogger('docassemble')
+    sys_logger.setLevel(logging.DEBUG)
+    add_log_handler()
     if LOGSERVER is None:
         docassemble.base.logger.set_logmessage(syslog_message_with_timestamp)
     else:
@@ -1505,6 +1505,7 @@ app.config['CONTAINER_CLASS'] = 'container-fluid' if daconfig.get('admin full wi
 app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_ZITADEL_LOGIN'] = False
+app.config['USE_MINIORANGE_LOGIN'] = False
 app.config['USE_TWITTER_LOGIN'] = False
 app.config['USE_AUTH0_LOGIN'] = False
 app.config['USE_KEYCLOAK_LOGIN'] = False
@@ -1522,6 +1523,7 @@ if 'oauth' in daconfig:
     app.config['USE_GOOGLE_LOGIN'] = bool('google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False))
     app.config['USE_FACEBOOK_LOGIN'] = bool('facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False))
     app.config['USE_ZITADEL_LOGIN'] = bool('zitadel' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['zitadel'] and daconfig['oauth']['zitadel']['enable'] is False))
+    app.config['USE_MINIORANGE_LOGIN'] = bool('miniorange' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['zitadel'] and daconfig['oauth']['miniorange']['enable'] is False))
     app.config['USE_TWITTER_LOGIN'] = bool('twitter' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['twitter'] and daconfig['oauth']['twitter']['enable'] is False))
     app.config['USE_AUTH0_LOGIN'] = bool('auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False))
     app.config['USE_KEYCLOAK_LOGIN'] = bool('keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False))
@@ -3441,7 +3443,7 @@ def delete_session_sessions():
 
 
 def delete_session_info():
-    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions', 'alt_session', 'zitadel_verifier'):
+    for key in ('i', 'uid', 'key_logged', 'tempuser', 'user_id', 'encrypted', 'chatstatus', 'observer', 'monitor', 'variablefile', 'doing_sms', 'playgroundfile', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules', 'playgroundpackages', 'taskwait', 'phone_number', 'otp_secret', 'validated_user', 'github_next', 'next', 'sessions', 'alt_session', 'zitadel_verifier', 'miniorange_verifier'):
         if key in session:
             del session[key]
 
@@ -4721,6 +4723,9 @@ class OAuthSignIn:
     def authorize(self):
         pass
 
+    def enabled(self):
+        return app.config.get(f"USE_{self.provider_name.upper()}_LOGIN", False)
+
     def callback(self):
         pass
 
@@ -4915,6 +4920,57 @@ class AzureSignIn(OAuthSignIn):
             {'first_name': me.get('givenName', None),
              'last_name': me.get('surname', None),
              'name': me.get('displayName', me.get('userPrincipalName', None))}
+        )
+
+
+class MiniOrangeOAuthSignIn(OAuthSignIn):
+
+    def __init__(self):
+        super().__init__('miniorange')
+        self.service = OAuth2Service(
+            name='azure',
+            client_id=self.consumer_id,
+            client_secret=self.consumer_secret,
+            authorize_url='https://' + str(self.consumer_domain) + '/wp-json/moserver/authorize',
+            access_token_url='https://' + str(self.consumer_domain) + '/wp-json/moserver/token',
+            base_url='https://' + str(self.consumer_domain)
+        )
+
+    def authorize(self):
+        session['miniorange_verifier'] = random_alphanumeric(43)
+        return redirect(self.service.get_authorize_url(
+            response_type='code',
+            client_id=self.consumer_id,
+            redirect_uri=self.get_callback_url(),
+            scope='openid profile email',
+            state=session['miniorange_verifier'])
+        )
+
+    def callback(self):
+        if 'code' not in request.args or 'miniorange_verifier' not in session:
+            return None, None, None, None
+        the_state = request.args.get('state', '')
+        if the_state != session['miniorange_verifier']:
+            del session['miniorange_verifier']
+            return None, None, None, None
+        the_data = {'code': request.args['code'],
+                    'grant_type': 'authorization_code',
+                    'client_id': self.consumer_id,
+                    'client_secret': self.consumer_secret,
+                    'redirect_uri': self.get_callback_url()}
+        oauth_session = self.service.get_auth_session(
+            decoder=safe_json_loads,
+            data=the_data
+        )
+        me = oauth_session.get('wp-json/moserver/resource').json()
+        del session['miniorange_verifier']
+        return (
+            'miniorange$' + str(me['id']),
+            me.get('email').split('@')[0],
+            me.get('email'),
+            {'first_name': me.get('first_name', None),
+             'last_name': me.get('last_name', None),
+             'name': (me.get('first_name', '') + ' ' + me.get('last_name', '')).strip()}
         )
 
 
@@ -5174,6 +5230,8 @@ def oauth_callback(provider):
     # for argument in request.args:
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
     oauth = OAuthSignIn.get_provider(provider)
+    if not oauth.enabled():
+        abort(403)
     social_id, username, email, name_data = oauth.callback()
     if not verify_email(email):
         flash(word('E-mail addresses with this domain are not authorized to register for accounts on this system.'), 'error')
@@ -5183,7 +5241,10 @@ def oauth_callback(provider):
         return redirect(url_for('interview_list', from_login='1'))
     user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(social_id=social_id)).scalar()
     if not user:
-        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).filter_by(email=email)).scalar()
+        user = db.session.execute(select(UserModel).options(db.joinedload(UserModel.roles)).where(UserModel.email.ilike(email))).scalar()
+        if user and not user.social_id.startswith('local') and not daconfig.get('allow external auth with multiple methods', False) and social_id.split('$')[0] != user.social_id.split('$')[0]:
+            flash(word('There is already an account on the system with the e-mail address') + " " + str(email) + ".  " + word("Please log in to that account."), 'error')
+            return redirect(url_for('user.login'))
     if user and user.social_id is not None and user.social_id.startswith('local'):
         flash(word('There is already a username and password on this system with the e-mail address') + " " + str(email) + ".  " + word("Please log in."), 'error')
         return redirect(url_for('user.login'))

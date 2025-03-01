@@ -747,6 +747,7 @@
 "Please enter the verification code from the text message we just sent you.": Null
 "Please enter the verification code from your authentication app.": Null
 "Please log in.": Null
+"Please log in to that account.": Null
 "Please select at least %s.": Null
 "Please select exactly %s.": Null
 "Please select no more than %s.": Null
@@ -816,6 +817,7 @@
 "Register with Azure": Null
 "Register with Facebook": Null
 "Register with Google": Null
+"Register with miniOrange": Null
 "Register with Twitter": Null
 "Register with your mobile phone": Null
 "Register with Zitadel": Null
@@ -921,6 +923,7 @@
 "Sign in with Facebook": Null
 "Sign in with Google": Null
 "Sign in with Keycloak": Null
+"Sign in with miniOrange": Null
 "Sign in with Twitter": Null
 "Sign in with your mobile phone": Null
 "Sign in with Zitadel": Null
@@ -1042,6 +1045,7 @@
 "There are no active sessions.": Null
 "There are unsaved changes.  Are you sure you wish to leave this page?": Null
 "The regular expression you provided could not be parsed.": Null
+"There is already an account on the system with the e-mail address": Null
 "There is already a username and password on this system with the e-mail address": Null
 "The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.": Null
 "There was an error.": Null
