@@ -68,7 +68,7 @@ bash -c \
    click==8.1.7 \
    ConfigArgParse==1.7 \
    configobj==5.0.9 \
-   cryptography==44.0.0 \
+   cryptography==44.0.1 \
    distro==1.9.0 \
    idna==3.10 \
    joblib==1.4.2 \

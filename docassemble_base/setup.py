@@ -82,7 +82,7 @@ install_requires = [
     "colorama==0.4.6",
     "commonmark==0.9.1",
     "convertapi==2.0.0",
-    "cryptography==44.0.0",
+    "cryptography==44.0.1",
     "cssselect2==0.7.0",
     "defusedxml==0.7.1",
     "Deprecated==1.2.15",
