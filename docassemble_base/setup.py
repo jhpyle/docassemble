@@ -133,7 +133,7 @@ install_requires = [
     "jdcal==1.4.1",
     "jeepney==0.8.0",
     "jellyfish==1.1.0",
-    "Jinja2==3.1.4",
+    "Jinja2==3.1.5",
     "jmespath==1.0.1",
     "joblib==1.4.2",
     "keyring==25.5.0",
