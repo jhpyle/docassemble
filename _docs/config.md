@@ -5101,10 +5101,10 @@ The `pypirc path` directive refers to the file where the repository
 URL will be stored. You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
-## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, Keycloak, Zitadel, and Azure login
+## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, Keycloak, Zitadel, miniOrange, and Azure login
 
 If you want to enable logging in with Facebook, Twitter, Google,
-Auth0, KeyCloak, Zitadel, or Microsoft Azure, you will need to tell
+Auth0, KeyCloak, Zitadel, miniOrange, or Microsoft Azure, you will need to tell
 **docassemble** your [OAuth2] keys for these services:
 
 {% highlight yaml %}
@@ -5137,6 +5137,11 @@ oauth:
     enable: True
     id: 168422810448705515@yourprojectname
     domain: your-instance-name-edy3i2.zitadel.cloud
+  miniorange:
+    enable: True
+    id: TQBwKWUcsECMUIkCctjxLQjPFXdIsnYU
+    secret: lTUyixltiJmMMKhXYulCBrKWbFbXPrdy
+    domain: myserver.com
   azure:
     enable: True
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
@@ -5148,13 +5153,22 @@ by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
 [installation] page's sections on [Facebook], [Twitter], [Google],
-[Auth0], [Keycloak], [Zitadel] and [Azure].
+[Auth0], [Keycloak], [Zitadel], [miniOrange] and [Azure].
 
 Note that in [YAML], dictionary keys must be unique. So you can only
 have one `ouath:` line in your configuration. Put all of your
 [OAuth2] configuration details (for Google logins, Google Drive
 integration, OneDrive integration, etc.) within a single `oauth`
 directive.
+
+If an external authentication method is used, the decryption key for
+server-side encryption is based on information sent back by the
+external authentication provider. Encryption still happens (e.g., when
+`multi_user` is not set to `True`), but the encryption key is not a
+secret The protection offered by server-side encryption will be less,
+because a resourceful hacker could figure out the encryption key for
+decrypting interview answers, based on information stored unencrypted
+on the server.
 
 <a name="allow external auth with admin accounts"></a>By default, users who
 log with an authentication mechanism other than username/password
@@ -5166,6 +5180,25 @@ accounts if the external authentication mechanism fails, you can set
 {% highlight yaml %}
 allow external auth with admin accounts: True
 {% endhighlight %}
+
+<a name="allow external auth with multiple methods"></a>By default, a
+use who signs in for the first time (registers) with one external
+authentication method cannot then log in using a different external
+authentication method that is connected with the same email address.
+
+However, if you want to allow users to do this, set `allow external
+auth with multiple methods` to `True`:
+
+{% highlight yaml %}
+allow external auth with multiple methods: True
+{% endhighlight %}
+
+The default is `False`.
+
+Note that if you enable this feature, users may experience an apparent
+loss in access to sessions. While they are allowed to log in to the
+same account, because it has the same email address, the encryption
+key will be different because the authentication method is different.
 
 ## <a name="googledrive"></a>Google Drive configuration
 
@@ -6525,6 +6558,7 @@ and Facebook API keys.
 [Auth0]: {{ site.baseurl }}/docs/installation.html#auth0
 [Keycloak]: {{ site.baseurl }}/docs/installation.html#keycloak
 [Zitadel]: {{ site.baseurl }}/docs/installation.html#zitadel
+[miniOrange]: {{ site.baseurl }}/docs/installation.html#miniorange
 [Azure]: {{ site.baseurl }}/docs/installation.html#azure
 [invited by an administrator]: {{ site.baseurl }}/docs/users.html#invite
 [`root`]: #root

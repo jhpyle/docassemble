@@ -3,6 +3,26 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.6.4](https://github.com/jhpyle/docassemble/releases/tag/v1.6.4) - 2025-03-01
+
+
+### Added
+- The `allow external auth with multiple methods` Configuration
+  directive.
+- The miniOrange WordPress plugin external authentication method.
+
+
+### Changed
+- Users who registered with one external authentication method cannot
+  log in using a different authentication method connected to the same
+  email address unless the `allow external auth with multiple methods`
+  Configuration directive is set to `True`.
+
+
+### Fixed
+- Trapped exception where service account credentials contain invalid
+  JSON.
+
 ## [1.6.3](https://github.com/jhpyle/docassemble/releases/tag/v1.6.3) - 2025-02-16
 
 

@@ -909,6 +909,32 @@ an `id` and `domain` for use with [Zitadel]'s [OAuth] interface.
   may not be necessary for [Zitadel] to work, but in any case, it
   doesn't hurt.
 
+## <a name="miniorange"></a>Setting up miniOrange WordPress logins
+
+To enable users to log in with an account on a WordPress server
+running the [miniOrange OAuth plugin], you need to obtain an `id` and
+`secret` from the WordPress server.
+
+* Log in to the server and go to the miniOrange plugin configuration.
+* Set up the "Client Name." This is the name that will be used to
+  refer to your **docassemble** server on the consent screen.
+* Under "Callback/Redirect URI," enter the URL of your **docassemble**
+  site with `/callback/miniorange` at the end. E.g.,
+  `https://docassemble.example.com/callback/miniorange`.
+* Note the "Client ID." This will be the `id` in your [`oauth`]
+  configuration, under `miniorange`.
+* Also note the "Client Secret."  This will be the `secret` in your
+  [`oauth`] configuration.
+* Also note the hostname of the WordPress server. This will be the
+  `domain` part of your [OAuth] configuration.
+* Edit your **docassemble** [configuration] and update the values
+  under the `miniorange` part of the [`oauth`] directive so that it
+  includes the `id`, `secret`, and `domain` values you noted in the
+  steps above. When setting the `domain`, do not include the
+  `https://` part. There should not be any `/` characters in the
+  `domain`; it needs to be a pure domain. Make sure that `enable` is
+  not set to `False`.
+
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 
 To enable users to log in with their Microsoft accounts, you need to
@@ -1806,4 +1832,5 @@ All of these system administration headaches can be avoided by
 [Telnyx]: https://telnyx.com/
 [Keycloak]: https://www.keycloak.org/
 [Zitadel]: https://zitadel.com
+[miniOrange OAuth plugin]: https://wordpress.org/plugins/miniorange-oauth-20-server/
 [reverse proxy]: {{ site.baseurl }}/docs/docker.html#forwarding

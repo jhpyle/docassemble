@@ -22,7 +22,8 @@ If users log in with [external authentication methods] or the
 the [`multi_user`] variable is set to `True`), but a resourceful
 hacker could figure out the encryption key.  Therefore, if server-side
 encryption is important to you, it is recommended that you do not
-enable [external authentication methods] or the [phone login] feature.
+enable [external authentication methods] or the [phone login]
+feature.
 
 Uploaded and assembled documents are stored on the server (and on
 [Amazon S3], if [S3] is being used, or [Microsoft Azure], if [Azure
