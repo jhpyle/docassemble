@@ -181,7 +181,7 @@ file.
 {% include side-by-side.html demo="document-docx-from-rtf" %}
 
 Note that you can also assemble .docx files from templates that you
-compose in Mirosoft Word.  See the [`docx template file`] feature,
+compose in Microsoft Word.  See the [`docx template file`] feature,
 which is described [below](#docx template file).
 
 ## <a name="md"></a>Creating Markdown files from Markdown
@@ -288,7 +288,7 @@ documents.
   be explicit, `[ENDASH]` will do the same thing.
 * <a name="emdash"></a>`[EMDASH]` - Normally, `---` produces an em-dash, but if you want to
   be explicit, `[EMDASH]` will do the same thing.
-* <a name="hyphen"></a>`[HYPHEN]` - Insert a hyphen.  Normally, `---` produces an em-dash, but if you want to
+* <a name="hyphen"></a>`[HYPHEN]` - Insert a hyphen.  Normally, `-` produces a hyphen, but if you want to
   be explicit, `[HYPHEN]` will do the same thing.
 * <a name="blank"></a>`[BLANK]` - Insert `___________________`.
 * <a name="blank"></a>`[BLANKFILL]` - Insert a wider version of

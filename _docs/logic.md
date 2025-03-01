@@ -106,7 +106,7 @@ determined by which variables **docassemble** sees first.
 
 Note that the order in which non-[`mandatory`] questions appear in the
 [YAML] does not affect the order in which questions are asked.  Each
-block in in your [YAML] is a just a "rule," and you can specify as
+block in your [YAML] is a just a "rule," and you can specify as
 many "rules" in your [YAML] as you want, in any order.
 
 For example, the following block is a rule that indicates whether the
@@ -999,7 +999,7 @@ gathered `income` or `asset`, these [`code`] blocks will perform their
 function and deliver a definition without causing any non-idempotent
 questions to be asked.
 
-As a general rule, Let each [`code`] block serve a single purpose, or a
+As a general rule, let each [`code`] block serve a single purpose, or a
 set of closely-related purposes, and let it deliver its award (the
 defining of the variable sought) on the last line.  If you get into
 this habit, you will avoid hard-to-debug logic errors.

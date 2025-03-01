@@ -769,7 +769,7 @@ variables like `i` and `j` work.  If **docassemble** wants to define
 the attribute `allergy` for an object `person[0]`, and the object is
 of type `Individual`, it can run `x = person[0]` and then process the
 `x.allergy: DAList` line of the [`objects`] block.  Likewise, if
-**docassemble wants to define `person[1].child[0].allergy[3]`, it can
+**docassemble** wants to define `person[1].child[0].allergy[3]`, it can
 set `x = person[1].child[0]`, set `i = 3`, and then ask the
 [`question`] that defines `x.allergy[i]`.  By using the [`generic
 object`] feature, we save ourselves the trouble of writing separate
