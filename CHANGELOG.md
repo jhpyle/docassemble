@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.6.5] - 2025-03-04
+
+### Fixed
+- Bug introduced in 1.6.4, affecting miniOrange users only.
+
 ## [1.6.4] - 2025-03-01
 
 ### Added

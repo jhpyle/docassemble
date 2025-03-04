@@ -1523,7 +1523,7 @@ if 'oauth' in daconfig:
     app.config['USE_GOOGLE_LOGIN'] = bool('google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False))
     app.config['USE_FACEBOOK_LOGIN'] = bool('facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False))
     app.config['USE_ZITADEL_LOGIN'] = bool('zitadel' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['zitadel'] and daconfig['oauth']['zitadel']['enable'] is False))
-    app.config['USE_MINIORANGE_LOGIN'] = bool('miniorange' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['zitadel'] and daconfig['oauth']['miniorange']['enable'] is False))
+    app.config['USE_MINIORANGE_LOGIN'] = bool('miniorange' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['miniorange'] and daconfig['oauth']['miniorange']['enable'] is False))
     app.config['USE_TWITTER_LOGIN'] = bool('twitter' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['twitter'] and daconfig['oauth']['twitter']['enable'] is False))
     app.config['USE_AUTH0_LOGIN'] = bool('auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False))
     app.config['USE_KEYCLOAK_LOGIN'] = bool('keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False))
