@@ -242,7 +242,7 @@ install_requires = [
 ]
 
 setup(name='docassemble.base',
-      version='1.6.4',
+      version='1.6.5',
       python_requires='>=3.9',
       description=('The base components of the docassemble system.'),
       long_description=read("README.md"),
