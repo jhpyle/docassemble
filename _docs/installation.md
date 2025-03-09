@@ -912,7 +912,7 @@ an `id` and `domain` for use with [Zitadel]'s [OAuth] interface.
 ## <a name="miniorange"></a>Setting up miniOrange WordPress logins
 
 To enable users to log in with an account on a WordPress server
-running the [miniOrange OAuth plugin], you need to obtain an `id` and
+running the [miniOrange OpenID plugin], you need to obtain an `id` and
 `secret` from the WordPress server.
 
 * Log in to the server and go to the miniOrange plugin configuration.
@@ -932,8 +932,11 @@ running the [miniOrange OAuth plugin], you need to obtain an `id` and
   includes the `id`, `secret`, and `domain` values you noted in the
   steps above. When setting the `domain`, do not include the
   `https://` part. There should not be any `/` characters in the
-  `domain`; it needs to be a pure domain. Make sure that `enable` is
-  not set to `False`.
+  `domain`; it needs to be a pure domain, like `example.com`. Make
+  sure that `enable` is not set to `False`.
+
+This system assumes that the JWT Token Verification feature is not
+used.
 
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 
@@ -1832,5 +1835,5 @@ All of these system administration headaches can be avoided by
 [Telnyx]: https://telnyx.com/
 [Keycloak]: https://www.keycloak.org/
 [Zitadel]: https://zitadel.com
-[miniOrange OAuth plugin]: https://wordpress.org/plugins/miniorange-oauth-20-server/
+[miniOrange OpenID plugin]: https://wordpress.org/plugins/miniorange-oauth-20-server/
 [reverse proxy]: {{ site.baseurl }}/docs/docker.html#forwarding

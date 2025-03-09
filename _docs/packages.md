@@ -270,12 +270,8 @@ system knows where to find the package.  For example, if
 include:
 
 {% highlight python %}
-install_requires=['docassemble.helloworld', 'kombu'],
-dependency_links=['git+https://github.com/jhpyle/docassemble-helloworld#egg=docassemble.helloworld-0.1'],
+install_requires=['docassemble.helloworld @ https://github.com/jhpyle/docassemble-helloworld/archive/refs/tags/v1.0.zip', 'kombu'],
 {% endhighlight %}
-
-If you use the [Packages area] of the [Playground] to maintain your
-package, this is all handled for you.
 
 # <a name="installing"></a>Installing a package
 

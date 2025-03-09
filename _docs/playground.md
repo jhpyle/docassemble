@@ -702,9 +702,16 @@ Playground.
 
 {% include image.html alt="Sidebar in Word Online" src="playground-word-online-sidebar.png" class="maybe-full-width" %}
 
-To enable the sidebar in Microsoft Word, first go to [Utilities] and
-[download the XML manifest file].  This small data file represents an
-"add-in" for Microsoft Word.
+To enable this, first go to the [Configuration] and enable the
+following setting:
+
+{% highlight yaml %}
+cross site domains:
+  - https://word-edit.officeapps.live.com
+{% endhighlight %}
+
+Then, go to [Utilities] and [download the XML manifest file].  This
+small data file represents an "add-in" for Microsoft Word.
 
 The sidebar works both in Word Online and in the desktop version of
 Word, using this XML file.
@@ -725,21 +732,15 @@ add-in following [Microsoft's instructions](https://learn.microsoft.com/en-us/of
 If you are an Office 365 administrator for an organization, you can
 install the add-in and make it available to the users in your
 organization. Go to the Admin "app," also known as the "Microsoft 365
-admin center."  Under "Settings," select "Services & add-ins."  Click
-"+ Deploy Add-In."  It should take you to a dialog box where you can
-upload an XML file.  Select "I have the manifest file (.xml) on this
-device," click "Browse," and then select the XML manifest file that
-you downloaded from your **docassemble** server.
+admin center." Under "Settings," select "Integrated apps," then click
+"Upload custom apps." It should take you to a page where you can
+upload an XML file. Under "Upload manifest file," click "Choose File,"
+and then select the XML manifest file that you downloaded from your
+**docassemble** server.
 
-Once the add-in is installed, you can open a Word file.  To show the
-sidebar, go to the "Insert" menu and select "Office Add-ins."  The
-Office Add-ins dialog box has four tabs.  If your add-in installed
-correctly, you should be able to find the "Docassemble Playground"
-add-in under one of these tabs.  Select it and click the "Add" button.
-
-Unfortunately, Word does not remember what add-ins you were using from
-one session to another, so every time you open the Word file, you will
-need to go to the "Insert" menu to activate the Playground sidebar.
+Once the add-in is installed, you can open a Word file. The
+"Playground sidebar" should be visible on the Home tab. Click the icon
+to open the sidebar.
 
 ## <a name="word addin desktop install"></a>Installing the sidebar in the desktop version of Word
 
@@ -758,6 +759,10 @@ the "Shared Folder" tab, select "Docassemble Playground," and click
 Unfortunately, Word does not remember what add-ins you were using from
 one session to another, so every time you open the Word file, you will
 need to go to the "Insert" menu to activate the Playground sidebar.
+
+Note: **docassemble** no longer supports Internet Explorer. If your
+version of desktop Microsoft Word still uses Internet Explorer to load
+add-ins, the sidebar will fail to load.
 
 ## <a name="word addin other xml"></a>Using XML manifest files other than your own
 
