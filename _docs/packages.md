@@ -273,6 +273,18 @@ include:
 install_requires=['docassemble.helloworld @ https://github.com/jhpyle/docassemble-helloworld/archive/refs/tags/v1.0.zip', 'kombu'],
 {% endhighlight %}
 
+Different dependency situations might require a more advanced
+understanding of [pip's `install_requires` dependency specifiers](https://packaging.python.org/en/latest/specifications/dependency-specifiers/#dependency-specifiers).
+
+The [Packages area] of the Playground is capable of generating a
+rudimentary `setup.py` file that you can start with, but if you need
+to manually modify your `setup.py` file, the [Packages area] will not
+be able to generate a `setup.py` containing your modifications. You
+can still install your package into the Playground (provided it does
+not use subdirectories under folders like `data/static` and
+`data/templates`), but the [Packages area] only knows how to generate
+`install_requires` lines that list packages available on [PyPI].
+
 # <a name="installing"></a>Installing a package
 
 You can install a **docassemble** extension package, or any other

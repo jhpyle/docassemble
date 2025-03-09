@@ -261,7 +261,8 @@ Packages are defined with the following elements:
   system using a ZIP file or a GitHub URL, the `setup.py` file will
   nevertheless assume that the package is available on PyPI. If you
   need your `setup.py` to pull a dependency from GitHub, you will need
-  to edit it manually.
+  to edit it manually, and if your package lives on GitHub, you will
+  need to use command line `git` to commit changes.
 * **Interview files**: From the [interview files] defined in your
   Playground, indicate which ones should be included in your package.
 * **Template files**: From the [template files] defined in your
