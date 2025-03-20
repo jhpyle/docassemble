@@ -1,0 +1,1 @@
+{% unless include.inline %}<p>{% endunless %}<picture><source srcset="{{ site.baseurl }}/imgdark/{{ include.src }}" media="(prefers-color-scheme: dark)" /><img alt="{{ include.alt }}" src="{{ site.baseurl }}/img/{{ include.src }}"{% if include.class %} class="{{ include.class }}"{% endif %} /></picture>{% unless include.inline %}</p>{% endunless %}

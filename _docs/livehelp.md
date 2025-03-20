@@ -160,30 +160,33 @@ monitoring by an operator.)
 
 Each session listing consists of:
 
+![monitor-indicator-waiting]({{ site.baseurl }}/img/monitor-indicator-waiting.png)
+![monitor-indicator-standby]({{ site.baseurl }}/img/monitor-indicator-standby.png) 
+
 * A status indicator:
-    * ![monitor-indicator-waiting]({{ site.baseurl }}/img/monitor-indicator-waiting.png)
+    * <span class="badge bg-info da-chat-status-label">waiting</span>
       means that the user is waiting for available chat partners to
       appear;
-    * ![monitor-indicator-standby]({{ site.baseurl }}/img/monitor-indicator-standby.png) 
+    * <span class="badge bg-info da-chat-status-label">standby</span> 
       means that a chat partner is available, but the user has not
       activated chat;
-    * ![monitor-indicator-on]({{ site.baseurl }}/img/monitor-indicator-on.png) 
+    * <span class="badge bg-info da-chat-status-label">on</span> 
       means that the user has activated [live chat]; and
-    * ![monitor-indicator-off]({{ site.baseurl }}/img/monitor-indicator-off.png)
+    * <span class="badge bg-info da-chat-status-label">off</span> 
       means that [live chat] is turned off in the user's interview,
       but the user's screen can still be [observed] and [controlled].
-    * ![monitor-indicator-offline]({{ site.baseurl }}/img/monitor-indicator-offline.png) 
+    * <span class="badge bg-danger da-chat-status-label">offline</span> 
       means that the user's session has become inactive.
 * The interview title (as set in the [metadata]).
 * The name of the interviewee, if the user is signed in.
 * Control buttons:
-    * ![monitor-button-observe]({{ site.baseurl }}/img/monitor-button-observe.png)
+    * <a href="javascript:return(0)" class="btn btn-primary">Observe</a>
       allows the operator to see a [real-time view](#observe) of the
       user's screen, and then take [control] of the screen if necessary;
-    * ![monitor-button-join]({{ site.baseurl }}/img/monitor-button-join.png)
+    * <a href="javascript:return(0)" class="btn btn-warning">Join</a>
       opens a new tab in the operator's browser, where the operator
       [becomes a co-interviewee](#join) in the on-going interview.
-    * ![monitor-button-block]({{ site.baseurl }}/img/monitor-button-block.png)
+    * <a href="javascript:return(0)" class="btn btn-danger">Block</a>
       can be used by the operator to [terminate](#block) an existing chat
       conversation or to prevent the user from initiating one, without
       affecting the operator's availability to other sessions.
@@ -207,7 +210,7 @@ above or below.
 
 ## <a name="observe"></a>Observing the interview in progress
 
-The ![monitor-button-observe]({{ site.baseurl }}/img/monitor-button-observe.png)
+The <a href="javascript:return(0)" class="btn btn-primary">Observe</a>
 button displays a real time view of a user's interview screen.  It
 changes as the user makes changes to a form or moves from screen to
 screen.
@@ -220,7 +223,7 @@ reflected without delay, except for typing in a text box, which may
 take up to six seconds to be reflected.
 
 The view of the user's screen is "read-only."  Operators cannot make
-changes.  Clicking ![monitor-button-stop-observing]({{ site.baseurl }}/img/monitor-button-stop-observing.png)
+changes.  Clicking <a href="javascript:return(0)" class="btn btn-secondary">Stop Observing</a>
 will hide the operator's view of the user's screen.
 
 Users do not receive any kind of notification when an operator starts
@@ -235,7 +238,7 @@ can take control and start answering questions on behalf of the user,
 while the user watches what the operator does.
 
 When the operator presses the
-![monitor-button-control]({{ site.baseurl }}/img/monitor-button-control.png)
+<a href="javascript:return(0)" class="btn btn-info">Control</a>
 button, the user sees a notification like this:
 
 ![control-example-controlled]({{ site.baseurl }}/img/control-example-controlled.png){: .maybe-full-width }
@@ -252,7 +255,7 @@ miniature window:
 ![monitor-example-with-control]({{ site.baseurl }}/img/monitor-example-with-control.png){: .maybe-full-width }
 
 When the operator presses the
-![monitor-button-stop-controlling]({{ site.baseurl }}/img/monitor-button-stop-controlling.png)
+<a href="javascript:return(0)" class="btn btn-secondary">Stop Controlling</a>
 button, the user regains control of the interview:
 
 ![control-example-no-longer-controlled]({{ site.baseurl }}/img/control-example-no-longer-controlled.png){: .maybe-full-width }
@@ -267,7 +270,7 @@ you inform the user that their session may be monitored.
 ## <a name="join"></a>Joining the interview in progress
 
 When the operator clicks the
-![monitor-button-join]({{ site.baseurl }}/img/monitor-button-join.png)
+<a href="javascript:return(0)" class="btn btn-warning">Join</a>
 button, a new tab opens up in the operator's browser.  The effect is
 similar to that of clicking on a URL created by the
 [`interview_url()`] function.  One difference is that the
@@ -463,7 +466,7 @@ out.  At the bottom of the screen is a message showing that there is
 one operator standing by to chat with the user.
 
 The user then clicks the
-![chat-button-activate-chat]({{ site.baseurl }}/img/chat-button-activate-chat.png)
+<a href="javascript:return(0)" class="btn btn-success">Activate chat</a>
 button.
 
 ![chat-example-03]({{ site.baseurl }}/img/chat-example-03.png){: .maybe-full-width }
@@ -530,11 +533,11 @@ board" to leave messages for one another.
 ## <a name="block"></a>Blocking live chat for a session
 
 The user can terminate a [live chat] session by clicking the
-![chat-button-turn-off-chat]({{ site.baseurl }}/img/chat-button-turn-off-chat.png)
+<a href="javascript:return(0)" class="btn btn-warning">Turn off chat</a>
 button.
 
 The operator can terminate a [live chat] session by clicking the
-![monitor-button-block]({{ site.baseurl }}/img/monitor-button-block.png)
+<a href="javascript:return(0)" class="btn btn-danger">Block</a>
 button.
 
 Note that when the operator sets his or her status to "Not available
@@ -550,7 +553,7 @@ user will be prevented from initiating a [live chat] session with any
 of the operators.
 
 The operator can reverse the effect of the block by clicking the 
-![monitor-button-unblock]({{ site.baseurl }}/img/monitor-button-unblock.png)
+<a href="javascript:return(0)" class="btn btn-info">Unblock</a>
 button.
 
 If the [chat mode] is [`peer`] or [`peerhelp`], blocking the user will
@@ -621,7 +624,8 @@ like this, indicating that telephone calls with the first session are enabled.
 
 ![phone-example-green-icon]({{ site.baseurl }}/img/phone-example-green-icon.png)
 
-Clicking the ![phone-button-green]({{ site.baseurl }}/img/phone-button-green.png)
+Clicking the 
+<a class="btn btn-success daobservebutton" href="javascript:return(0)"><i class="fa-solid fa-phone"></i></a>
 button will toggle the enabling of call forwarding.
 
 Within seconds of the operator enabling call forwarding, the user will

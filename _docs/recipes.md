@@ -216,7 +216,7 @@ __all__ = ['prog_disclose']
 
 def prog_disclose(template, classname=None):
     if classname is None:
-        classname = ' bg-light'
+        classname = ' bg-secondary-subtle'
     else:
         classname = ' ' + classname.strip()
     the_id = re.sub(r'[^A-Za-z0-9]', '', template.instanceName)
@@ -256,6 +256,23 @@ The functions in [`docassemble.demo.accordion`] can also be used in
 other parts of a screen, such as the `subquestion`.
 
 {% include demo-side-by-side.html demo="testaccordion3" %}
+
+If you need empty accordions to be hidden you can use some CSS to hide
+empty accordions.
+
+{% include demo-side-by-side.html demo="testaccordion4" %}
+
+The CSS in the `accordion.css` file is:
+
+{% highlight css %}
+div.accordion-item:has(.accordion-body:empty) h2 {
+    display: none;
+}
+
+div.accordion-item:has(.accordion-body:empty) div {
+    display: none;
+}
+{% endhighlight %}
 
 When using functions like these that change the HTML structure of the
 screen, it is very important not to forget to call the functions that
@@ -2399,7 +2416,8 @@ Here is an example of a Python module that, when installed on a
 # pre-load
 
 from docassemble.webapp.app_object import app
-from flask import render_template_string, Markup
+from flask import render_template_string
+from markupsafe import Markup
 
 @app.route('/hello', methods=['GET'])
 def hello_endpoint():
@@ -2440,7 +2458,7 @@ variables that the `base_templates/base.html` uses. You can customize
 different parts of the page by setting these values. The exception is
 `planet`, which is a variable that is used in the HTML for the
 `/hello` page. Note that in order to insert raw HTML using keyword
-parameters, you need to use [Flask]'s `Markup()` function.
+parameters, you need to use the `Markup()` function.
 
 [Flask] only permits one template folder, and the template folder in
 the **docassemble** app is the one in `docassemble.webapp`. This
@@ -2823,6 +2841,111 @@ class.
 
 {% include demo-side-by-side.html demo="new-or-existing" %}
 
+# <a name="access"></a>Controlling access to interviews
+
+You can control access to interviews using the username/password
+system, and you can use the [`require login`] and [`required
+privileges`].
+
+If you already have a username/password system on another
+web site, and you don't want users to have to log in twice, there are
+ways around this:
+* If both your other site and your **docassemble** side use the same
+  social sign-on system, like Azure, the login process can be fairly
+  transparent.
+* Your other site could synchronize the usernames and passwords
+  between your other site and the **docassemble** site. The
+  **docassemble** API allows for creating users, deleting users, and
+  changing their passwords.
+* Your users can use the **docassemble** site without logging in to
+  the **docassemble** site. Your interviews can control access and
+  identify the user through a different means.
+
+To make an interview non-public, you can put something like this at the top of the interview:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  authorized = False
+  multi_user = True
+---
+initial: True
+code: |
+  if not authorized:
+    command('exit', url="https://example.com/login")
+  process_action()
+{% endhighlight %}
+
+If a random person on the internet tries to access the docassemble
+interview through a URL, they will be immediately redirected. A new
+session will be created, but it will immediately be deleted by
+the operation of `command('exit')`.
+
+Meanwhile, users of your web site will be able to use interview
+sessions that your site creates for them. Your site can call the
+following [API] endpoints:
+
+* [`/api/session/new` GET endpoint]: this creates a new session in an
+  interview with the filename `i`. A `session` ID is returned.
+* [`/api/session` POST endpoint]: this defines variables in the
+interview answers of a session identified by `i` and `session`. For
+example, using the `session` ID it obtained by calling the previous
+endpoint, your site could call the [`/api/session` POST endpoint] with
+`variables` set to `{'authorized': true}`.
+
+Now you can direct the user to the URL
+`https://da.example.com/interview?i=docassemble.mypackage:data/questions/myinterview.yml&session=afj32vnf23wjfhf2393d928j39d8j`
+or, equivalently, `https://da.example.com/run/mypackage/myinterview/?session=afj32vnf23wjfhf2393d928j39d8j`.
+
+The session that the user resumes will have the variable `authorized`
+set to `True` and thus the user will not be redirected away. The
+session code is the security mechanism.
+
+At the same time that your site defines `authorized` as `True`, it
+could also define variables such as the user's email address, or a
+unique ID for the user's account on your site. These might be useful
+to have in an interview.
+
+There are other strategies for authentication without login. For
+example, you could use to use the [API] to [stash] data in
+**docassemble**, and then direct the user to an interview with a link
+like
+`https://da.example.com/start/mypackage/myinterview/?k=AFJI23FJOIJ239FASD2&s=IRUWJR2389EFIJW2333`
+where `AFJI23FJOIJ239FASD2` and `IRUWJR2389EFIJW2333` are the
+`stash_key` and the `secret` returned by the [`/api/stash_data`]
+endpoint. Your interview logic could retrieve these values from the
+`url_args` and then use [`retrieve_stashed_data()`] to obtain the
+data.
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  if 'k' not in url_args or 's' not in url_args:
+    command('exit', url="https://example.com/login")
+  data = retrieve_stashed_data(url_args['k'], url_args['s'])
+  if not data:
+    command('exit', url="https://example.com/login")
+  user_name = data['user_name']
+scan for variables: False
+---
+initial: True
+code: |
+  process_action()
+{% endhighlight %}
+
+The interview can commence only if `k` and `s` are present in the URL
+parameters, and only if they are valid. When you [stash] the data you
+can set a time period after which the data will be automatically
+deleted.
+
+This method has the advantage that it does not require using
+`multi_user = True`. However, if the user does not log in to the
+**docassemble** site, the user will not be able to resume an encrypted
+session if `multi_user` is not set to `True`.
+
+[`retrieve_stashed_data()`]: {{ site.baseurl }}/docs/functions.html#retrieve_stashed_data
+[`/api/session/new` GET endpoint]: {{ site.baseurl }}/docs/api.html#session_new
+[`/api/session` POST endpoint]: {{ site.baseurl }}/docs/api.html#session_post
 [`sections`]: {{ site.baseurl }}/docs/initial.html#sections
 [how **docassemble** finds questions for variables]: {{ site.baseurl }}/docs/logic.html#variablesearching
 [`show if`]: {{ site.baseurl }}/docs/fields.html#show if
@@ -2968,3 +3091,7 @@ class.
 [accordion feature]: https://getbootstrap.com/docs/5.3/components/accordion/
 [`docassemble.demo`]: https://github.com/jhpyle/docassemble/tree/master/docassemble_demo
 [`docassemble.demo.accordion`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_demo/docassemble/demo/accordion.py
+[`require login`]: {{ site.baseurl }}/docs/initial.html#require login
+[`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
+[stash]: {{ site.baseurl }}/docs/api.html#stash_data
+[`/api/stash_data`]: {{ site.baseurl }}/docs/api.html#stash_data

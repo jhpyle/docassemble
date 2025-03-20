@@ -17,9 +17,9 @@ mandatory: True
 
 To run this, first set up your server using [Docker].
 
-To get **docassemble** up and running in your web browser, visit 
-[http://localhost](http://localhost) if you are running **docassemble** locally (i.e., 
-using Docker Desktop on your computer), or else navigate to your 
+To get **docassemble** up and running in your web browser, visit
+[http://localhost](http://localhost) if you are running **docassemble** locally (i.e.,
+using Docker Desktop on your computer), or else navigate to your
 **docassemble** server URL).
 
 Once **docassemble** is up and running in your web browser, click "Log
@@ -39,25 +39,28 @@ Then, from the menu, select [Playground].  The [Playground] is a
 "sandbox" area where you can develop interviews and test them, all
 inside the web browser.
 
-![Playground]({{ site.baseurl }}/img/menu-selection-playground.png)
+{% include image.html alt="Playground" src="menu-selection-playground.png" class="maybe-full-width" %}
 
-Then, click the ![Add]({{ site.baseurl }}/img/playground-button-add.png)
-button to create a new interview.  Call it "hello.yml."  (`.yml` is
-the file extension for the data format known as [YAML].)
+Then, click the 
+{% include button.html class="fa-solid fa-plus-circle" text="Add" %} 
+button to create a new interview.  Call it "hello.yml." (`.yml` is the
+file extension for the data format known as [YAML].)
 
-![New interview]({{ site.baseurl }}/img/playground-new-interview.png)
+{% include image.html alt="New interview" src="playground-new-interview.png" %}
 
 Then, copy and paste the interview code above into the editor:
 
-![Code copied into interview]({{ site.baseurl }}/img/playground-new-interview-with-code.png)
+{% include image.html alt="Code copied into interview" src="playground-new-interview-with-code.png" %}
 
-Then, click the ![Save]({{ site.baseurl
-}}/img/playground-button-save.png) button, followed by the ![Save and run]({{ site.baseurl
-}}/img/playground-button-save-and-run.png) button.
+Then, click the 
+<a class="btn btn-primary" href="javascript:return(0)">Save</a> 
+button, followed by the 
+<a class="btn btn-warning" href="javascript:return(0)">Save and Run</a> 
+button.
 
 You should see:
 
-![Hello world interview]({{ site.baseurl }}/img/tutorial-hello-world-interview-01.png)
+{% include image.html alt="Hello world interview" src="tutorial-hello-world-interview-01.png" %}
 
 (If you do not have a server yet, you can [try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello.yml){:target="_blank"}.)
 
@@ -85,23 +88,24 @@ fields:
 It should now ask you "What is your planet's name?" and then greet
 your world by its name.
 
-Try clicking ![Source]({{ site.baseurl }}/img/button-source.png) in
-the navigation bar.  This toggles the display of information that will
-help you understand how a question came to be asked.  This can be
-helpful for "debugging" your interview.  Information about the
-readability of your interview question is also displayed.
+Try clicking <i class="fa-solid fa-code"></i> in the navigation bar.
+This toggles the display of information that will help you understand
+how a question came to be asked.  This can be helpful for "debugging"
+your interview.  Information about the readability of your interview
+question is also displayed.
 
-![Source]({{ site.baseurl }}/img/hello-world-source-code-for-question.png)
+{% include image.html alt="Source" src="hello-world-source-code-for-question.png" %}
 
-Note that end users will not see the Source tab; it will only be shown
-to users if the interview is in the [Playground], or if the server is
-[configured as a development server].
+Note that end users will not see the <i class="fa-solid fa-code"></i> 
+tab; it will only be shown to users if the interview is in the
+[Playground], or if the server is [configured as a development
+server].
 
-In this example, the Source information explains that the interview
-tried to show a [`mandatory`] question, but couldn't, because it
-needed the definition of the variable `planet`.  Therefore it looked
-for a question that offered to define `planet`, and asked that
-question of the user.
+In this example, the information explains that the interview tried to
+show a [`mandatory`] question, but couldn't, because it needed the
+definition of the variable `planet`.  Therefore it looked for a
+question that offered to define `planet`, and asked that question of
+the user.
 
 # Adding some Python code
 
@@ -233,25 +237,24 @@ putting the DOCX file in the [Templates] folder of your [Playground].
 
 To do this, go to the Folders menu and select "Templates."
 
-![Templates]({{ site.baseurl }}/img/playground-menu-templates.png)
+{% include image.html alt="Templates" src="playground-menu-templates.png" %}
 
-Then, go to "Upload a template file" and click
-![Browse]({{ site.baseurl }}/img/playground-templates-browse-button.png).
+Then, go to "Upload a template file" and click "Choose Files."
 
-![Upload a template file]({{ site.baseurl }}/img/playground-files-upload-template.png)
+{% include image.html alt="Upload a template file" src="playground-files-upload-template.png" %}
 
 Locate your DOCX file on your computer and select it.  Then click
-![Upload]({{ site.baseurl }}/img/playground-templates-upload-button.png).
+<a class="btn btn-primary" href="javascript:return(0)">Upload</a>.
 
 Now you should see the DOCX file listed as one of your Templates.
 
-![Template list]({{ site.baseurl }}/img/playground-files-template-listing.png)
+{% include image.html alt="Template list" src="playground-files-template-listing.png" %}
 
-Then, click ![Back]({{ site.baseurl
-}}/img/playground-button-back-to-playground.png) or
-![Back to playground]({{ site.baseurl
-}}/img/playground-button-back-to-playground-bottom.png) to go back to the
-main page of the [Playground].
+Then, click 
+<a href="javascript:return(0)" class="nav-link" style="display: inline"><i class="fa-solid fa-chevron-left"></i><span style="margin-left: 0.1em">Back</span></a>
+or
+<a href="javascript:return(0)" class="btn btn-secondary"><i class="fa-solid fa-chevron-left"></i>&nbsp;Back to Playground</a>
+to go back to the main page of the [Playground].
 
 Now you need to edit the interview so that it uses the DOCX file.
 
@@ -306,27 +309,26 @@ From the [Playground], go to the Folders menu and select "Static
 files."  (The files are called "[static]" because they do not change,
 unlike templates, which can produce different files every time.)
 
-![Static files]({{ site.baseurl }}/img/playground-menu-static.png)
+{% include image.html alt="Static files" src="playground-menu-static.png" %}
 
-Then, go to "Upload a static file" and click
-![Browse]({{ site.baseurl }}/img/playground-templates-browse-button.png).
+Then, go to "Upload a static file" and click "Choose Files."
 
-![Upload a static file]({{ site.baseurl }}/img/playground-files-upload.png)
+{% include image.html alt="Upload a static file" src="playground-files-upload.png" %}
 
 After you select the file (or files) on your computer that you want to
 upload, click
-![Upload]({{ site.baseurl }}/img/playground-templates-upload-button.png).
-
+<a class="btn btn-primary" href="javascript:return(0)">Upload</a>.
 You should now see the file listed as one of the "Static files."
 
-![File uploaded]({{ site.baseurl }}/img/playground-files-listing.png)
+{% include image.html alt="File uploaded" src="playground-files-listing.png" %}
 
 In this example, the file is [globe.svg], a picture of a globe.
 
-Now, click ![Back]({{ site.baseurl
-}}/img/playground-button-back-to-playground.png) or
-![Back to playground]({{ site.baseurl
-}}/img/playground-button-back-to-playground-bottom.png) and add the following
+Now, click
+<a href="javascript:return(0)" class="nav-link" style="display: inline"><i class="fa-solid fa-chevron-left"></i><span style="margin-left: 0.1em">Back</span></a>
+or
+<a href="javascript:return(0)" class="btn btn-secondary"><i class="fa-solid fa-chevron-left"></i>&nbsp;Back to Playground</a>
+ and add the following
 to your interview:
 
 {% highlight yaml %}
@@ -367,7 +369,7 @@ decoration: earth
 Now, when you run the interview, you can see that the image
 "decorates" the question:
 
-![Question with decoration]({{ site.baseurl }}/img/playground-interview-with-image.png)
+{% include image.html alt="Question with decoration" src="playground-interview-with-image.png" %}
 
 ([Try it out here]({{ site.demourl }}/interview?i=docassemble.demo:data/questions/hello5.yml){:target="_blank"}.)
 
@@ -407,20 +409,20 @@ with other developers or posted on [GitHub].
 
 Go to the Folders menu and select "Packages."
 
-![Packages menu item]({{ site.baseurl }}/img/playground-menu-packages.png)
+{% include image.html alt="Packages menu item" src="playground-menu-packages.png" %}
 
 This will take you to the ["Packages" folder], where you can create and
 edit packages.
 
-![Packages folder]({{ site.baseurl }}/img/playground-folder-packages.png)
+{% include image.html alt="Packages folder" src="playground-folder-packages.png" %}
 
-If there is an existing package, click the ![Add]({{ site.baseurl
-}}/img/playground-button-add.png) button to create a new package.
-Otherwise, edit the "New" package.
+If there is an existing package, click the
+{% include button.html class="fa-solid fa-plus-circle" text="Add" %} 
+button to create a new package.  Otherwise, edit the "New" package.
 
 Call your new package "helloworld."
 
-![Package called helloworld]({{ site.baseurl }}/img/playground-packages-example-helloworld.png)
+{% include image.html alt="Package called helloworld" src="playground-packages-example-helloworld.png" %}
 
 On this screen, you can define the characteristics of your package and
 indicate which resources from the [Playground] should be included in
@@ -428,15 +430,15 @@ the package.
 
 Under "Interview files," select your `hello.yml` file.
 
-![Interview files]({{ site.baseurl }}/img/playground-packages-interview-files.png)
+{% include image.html alt="Interview files" src="playground-packages-interview-files.png" %}
 
 Under "Static files," select your `globe.svg` file.
 
-![Static files]({{ site.baseurl }}/img/playground-packages-static-files.png)
+{% include image.html alt="Static files" src="playground-packages-static-files.png" %}
 
 Under "Template files," select your `hello_planet.docx` file.
 
-![Template files]({{ site.baseurl }}/img/playground-packages-template-files.png)
+{% include image.html alt="Template files" src="playground-packages-template-files.png" %}
 
 If you were creating an actual package for distribution, you would
 type a careful description of your package and the contents of a
@@ -445,25 +447,24 @@ that.
 
 At the bottom of the screen, you will see some buttons:
 
-![Buttons]({{ site.baseurl }}/img/playground-packages-buttons.png)
+<a href="javascript:return(0)" class="btn btn-primary">Save</a> <a href="javascript:return(0)" class="btn btn-secondary">Cancel</a>
 
-Click the ![Save]({{ site.baseurl
-}}/img/playground-packages-button-save.png) button to save your
-package.
+Click the <a class="btn btn-primary" href="javascript:return(0)">Save</a> 
+button to save your package.
 
 Then, once your package is saved in the system, you will see the
 following buttons at the top of the screen.
 
-![Buttons]({{ site.baseurl }}/img/playground-packages-buttons-top.png)
+{% include image.html alt="Buttons" src="playground-packages-buttons-top.png" %}
 
 You will see the following buttons at the bottom of the screen.
 
-![Buttons]({{ site.baseurl }}/img/playground-packages-buttons-bottom.png)
+<a href="javascript:return(0)" class="btn btn-primary">Save</a> <a href="javascript:return(0)" class="btn btn-success">Install</a> <a href="javascript:return(0)" class="btn btn-info">Download</a> <a href="javascript:return(0)" class="btn btn-danger">Delete</a>
 
-Click the ![Install]({{ site.baseurl
-}}/img/playground-packages-button-install.png) button.  This will take
-a snapshot of your package, bundle it all up into a [Python] package,
-and install that [Python] package on the computer.
+Click the <a class="btn btn-success" href="javascript:return(0)">Install</a>
+button.  This will take a snapshot of your package, bundle it all up
+into a [Python] package, and install that [Python] package on the
+computer.
 
 Now, users can run the interview using a different URL.  If your
 server is `interview.example.com`, users will be able to run the
@@ -510,20 +511,18 @@ For serious deployment of interviews, [it is recommended] that you use
 separate "development" and "production" servers.
 
 Another thing you can do from the "Packages" folder is click the
-![Download]({{ site.baseurl
-}}/img/playground-packages-button-download.png) button.  This will
-download the package as a ZIP file called
+<a href="javascript:return(0)" class="btn btn-info">Download</a>
+button.  This will download the package as a ZIP file called
 `docassemble-helloworld.zip`.
 
 If you unpack the contents of the ZIP file, you will have a folder
-called `docassemble-helloworld`.  You can make changes to the files,
+called `docassemble-helloworld`. You can make changes to the files,
 then re-ZIP the `docassemble-helloworld` folder, and install the
-revised package on a **docassemble** server using the
-[Package Management] tool.  Or, if you want to edit the revised
-contents of your package in the [Playground] again, click the
-![Upload]({{ site.baseurl
-}}/img/playground-packages-button-upload.png) button to upload the
-contents of your ZIP file into the [Playground].
+revised package on a **docassemble** server using the [Package
+Management] tool. Or, if you want to edit the revised contents of your
+package in the [Playground] again, click the
+{% include button.html class="fa-solid fa-upload" text="Upload" %} 
+button to upload the contents of your ZIP file into the [Playground].
 
 ## <a name="pypi"></a>Storing on PyPI
 
@@ -543,7 +542,9 @@ uploaded (namely, by me, when I was creating this tutorial).  However,
 these instructions will work if you use a package name of your own
 invention.
 
-First, you need to create a username and password on [PyPI].
+First, you need to create an account on [PyPI] and obtain an API
+key. The API key has the form `pypi-` followed by a series of
+alphanumeric characters.
 
 The **docassemble** [configuration] on your server will need to be set
 up to allow publishing to [PyPI].  To configure this, log in as a user
@@ -556,10 +557,11 @@ pypi: True
 
 If this configuration has been made, you can go to "Profile" from the
 menu and scroll down to the "PyPI Username" and "PyPI Password"
-fields.  Fill in these fields with the username and password you just
-obtained.
+fields.  Fill in these fields with `__token__` as the username and
+your API key as the password. (This is how authentication works with
+[`twine`].)
 
-![PyPI username and password]({{ site.baseurl }}/img/profile-pypi-username-password.png)
+{% include image.html alt="PyPI username and password" src="profile-pypi-username-password.png" %}
 
 Then, go to the ["Packages" folder] of the **docassemble**
 [Playground] and open your `docassemble-helloworld` package that you
@@ -567,11 +569,11 @@ created [above](#packaging).  At the bottom of the screen you will see
 a message about whether the package is published on [PyPI] and/or
 [GitHub].
 
-![PyPI Info]({{ site.baseurl }}/img/playground-packages-not-published-yet.png)
+{% include image.html alt="PyPI Info" src="playground-packages-not-published-yet.png" %}
 
-Press the ![PyPI]({{ site.baseurl
-}}/img/playground-packages-button-pypi.png) button to publish the
-package to [PyPI].
+Press the 
+<a class="btn btn-warning" href="javascript:return(0)">PyPI</a> 
+button to publish the package to [PyPI].
 
 When the publishing is done, you will see an informational message
 with the output of the uploading commands.  Check this message to see
@@ -583,18 +585,18 @@ exists on [PyPI].  (However, sometimes the [PyPI] server is slow to
 reflect the existence of the package, so you may need to give it a
 minute or two.)
 
-![PyPI Info]({{ site.baseurl }}/img/playground-packages-pypi-published.png)
+{% include image.html alt="PyPI Info" src="playground-packages-pypi-published.png" %}
 
 If you click the link, you can see what the package looks like on the
 [PyPI] web site.
 
-![PyPI page]({{ site.baseurl }}/img/pypi-helloworld-page.png){: .maybe-full-width }
+{% include image.html alt="PyPI page" src="pypi-helloworld-page.png" class="maybe-full-width" %}
 
 Now, on the **docassemble** menu (of this server or another server),
 you can go to Package Management and [install]
 the package by specifying a "Package on PyPI."
 
-![PyPI Install]({{ site.baseurl }}/img/update-package-pypi.png)
+{% include image.html alt="PyPI Install" src="update-package-pypi.png" %}
 
 For more information about uploading packages to [PyPI], see
 the [PyPI subsection] of the [packages] section.
@@ -624,10 +626,11 @@ package that you created [above](#packaging).  At the bottom of the
 screen you will see a message about whether the package is published
 on [GitHub].
 
-![GitHub Info]({{ site.baseurl }}/img/playground-packages-github-not-published-yet.png)
+{% include image.html alt="GitHub Info" src="playground-packages-github-not-published-yet.png" %}
 
-Press the ![GitHub]({{ site.baseurl
-}}/img/playground-packages-button-github.png) button.
+Press the
+<a class="btn btn-warning" href="javascript:return(0)">GitHub</a> 
+button.
 
 You will be asked for a "commit message."  This is a brief, one-line
 message that describes the changes made to your package since the last
@@ -635,7 +638,7 @@ time you "committed" changes.  Each "commit" is like a snapshot, and
 the history of "commit" messages is a record of the development of
 your project.  You can give your first commit a simple name:
 
-![Commit]({{ site.baseurl }}/img/playground-packages-github-commit-helloworld.png){: .maybe-full-width }
+{% include image.html alt="Commit" src="playground-packages-github-commit-helloworld.png" class="maybe-full-width" %}
 
 However, your subsequent "commits" should have meaningful names that
 describe succinctly how that snapshot is different from the previous
@@ -655,16 +658,16 @@ If the publishing was successful, then at the bottom of the page
 describing your package, you should see a message that the package now
 exists on [GitHub].
 
-![PyPI Info]({{ site.baseurl }}/img/playground-packages-github-published.png)
+{% include image.html alt="PyPI Info" src="playground-packages-github-published.png" %}
 
 If you click the link, you can see what the package looks like on [GitHub]:
 
-![GitHub Repository]({{ site.baseurl }}/img/github-helloworld-repository.png){: .maybe-full-width }
+{% include image.html alt="GitHub Repository" src="github-helloworld-repository.png" class="maybe-full-width" %}
 
 Now, on the **docassemble** menu, you can go to Package Management and
 [install] the package using its [GitHub] URL.
 
-![GitHub Install]({{ site.baseurl }}/img/update-package-github.png)
+{% include image.html alt="GitHub Install" src="update-package-github.png" %}
 
 For more information about uploading packages to [GitHub], see
 the [GitHub subsection] of the [packages] section.
@@ -719,3 +722,4 @@ the [GitHub subsection] of the [packages] section.
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [`dispatch`]: {{ site.baseurl }}/docs/config.html#dispatch
+[`twine`]: https://pypi.org/project/twine/

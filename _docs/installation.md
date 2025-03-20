@@ -16,7 +16,7 @@ follow the installation instructions on this page.  If you do not
 already have [Docker], you can install [Docker] on your machine
 whether you have a Mac, a PC, or a Linux machine.
 
-For example, on a Windows 10 machine, once you install
+For example, on a Windows 11 machine, once you install
 [Docker for Windows], you simply go to Windows PowerShell and type:
 
 {% highlight bash %}
@@ -26,6 +26,12 @@ docker run -d -p 80:80 jhpyle/docassemble
 Then, after a few minutes, the application will be available in your
 browser at http://localhost.
 
+If the machine is already using port 80, you can do something like
+`docker run -d -p 8080:80 jhpyle/docassemble` to run **docassemble**
+on http://localhost:8080. You could also set up a [reverse proxy] on
+the web server so that users can access the **docassemble**
+application through the web server through a standard port.
+
 Even if you want to put **docassemble** into production, it is
 recommended that you [install it using Docker] -- ideally on an [EC2]
 virtual machine hosted by [Amazon Web Services].  **docassemble**
@@ -34,9 +40,14 @@ Azure] services such as [Azure blob storage] for persistent storage.
 It also supports [S3]-compatible object storage services.
 
 The primary reason you might want to install **docassemble** manually
-on a machine is if you want it to run on a server for which the HTTP
-and HTTPS ports are serving other applications.  ([Docker] can only
-use the HTTP and HTTPS ports if it has exclusive use of them.)
+on a machine is if [Docker]'s container/host separation interferes
+with a customized setup that you want to use. For example, you might
+want the **docassemble** server to use the NGINX, PostgreSQL, Redis,
+RabbitMQ, Celery, and/or `cron` servers that are already running on
+the machine. If you install **docassemble** manually, then when
+`supervisord` starts up, the `initialize` service will see that these
+servers are already running, and they will not be started using
+`supervisord`.
 
 # <a name="minimum"></a>Minimum system requirements
 
@@ -898,6 +909,35 @@ an `id` and `domain` for use with [Zitadel]'s [OAuth] interface.
   may not be necessary for [Zitadel] to work, but in any case, it
   doesn't hurt.
 
+## <a name="miniorange"></a>Setting up miniOrange WordPress logins
+
+To enable users to log in with an account on a WordPress server
+running the [miniOrange OpenID plugin], you need to obtain an `id` and
+`secret` from the WordPress server.
+
+* Log in to the server and go to the miniOrange plugin configuration.
+* Set up the "Client Name." This is the name that will be used to
+  refer to your **docassemble** server on the consent screen.
+* Under "Callback/Redirect URI," enter the URL of your **docassemble**
+  site with `/callback/miniorange` at the end. E.g.,
+  `https://docassemble.example.com/callback/miniorange`.
+* Note the "Client ID." This will be the `id` in your [`oauth`]
+  configuration, under `miniorange`.
+* Also note the "Client Secret."  This will be the `secret` in your
+  [`oauth`] configuration.
+* Also note the hostname of the WordPress server. This will be the
+  `domain` part of your [OAuth] configuration.
+* Edit your **docassemble** [configuration] and update the values
+  under the `miniorange` part of the [`oauth`] directive so that it
+  includes the `id`, `secret`, and `domain` values you noted in the
+  steps above. When setting the `domain`, do not include the
+  `https://` part. There should not be any `/` characters in the
+  `domain`; it needs to be a pure domain, like `example.com`. Make
+  sure that `enable` is not set to `False`.
+
+This system assumes that the JWT Token Verification feature is not
+used.
+
 ## <a name="azure"></a>Setting up Microsoft Azure logins
 
 To enable users to log in with their Microsoft accounts, you need to
@@ -911,24 +951,24 @@ Directory service.
 * Set the Name to the name you want to use for your application.  This
   is the name that your users will see when they are prompted by Azure
   to give their consent to logging in with Azure.
-* Set the Sign-on URL to the URL for your site's login page.  If your
-  hostname is `docassemble.example.com`, then the URL will be
-  `https://docassemble.example.com/user/sign-in` (unless you have set
-  a non-standard [`root`]).
 * Create the Registered App and then open it.
-* Find the Application ID.  You need to set this value as the `id` in
-  the [`oauth`] configuration, under `azure`.
-* Go into Reply URLs and add an additional Reply URL for
+* Under "Overview," find the "Application (client) ID."  You need to
+  set this value as the `id` in the **docassemble** [`oauth`]
+  configuration, under `azure`.
+* Go into Authentication and add a "Platform." Choose "Web" as the
+  "platform" type.
+* Set the Redirect URI to
   `https://docassemble.example.com/callback/azure`, or whatever the URL
   for `/callback/azure` is on your site.
-* Go into Keys and create a new key.  The "Key description" can be
-  `docassemble` or some other name of your choosing.  The duration can
-  be anything you want, but note that if the duration expires, you
-  will need to edit this configuration if you want users to still be
-  able to log in with Azure.
-* Press save.  Then copy the value of the key you just created.  You
-  need to set this value as the `secret` in the [`oauth`] configuration,
-  under `azure`.
+* Leave other settings of the "platform" at the default values.
+* Go into Certificates & Secrets and create a new "client secret."
+  The "Description" can be `docassemble` or some other name of your
+  choosing. The expiration setting can be anything you want, but note
+  that if the key expires, you will need to edit this configuration if
+  you want users to still be able to log in with Azure.
+* Press Add. Then make a note of the "value" of the key you just
+  created. You need to set these value as
+  the `secret` in the [`oauth`] configuration, under `azure`.
 * Go into Required permissions and click Add.
 * Add "Microsoft Graph" as one of the APIs.
 * Under "delegated permissions," select the following:
@@ -1795,3 +1835,5 @@ All of these system administration headaches can be avoided by
 [Telnyx]: https://telnyx.com/
 [Keycloak]: https://www.keycloak.org/
 [Zitadel]: https://zitadel.com
+[miniOrange OpenID plugin]: https://wordpress.org/plugins/miniorange-oauth-20-server/
+[reverse proxy]: {{ site.baseurl }}/docs/docker.html#forwarding

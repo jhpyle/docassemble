@@ -98,10 +98,8 @@ You can test out **docassemble** on a PC or a Mac, but for serious,
 long-term deployment, it is worthwhile to run it in the cloud, or on a
 dedicated on-premises server. Running [Docker] on a machine that shuts
 down or restarts frequently could lead to [database corruption]. Also,
-if you are using [Docker Desktop], **docassemble** will not run
-reliably if you have a processor that is not in the `amd64` family. If
-your processor is an Apple M1 chip, or other ARM-based microprocessor,
-you should [build the image first](#build) and then [`docker run`] it.
+if you are using [Docker Desktop], **docassemble** may not run
+reliably if you have a processor that is not in the `amd64` family.
 
 If you have never deployed a Linux-based virtual machine in the cloud
 before, this might be a good opportunity to learn. The ability to use
@@ -137,9 +135,9 @@ the basic [Docker] command line.
 # <a name="install"></a>Installing Docker
 
 First, make sure you are running [Docker] on a computer or virtual
-computer with at least 4GB of memory and 20GB of hard drive space.
-The **docassemble** installation will use up about 10GB of space, and
-you should always have at least 10GB free when you are running
+computer with at least 4GB of memory and 40GB of hard drive space.
+The **docassemble** installation will use up about 20GB of space, and
+you should always have at least 20GB free when you are running
 **docassemble**.
 
 If you have a Windows PC, follow the
@@ -176,10 +174,10 @@ Linux, you many need to do `sudo systemctl start docker`, `sudo
 service docker start`, or `sudo /etc/init.d/docker start`.
 
 The operating system that runs inside of the **docassemble** Docker
-container is Ubuntu 22.04. This is a fairly recent version of
+container is Ubuntu 24.04. This is a fairly recent version of
 Ubuntu. When using [Docker], it is recommended that you run a recent
 version of [Docker] and its dependencies ([containerd] and
-[runC]). Ubuntu 22 and Debian 11 are known to work well. (If you run
+[runC]). Ubuntu 22 and Debian 12 are known to work well. (If you run
 Docker on Mac or Windows, it will likely start a virtual machine and
 then deploy the **docassemble** Docker container inside that virtual
 machine; the operating system of that virtual machine, which is likely
@@ -192,6 +190,12 @@ likely that you will encounter problems, if not right away then at a
 later point in time. The software in the **docassemble** image and
 Python packages is continually updated, and the latest versions of
 software may expect the latest versions of operating system.
+
+As of August 2024, Ubuntu 24.04's `docker.io` package has a problem
+with AppArmor interfering with the functionality of [`docker
+stop`]. If you use Ubuntu 24.04 as the operating system on which to
+run Docker, follow the instructions on Docker's web site for
+installing the Community Edition.
 
 If you are using [Docker Desktop], it is recommended that you go to
 Settings and change the Docker Engine settings so that the
@@ -598,7 +602,7 @@ The `/etc/cron.daily/docassemble` script does the following:
 * The directory `/etc/letsencrypt` is copied to data storage as
   `letsencrypt.tar.gz`.
 * The log files are copied to data storage.
-* Each database that the PostgreSQL server hosts (except for ones with
+* Every database that the PostgreSQL server hosts (except for ones with
   `template` in the name) are dumped to the `postgres` folder in data
   storage using `pg_dump -F c`.
 * The `/var/lib/redis/dump.rdb` file is copied to data storage as the
@@ -1263,8 +1267,8 @@ your container for the new configuration to take effect.
 * <a name="DBUSER"></a>`DBUSER`: The username for connecting to the
   [PostgreSQL] server. The default is `docassemble`.
 * <a name="DBPASSWORD"></a>`DBPASSWORD`: The password for connecting
-  to the SQL server. The default is `abc123`. The password cannot
-  contain the character `#`.
+  to the SQL server. The default is `abc123`. Valid characters include
+  alphanumeric characters, `_`, `~`, `/`, `-`, `^`, `*`, `?`, and `!`.
 * <a name="DBPREFIX"></a>`DBPREFIX`: This sets the prefix for the
   database specifier. The default is `postgresql+psycopg2://`. This
   corresponds with the `prefix` of the [`db`] configuration directive.
@@ -1358,9 +1362,17 @@ your container for the new configuration to take effect.
   `RABBITMQ`. See the [`rabbitmq`] configuration directive.
 * <a name="DACELERYWORKERS"></a>`DACELERYWORKERS`: By default, the
   number of Celery workers is based on the number of CPUs on the
-  machine. If you want to set a different value, set
-  `DACELERYWORKERS` to integer greater than or equal to 1. See the
+  machine and its total memory. If you want to set a different value,
+  set `DACELERYWORKERS` to integer greater than or equal to 1. See the
   [`celery processes`] configuration directive.
+* <a name="DAMAXCELERYWORKERS"></a>`DACELERYWORKERS`: By default, the
+  number of Celery workers scales with the number of CPUs on the
+  machine (one process per CPU reported by `nproc`) and is limited by
+  the total memory (one process for every 2GB). If you want the number
+  of Celery workers to scale based on the number of CPUs but the
+  memory-based limit is to restrictive, you can set
+  `DAMAXCELERYWORKERS` to integer greater than or equal to 1. See the
+  [`max celery processes`] configuration directive.
 * <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
   server generates an error, the error message will contain an e-mail
   address that the user can contact for help. This e-mail address
@@ -2880,10 +2892,7 @@ Each of these repositories contains a `Dockerfile`. The
 `jhpyle/docassemble` repository depends on
 `jhpyle/docassemble-os`. (The `jhpyle/docassemble-os` repository is
 separate because it contains operating system files and takes a long
-time to build. If you are on the `amd64` platform and you want to
-modify the Docker image, you can download
-the `jhpyle/docassemble-os` image and then `docker build` the
-`jhpyle/docassemble` repository only.)
+time to build.
 
 To make changes to the operating system or the operating system
 packages that are installed inside the container, edit the
@@ -2990,16 +2999,12 @@ docker push yourdockerhubusername/mydocassemble
 # <a name="arm"></a>ARM support
 
 Using **docassemble** on the [ARM] architecture is considered
-experimental. The images on [Docker Hub] are `amd64`-only, so if you
-want to run **docassemble** on [ARM], you will need to use `docker
-build` to build the `jhpyle/docassemble-os` and `jhpyle/docassemble`
-images. The known issues with [ARM] compatibility are:
+experimental. The known issues with [ARM] compatibility are:
 
-* The `DAGoogleAPI` object cannot be used because the dependency
-  package it relies on causes a C memory allocation error to be
-  raised.
-* Google Chrome is not installed if the architecture is [ARM], so you
-  cannot use headless Chrome for web browser automation.
+* Google Chrome is not installed if the architecture is [ARM], so the
+  `mmdc()` function will not work.
+* For the same reason, you cannot use headless Chrome for web browser
+  automation running inside the Docker container.
 
 # <a name="upgrading"></a>Upgrading docassemble when using Docker
 

@@ -31,7 +31,7 @@ as possible.
 then you get text that looks like this:
 
 <blockquote class="blockquote">
-It is <strong>very</strong> important that you obtain your 
+It is <em>very</em> important that you obtain your 
 <a href="https://www.annualcreditreport.com">free credit report</a> 
 as soon as possible.
 </blockquote>

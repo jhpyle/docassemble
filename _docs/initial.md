@@ -123,25 +123,26 @@ the "Exit" link can be modified.  (The "Exit" menu option is displayed
 when the [`show login` configuration directive] is set to `False` or
 the [`show login` metadata specifier] in an interview is set to
 `False`.)  The value can be either `exit`, `leave,` or `logout`.  If
-it is `exit`, then when the user clicks the link, they will be logged
-out (if they are logged in) and their interview answers will be
-deleted from the server.  If it is `leave`, the user will be logged
-out (if they are logged in), but the interview answers will not be
-deleted from the server.  (It can be important to keep the interview
-answers on the server if [background tasks] are still running.)  If it
-is `logout`, then if the user is logged in, the user will be logged
-out, but if the user is not logged in, this will have the same effect
-as `leave`.
+it is `exit`, then when the user clicks the link, their interview
+answers will be deleted from the server, and the user will be
+redirected to the `exit url` (see below). If `exit link` is `leave`,
+the user will be redirected to the `exit url`, and their interview
+answers will remain intact. (It can be important to keep the interview
+answers on the server if [background tasks] are still running.) If
+`exit link` is `logout`, then if the user is logged in, the user will
+be logged out and then redirected to the `exit url`, but if the user
+is not logged in, this will have the same effect as `leave`. If `exit
+link` is `exit_logout`, the user's interview answers will be deleted,
+they will be logged out if they are logged in, and they will be
+redirected to the `exit url`.
 
 <a name="exit url"></a>If an `exit url` is provided, the user will be
-redirected to the given URL.  If no `exit url` is provided, the user
-will be directed to the [`exitpage`] if the `exit link` is `exit` or
-`leave`, and directed to the login page if the user is logged in and
-`exit link` is `logout`.  The `exit url` also functions as an
-interview-level default value in place of the system-wide
-[`exitpage`], which is used by the [`command()`] function and used on
-[special pages] that show `buttons` or `choices` that allows users to
-`exit` or `leave`.
+redirected to the given URL when they click the "Exit" link. If no
+`exit url` is provided, the user will be directed to the [`exitpage`].
+The `exit url` also functions as an interview-level default value in
+place of the system-wide [`exitpage`], which is used by the
+[`command()`] function and used on [special pages] that show `buttons`
+or `choices` that allows users to `exit` or `leave`.
 
 <a name="exit label"></a>If `exit label` is provided, the given text
 will be used in place of the word "Exit" on the "Exit" menu option.
@@ -1268,23 +1269,8 @@ You can also use `table` blocks with [`DADict`] objects:
 {% include side-by-side.html demo="table-dict" %}
 
 When `rows` refers to a [`DADict`], then in the `columns`, `row_index`
-represents the "key" and `row_item` represents the value of each item
-in the dictionary.
-
-You can pretend that the [Python expression]s under `columns` are
-evaluated in a context like this:
-
-{% highlight python %}
-for row_index in sorted(income):
-  row_item = fruit[row_index]
-  # evaluation takes place here
-{% endhighlight %}
-
-Note that running `sorted()` on a dictionary returns an alphabetically
-sorted list of keys of the dictionary.  In [Python], dictionaries are
-inherently unordered.  The keys are sorted is this fashion so that
-the order of the rows in a table does not change every time the table
-appears on the screen.
+represents the "key" and `row_item` represents the "value" of each
+item in the dictionary.
 
 <a name="require gathered"></a>By default, the display of a table
 will require that the table is gathered.  If you want to display a
@@ -1374,9 +1360,109 @@ editing an already-gathered [`DAList`] or [`DADict`].
 For more information about this feature, see the section on [editing
 an already-gathered list] in the section on [groups].
 
+## <a name="sort key"></a>Sorting and filtering items in a table
+
+If you have a `DAList` or a `DADict` and you want to display a table
+of some of the items, or display the items sorted in a different way,
+you can specify `sort key` and `filter` options.
+
+In a `table` definition where `rows` refers to a `DAList`, `sort key`
+refers to a function that takes a single parameter as input, namely an
+item in the list, and returns a value that should be used for
+sorting the list. When Python sorts the list, it will call this
+function on each item in the list. The `sort key` is passed to the
+`key` parameter of the Python [`sorted`] function.
+
+Any function name can be used. For example, writing `sort key: str`
+will use the `str()` function to convert each item in the list to
+text, and then alphabetize the rows based on that textual
+representation of each item.
+
+In most cases, though, you will want to write a [`lambda`]
+function. For example:
+
+{% include side-by-side.html demo="table-sort" %}
+
+This example uses
+{% highlight yaml %}
+sort key: |
+  lambda y: y.last_eaten
+{% endhighlight %}
+
+The `last_eaten` attribute is defined by a `datatype: date` field, so
+the rows will be presented to the user in date order.
+
+A [`lambda`] function is just like a Python function, except it
+doesn't have a name. Equivalently, you could load a `.py` module file
+that defines the following function:
+
+{% highlight python %}
+def get_last_eaten(y):
+    return y.last_eaten
+{% endhighlight %}
+
+and then you could write `sort key: get_last_eaten`. However, it is
+easier to just write `lambda y: y.last_eaten`.
+
+Note that the use of the variable name `y` is arbitrary. You could use
+any variable name you want (as long as it isn't a reserved Python
+keyword).
+
+<a name="sort reverse"></a>In a `table` definition, `sort reverse`
+indicates whether the rows will be sorted in reverse order. In the
+above example, `sort reverse: True` is used, which means the table
+will present the items in reverse chronological order. `sort reverse`
+can refer to `True`, `False`, or any Python expression. If `sort
+reverse` is omitted or it evaluates to a false value, the rows are
+sorted in forward order.
+
+<a name="filter"></a>If you want the `table` to present a filtered
+list of the items, you can set `filter` to a Python expression that
+should be evaluated to determine if the item should be included or
+not. In the above example, the expression is `row_item.seeds >
+0`. That means that the `table` will omit any items in the `fruit`
+list where the `seeds` attribute is zero. Like an item in the
+`columns`, the `filter` expression uses the special variables
+`row_item` and `row_index`. The expression is evaluated for each item
+in the list, and if the expression evaluates to a true value, the item
+is included in the table.
+
+If your `table` is editable, it is important to perform sorting and
+filtering using `sort key`, `sort reverse`, and `filter`, rather than
+by passing an expression to `rows` that returns an altered version of
+the underlying list. If you give `rows` an altered version of a
+`DAList` object, some of the editing features might not work
+correctly.
+
+Note that these sorting and filtering features do not alter the
+underlying `DAList` in any way; they only affect the way the `table`
+representation is displayed.
+
+### <a name="sort filter dict"></a>Sorting and filtering dictionaries
+
+The `sort key`, `sort reverse`, and `filter` features also work if the
+`rows` refers to a `DADict` object. The main difference is that the
+`sort key` function is given a Python `tuple` with two items, the
+dictionary key and the dictionary value. If you want to sort on the
+key of a dictionary item, access the first item; if you want to sort
+on the value of a dictionary item, access the second item.
+
+{% include side-by-side.html demo="table-sort-dict" %}
+
+In this example, the `sort key` expression is:
+
+{% highlight python %}
+lambda y: y[1].amount if y[1].receives else 0.0
+{% endhighlight %}
+
+Here, `y[1]` refers to the value of the dictionary item (a
+[`DAObject`]). The income items that are not received are listed as
+though their `amount` was zero, and then the other items are listed in
+`amount` order.
+
 # <a name="sections"></a>Defining the sections for the navigation bar
 
-You can add use the [`navigation bar`] feature or the
+You can use the [`navigation`] bar feature or the
 [`nav.show_sections()`] function to show your users the "sections" of
 the interview and what the current section of the interview is.
 
@@ -1408,6 +1494,14 @@ sections:
 {% endhighlight %}
 
 If no language is specified, the fallback language `*` is used.
+
+Section headings are not processed as [Mako]. As a result, the
+[`translations`] system cannot be used to translate section
+headings. Thus the translation method described above, using the
+`language` modifier, must be used to support section headings in
+multiple languages. (Alternatively, you could use [`code` blocks] and
+the [`nav.set_sections()`] to define the sections using [`template`]
+blocks reduced to text.)
 
 In the example above, the [`section`] modifier referred to sections
 using the same text that is displayed to the user.  However, in some
@@ -1644,7 +1738,7 @@ about the `language` setting of a question.
 One way that **docassemble** supports [multi-lingual interviews] is
 through the [`language` modifier] on a [`question`] and the [`default
 language`] block, which sets a default value for the [`language`
-modifier].  Your interview can contain [`question`]s in English that
+modifier]. Your interview can contain [`question`]s in English that
 don't have a [`language` modifier], and [`question`]s in French that
 have the `language: fr` modifier set.  If the current language in an
 interview (as determined by the [`set_language()`] function) is French
@@ -1684,6 +1778,12 @@ The `translations` block is only capable of defining translations for
 blocks that come after the `translations` block.  Therefore, it is a
 good practice to make sure that the `translations` block is placed as
 one of the very first blocks in your interview [YAML] file.
+
+Since the `translations` block only translates phrases in which [Mako]
+templating is allowed, there are some parts of the YAML that are not
+translatable through a `translations` block. For example, `sections`
+blocks do not use [Mako] and thus do not use the `translations`
+system.
 
 For more information about using translation files, read the section
 [Download an interview phrase translation file]. See [language
@@ -2151,15 +2251,14 @@ code: |
 ## <a name="hide corner interface"></a>Hiding the menu and login interface entirely
 
 The interface in the upper-right corner lets the user log in, or shows
-a menu, or shows the exit button. This interface can be removed by
-setting `hide corner interface` to `True`.
+a menu, shows the exit button, and/or shows the [`navigation bar
+html`]. This interface can be removed by setting `hide corner
+interface` to `True`.
 
 {% highlight yaml %}
 features:
   hide corner interface: True
 {% endhighlight %}
-
-Items you have created with [`navigation bar html`] will not be affected.
 
 ## <a name="javascript"></a><a name="css"></a>Javascript and CSS files
 
@@ -2576,6 +2675,62 @@ features:
 This will cause the web application to run the JavaScript for the
 `ssn` and `iso639language` custom data types.
 
+## <a name="auto jinja filter"></a>Jinja2 filters to apply automatically
+
+You can write your own custom [Jinja2] filters using
+[`register_jinja_filter()`], but if you would like to apply a text
+transformation to all [Jinja2] variable interpolations automatically,
+you can use the `auto jinja filter` feature to specify a Python
+function that should be used to transform all text being inserted into
+the document.
+
+For example, suppose you have a Python file `my_filters.py`,
+containing this:
+
+{% highlight python %}
+import re
+
+__all__ = ['animal']
+
+def animal(text):
+    return re.sub(r'\b(dog|fish|turtle)\b', 'cat', text)
+{% endhighlight %}
+
+Suppose you have a DOCX file `animal_testimonial.docx` that contains
+the following:
+
+> {% raw %}{{ testimonial }} {% endraw %}`
+
+You can then write a YAML file like this:
+
+{% highlight yaml %}
+modules:
+  - .my_filters
+---
+features:
+  auto jinja filter: animal
+---
+question: |
+  Describe to me what your favorite animal is and why you like it so much.
+fields:
+  - Favorite animal essay: testimonal
+---
+mandatory: True
+question: |
+  Final document
+attachment:
+  docx template file: animal_testimonial.docx
+{% endhighlight %}
+
+Any mention of the words "dog," "fish," or "turtle" in the
+`testimonal` will be replaced by the word "cat" in the output.
+
+The result will be as though you used [`register_jinja_filter()`] to
+make a filter from the `animal()` function and then your DOCX file
+contained:
+
+> {% raw %}{{ testimonial | animal }} {% endraw %}`
+
 [Bootstrap popover feature]: https://getbootstrap.com/docs/5.2/components/popovers/
 [catchall questions]: {{ site.baseurl }}/docs/fields.html#catchall
 [infinite loop protection]: {{ site.baseurl }}/docs/config.html#loop limit
@@ -2639,7 +2794,6 @@ This will cause the web application to run the JavaScript for the
 [Python names]: {{ site.baseurl }}/docs/fields.html#variable names
 [`event`]: {{ site.baseurl }}/docs/fields.html#event
 [`review`]: {{ site.baseurl }}/docs/fields.html#review
-[`navigation bar`]: #navigation bar
 [`navigation bar html`]: #navigation bar html
 [`nav.set_sections()`]: {{ site.baseurl }}/docs/functions.html#DANav.set_sections
 [action]: {{ site.baseurl }}/docs/functions.html#actions
@@ -2817,7 +2971,11 @@ This will cause the web application to run the JavaScript for the
 [floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/
 [`pickle`]: https://docs.python.org/3/library/pickle.html
 [`mail`]: {{ site.baseurl }}/docs/config.html#mail multiple
-[GitHub repository]: {{ site.github.repository_url }}
 [combining multiple interviews into one]: {{ site.baseurl }}/docs/logic.html#multiple interviews
 [pikepdf]: https://pikepdf.readthedocs.io/en/latest/
 [pdftk]: https://www.pdflabs.com/tools/pdftk-the-pdf-toolkit/
+[`register_jinja_filter()`]: {{ site.baseurl }}/docs/documents.html#register_jinja_filter
+[Jinja2]: https://jinja.palletsprojects.com/en/3.0.x/
+[`lambda`]: https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions
+[`sorted`]: https://docs.python.org/3/library/functions.html#sorted
+[GitHub repository]: {{ site.github.repository_url }}

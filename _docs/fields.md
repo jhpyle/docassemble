@@ -755,27 +755,69 @@ on the file variable using the keyword attribute `persistent`.
 is available to anyone, including non-logged in users.  Even a bot
 that guesses URLs could download the file.  If you want to share with
 particular users, you can indicate specific users using the `allow
-users` modifier.  If `allow users` refers to a [YAML] list, the list
-is expected to be a list of e-mail addresses of users or integers
-indicating the numeric user IDs of users.  If `allow users` refers
-to text, the text is treated as a single item.  If `allow users`
-refers to a [YAML] dictionary, the single key of which is `code`, you
-can define the list with [Python] code.  The code is expected to
-evalute to an e-mail address, an integer user ID, an [`Individual`]
-with the `email` attribute set, or a list or [`DAList`] of any of the
-above.  You can also use the [`.user_access()`] method to control
-which users have access to a file.
+users` modifier.
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users:
+      - peter@abc.com
+      - daniel@abc.com
+{% endhighlight %}
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users:
+      - 1
+      - 2
+{% endhighlight %}
+
+If `allow users` refers to a [YAML] list, the list is expected to be a
+list of e-mail addresses of users or integers indicating the numeric
+user IDs of users. If `allow users` refers to text, the text is
+treated as a single item.
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users: peter@abc.com
+{% endhighlight %}
+
+[Mako] is not available; however, if `allow users` refers to a [YAML]
+dictionary, the single key of which is `code`, you can specify users
+with [Python] code. The code is expected to evalute to an e-mail
+address, an integer user ID, an [`Individual`] with the `email`
+attribute set, or a list or [`DAList`] of any of the above.
+
+{% highlight yaml %}
+fields:
+  - Your file: file_variable
+    datatype: file
+    allow users:
+      code: |
+        [advocate] + ([user_info().id] if user_logged_in() else [])
+{% endhighlight %}
+
+You can also use the [`.user_access()`] method to control which users
+have access to a file.
 
 <a name="allow privileges"></a>Instead of granting access to specific
-other users, you can grant access to categories of users by
-referencing [privileges] by name, such as `user`, `developer`, or
-`advocate`.  If the `allow privileges` modifier refers to a [YAML]
-list, the list items are expected to be text items like `user` or
-`developer`.  If `allow privileges` refers to a string, it is treated
-as a single item.  If it refers to a [YAML] dictionary, the single key
-of which is `code`, you can define the privileges using [Python] code,
-which is expected to evaluate to text (e.g., `'user'`) or a list of
-text strings (e.g., `['user', 'developer']`).  You can also use the
+other users, you can use the `allow privileges` field modifier to
+grant access to categories of users by referencing [privileges] by
+name, such as `user`, `developer`, or `advocate`. The 
+`allow privileges` modifier works much like the `allow users`
+modifier. If the `allow privileges` modifier refers to a [YAML] list,
+the list items are expected to be text items like `user` or
+`developer`. If `allow privileges` refers to a string, it is treated
+as a single item. [Mako] is not allowed. If `allow privileges` refers
+to a [YAML] dictionary, the single key of which is `code`, you can
+define the privileges using [Python] code, which is expected to
+evaluate to text (e.g., `'user'`) or a list of text strings (e.g.,
+`['user', 'developer']`). You can also use the
 [`.privilege_access()`] method to control which users have access to a
 file.
 
@@ -804,7 +846,7 @@ uploading signature images, see the [Uploads](#uploads) subsection.
 ## <a name="fields yesno"></a><a name="fields noyes"></a>Yes/no fields
 
 `datatype: yesno` will show a checkbox with a label, aligned with
-labeled fields.  `datatype: noyes` is like `datatype: yesno`, except
+labeled fields. `datatype: noyes` is like `datatype: yesno`, except
 with True and False inverted.
 
 {% include side-by-side.html demo="fields-yesno" %}
@@ -1242,14 +1284,14 @@ $.validator.addMethod('ssn', function(value, element, params){
     jq_rule = 'ssn'
     jq_message = 'You need to enter a valid SSN.'
     @classmethod
-    def validate(cls, item):
+    def validate(cls, item, variable_name, data):
         item = str(item).strip()
         m = re.search(r'^[0-9]{3}-?[0-9]{2}-?[0-9]{4}$', item)
         if item == '' or m:
             return True
         raise DAValidationError("A SSN needs to be in the form xxx-xx-xxxx")
     @classmethod
-    def transform(cls, item):
+    def transform(cls, item, variable_name, data):
         item = str(item).strip()
         m = re.search(r'^([0-9]{3})-?([0-9]{2})-?([0-9]{4})$', item)
         if m:
@@ -1328,7 +1370,7 @@ $(document).on('daPageLoad', function(){
   then the variable will be set to the output of the `.empty()` class
   method.
 * `is_object` - the default is `False`.  If you have a `transform()`
-  class method that returns something that cannot be defined with with
+  class method that returns something that cannot be defined with
   `repr()`, set this to `True`.
 * `parameters` - the default is `[]`.  If you want to pass parameters
   from the YAML to `data` attributes of the resulting `<input>`, you
@@ -1349,52 +1391,116 @@ $(document).on('daPageLoad', function(){
 The available class methods are:
 
 * `validate()` - the `validate()` class method is used for server-side
-  input validation.  The raw value from the POST request is passed to
-  this method as the first positional parameter.  The method should
-  return `True` if the value is valid.  If the value is invalid, the
+  input validation. The raw value from the POST request is passed to
+  this method as the first positional parameter. The second
+  positional parameter is the name of the variable, as a string. The
+  third positional parameter is a dictionary containing the parameters
+  specified in the YAML (see `parameters`, etc., above). The method should
+  return `True` if the value is valid. If the value is invalid, the
   method should raise a `DAValidationError` exception with a message.
   The message given to `DAValidationError` will pass through the
   [`word()`] function before it is presented to the user, so you can
   use the [`words`] directive in the [Configuration] to support
-  multiple languages.  If the method returns a false value, the error
+  multiple languages. If the method returns a false value, the error
   message will be "You need to enter a valid value."  If a
   `validate()` class method is not provided, no input validation will
   be performed.
 - `transform` - the `transform()` class method is used to perform any
   necessary transformations on the data received from the browser.
   The raw value from the POST request is passed to this method as the
-  first positional parameter.  The method should return the
-  transformed value.  In the example above, the `transform()` class
-  method ensures that Social Security numbers that are entered without
-  hyphens (which are accepted) will contain hyphens when the variable
-  `user.ssn` is actually defined.  If a `transform()` class method is
-  not provided, the variable will be set to the raw value from the
-  POST request (a string).
+  first positional parameter. The second positional parameter is the
+  name of the variable, as a string. The third positional parameter is
+  a dictionary containing the parameters specified in the YAML (see
+  `parameters`, etc., above). The method should return the transformed
+  value. In the example above, the `transform()` class method ensures
+  that Social Security numbers that are entered without hyphens (which
+  are accepted) will contain hyphens when the variable `user.ssn` is
+  actually defined. If a `transform()` class method is not provided,
+  the variable will be set to the raw value from the POST request (a
+  string).
 - `default_for` - the `default_for()` method is used when the user
-  visits a `question` when the variable is already defined.  If the
+  visits a `question` when the variable is already defined. If the
   output of your `transform` method is not suitable for placing into
   the field as the default value, you can define a `default_for()`
   class method that returns the text that should be inserted into the
-  field.  The `default_for()` class method takes a single positional
-  parameter, which is the value of the variable.  For example, if your
-  `transform()` method returns a [Python object], you can write a
-  `default_for()` class method that takes the object as its parameter
-  and returns plain text (an `str`) that is a suitable default value
-  to insert into the field.  If you do not define a `default_for()`
-  class method, an attempt will be made to obtain a default value by
-  running `str()` on the variable.
-- `empty` - this is rarely used, so you can probably ignore it.  The
+  field. The first positional parameter for the `default_for()` class
+  method is the value of the variable. The second positional parameter
+  is the name of the variable, as a string. The third positional
+  parameter is a dictionary containing the parameters specified in the
+  YAML (see `parameters`, etc., above). If your `transform()` method
+  returns a [Python object], you can write a `default_for()` class
+  method that takes the object as the first positional parameter and
+  returns plain text (an `str`) that is a suitable default value to
+  use for the HTML field. If you do not define a `default_for()` class
+  method, an attempt will be made to obtain a default value by running
+  `str()` on the variable.
+- `empty` - this is rarely used, so you can probably ignore it. The
   `empty` class method is used when `skip_if_empty` is
-  `False`.  Instead of not defining the variable, **docassemble** will
-  set the value of the variable to the output of this method.  If no
+  `False`. Instead of not defining the variable, **docassemble** will
+  set the value of the variable to the output of this method. If no
   `empty()` method is provided, the value `None` is used.
 
-If you provide client-side input validation, it is also a good idea to
-provide server-side validation, even though it might never be
-triggered.  There are ways that users might accidentally or
-deliberately bypass client-side input validation.  So even if you
-have a [jQuery Validation Plugin] rule that works, it is a good idea
-to include a `validate()` class method.
+Here is an example that demonstrates the use of the `transform()`,
+`validate()`, and `default_for()` methods.
+
+{% highlight python %}
+from docassemble.base.util import CustomDataType, Thing, DAValidationError, word
+
+class CustomFruit(CustomDataType):
+    name = 'customfruit'
+    container_class = 'da-fruit-container'
+    input_class = 'da-fruit'
+    is_object = True
+    parameters = ['seeds']
+    code_parameters = ['max words']
+    @classmethod
+    def transform(cls, item, variable_name, data):
+        new_object = Thing(variable_name)
+        new_object.name.text = item
+        new_object.seeds = data.get('seeds', 0)
+        return new_object
+    @classmethod
+    def validate(cls, item, variable_name, data):
+        max_words = data.get('max words', 2)
+        if len(item.split()) <= max_words:
+            return True
+        raise DAValidationError(word("You cannot write more than %d words") % (max_words, ))
+    @classmethod
+    def default_for(cls, item, variable_name, data):
+        if isinstance(item, Thing):
+            return item.name.text
+        return str(item)
+{% endhighlight %}
+
+An example of using this data type would be:
+
+{% highlight yaml %}
+question: |
+  Tell me about the fruit.
+fields:
+  - Fruit name: favorite_fruit
+    datatype: customfruit
+    max words: 3
+    seeds: 10
+{% endhighlight %}
+
+The `favorite_fruit` variable will become a `Thing` object. The value
+of the HTML `<input>` element becomes the `.name.text` attribute of
+the object. In addition, the `.seeds` attribute of the object is
+defined using the custom parameter `seeds`. The validation method
+limits the number of words that can be used, based on the parameter
+`max words`, which can contain a Python expression.
+
+Note that the `default_for()` and `transform()` objects are
+complementary; the `default_for()` converts a `Thing` object to a
+string, and `transform()` converts a string into a `Thing` object.
+The `default_for()` method needs to be flexible because the default
+value of the field that is passed to the `default_for()` method may be
+plain text or a `Thing` object, depending on the circumstances. The
+value will be a string if a `default` field modifier is used (which is
+always treated as a Mako expression that returns a string), or if
+there is a validation error, in which case the default value becomes
+the string that was found invalid.
 
 Python classes, when loaded into the Python web application, are
 loaded globally across all threads of the server; they are not loaded
@@ -3347,6 +3453,23 @@ omitted.
 
 {% include side-by-side.html demo="review-3" %}
 
+By default, items in a `review` list have the [CSS] class of
+`bg-secondary-subtle` so that each item is distinguishable from its
+neighbors. However, `note` and `html` items do not have a class. Using
+the `css class` modifier on an item, you can change the [CSS] class of
+an item.
+
+{% include side-by-side.html demo="review-10" %}
+
+In this example, the `favorite_vegetable` item has been given a
+different background color, and the `note`, which by default is
+colorless, is given the color `bg-secondary-subtle` so that it matches
+the other items.
+
+If you want an item to have no background color, set the `css class`
+to the name of a class that does not exist or that does not define a
+background color.
+
 If you include `note` and `html` as modifiers of an item under the
 `review` specifier, the text will appear to the right of the item on
 wide screens.  On small screens, the HTML will appear after the item.
@@ -3441,24 +3564,10 @@ There are three other special commands that you can use in a list of
 variables in a `review` item: `set`, `undefine`, and `invalidate`.
 The following example illustrates `set`:
 
-{% include side-by-side.html demo="review-8" %}
+{% include side-by-side.html demo="review-8a" %}
 
-This interview demonstrates how to re-do the geocoding of an
-[`Address`].  When you call [`.geocode()`] on an [`Address`] the
-first time, the address is geocoded and the `.geocoded` attribute
-of the object is changed from `False` to `True`.  If you call
-[`.geocode()`] on the object again, the first thing it does is check
-the `.geocoded` attribute, and if it is `True`, it will immediately
-return without doing anything.  This is useful for avoiding
-unnecessary API calls, which can slow down the responsiveness of your
-app.  However, if the user edits the underlying attributes of the
-address, you need to "reset" the geocoding in order to get it to run
-again.
-
-In the above interview, the `set` command sets `address.geocoded` to
-`False`, which means that when the `address.county` is recomputed, and
-the [`.geocode()`] method is run again by the `code` block, then the
-[`.geocode()`] method will actually geocode the new address.
+In this interview, the `set` command sets
+`address.manually_edited` to `True` after the user edits the address.
 
 The `undefine` specifier causes the values to be undefined.  The
 `invalidate` specifier works like `undefine`, except that the original
@@ -3514,7 +3623,7 @@ review:
 
 This enables you to use tables in your `review` screen.  Ordinarily,
 tables are always undefined (so that their contents always reflect the
-current state of the list, so a `review` screen would never display them.
+current state of the list), so a `review` screen would never display them.
 
 ### <a name="resume button label"></a>Customizing the Resume button
 

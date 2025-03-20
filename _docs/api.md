@@ -2344,13 +2344,14 @@ Parameters:
    key.
  - `folder` (optional): the folder in the [Playground] from which to
    obtain the list of files.  Must be one of `questions`, `sources`,
-   `static`, `templates`, or `modules`.  The default is `static`.
+   `static`, `templates`, `modules`, or `packages`.  The default is `static`.
  - `project` (optional): the project in the [Playground] from which to
    obtain the list of files.  The default is `default`, which is the
    "Default Playground" project.
  - `filename` (optional): the name of the file to be downloaded.  If a
    `filename` is not provided, a [JSON] list of files will be
-   returned.
+   returned. If `folder` is `packages`, a ZIP file of the package
+   indicated by `filename` will be downloaded.
 
 Required privileges:
 
@@ -2371,7 +2372,10 @@ Responses on failure:
 
 Response on success: [200]
 
-Body of response: a [JSON] array of file names
+Body of response: a [JSON] array of file names, or if `filename` is
+provided, the content of the file. If `folder` is `packages` and
+`filename` is provided, the response will be a ZIP file containing the
+package.
 
 ## <a name="playground_delete"></a>Delete a file in the Playground
 
@@ -3481,8 +3485,9 @@ Required privileges:
 Responses on failure:
 
  - [403] "Access Denied" if the API key did not authenticate.
- - [400] "File not included." if a file is not uploaded with the
-   request.
+ - [400] "No filename supplied." if a filename was not provided in the
+   `i` parameter.
+ - [400] "Error finding interview" if the interview could not be loaded.
 
 Response on success: [200]
 

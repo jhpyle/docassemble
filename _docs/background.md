@@ -744,7 +744,7 @@ area designated by the [`template`]'s `target`.
 
 If the user types "apples," the following message will appear:
 
-![Real time feedback]({{ site.baseurl }}/img/target-template.png)
+{% include image.html alt="Real time feedback" src="target-template.png" %}
 
 The timeline for this process is as follows:
 

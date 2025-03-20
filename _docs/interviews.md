@@ -368,7 +368,7 @@ fields:
   : words
 {% endhighlight %}
 
-Note that many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `:`, `{`, `}`,
+Note that many punctuation marks, including `"`, `'`, `%`, `?`, `~`, `|`, `#`, `>`, `:`, `!`, `{`, `}`,
 `[`, and `]`, have special meaning in [YAML], so if you use them in
 your text, make sure to use quotation marks or block quotes.
 
@@ -1042,6 +1042,7 @@ filename such as `docassemble.missouri:data/questions/toinclude.yml`.
 
 The following variables are available in the [Jinja2] context:
 
+  * `__config__`: the [Configuration] of the server, as a Python `dict`.
   * `__version__`: the current version of **docassemble** installed on
     the server.
   * `__architecture__`: the value returned by `platform.machine()` (e.g., `'x86_64'`).

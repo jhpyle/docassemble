@@ -657,29 +657,53 @@ see the section on [groups].
 
 All **docassemble** objects are instances of the `DAObject` class.
 `DAObject`s are different from normal [Python objects] because they
-have special features that allow their attributes to be set by
-**docassemble** questions.  If `fruit` is an ordinary [Python object]
+have special features that allow their attributes to be defined by
+**docassemble** questions. If `fruit` is an ordinary [Python object]
 and you refer to `fruit.seeds` when `seeds` is not an existing
 attribute of `fruit`, [Python] will generate an [AttributeError].  But
 if `fruit` is a `DAObject`, **docassemble** will intercept that error
-and look for a [`question`] or [`code`] block that offers to define
-`fruit.seeds`.  Or, if that does not work, it will look for a
-[`generic object`] block that offers to define `x.seeds` for a `DAObject`.
+and look for a [`question`], [`code`] block (or other block) that
+offers to define `fruit.seeds`. Or, if that does not work, it will
+look for a [`generic object`] block that offers to define `x.seeds`
+for a `DAObject`.
 
 From the interview developer's perspective, `DAObject`s can be treated
 like ordinary [Python objects] in most ways, but there are exceptions.
 
-An important characteristic of all [`DAObject`]s is that they have
-intrinsic names.  If you do:
+### <a name="DAObject.instanceName"></a>Intrinsic names
+
+An important characteristic of all [`DAObject`] instances is that they
+have intrinsic names.  If you do:
 
 {% highlight yaml %}
 objects:
   - foo: DAObject
 {% endhighlight %}
 
-then `foo.instanceName` will be `'foo'`.  The object knows its own
-name.  This is not a standard feature of [Python] objects, but a
-feature added by **docassemble**.
+then `foo` will be an instance of the `DAObject` class and
+`foo.instanceName` will be `'foo'`. The object knows its own name.
+This is not a standard feature of [Python] objects, but a feature
+added by **docassemble**.
+
+In [Python], objects are created by calling the class as though it
+were a function:
+
+{% highlight python %}
+>>> from decimal import Decimal
+>>> salary = Decimal(20000)
+>>> float(salary)
+20000.0
+{% endhighlight %}
+
+In this example, `Decimal()` is called with a parameter representing
+a number. Similarly, when you call `DAObject()` you provide a
+parameter representing the name of the variable.
+
+{% highlight python %}
+from docassemble.base.util import DAObject
+
+foo = DAObject('foo')
+{% endhighlight %}
 
 Since `foo` is a [Python] object, you can create other names
 for the same object, but the `instanceName` attribute will not change.
@@ -828,19 +852,21 @@ the gender of the second argument.)
 <a name="DAObject.object_possessive"></a>A related method of
 `DAObject` is `object_possessive()`.  Calling
 `turnip.object_possessive('leaves')` will return `the turnip's
-leaves`.  Calling `park.front_gate.object_possessive('latch')` will
+leaves`. Calling `park.front_gate.object_possessive('latch')` will
 return `the latch of the front gate in the park`.
 
 The `DAObject` is the most basic object, and all other **docassemble**
 objects inherit from it.  These objects will have different methods
-and behaviors.  For example, if `friend` is an [`Individual`], calling
-`${ friend }` in a [Mako] template will not return
+and behaviors.  For example, if `friend` is an [`Individual`],
+referring to `${ friend }` in a [Mako] template will not return
 `friend.object_name()`; rather, it will return `friend.full_name()`,
 which may require asking the user for the `friend`'s name.
 
-<a name="DAObject.initializeAttribute"></a>A [`DAObject`] can have any
-attributes you want to give it.  When those attributes are objects
-themselves, you need to use the `initializeAttribute()` method.
+### <a name="DAObject.initializeAttribute"></a> Methods for working with attributes
+
+A [`DAObject`] can have any attributes you want to give it.  When
+those attributes are objects themselves, you need to use the
+`initializeAttribute()` method.
 
 One way to initialize attributes of an object is to use [Python] code:
 
@@ -888,7 +914,7 @@ in situations when the attribute is already defined, use
 will overwrite the attribute.  The `reInitializeAttribute()` method
 returns the object it just reinitialized.
 
-Another way to define object attributes is to use the [`objects`]
+The best way to define object attributes is to use the [`objects`]
 block.
 
 {% highlight yaml %}
@@ -897,7 +923,15 @@ objects:
   - fish.best_friend: DAObject
 {% endhighlight %}
 
-You can even use [`objects`] with the [`generic object`] modifier:
+This also works with list items:
+
+{% highlight yaml %}
+objects: |
+  - companies: DAList.using(object_type=Person)
+  - companies[i].principal_place_of_business: City
+{% endhighlight %}
+
+You can also use [`objects`] with the [`generic object`] modifier:
 
 {% highlight yaml %}
 generic object: Person
@@ -1022,6 +1056,40 @@ client.getattr_fresh('total_income')
 This should only be used on attributes that are defined by `code`
 blocks.
 
+<a name="DAObject.raise_undefined_attribute_error"></a>The
+`raise_undefined_attribute_error()` method raises the same type of
+exception that a `DAObject` raises when the interview logic requires a
+definition of an object attribute that is undefined.
+
+This can be useful when you are using the `@property` decorator to
+implement getter/setter methods.
+
+{% highlight python %}
+from docassemble.base.util import DAObject
+
+__all__ = ['MyObject']
+
+class MyObject(DAObject):
+
+  @property
+  def foo(self):
+    if not hasattr(self, '_foo'):
+      self.raise_undefined_attribute_error('foo')
+    return self._foo
+
+  @foo.setter
+  def foo(self, val):
+    self._foo = val
+
+{% endhighlight %}
+
+### <a name="DAObjectlang"></a>Language methods
+
+<a name="DAObject.possessive"></a>The `possessive()` method is a
+[language method] that responds with a possessive phrase. For example,
+if the object `friend` when reduced to text returns `John Smith`, then
+`friend.possessive('fish')` will return `John Smith's fish`.
+
 <a name="DAObject.pronoun"></a><a
 name="DAObject.pronoun_objective"></a><a
 name="DAObject.pronoun_subjective"></a><a
@@ -1031,7 +1099,28 @@ special pronoun behavior, then the `.pronoun()`,
 `.pronoun_subjective()`, and `.pronoun_objective()` methods all return
 `'it'`.  The `.pronoun_possessive()` method returns `'its'` followed
 by the argument.  For example, `thing.pronoun_possessive('reason')`
-returns `'its reason'`.
+returns `'its reason'`. These methods work differently on subclasses
+[`Individual`] and [`DAList`]. See [language methods] for more
+information.
+
+<a name="DAObject.is_are_you"></a><a name="DAObject.yourself_or_name"></a><a name="DAObject.itself"></a><a name="DAObject.is_user"></a><a name="DAObject.do_question"></a><a name="DAObject.did_question"></a><a name="DAObject.were_question"></a><a name="DAObject.have_question"></a><a name="DAObject.does_verb"></a><a name="DAObject.did_verb"></a><a name="DAObject.subjective_pronoun_or_name"></a><a name="DAObject.pronoun_or_name"></a>The `DAObject` supports the
+[language methods] `is_are_you()`, `yourself_or_name()`, `itself()`,
+`is_user()`, `do_question()`, `did_question()`, `were_question()`,
+`have_question()`, `does_verb()`, `did_verb()`,
+`subjective_pronoun_or_name()`, `pronoun_or_name()`. For more
+information about how to use these methods, see [language methods].
+
+<a name="DAObject._point_of_view"></a><a
+name="DAObject.get_point_of_view"></a>Many of the [language methods] of
+the [DAObject] class accept the optional keyword parameter `person`,
+which can be set to `1`, `2`, `3` to indicate that they should use
+first person ("I," "me"), second person ("you", "your"), or
+third person ("them," "their"). You can avoid passing this parameter
+every time by setting the `._point_of_view` attribute of the object to
+`1`, `2`, or `3`. You can also use plural forms `1p` ("we", "our") and
+`2p` (which is the same as `2` in English).
+
+### <a name="DAObjectutil"></a>Utility methods
 
 <a name="DAObject.as_serializable"></a>The `.as_serializable()` method
 returns a simplified representation of the object and its attributes.
@@ -1198,7 +1287,7 @@ Here is an example that uses `.all_false()`:
 {% include side-by-side.html demo="all-false" %}
 
 <a name="DADict.true_values"></a>The method `.true_values()` will return a
-[list] of keys that are `True`.
+[`DAList`] of keys that are `True`.
 
 {% include side-by-side.html demo="true-values" %}
 
@@ -1209,7 +1298,7 @@ order of the underlying dictionary. Otherwise, the keys are sorted in
 alphabetical order.
 
 <a name="DADict.false_values"></a>Similarly, `.false_values()` will return a
-[list] of keys that are `False`.
+[`DAList`] of keys that are `False`.
 
 {% include side-by-side.html demo="false-values" %}
 
@@ -2011,7 +2100,7 @@ method takes an optional keyword argument, `width`.
 The method also takes an optional keyword argument `alt_text`, which
 can be used to set the [alt text] of images that appear in the web
 browser.  If an `alt_text` keyword argument is not supplied,
-[`get_alt_text()`] is called on the underling [`DAFile`] object to
+[`get_alt_text()`] is called on the underlying [`DAFile`] object to
 obtain the [alt text].  If no `alt_text` is defined for the file, no
 [alt text] is used.
 
@@ -2094,7 +2183,7 @@ call `show()` on itself.
 The method also takes an optional keyword argument `alt_text`, which
 can be used to set the [alt text] of images that appear in the web
 browser.  If an `alt_text` keyword argument is not supplied,
-[`get_alt_text()`] is called on the underling [`DAFile`] object to
+[`get_alt_text()`] is called on the underlying [`DAFile`] object to
 obtain the [alt text].  If no `alt_text` is defined for the file, no
 [alt text] is used.
 
@@ -3460,8 +3549,8 @@ your bearer token.
 {% highlight yaml %}
 objects:
   - web: |
-      DAWeb.using(base_url='https://api.example.com', 
-                  auth={'type': 'bearer', 
+      DAWeb.using(base_url='https://api.example.com',
+                  auth={'type': 'bearer',
                         'token': 'uweoDS0iBfirGwesB.8d29230fa55b5c5deb2f87a82b3f6d2f4ab25c2b7e34b563d3b8fb84532c254b'})
 {% endhighlight %}
 
@@ -3651,9 +3740,6 @@ standard way to keep [service account] authentication information in
 the [Configuration].
 
 ### <a name="DAGoogleAPI setup"></a>Setup process
-
-The `DAGoogleAPI` object only functions on the `amd64` architecture,
-so if you are using an [ARM] server, you cannot use `DAGoogleAPI`.
 
 In order for your site to communicate with Google, you will need to
 create an account on the [Google Developers Console] and create an
@@ -4014,7 +4100,7 @@ If you set the `name` attribute of a `Thing` to text, the
 An `Event` is a type of [`DAObject`] with the following attributes
 initialized by default:
 
-* `address`: an [`Address`] object
+* `address`: a [`City`] object
 * `location`: a [`LatitudeLongitude`] object
 
 There may be many other attributes you want to use for an `Event`, but
@@ -5215,6 +5301,152 @@ including [`objects`] initial blocks, as a parameter in the methods
 [`appendObject()`], and [`gather()`], or as the [`object_type`]
 attribute of a [`DAList`] or [`DADict`].
 
+# <a name="language methods"></a>Methods for writing language programmatically
+
+When you write `question`s in your [YAML], you may find that you need
+to phrase language differently depending on variables. For example:
+
+{% highlight yaml %}
+question: |
+  % if defendants.number() > 0:
+  When did they first contact you?
+  % elif defendants[0].gender == 'male':
+  When did he first contact you?
+  % elif defendants[0].gender == 'female':
+  When did she first contact you?
+  % endif
+{% endhighlight %}
+
+In some situations, writing multiple `if` statements to make slight
+language changes is repetitive and inefficient.
+
+**docassemble** objects have a variety of methods that can simplify
+this process. For example, the above can be written:
+
+{% highlight yaml %}
+question: |
+  When did ${ defendants.pronoun_subjective() } first contact you?
+{% endhighlight %}
+
+All classes that inherit from `DAObject` support the methods
+`possessive()`, `object_possessive()`, `pronoun()`,
+`pronoun_objective()`, `pronoun_subjective()`, `pronoun_possessive()`,
+`is_are_you()`, `yourself_or_name()`, `itself()`, `is_user()`,
+`do_question()`, `did_question()`, `were_question()`,
+`have_question()`, `does_verb()`, `did_verb()`,
+`subjective_pronoun_or_name()`, `pronoun_or_name()`, which are
+demonstrated below.
+
+{% include demo-side-by-side.html demo="daobject-language-functions" %}
+
+## <a name="group language methods"></a>Methods for group objects
+
+The classes `DAList`, `DADict`, and `DASet` support these methods as
+well. If a list has just one element, calling the method on the list
+has the same effect as calling the method on the first element of the
+list. Otherwise, appropriate words are used recognizing the plural
+nature of the object.
+
+Suppose `plaintiffs` is a `DAList` with two items, where the textual
+representation is `'Dick and Jane'`. Then:
+
+* `plaintiffs.itself()` returns `'themselves'`.
+* `plaintiffs.do_question('accept service')` returns `'do Dick and
+  Jane accept service'`
+* `plaintiffs.did_question('accept service')` returns `'did Dick and
+  Jane accept service'`
+* `plaintiffs.were_question('informed')` returns `'were Dick and
+  Jane informed'`
+* `plaintiffs.have_question('claimed')` returns `'have Dick and
+  Jane claimed'`
+* `plaintiffs.does_verb('claim')` returns `'Dick and
+  Jane claim'`
+* `plaintiffs.did_verb('claim')` returns `'Dick and
+  Jane claimed'`
+* `plaintiffs.pronoun_possessive('assertion')` returns `'their
+  assertion'`.
+* `plaintiffs.pronoun()` returns `'them'`.
+* `plaintiffs.pronoun_objective()` returns `'them'` (same as
+  `pronoun()`).
+* `plaintiffs.pronoun_subjective()` returns `'they'`.
+
+The `DAList`, `DADict`, and `DASet` classes also support some
+additional language methods.
+
+* `plaintiffs.as_noun()` returns `'plaintiffs'`, but if there was only
+  one plaintiff, it would return `'plaintiff'`.
+* `plaintiffs.as_noun('ox')` returns `'oxen'`, but if there was only
+  one plaintiff, it would return `'ox'`.
+* `plaintiffs.as_singular_noun()` returns `plaintiff` regardless of
+  how many elements are in the list.
+* `plaintiffs.number_as_word()` returns `'two'`.
+* `plaintiffs.quantity_noun('ox')` returns `'two oxen'`, but if there
+  was only one plaintiff, it would return `'one ox'`.
+
+## <a name="point of view"></a>Point of view
+
+The methods [`possessive()`], [`is_are_you()`],
+[`yourself_or_name()`], [`itself()`], [`pronoun_possessive()`],
+[`pronoun()`], [`pronoun_objective()`], [`pronoun_subjective()`],
+[`do_question()`], [`did_question()`], [`were_question()`],
+[`have_question()`], [`does_verb()`], [`did_verb()`],
+[`subjective_pronoun_or_name()`], [`pronoun_or_name()`] use the
+"second person" point of view if the object represents the user. You
+indicate whether the object represents the user by calling
+[`set_info()`].
+
+{% highlight yaml %}
+objects:
+  - client: Individual
+---
+initial: True
+code: |
+  set_info(user=client)
+{% endhighlight %}
+
+This must be done every time the screen loads (which is what `initial:
+True` means) because the interview might be a multi-user interview and
+who the user is may depend on who the current user is.
+
+The point of view can also be controlled manually. Each of the above
+methods accepts the keyword argument `person`, which can be set to
+one of the following values:
+
+* `'1'` or `1` indicates "first person" (i.e. "I am", "me", "my apple").
+* `'1p'` indicates "first person plural" (i.e. "we are", "us", "our apple").
+* `'2'` or `2` indicates "second person" (i.e. "you are", "you", "your apple").
+* `'2p'` indicates "second person plural" (same as "second person" in English).
+* `'3'` or `3` indicates "third person" (i.e. "George is", "George,"
+  "George's apple"). This is the default.
+
+For example, if `client` is an individual named John Smith:
+
+* `client.pronoun_possessive('apple', person=1)` returns `'my apple'`.
+* `client.pronoun_possessive('apple', person='1p')` returns `'our apple'`.
+* `client.pronoun_possessive('apple', person=2)` returns `'your apple'`.
+* `client.pronoun_possessive('apple', person='2p')` returns `'your apple'`.
+* `client.pronoun_possessive('apple', person=3)` returns `'his apple'`.
+
+You can also set the special attribute `_point_of_view` on the object
+itself to one of these values, and then that point of view will be
+used as the default any time one of these language methods is called
+on the object.
+
+For example, if you write:
+
+{% highlight yaml %}
+objects:
+  - company: Person.using(_point_of_view='1p')
+{% endhighlight %}
+
+then `company.pronoun_possessive('address')` will return `'our
+address'`.
+
+The following example demonstrates the different ways text can vary
+based on the object and its point of view.
+
+{% include demo-side-by-side.html demo="language-functions" %}
+
 # <a name="instanceName"></a>How docassemble objects are different
 
 For most purposes, **docassemble** objects behave just like [Python]
@@ -6018,7 +6250,7 @@ functionality of ordinary object instances, but with the added feature
 that particular attributes (or attributes of sub-objects) will
 synchronize with a [SQL] database.
 
-Using the `SQLObject` feature requires:
+The `SQLObject` is an expert feature. Using it requires:
 
 * Knowing how [SQL] databases work;
 * Knowing how to create a [SQL] database;
@@ -6033,16 +6265,16 @@ Here is an example of the use of `SQLObject`:
 
 The `Customer` and `Bank` classes are defined in the `demodb.py` file.
 `Customer` is a subclass of `Individual` and `SQLObject` (using
-[multiple inheritance].  `Bank` is a subclass of `Person` and
-`SQLObject`.  Behind every `Customer` is a row in a [SQL] table listing
-customers.  Behind every `Bank` is a row in a [SQL] table listing banks.
-These tables are in a separate [SQL] database from the database where
-**docassemble**'s interview answers are stored.  This [SQL] database can
-be any database capable of being accessed using [SQLAlchemy].  The
-database tables can be pre-existing (e.g., a database for a case
-management system) or created for the sole purpose of storing data from
-interviews.  If the tables do not exist, [SQLAlchemy] will create them
-when the module loads.
+[multiple inheritance]).  `Bank` is a subclass of `Person` and
+`SQLObject`.  Behind every `Customer` is a row in a [SQL] table
+listing customers.  Behind every `Bank` is a row in a [SQL] table
+listing banks.  These tables are in a separate [SQL] database from the
+database where **docassemble**'s interview answers are stored.  This
+[SQL] database can be any database capable of being accessed using
+[SQLAlchemy].  The database tables can be pre-existing (e.g., a
+database for a case management system) or created for the sole purpose
+of storing data from interviews.  If the tables do not exist,
+[SQLAlchemy] will create them when the module loads.
 
 In the interview, the user is first asked for a unique identifier
 (SSN) about the `customer`.  If the the SSN matches the SSN of a
@@ -6576,10 +6808,10 @@ in the SQL database.  This allows you to use the interview answers as
 a kind of "staging area" for information before writing it to the SQL
 database.
 
-If an object is stored both in the interview answers and in Python,
-but then it changes inside the SQL server, then the next time the
-interview answers are retrieved, the attributes in the Python objects
-will be updated with the values in SQL.
+If an object is stored both in the interview answers and on the SQL
+server, and then the columns in the SQL record change, then the next
+time the interview answers are retrieved, the attributes in the Python
+objects will be updated with the values in SQL.
 
 However, if the item is deleted from SQL, then when the corresponding
 Python object is retrieved, it will become a "zombie" object.  It will
@@ -6608,11 +6840,13 @@ database columns is controlled by the [`db_get()`], [`db_set()`], and
 [`db_null()`] methods of the class.  The [`db_get()`] method takes a
 column name and tries to obtain a value for it from [Python] land.
 The [`db_set()`] method takes a column name and a value from [SQL]
-land and saves that value in [Python] land. For example, in the above
-[Python module], the `first_name` column is associated with
-`.name.first` attribute of the `Customer` object.  The [`db_null()`]
-method takes a column name and tries to delete the object attribute in
-[Python] land that is associated with the given column.
+land and saves that value in [Python] land. (Think of the verbs "get"
+and "set" as applying to attributes of the Python object, not columns
+in the SQL record.) For example, in the above [Python module], the
+`first_name` column is associated with `.name.first` attribute of the
+`Customer` object.  The [`db_null()`] method takes a column name and
+tries to delete the object attribute in [Python] land that is
+associated with the given column.
 
 When you initialize an object, you can give it the unique ID, and if
 a record exists in SQL with that unique ID, then the object will be
@@ -6628,7 +6862,7 @@ unique integer that never changes.  The `id` is set when the record is
 created in [SQL], using an auto-incrementing counter.  If you know the
 `id` of a record you can use it to initialize your object so that it
 is non-nascent from the start.  For example, here is a way to use a
-URL parameter (or in the alternative, a [`question`], to get the `id`
+URL parameter (or in the alternative, a [`question`]), to get the `id`
 for a customer record:
 
 {% highlight yaml %}
@@ -6653,7 +6887,7 @@ it, it will run [`db_set()`] and update information in [Python] based on
 the values of the columns in [SQL].
 
 For example, assume there is a customer in the [SQL] database with SSN
-122-23-2322, whose first name is John and whose last name is John Smith.
+122-23-2322, whose first name is John and whose last name is Smith.
 
 {% highlight yaml %}
 objects:
@@ -6867,6 +7101,51 @@ code will know that the column information does not exist.  You do not
 need to use `try`/`except` logic of your own in these methods; just
 follow the pattern above.
 
+## <a name="sqlobject pitfalls"></a>Pitfalls
+
+### Multiple Python objects associated with a single SQL record
+
+When using `SQLObject`, make sure that your interview logic does not
+create multiple separate Python objects associated with the same SQL
+record. If you do that, then if you change the attributes of one
+object, but not the other, the two objects will be in conflict with
+one another. Which attributes are saved to the server will be random,
+depending on which object is [pickle]d last.
+
+The `SQLObject` maintains an object cache under the `_internal`
+dictionary in the interview answers. When a `SQLObject` has an `id`, a
+reference to that object will be created in the cache. Methods like
+`.filter(),` `.all(),` and `.by_id()` and `.by_uid()` return
+references to this cache if the object is in the cache, rather than
+create new objects. The cache helps avoid the problem of multiple
+separate Python objects existing in the interview answers.
+
+### Concurrency
+
+Between the time when the screen starts loading (when data are copied
+from SQL data to Python) and the screen finishes loading (when data
+are copied from Python to SQL), no lock is placed on the SQL
+records. Suppose session A copies data from SQL to Python at time 0,
+session B copies data from the same SQL record to Python at time 1,
+session B writes changes to the SQL record at time 2, and session A
+writes changes to the SQL record at time 3. In this scenario, session
+A's changes would overwrite the changes that session B made.
+
+The same result would happen if a third-party application made changes
+to the SQL record instead of session B.
+
+However, suppose session A copies data from SQL to Python at time 0,
+session B copies data from the same SQL record to Python at time 1,
+session B writes changes to the SQL record at time 2, and then at time
+3 the interview logic of session A finishes without making any
+changes. In this scenario, session A would not overwrite the changes
+of session B, because from the perspective of session A, there is no
+need to take the time to write data to SQL, since nothing changed.
+
+If you expect that SQL records might be altered concurrently, using
+`SQLObject`s to synchronize between interview answers and a SQL
+database might not be sufficiently robust.
+
 ## <a name="sqlobject reference"></a>Reference guide
 
 ### <a name="sqlobject class attributes"></a>Class attributes
@@ -7015,9 +7294,9 @@ called from the [`init()`] method of each class after the call to
 ### <a name="sqlobject class methods"></a>Class methods
 
 <a name="SQLObject.by_id"></a>If you have the `id` of a [SQL] record
-and you want to obtain a [Python] object corresponding to that ID, 
-you can call the `by_id()` class method.  If your class name is `Customer`, 
-and the id is `customer_id`, you would call `Customer.by_id(customer_id)`, 
+and you want to obtain a [Python] object corresponding to that ID,
+you can call the `by_id()` class method.  If your class name is `Customer`,
+and the id is `customer_id`, you would call `Customer.by_id(customer_id)`,
 and the result would be a `Customer` object.  If an object for this `id`
 is already present in the interview answers, that object will be
 returned.  If the object does not already exist, a new object will be
@@ -7224,7 +7503,6 @@ the `_uid` of the table rather than the `id`.
 [pickled]: https://docs.python.org/3.10/library/pickle.html
 [pickles]: https://docs.python.org/3.10/library/pickle.html
 [date field]: {{ site.baseurl }}/docs/fields.html#date
-[`pronoun()`]: #Individual.pronoun
 [`birthdate`]: #Individual.birthdate
 [`gender`]: #Individual.gender
 [`age`]: #Individual.age
@@ -7387,7 +7665,6 @@ the `_uid` of the table rather than the `id`.
 [Inserting multi-line or formatted text into a single field in a DOCX file]: {{ site.baseurl }}/docs/documents.html#markdown to docx
 [qpdf]: https://qpdf.sourceforge.net/
 [PyPDF2]: https://pythonhosted.org/PyPDF2/
-[ARM]: https://en.wikipedia.org/wiki/ARM_architecture
 [`button colors`]: {{ site.baseurl }}/docs/config.html#button colors
 [action]: {{ site.baseurl }}/docs/background.html#url_action
 [actions]: {{ site.baseurl }}/docs/background.html#url_action
@@ -7406,3 +7683,25 @@ the `_uid` of the table rather than the `id`.
 [bearer token authentication]: https://swagger.io/docs/specification/authentication/bearer-authentication/
 [`dalink.docx`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/dalink.docx
 [hyperlink style]: {{ site.baseurl }}/docs/documents.html#hyperlink style
+[language methods]: #language methods
+[language method]: #language methods
+[`possessive()`]: #DAObject.possessive
+[`is_are_you()`]: #DAObject.is_are_you
+[`yourself_or_name()`]: #DAObject.yourself_or_name
+[`itself()`]: #DAObject.itself
+[`pronoun_possessive()`]: #DAObject.pronoun_possessive
+[`pronoun()`]: #DAObject.pronoun
+[`pronoun_objective()`]: #DAObject.pronoun_objective
+[`pronoun_subjective()`]: #DAObject.pronoun_subjective
+[`do_question()`]: #DAObject.do_question
+[`did_question()`]: #DAObject.did_question
+[`were_question()`]: #DAObject.were_question
+[`have_question()`]: #DAObject.have_question
+[`does_verb()`]: #DAObject.does_verb
+[`did_verb()`]: #DAObject.did_verb
+[`subjective_pronoun_or_name()`]: #DAObject.subjective_pronoun_or_name
+[`pronoun_or_name()`]: #DAObject.pronoun_or_name
+[`as_noun()`]: #DAList.as_noun
+[`as_singular_noun()`]: #DAList.as_singular_noun
+[`number_as_word()`]: #DAList.number_as_word
+[`quantity_noun()`]: #DAList.quantity_noun

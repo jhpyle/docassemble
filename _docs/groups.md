@@ -769,7 +769,7 @@ variables like `i` and `j` work.  If **docassemble** wants to define
 the attribute `allergy` for an object `person[0]`, and the object is
 of type `Individual`, it can run `x = person[0]` and then process the
 `x.allergy: DAList` line of the [`objects`] block.  Likewise, if
-**docassemble wants to define `person[1].child[0].allergy[3]`, it can
+**docassemble** wants to define `person[1].child[0].allergy[3]`, it can
 set `x = person[1].child[0]`, set `i = 3`, and then ask the
 [`question`] that defines `x.allergy[i]`.  By using the [`generic
 object`] feature, we save ourselves the trouble of writing separate
@@ -906,6 +906,34 @@ However, this would set `location.new_object_type` to a piece of text
 `City`).  Thus, when setting `.new_object_type` (or `.object_type`),
 make sure to use [Python] code.
 
+If you don't want to use a `buttons` interface, you can use code such
+as the following to set the `.new_object_type` attribute to a Python
+class.
+
+{% highlight yaml %}
+question: |
+  Do you know the full address of the
+  ${ ordinal(location.current_index()) }
+  location?
+fields:
+  - Type: location.new_object_type_selection
+    choices:
+      - I know the full address
+      - I only know the city
+---
+code: |
+  if location.new_object_type_selection == 'I know the full address':
+    location.new_object_type = Address
+  else:
+    location.new_object_type = City
+  del location.new_object_type_selection
+{% endhighlight %}
+
+Running `del location.new_object_type_selection` causes
+`location.new_object_type_selection` to be undefined. This ensures that
+the next time `location.new_object_type` is sought, the `question` will
+be asked again.
+
 Note that there are two questions that ask about attributes of the
 list items:
 
@@ -950,6 +978,34 @@ over the "What is the address" question, and it will be asked.  If the
 attribute **docassemble** needs is `.address`, only the "What is the
 address" question is capable of defining that, so only that question
 will be asked.
+
+If you set `.ask_object_type` to `True` and you want **docassemble**
+to query for the `.new_object_type`, you need to trigger the list
+gathering process by directly or indirectly calling `.gather()` on the
+list. If you try to bypass the list gathering process, you may
+encounter problems. For example, this will result in an error:
+
+{% highlight yaml %}
+objects:
+  - mylist: DAlist.using(ask_object_type=True, there_are_any=True)
+---
+mandatory: True
+code: |
+  mylist[0].favorite_fruit
+{% endhighlight %}
+
+Instead, make sure the interview logic triggers the list gathering
+process. For example:
+
+{% highlight yaml %}
+objects:
+  - mylist: DAlist.using(ask_object_type=True, there_are_any=True)
+---
+mandatory: True
+code: |
+  for item in mylist:
+    item.favorite_fruit
+{% endhighlight %}
 
 # <a name="gather dictionary"></a>Gathering information into dictionaries
 
@@ -1353,7 +1409,7 @@ same time that `.gathered` is set to `True`.  Because `.revisit` is
 undefined at first, the [`review`] block will not show the "Edit"
 button for the list until the list is gathered.  When the list has
 been gathered, and the user clicks the "Edit" button associated with
-`.revisit`, the user is taken to the block with `field:
+`.revisit`, the user is taken to the block with `continue button field:
 person.revisit`.  On this screen, you can show the list as a table
 and provide the `.add_action()` button if you want users to be able to
 add entries.
@@ -1441,8 +1497,8 @@ the "Edit" button will not be shown.  If the value of the key
 requires the gathering process to be completed.  However, if the
 gathering process is already ongoing, then the table will still be
 created, and it will only contain items that are "complete."  If you
-do not want the table to trigger the gathering process, set `require
-gathered: False`.
+do not want the showing of the `table` to trigger the gathering
+process, set `require gathered: False`.
 
 <a name="editable"></a>If you have a `table` definition that includes
 editable elements (i.e. `edit`, `delete buttons`), but you want to
@@ -1453,7 +1509,22 @@ the editing features.
 
 {% include side-by-side.html demo="edit-list-non-editable" %}
 
-# <a name="reordering"></a>Reorder an already-gathered list
+## <a name="cancel_add_edit"></a>Canceling an add or edit process
+
+If you want to allow the user to cancel the process of adding or
+editing the item of a `DAList`, you can offer the user an "action"
+that runs the `.cancel_add_or_edit()` method on the list.
+
+{% include side-by-side.html demo="edit-list-cancel" %}
+
+This will cancel any pending actions related to the list and delete
+the last item in the list if it is incomplete.
+
+In this example, using `show if: fruits.has_been_gathered()` was not
+required; you may want to use that so that the "Cancel" buttons are
+not shown until the list is edited after having been gathered.
+
+## <a name="reordering"></a>Reorder an already-gathered list
 
 If you have a [`DAList`] and you want to allow the user to change the
 order of items in the list, you can set `allow reordering` to `True`:

@@ -106,6 +106,19 @@ fields, including:
 * Third subdivision (e.g., municipality)
 * Organization (e.g., company, non-profit organization)
 
+If uploading to [PyPI] is permitted by the [`pypi`] directive, users
+with `developer` or `admin` privileges will also see the fields:
+
+* PyPI Username
+* PyPI Password
+
+These values are passed to [`twine`] when the user uploads a package
+from the [Packages folder] to [PyPI]. Typically the "PyPI Username" is
+`__token__` and the `PyPI Password` is the API key.
+
+The [`user profile fields`] directive in the [Configuration] controls
+which fields are editable by the user.
+
 ## <a name="user_list">User List</a>
 
 Administrators can go to the "User List" from the menu.  From here,
@@ -322,3 +335,8 @@ will run after [`imports`] and [`modules`] blocks, but before
 [API]: {{ site.baseurl }}/docs/api.html
 [`permissions`]: {{ site.baseurl }}/docs/config.html#permissions
 [Configuration]: {{ site.baseurl }}/docs/config.html
+[`user profile fields`]: {{ site.baseurl }}/docs/config.html#user profile fields
+[PyPI]: https://pypi.python.org/pypi
+[`pypi`]: {{ site.baseurl }}/docs/config.html#pypi
+[`twine`]: https://pypi.org/project/twine/
+[Packages folder]: {{ site.baseurl }}/docs/playground.html#packages

@@ -567,7 +567,7 @@ special case: you can write `[BEGIN_TWOCOL]` (text of first column)
 # <a name="field"></a>Embedding fields
 
 In a [`fields`] block, you can use the markup syntax `[FIELD ...]` to
-embed fields within the within the [`subquestion`] text.  For more
+embed fields within the [`subquestion`] text.  For more
 information about this feature, see the section on
 [Embedding fields within a paragraph].
 

@@ -379,7 +379,7 @@ In addition, when you define the [`dispatch`] directive, your users
 can see a list of available interviews by going to the URL `/list` on
 the site. They will see a page like this:
 
-![Interview list]({{ site.baseurl }}/img/interviewlist.png){: .maybe-full-width }
+{% include image.html alt="Interview list" src="interviewlist.png" class="maybe-full-width" %}
 
 If you want to take advantage of the `/start/` shortcuts but you do
 not want the interview listed in the interview list, set `unlisted:
@@ -1341,9 +1341,9 @@ The default value is `medium`.
 ## <a name="footer css class"></a>Default CSS class for the footer
 
 By default, if you use a footer, the footer has the CSS class
-`bg-light`, in addition to the class `dafooter`. If you would like to
-use a different class instead of `bg-light`, you can set this class
-using `footer css class`.
+`bg-secondary-subtle`, in addition to the class `dafooter`. If you
+would like to use a different class instead of `bg-secondary-subtle`,
+you can set this class using `footer css class`.
 
 {% highlight yaml %}
 footer css class: bg-dark text-white
@@ -1371,8 +1371,8 @@ table-bordered, thead-dark`, then the `<table>` will have the class
 ## <a name="default icons"></a>Using standard sets of icons
 
 [Font Awesome] is enabled on all pages. **docassemble** includes the
-free version (5.2.0) of [Font Awesome]. This allows you to refer to
-[Font Awesome] icons using raw HTML.
+free version [Font Awesome]. This allows you to refer to [Font
+Awesome] icons using raw HTML.
 
 In addition, **docassemble** allows you to use Google's [Material
 Icons] in your raw HTML. Since the [Material Icons] are just a font,
@@ -1742,6 +1742,9 @@ configuration variables [`DBHOST`], [`DBNAME`], [`DBUSER`],
 particular SQL database should be used. For example, you would set
 these environment variables if you were using a cloud-based managed
 database system like [RDS].
+
+The password should only contain alphanumeric characters. The special
+characters `_`, `~`, `/`, `-`, `^`, `*`, `?`, and `!` may be used.
 
 Changing the `db` directives after you already have a working system
 can easily lead to an unbootable system. You should not change the
@@ -2392,6 +2395,9 @@ When the server starts, the value of `os locale` is appended to
 `/etc/locale.gen` (if not already there in uncommented form) and
 `locale-gen` and `update-locale` are run.
 
+After changing `os locale`, you will need to restart your container
+(`docker stop -t 600 <container ID>` followed by `docker start <container ID>`).
+
 ## <a name="other os locales"></a>Other available locales
 
 If your interviews use locale and language settings that your
@@ -2414,6 +2420,10 @@ values] that [Ubuntu]/[Debian] recognizes (listed in the
 When the server starts, each of the `other os locales` is appended to
 `/etc/locale.gen` (if not already there in uncommented form) and
 `locale-gen` and `update-locale` are run.
+
+After changing `other os locales`, you will need to restart your
+container (`docker stop -t 600 <container ID>` followed by `docker
+start <container ID>`).
 
 ## <a name="server administrator email"></a>E-mail address of server administrator
 
@@ -2878,13 +2888,26 @@ signature pen thickness scaling factor: 0.5
 
 When users supply PDF files and **docassemble** includes those files
 within a [document], the PDF pages are converted to PNG images in
-order to be included within RTF files. The `png resolution` directive
-defines the dots per inch to be used during this conversion.
+order to be included within DOCX and RTF files. The `png resolution`
+directive defines the dots per inch to be used during this conversion.
+
+{% highlight yaml %}
+png resolution: 500
+{% endhighlight %}
 
 PDF files are also converted to PNG for previewing within the web app,
 but at a lower resolution. The `png screen resolution` directive
 defines the dots per inch to be used for conversion of PDF pages to
 PNG files for display in the web browser.
+
+{% highlight yaml %}
+png screen resolution: 72
+{% endhighlight %}
+
+When converting page images, the actual DPI used will be scaled based
+on the page size. If the long edge of the page is 11 inches and the
+`png resolution` is 500, then the DPI will be 500. However if the long
+edge of the page is 22 inches, the DPI will be 250.
 
 ## <a name="ocr dpi"></a>OCR resolution
 
@@ -2897,8 +2920,12 @@ else, set the `ocr dpi` directive:
 ocr dpi: 500
 {% endhighlight %}
 
-## <a name="retype password"></a>Controlling whether registering users need to retype their passwords
+The actual DPI used will be scaled based on the page size. If the long
+edge of the page is 11 inches and the `ocr dpi` is 500, then the DPI
+will be 500. However if the long edge of the page is 22 inches, the
+DPI will be 250.
 
+## <a name="retype password"></a>Controlling whether registering users need to retype their passwords
 
 By default, users when registering must type in their passwords twice.
 To allow users to register after only typing the password once, you
@@ -4910,20 +4937,62 @@ process by setting the `image upload type` to `png`, `jpeg`, or `bmp`.
 image upload type: jpeg
 {% endhighlight %}
 
-## <a name="celery processes"></a>Number of concurrent background tasks
+## <a name="celery processes"></a><a name="max celery processes"></a>Number of concurrent background tasks
 
 **docassemble** uses [Celery] to execute background tasks. The
 [Celery] system is able to execute multiple tasks concurrently. The
-number of concurrent processes is limited by default to the number of
-CPU cores on the machine. If you want to increase the number of
-processes, set the `celery processes` directive.
+number of concurrent workers is set by default to the number of CPU
+cores on the machine, except that the number of workers will not be
+larger than the number of gigabytes of total memory divided by 2. For
+example:
+
+* If a machine has 4 CPU cores and 16GB of RAM, four [Celery] workers
+  will be started (CPU limited)
+* If a machine has 32 CPU cores and 16GB of RAM, eight [Celery]
+  workers will be started (memory limited).
+
+The number of CPUs is determined by calling `nproc --all`. Note that
+the result may be the same or may be different from the number of
+`vCPUs` that a virtual machine has.
+
+If you want to manually override this formula, set the `celery
+processes` directive.
 
 {% highlight yaml %}
 celery processes: 15
 {% endhighlight %}
 
-This value will be passed directly to [Celery]'s [`worker_concurrency`]
-configuration variable.
+This will cause 15 [Celery] workers to be spawned.
+
+Note that there are two [Celery] systems: one called `celerysingle`
+with a single worker, and one called `celery` with one or more
+workers. The `celerysingle` system is used for background processes
+that will perform parallel processing and use every CPU in the
+machine; it would be dangerous to run more than one such process at a
+time. The `celery` system is used for all other tasks, which [Celery]
+may run in parallel on all the available worker processes. Thus, if
+the `celery processes` is `15`, the [`worker_concurrency`] will be `1`
+for `celerysingle` and `14` for `celery`. You can see this if you do
+`ps ax | grep celery` on the server.
+
+If you want the number of [Celery] processes to scale with CPU but you
+think your system can handle more concurrency than the standard
+formula would provide, you can set a higher maximum:
+
+{% highlight yaml %}
+max celery processes: 10
+{% endhighlight %}
+
+This setting will mean that:
+
+* If a machine has 8 CPUs and 4GB of RAM, the number of celery
+  processes will be 8 (`1` for `celerysingle` and `7` for `celery`).
+* If a machine has 32 CPUs and 4GB of RAM, the number of celery
+  processes will be 10 (`1` for `celerysingle` and `9` for `celery`).
+
+It is important not to spawn too many [Celery] workers because each of
+them loads software into its own memory space, which could cause your
+memory to be exhausted.
 
 ## <a name="run oauthlib on http"></a>Using oauthlib on http servers
 
@@ -4999,12 +5068,22 @@ If you change the `timezone`, you need to do a `docker stop` and
 
 ## <a name="pypi"></a>Sharing packages on PyPI
 
-If you want users of your server to be able to publish packages to
-[PyPI] from the [packages folder] of the [Playground], set `pypi` to `True`:
+If you want users of your server with `developer` privleges to be able
+to publish packages to [PyPI] from the [packages folder] of the
+[Playground], set `pypi` to `True`:
 
 {% highlight yaml %}
 pypi: True
 {% endhighlight %}
+
+Then, a user with `developer` privileges can configure a [PyPI]
+username and password on their [Profile]. Typically, the username is
+`__token__` and the password is a long security token beginning with
+`pypi-`. This is available from [PyPI] when you create an account and
+create an API token. If using `twine` from the command line, you would
+set up this username and password in a `.pypirc` file. **docassemble**
+runs `twine` to upload to [PyPI] and it passes this username and
+password to `twine`.
 
 You can also tweak the operation of **docassemble**'s interaction with
 [PyPI] by setting the following optional directives (which you should
@@ -5022,10 +5101,10 @@ The `pypirc path` directive refers to the file where the repository
 URL will be stored. You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
-## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, Keycloak, Zitadel, and Azure login
+## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, Keycloak, Zitadel, miniOrange, and Azure login
 
 If you want to enable logging in with Facebook, Twitter, Google,
-Auth0, KeyCloak, Zitadel, or Microsoft Azure, you will need to tell
+Auth0, KeyCloak, Zitadel, miniOrange, or Microsoft Azure, you will need to tell
 **docassemble** your [OAuth2] keys for these services:
 
 {% highlight yaml %}
@@ -5058,6 +5137,11 @@ oauth:
     enable: True
     id: 168422810448705515@yourprojectname
     domain: your-instance-name-edy3i2.zitadel.cloud
+  miniorange:
+    enable: True
+    id: TQBwKWUcsECMUIkCctjxLQjPFXdIsnYU
+    secret: lTUyixltiJmMMKhXYulCBrKWbFbXPrdy
+    domain: myserver.com
   azure:
     enable: True
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
@@ -5069,13 +5153,22 @@ by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
 [installation] page's sections on [Facebook], [Twitter], [Google],
-[Auth0], [Keycloak], [Zitadel] and [Azure].
+[Auth0], [Keycloak], [Zitadel], [miniOrange] and [Azure].
 
 Note that in [YAML], dictionary keys must be unique. So you can only
 have one `ouath:` line in your configuration. Put all of your
 [OAuth2] configuration details (for Google logins, Google Drive
 integration, OneDrive integration, etc.) within a single `oauth`
 directive.
+
+If an external authentication method is used, the decryption key for
+server-side encryption is based on information sent back by the
+external authentication provider. Encryption still happens (e.g., when
+`multi_user` is not set to `True`), but the encryption key is not a
+secret The protection offered by server-side encryption will be less,
+because a resourceful hacker could figure out the encryption key for
+decrypting interview answers, based on information stored unencrypted
+on the server.
 
 <a name="allow external auth with admin accounts"></a>By default, users who
 log with an authentication mechanism other than username/password
@@ -5087,6 +5180,25 @@ accounts if the external authentication mechanism fails, you can set
 {% highlight yaml %}
 allow external auth with admin accounts: True
 {% endhighlight %}
+
+<a name="allow external auth with multiple methods"></a>By default, a
+use who signs in for the first time (registers) with one external
+authentication method cannot then log in using a different external
+authentication method that is connected with the same email address.
+
+However, if you want to allow users to do this, set `allow external
+auth with multiple methods` to `True`:
+
+{% highlight yaml %}
+allow external auth with multiple methods: True
+{% endhighlight %}
+
+The default is `False`.
+
+Note that if you enable this feature, users may experience an apparent
+loss in access to sessions. While they are allowed to log in to the
+same account, because it has the same email address, the encryption
+key will be different because the authentication method is different.
 
 ## <a name="googledrive"></a>Google Drive configuration
 
@@ -6446,6 +6558,7 @@ and Facebook API keys.
 [Auth0]: {{ site.baseurl }}/docs/installation.html#auth0
 [Keycloak]: {{ site.baseurl }}/docs/installation.html#keycloak
 [Zitadel]: {{ site.baseurl }}/docs/installation.html#zitadel
+[miniOrange]: {{ site.baseurl }}/docs/installation.html#miniorange
 [Azure]: {{ site.baseurl }}/docs/installation.html#azure
 [invited by an administrator]: {{ site.baseurl }}/docs/users.html#invite
 [`root`]: #root
@@ -6771,3 +6884,4 @@ and Facebook API keys.
 [ElastiCache for Redis]: https://aws.amazon.com/elasticache/redis/
 [`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
+[Profile]: {{ site.baseurl }}/docs/users.html#profile

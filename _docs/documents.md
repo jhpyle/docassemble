@@ -152,7 +152,7 @@ like this in a word processor (depending on the user's software):
 If the user clicks the "Preview" tab, an HTML version of the document
 will be visible:
 
-![document screenshot]({{ site.baseurl }}/img/document-example-preview.png)
+{% include image.html alt="document screenshot" src="document-example-preview.png" class="maybe-full-width" %}
 
 ## <a name="docx"></a>Creating DOCX files from Markdown
 
@@ -181,7 +181,7 @@ file.
 {% include side-by-side.html demo="document-docx-from-rtf" %}
 
 Note that you can also assemble .docx files from templates that you
-compose in Mirosoft Word.  See the [`docx template file`] feature,
+compose in Microsoft Word.  See the [`docx template file`] feature,
 which is described [below](#docx template file).
 
 ## <a name="md"></a>Creating Markdown files from Markdown
@@ -288,7 +288,7 @@ documents.
   be explicit, `[ENDASH]` will do the same thing.
 * <a name="emdash"></a>`[EMDASH]` - Normally, `---` produces an em-dash, but if you want to
   be explicit, `[EMDASH]` will do the same thing.
-* <a name="hyphen"></a>`[HYPHEN]` - Insert a hyphen.  Normally, `---` produces an em-dash, but if you want to
+* <a name="hyphen"></a>`[HYPHEN]` - Insert a hyphen.  Normally, `-` produces a hyphen, but if you want to
   be explicit, `[HYPHEN]` will do the same thing.
 * <a name="blank"></a>`[BLANK]` - Insert `___________________`.
 * <a name="blank"></a>`[BLANKFILL]` - Insert a wider version of
@@ -347,6 +347,9 @@ attachment:
 
 Metadata values can contain [Mako] template commands.
 
+To set interview-wide default values for the `metadata`, you can use
+[`attachment options`].
+
 ## <a name="metadata rtf pdf"></a>Metadata applicable to RTF and PDF files
 
 * If you wish to use a standard document title, set the following:
@@ -364,9 +367,14 @@ Metadata values can contain [Mako] template commands.
 * `TripleSpacing` - set this to `True` for triple spacing with
   indentation of first lines.
 * `fontsize` - default is `12pt`.  Must be one of `10pt`, `11pt`, and `12pt`.
-* `Indentation` - not defined by default.  By default, the first line
-  of each paragraph is indented, unless `SingleSpacing` is set, in
-  which case there is no indentation.
+* `Indentation` - not defined by default. In `SingleSpacing` mode,
+  which by default has no indentation of the first line of each
+  paragraph, `Indentation` can be set to `True` to force the
+  indentation of the first line of each paragraph. The amount of
+  indentation is 0.5 inches but this can be customized with
+  `IndentationAmount`. In `DoubleSpacing` mode, first-line indentation
+  is enabled by default and can be turned off by setting
+  `IndentationAmount` to `0pt`.
 * `IndentationAmount` - not defined by default.  When double spacing
   is used, the default is 0.5 inches of first-line indentation in each
   paragraph.
@@ -435,21 +443,21 @@ the next section).
 ## <a name="customization"></a>Additional customization of document formatting
 
 You can exercise greater control over document formatting by creating
-your own template files for [Pandoc].  The default template files are
+your own template files for [Pandoc]. The default template files are
 located in the [`docassemble.base`] package in the
 `docassemble/base/data/templates` directory.  The files include:
 
-* [`Legal-Template.tex`]: this is the [LaTeX] template that [Pandoc]
+* [`Legal-Template.tex`] - this is the [LaTeX] template that [Pandoc]
   uses to generate PDF files.
-* [`Legal-Template.yml`]: default [Pandoc] metadata for the
+* [`Legal-Template.yml`] - default [Pandoc] metadata for the
   [`Legal-Template.tex`] template, in [YAML] format.  Options passed
   through `metadata` items within an [`attachment`] will append or
   overwrite these default options.
-* [`Legal-Template.rtf`]: this is the template that [Pandoc] uses to
+* [`Legal-Template.rtf`] - this is the template that [Pandoc] uses to
   generate RTF files.
-* [`Legal-Template.docx`]: this is the reference file that [Pandoc] uses
-  to generate DOCX files.  You can edit this file to change default
-  styles, headers, and footers.
+* [`Legal-Template.docx`] - this is the reference file that [Pandoc]
+  uses to generate DOCX files.  You can edit this file to change
+  default styles, headers, and footers.
 
 To use your own template files, specify them using the following
 options to [`attachment`]:
@@ -508,10 +516,11 @@ If this question appears within a [YAML] file located in the package
 will exist in the directory `docassemble/pa_family_law/data/templates`
 within that package.
 
-If you want to use a custom template for all the attachments in a
-given interview, you do not have to specify the same values for every
-attachment.  Instead, you can set attachment template options that
-will be applied to all attachments in the interview:
+<a name="attachment options"></a>If you want to use a custom template
+for all the attachments in a given interview, you do not have to
+specify the same values for every attachment.  Instead, you can set
+attachment template options that will be applied to all attachments in
+the interview:
 
 {% highlight yaml %}
 ---
@@ -521,12 +530,22 @@ attachment options:
     - docassemble.pennsylvania:data/templates/pleading_format.yml
   template file: summary_judgment_template.tex
   rtf template file: summary_judgment_template.rtf
+  metadata:
+    SingleSpacing: True
+    fontsize: 10pt
 ---
 {% endhighlight %}
 
 If you use an interview-wide `attachment options` block to set
 defaults, you can override those defaults for a particular attachment
-by providing specific options within the question block.
+by providing specific options within the question block. If you
+specify `metadata` in both the `attachment options` and the
+`attachment` block, the `metadata` in the `attachment` block will
+merge with the `metadata` in the `attachment options` block.
+
+If the interview YAML has more than one `attachment options` block,
+the settings in later blocks will override the settings in earlier
+blocks.
 
 # <a name="docx template file"></a>Assembling DOCX templates
 
@@ -564,7 +583,7 @@ features can be lost in the process of concatenation.)
 The `docx template file` feature relies heavily on the [Python]
 package known as [`python-docx-template`].  This package uses the
 [Jinja2] templating system to indicate fields in the DOCX file and
-logic based on Python expressions.  [Jinja2] is different from the
+logic based on [Python expressions].  [Jinja2] is different from the
 [Mako] templating system, which **docassemble** primarily uses, but it
 serves the same general purpose.
 
@@ -972,7 +991,7 @@ If `some_variable` contains Markdown indicating bold, italics, or
 other character-level formatting, but no paragraph breaks, lists, or
 other paragraph-level formatting, write:
 
-> I went to {% raw %}{{r some_variable \| inline markdown }}{% endraw %} for lunch.
+> I went to {% raw %}{{r some_variable \| inline_markdown }}{% endraw %} for lunch.
 {: .blockquote}
 
 It is important that you understand the difference between
@@ -1079,7 +1098,7 @@ prefix, `{% raw %}{{r ... }}{% endraw %}`.
 
 ## <a name="filters"></a>Jinja2 filters
 
-[Jinja2] does not allow you to write every kind Python expression, the
+[Jinja2] does not allow you to write every kind [Python expression], the
 way that [Mako] does; there are limitations, such as not being able to
 refer to certain built-in names like `None`.  [Jinja2] allows you to
 do sophisticated things, however, but it encourages the use of
@@ -1141,6 +1160,9 @@ The `register_jinja_filter()` function is similar to
 starts and the server loads modules.  That is why the line `#
 pre-load` is at the top.  Also note that `register_jinja_filter` is
 not exported when you do `from docassemble.base.util import *`.
+
+If you have a filter that you want to apply to all Jinja2 variable
+interpolations, see [`auto jinja filter`].
 
 ## <a name="macros"></a>Inserting blocks of text more than once in a document
 
@@ -1522,7 +1544,12 @@ some of the variables needed for the fields are undefined, set `skip
 undefined` to `True`.  If `skip undefined` is true, then blanks will
 be substituted for any fields for which a value cannot be determined
 due to a variable being undefined.  You can also set `skip undefined`
-to a Python expression that evaluates to a true or false value.
+to a [Python expression] that evaluates to a true or false value.
+
+If your template contains computations, using `skip undefined: True`
+may lead to bugs that are difficult to track down, since variables
+that should have certain data types will be `Undefined` and you will
+get strange error messages.
 
 The `skip undefined` setting should only be used if the document does
 not need to be robust.  For example, it could be used to show the user
@@ -1708,6 +1735,34 @@ name).  The expression can return:
     [Playground].
   * If the text is `docassemble.missouri:data/static/sample_form.pdf`,
     that file will be retrieved from the `docassemble.missouri` package.
+
+## <a name="manual"></a>Adding a DAFile to an attachment manually
+
+Normally, the `attachment` block is used to perform document
+assembly. If you already have a file that is complete, and you just
+want to show it as an `attachment`, or as part of an `attachment`, you
+can use the `manual` specifier. The `manual` specifier needs to refer
+to a dictionary where the keys are file extensions (in lowercase) and
+the values are [Python expressions] referencing `DAFile` objects.
+
+{% include side-by-side.html demo="document-manual" %}
+
+If you need to do a computation to figure out what extensions and
+documents you need, you can use `manual code` instead. `manual code`
+must refer to a [Python expression] that evaluates to a dictionary in
+which the keys are file extensions (in lowercase) and the values are
+`DAFile` objects.
+
+{% include side-by-side.html demo="document-manual-code" %}
+
+You can use `manual` or `manual code` to show file types other than
+PDF, DOCX, etc. Here is an example of showing a JPEG file:
+
+{% include side-by-side.html demo="document-manual-jpg" %}
+
+It is possible to combine `manual` and `manual code` with `docx
+template file`, `pdf template file`, `content`, etc. The manual file
+extensions will take precedence.
 
 ## <a name="pdfa"></a>Producing PDF/A files
 
@@ -2253,6 +2308,8 @@ interview, see the [`cache documents` feature].
 [`Legal-Template.rtf`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.rtf
 [`Legal-Template.docx`]: https://github.com/jhpyle/docassemble/blob/master/docassemble_base/docassemble/base/data/templates/Legal-Template.docx
 [Python expression]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
+[Python expressions]: https://stackoverflow.com/questions/4782590/what-is-an-expression-in-python
 [font list tool]: https://demo.docassemble.org/start/demo/fontlist/
 [pikepdf]: https://pikepdf.readthedocs.io/en/latest/
-
+[`attachment options`]: #attachment options
+[`auto jinja filter`]: {{ site.baseurl }}/docs/initial.html#auto jinja filter
