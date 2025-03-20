@@ -4412,9 +4412,9 @@ the [note above].)
 
 ### <a name="Individual.salutation"></a>`.salutation()`
 
-Depending on the `gender` attribute (one of "male", "female", or "nonbinary"),
-the `.salutation()` method returns "Mr.", "Mx.", or "Ms." This can be helpful
-when writing letters. If `gender` is not one of "male", "female" or "nonbinary"
+Depending on the `gender` attribute (one of "male" or "female"),
+the `.salutation()` method returns "Mr." or "Ms." This can be helpful
+when writing letters. If `gender` is not one of "male" or "female"
 the individual's full name is returned.
 
 {% include side-by-side.html demo="salutation" %}
@@ -4430,7 +4430,7 @@ not assume exist:
 
 * <a name="Individual.salutation_to_use"></a>If `.salutation_to_use`
   is set, `.salutation()` uses its value as the salutation instead of
-  `'Mr.'`, `'Mx.'`, or `'Ms.'`.
+  `'Mr.'` or `'Ms.'`.
 * <a name="Individual.is_doctor"></a>If `.is_doctor` is set to a true
   value, the salutation "Dr." is used.
 * <a name="Individual.is_judge"></a>If `.is_judge` is set to a true
