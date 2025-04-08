@@ -1,0 +1,17 @@
+metadata:
+  title: Output formats
+  documentation: "https://docassemble.org/docs/documents.html#valid formats"
+---
+question: Your document is ready.
+attachment:
+  - name: A hello world document
+    filename: Hello_World_Document
+    valid formats:
+      code: |
+        ['pdf'] + (['rtf'] if user_has_privilege('admin') else [])
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+mandatory: True
+

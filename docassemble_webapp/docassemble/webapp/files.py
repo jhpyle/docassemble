@@ -104,7 +104,7 @@ def url_sanitize(url):
 
 class SavedFile:
 
-    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', subdir=None, should_not_exist=False, must_exist=False):
+    def __init__(self, file_number, extension=None, fix=False, section='files', filename='file', subdir=None, should_not_exist=False, must_exist=False):  # pylint: disable=too-many-positional-arguments
         file_number = int(file_number)
         section = str(section)
         if section not in docassemble.base.functions.this_thread.saved_files:
@@ -561,7 +561,7 @@ def make_package_zip(pkgname, info, author_info, tz_name, current_project='defau
     for root, dirs, files in os.walk(packagedir):  # pylint: disable=unused-variable
         for file in files:
             thefilename = os.path.join(root, file)
-            zinfo = zipfile.ZipInfo(thefilename[trimlength:], date_time=datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=datetime.timezone.utc).astimezone(the_timezone).timetuple())
+            zinfo = zipfile.ZipInfo(thefilename[trimlength:], date_time=datetime.datetime.fromtimestamp(os.path.getmtime(thefilename), tz=datetime.timezone.utc).replace(tzinfo=datetime.timezone.utc).astimezone(the_timezone).timetuple())
             zinfo.compress_type = zipfile.ZIP_DEFLATED
             zinfo.external_attr = 0o644 << 16
             with open(thefilename, 'rb') as fp:
@@ -571,7 +571,16 @@ def make_package_zip(pkgname, info, author_info, tz_name, current_project='defau
     return temp_zip
 
 
-def get_version_suffix(package_name):
+def get_package_identifier(package_name):
+    from docassemble.webapp.package_info import retrieve_package_info  # pylint: disable=import-outside-toplevel
+    package_info = retrieve_package_info(package_name)
+    logmessage("package_info is " + repr(package_info))
+    if package_info is not None and package_info['type'] == 'git':
+        output = package_info['name'] + ' @ git+' + package_info['giturl'] + '.git'
+        if package_info['gitbranch']:
+            output += '@' + package_info['gitbranch']
+        logmessage("returning " + repr(output))
+        return output
     info = get_pip_info(package_name)
     if 'Version' in info:
         the_version = info['Version']
@@ -594,7 +603,7 @@ def get_version_suffix(package_name):
         except:
             pass
         if printable_latest_release:
-            return '>=' + printable_latest_release
+            return package_name + '>=' + printable_latest_release
     return ''
 
 
@@ -602,7 +611,7 @@ def make_package_dir(pkgname, info, author_info, directory=None, current_project
     area = {}
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
-    dependencies = ", ".join(map(lambda x: repr(x + get_version_suffix(x)), sorted(info['dependencies'])))
+    dependencies = ", ".join(y for y in map(lambda x: repr(get_package_identifier(x)), sorted(info['dependencies'])) if y != "''")
     licensetext = str(info['license'])
     if re.search(r'MIT License', licensetext):
         licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(info.get('author_name', '')) + """
@@ -636,12 +645,17 @@ SOFTWARE.
     else:
         readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
         using_default['readme'] = True
+    pyprojecttoml = """\
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+"""
     manifestin = """\
 include README.md
 """
     setupcfg = """\
 [metadata]
-description_file = README.md
+long_description = file: README.md
 """
     setuppy = """\
 import os
@@ -794,6 +808,9 @@ machine learning training files, and other source files.
     with open(os.path.join(packagedir, 'MANIFEST.in'), 'w', encoding='utf-8') as the_file:
         the_file.write(manifestin)
     os.utime(os.path.join(packagedir, 'MANIFEST.in'), (info['modtime'], info['modtime']))
+    with open(os.path.join(packagedir, 'pyproject.toml'), 'w', encoding='utf-8') as the_file:
+        the_file.write(pyprojecttoml)
+    os.utime(os.path.join(packagedir, 'pyproject.toml'), (info['modtime'], info['modtime']))
     with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
         the_file.write("__version__ = " + repr(info.get('version', '')) + "\n")
     os.utime(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), (info['modtime'], info['modtime']))

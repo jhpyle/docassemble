@@ -12,7 +12,7 @@ import operator
 import pprint
 import copy
 import codecs
-import array
+import array  # pylint: disable=import-error
 import tempfile
 import json
 import platform
@@ -85,7 +85,7 @@ match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while|\#\#')
 emoji_match = re.compile(r':([^ ]+):')
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
-nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment|is undefined)')
+nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment|is undefined|where it is not)')
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'[\n\r]+\.\.\.$')
 fix_tabs = re.compile(r'\t')
@@ -298,7 +298,7 @@ class InterviewSourceString(InterviewSource):
         self.set_path(kwargs.get('path', None))
         self.set_directory(kwargs.get('directory', None))
         self.set_content(kwargs.get('content', None))
-        self._modtime = datetime.datetime.utcnow()
+        self._modtime = datetime.datetime.now(tz=datetime.timezone.utc)
         super().__init__(**kwargs)
 
 
@@ -1127,9 +1127,8 @@ class InterviewStatus:
                         if debug:
                             output['question'] += '<p>' + the_attachment['description'] + '</p>'
                 for key in ('valid_formats', 'filename', 'content', 'markdown', 'raw'):
-                    if key in attachment:
-                        if attachment[key]:
-                            the_attachment[key] = attachment[key]
+                    if key in attachment and attachment[key]:
+                        the_attachment[key] = attachment[key]
                 for the_format in attachment['file']:
                     the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + extension_of_doc_format.get(the_format, the_format))
                     the_attachment['number'][the_format] = attachment['file'][the_format]
@@ -3025,10 +3024,10 @@ class Question:
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = {}
                     re_dict = {}
-                    re_dict[self.language] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                    re_dict[self.language] = re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                        re_dict[lang] = re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                        re_dict[lang] = re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                         alt_terms[lang] = tr_tuple[0]
                     self.terms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'auto terms' in data and 'question' in data:
@@ -3048,10 +3047,10 @@ class Question:
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = {}
                     re_dict = {}
-                    re_dict[self.language] = re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                    re_dict[self.language] = re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                        re_dict[lang] = re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                        re_dict[lang] = re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                         alt_terms[lang] = tr_tuple[0]
                     self.autoterms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'terms' in data and 'question' not in data:
@@ -3069,14 +3068,14 @@ class Question:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
                             definition_textobject = TextObject(str(definition), question=self)
-                            self.interview.terms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                            self.interview.terms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.terms:
                                     self.interview.terms[lang] = {}
                                 if tr_tuple[0] not in self.interview.terms[lang]:
                                     if lang in definition_textobject.other_lang:
                                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     else:
                         raise DASourceError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['terms'], dict):
@@ -3084,14 +3083,14 @@ class Question:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     definition_textobject = TextObject(str(data['terms'][term]), question=self)
-                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         if lang not in self.interview.terms:
                             self.interview.terms[lang] = {}
                         if tr_tuple[0] not in self.interview.terms[lang]:
                             if lang in definition_textobject.other_lang:
                                 lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{(?i)(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
             else:
                 raise DASourceError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'auto terms' in data and 'question' not in data:
@@ -3109,14 +3108,14 @@ class Question:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
                             definition_textobject = TextObject(str(definition), question=self)
-                            self.interview.autoterms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                            self.interview.autoterms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.autoterms:
                                     self.interview.autoterms[lang] = {}
                                 if tr_tuple[0] not in self.interview.autoterms[lang]:
                                     if lang in definition_textobject.other_lang:
                                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     else:
                         raise DASourceError("An auto terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['auto terms'], dict):
@@ -3124,14 +3123,14 @@ class Question:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     definition_textobject = TextObject(str(data['auto terms'][term]), question=self)
-                    self.interview.autoterms[self.language][lower_term] = {'definition': str(data['auto terms'][term]), 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                    self.interview.autoterms[self.language][lower_term] = {'definition': str(data['auto terms'][term]), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         if lang not in self.interview.autoterms:
                             self.interview.autoterms[lang] = {}
                         if tr_tuple[0] not in self.interview.autoterms[lang]:
                             if lang in definition_textobject.other_lang:
                                 lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"{?(?i)\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
             else:
                 raise DASourceError("An auto terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:
@@ -5311,9 +5310,11 @@ class Question:
                     if 'valid formats' in target:
                         if isinstance(target['valid formats'], str):
                             target['valid formats'] = [target['valid formats']]
+                        elif isinstance(target['valid formats'], dict) and len(target['valid formats']) == 1 and 'code' in target['valid formats']:
+                            target['valid formats'] = compile(str(target['valid formats']['code']), '<valid formats expression>', 'eval')
                         elif not isinstance(target['valid formats'], list):
                             raise DASourceError('Unknown data type in attachment valid formats.' + self.idebug(target))
-                        if 'rtf to docx' in target['valid formats']:
+                        if isinstance(target['valid formats'], list) and 'rtf to docx' in target['valid formats']:
                             raise DASourceError('Valid formats cannot include "rtf to docx" when "docx template file" is used' + self.idebug(target))
                     else:
                         target['valid formats'] = ['docx', 'pdf']
@@ -5436,9 +5437,11 @@ class Question:
             if 'valid formats' in target:
                 if isinstance(target['valid formats'], str):
                     target['valid formats'] = [target['valid formats']]
+                elif isinstance(target['valid formats'], dict) and len(target['valid formats']) == 1 and 'code' in target['valid formats']:
+                    target['valid formats'] = compile(str(target['valid formats']['code']), '<valid formats expression>', 'eval')
                 elif not isinstance(target['valid formats'], list):
                     raise DASourceError('Unknown data type in attachment valid formats.' + self.idebug(target))
-                if 'rtf to docx' in target['valid formats'] and 'docx' in target['valid formats']:
+                if isinstance(target['valid formats'], list) and 'rtf to docx' in target['valid formats'] and 'docx' in target['valid formats']:
                     raise DASourceError('Valid formats cannot include both "rtf to docx" and "docx."' + self.idebug(target))
             else:
                 target['valid formats'] = ['*']
@@ -7145,8 +7148,8 @@ class Question:
                                     else:
                                         break
                                 # Copy over images, etc from subdoc to master template
-                                subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', [])  # Get the subdoc file list
-                                the_template_docx = the_template.docx
+                                # subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', [])  # Get the subdoc file list
+                                # the_template_docx = the_template.docx
 
                             except TemplateError as the_error:
                                 if (not hasattr(the_error, 'filename')) or the_error.filename is None:
@@ -7319,13 +7322,22 @@ class Question:
             docassemble.base.functions.set_language(attachment['options']['language'])
         else:
             old_language = None
+        if isinstance(attachment['valid_formats'], CodeType):
+            valid_formats = eval(attachment['valid_formats'], the_user_dict)
+            if not isinstance(valid_formats, list):
+                raise DAException("The valid formats did not evaluate to a list")
+            for item in valid_formats:
+                if not isinstance(item, str):
+                    raise DAException("The valid formats did not evaluate to a list of strings")
+        else:
+            valid_formats = attachment['valid_formats']
         try:
             the_name = attachment['name'].text(the_user_dict).strip()
             the_filename = attachment['filename'].text(the_user_dict).strip()
             the_filename = docassemble.base.functions.secure_filename_unicode_ok(the_filename)
             if the_filename == '':
                 the_filename = docassemble.base.functions.secure_filename_unicode_ok(docassemble.base.functions.space_to_underscore(the_name))
-            result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': copy.deepcopy(attachment['valid_formats'])}
+            result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': copy.deepcopy(valid_formats)}
             actual_extension = attachment['raw']
             if attachment['content'] is None and 'content file code' in attachment['options']:
                 raw_content = ''
@@ -7386,10 +7398,10 @@ class Question:
                 result['formats_to_use'] = ['raw']
             else:
                 result['raw'] = False
-                if '*' in attachment['valid_formats']:
+                if '*' in valid_formats:
                     result['formats_to_use'] = ['pdf', 'rtf', 'html']
                 else:
-                    result['formats_to_use'] = copy.deepcopy(attachment['valid_formats'])
+                    result['formats_to_use'] = copy.deepcopy(valid_formats)
             result['metadata'] = copy.deepcopy(self.interview.attachment_options.get('metadata', {}))
             if len(attachment['metadata']) > 0:
                 for key in attachment['metadata']:
@@ -8954,7 +8966,7 @@ class Interview:
                                     raise MandatoryQuestion()
                 except ForcedReRun:
                     continue
-                except (NameError, DAAttributeError, DAIndexError) as the_exception:
+                except (NameError, UnboundLocalError, DAAttributeError, DAIndexError) as the_exception:
                     if 'pending_error' in docassemble.base.functions.this_thread.misc:
                         del docassemble.base.functions.this_thread.misc['pending_error']
                     # logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))
@@ -9777,7 +9789,7 @@ class Interview:
                 docassemble.base.functions.pop_current_variable()
                 docassemble.base.functions.pop_event_stack(origMissingVariable)
                 return {'type': 're_run', 'sought': origMissingVariable, 'orig_sought': origMissingVariable}
-            except (NameError, DAAttributeError, DAIndexError) as the_exception:
+            except (NameError, UnboundLocalError, DAAttributeError, DAIndexError) as the_exception:
                 if 'pending_error' in docassemble.base.functions.this_thread.misc:
                     del docassemble.base.functions.this_thread.misc['pending_error']
                 # logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))

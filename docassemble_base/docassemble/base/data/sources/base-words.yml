@@ -818,7 +818,6 @@
 "Register with Facebook": Null
 "Register with Google": Null
 "Register with miniOrange": Null
-"Register with Twitter": Null
 "Register with your mobile phone": Null
 "Register with Zitadel": Null
 "Registration attempt": Null
@@ -924,7 +923,6 @@
 "Sign in with Google": Null
 "Sign in with Keycloak": Null
 "Sign in with miniOrange": Null
-"Sign in with Twitter": Null
 "Sign in with your mobile phone": Null
 "Sign in with Zitadel": Null
 "Sign Out": Null
@@ -1305,7 +1303,6 @@
 "You need to log in with Azure.": Null
 "You need to log in with Facebook.": Null
 "You need to log in with Google.": Null
-"You need to log in with Twitter.": Null
 "You need to select one.": Null
 "You need to select one or type in a new value.": Null
 "You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.": Null

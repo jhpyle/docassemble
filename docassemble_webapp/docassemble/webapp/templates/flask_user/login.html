@@ -83,7 +83,7 @@
               {{ render_submit_field(form.submit) }}
             </div>
           </form>
-          {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_ZITADEL_LOGIN'] or config['USE_TWITTER_LOGIN'] or config['USE_AUTH0_LOGIN'] or config['USE_KEYCLOAK_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_MINIORANGE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
+          {%- if config['USE_GOOGLE_LOGIN'] or config['USE_FACEBOOK_LOGIN'] or config['USE_ZITADEL_LOGIN'] or config['USE_AUTH0_LOGIN'] or config['USE_KEYCLOAK_LOGIN'] or config['USE_AZURE_LOGIN'] or config['USE_MINIORANGE_LOGIN'] or config['USE_PHONE_LOGIN'] %}
           <p style="padding: 15px 15px 5px 15px;"><strong>{{ word('or') }}</strong></p>
           {%- endif %}
           {%- endif %}
@@ -100,11 +100,6 @@
           {%- if config['USE_FACEBOOK_LOGIN'] %}
           <div class="row danomargin">
             <div class="daiconbox col-md-7"><a role="button" class="danohover" href="{{ url_for('oauth_authorize', provider='facebook', next=request.args.get('next', '')) }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/facebook-logo.png', v=config['DA_VERSION']) }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Facebook') }}</td></tr></tbody></table></a></div>
-          </div>
-          {%- endif %}
-          {%- if config['USE_TWITTER_LOGIN'] %}
-          <div class="row danomargin">
-            <div class="daiconbox col-md-7"><a role="button" class="danohover" href="{{ url_for('oauth_authorize', provider='twitter', next=request.args.get('next', '')) }}"><table><tbody><tr><td style="padding-left:4px;vertical-align:middle;"><img alt="" src="{{ url_for('static', filename='app/twitter-logo.png', v=config['DA_VERSION']) }}"></td><td style="width:100%;vertical-align:middle;text-align:center;">{{ word('Sign in with Twitter') }}</td></tr></tbody></table></a></div>
           </div>
           {%- endif %}
           {%- if config['USE_AUTH0_LOGIN'] %}

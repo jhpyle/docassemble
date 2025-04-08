@@ -8,7 +8,7 @@ import re
 # from io import StringIO
 import shutil
 import time
-import fcntl
+import fcntl  # pylint: disable=import-error
 from packaging import version
 import docassemble.base.config
 from docassemble.base.config import daconfig
@@ -16,6 +16,8 @@ from docassemble.base.logger import logmessage
 from docassemble.webapp.info import system_packages
 
 installed_distribution_cache = None
+
+mode = 'initialize'
 
 if __name__ == "__main__":
     docassemble.base.config.load(arguments=sys.argv)
@@ -77,6 +79,28 @@ class DummyPackage:
         self.name = name
         self.type = 'pip'
         self.limitation = None
+
+
+def clear_invalid_package(start_time=None):
+    if start_time is None:
+        start_time = time.time()
+    logmessage("clear_invalid_package: starting after " + str(time.time() - start_time) + " seconds")
+    from docassemble.webapp.db_object import db  # pylint: disable=import-outside-toplevel
+    from docassemble.webapp.packages.models import Package  # pylint: disable=import-outside-toplevel
+    from sqlalchemy import delete, select  # pylint: disable=import-outside-toplevel
+    from sqlalchemy.orm import aliased  # pylint: disable=import-outside-toplevel
+    PackageA = aliased(Package, name='a')
+    PackageB = aliased(Package, name='b')
+    result = db.session.execute(
+        select(PackageA.id)
+        .join(PackageB, PackageA.name.ilike(PackageB.name))
+        .filter(PackageB.active == True)  # noqa: E712 # pylint: disable=singleton-comparison
+        .filter(PackageB.id > PackageA.id)
+        .group_by(PackageA.id)).all()
+    for item in result:
+        db.session.execute(delete(Package).filter_by(id=item.id))
+    db.session.commit()
+    logmessage("clear_invalid_package: finishing after " + str(time.time() - start_time) + " seconds")
 
 
 def clear_invalid_package_auth(start_time=None):
@@ -295,7 +319,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
             logmessage("check_for_updates: the package " + package.name + " is not in the table of installed packages for this server after " + str(time.time() - start_time) + " seconds")
         if package.id not in installs or package_version_greater or new_version_needed or package_missing:
             if package.name in system_packages:
-                logmessages += "Not upgrading " + str(package.name) + " because it is a system package and its version needs to be consistent with the version of the package that is required by the docassemble.webapp package."
+                logmessages += "Not upgrading " + str(package.name) + " because it is a system package and its version needs to be consistent with the version of the package that is required by the docassemble.webapp package.\n"
                 logmessage("check_for_updates: the package " + package.name + " is a system package and cannot be updated except through docassemble.webapp after " + str(time.time() - start_time) + " seconds")
                 system_packages_to_fix.append(package)
             else:
@@ -451,13 +475,16 @@ def add_dependencies(user_id, start_time=None):
     for package in db.session.execute(select(Package.name).filter_by(active=True)):
         packages_known.add(package.name)
     installed_packages = get_installed_distributions(start_time=start_time)
+    logmessage("add_dependencies: installed_packages is " + repr(installed_packages))
     home_pages = None
     packages_to_add = []
     for package in installed_packages:
+        logmessage("add_dependencies: package is " + repr(package.key))
         if package.key in packages_known:
             continue
         if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
             continue
+        logmessage("add_dependencies: going to delete " + repr(package.key))
         db.session.execute(delete(Package).filter_by(name=package.key))
         packages_to_add.append(package)
     did_something = False
@@ -704,6 +731,7 @@ def main():
         from docassemble.webapp.packages.models import Package  # pylint: disable=import-outside-toplevel
         from sqlalchemy import select  # pylint: disable=import-outside-toplevel
         # app.config['SQLALCHEMY_DATABASE_URI'] = docassemble.webapp.database.alchemy_connection_string()
+        clear_invalid_package(start_time=start_time)
         clear_invalid_package_auth(start_time=start_time)
         if mode == 'initialize':
             logmessage("update: updating with mode initialize after " + str(time.time() - start_time) + " seconds")
