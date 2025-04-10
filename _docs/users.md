@@ -114,7 +114,8 @@ with `developer` or `admin` privileges will also see the fields:
 
 These values are passed to [`twine`] when the user uploads a package
 from the [Packages folder] to [PyPI]. Typically the "PyPI Username" is
-`__token__` and the `PyPI Password` is the API key.
+`__token__` and the `PyPI Password` is the API key, in the form
+`pypi-` followed by a long string of characters.
 
 The [`user profile fields`] directive in the [Configuration] controls
 which fields are editable by the user.

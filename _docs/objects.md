@@ -564,13 +564,15 @@ Other methods available on a `DAList` are:
   item that is removed is passed to `hook_on_remove()` as a single
   positional parameter.
 * <a name="DAList.hook_on_item_complete"></a><a
-  name="DADict.hook_on_item_complete"></a>`hook_on_item_complete()` -
-  this method is not currently called by the **docassemble** code, but
-  it is available for your use in subclasses.  The intention is for
-  this method to be called immediately before the `complete_attribute`
-  is set.  E.g., `my_list.hook_on_item_complete(my_list[i])`.  If your
-  class does not provide a `.hook_on_item_complete()` method, this
-  method does nothing.
+  name="DADict.hook_on_item_complete"></a><a
+  name="DASet.hook_on_item_complete"></a>`hook_on_item_complete()` -
+  this method is not currently called by the **docassemble** code
+  under any circumstances, but it is a suggested method that you may
+  want to implement in your subclasses and call in your interview
+  logic. The idea is that your code would call this method immediately
+  before setting the `complete_attribute` in order to trigger some
+  standard procedure to run. E.g.,
+  `my_list.hook_on_item_complete(my_list[i])`.
 * <a name="DAList.filter"></a><a name="DASet.filter"></a>`filter()` -
   returns a [shallow copy] of the list object where the elements of
   the list are filtered according to criteria specified in keyword

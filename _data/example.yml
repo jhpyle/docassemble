@@ -5933,8 +5933,7 @@
       set_save_status('ignore')
       wordstart = action_argument('wordstart').lower()
       results = list()
-      import codecs
-      with codecs.open('/usr/share/dict/words', mode='rU', encoding='utf-8') as words_file:
+      with open('/usr/share/dict/words', mode='r', encoding='utf-8') as words_file:
         for line in words_file:
           lower_line = line.lower()
           if lower_line.startswith(wordstart):
@@ -16889,6 +16888,24 @@
         filename: Hello_World_Document
         valid formats:
           - pdf
+        description: |
+          A document with a classic message
+        content: |
+          Hello, world!
+    mandatory: True
+"valid-formats-code":
+  "height": !!int |-
+    535
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: Your document is ready.
+    attachment:
+      - name: A hello world document
+        filename: Hello_World_Document
+        valid formats:
+          code: |
+            ['pdf'] + (['rtf'] if user_has_privilege('admin') else [])
         description: |
           A document with a classic message
         content: |

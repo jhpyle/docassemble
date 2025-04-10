@@ -5612,8 +5612,8 @@ The keys are:
   the [`oauth`] configuration.
 * `facebook_login` - whether logging in with Facebook is available.
   See the [`oauth`] configuration.
-* `twitter_login` - whether logging in with Twitter is available.
-  See the [`oauth`] configuration.
+* `x_login` - whether logging in with X is available.  See the
+  [`oauth`] configuration.
 * `phone_login` - whether logging in with an [SMS] security code is
   available. See the [`phone login`] configuration.
 * `voicerss` - whether the text-to-speech feature is available. See

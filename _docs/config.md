@@ -2830,11 +2830,10 @@ backup file storage: false
 ## <a name="password secretkey"></a>Secret key for passwords
 
 The `password secretkey` is used in the process of encrypting
-interview answers for users who log in using
-[Facebook, Twitter, Google, or Azure]. It defaults to the same value as
-`secretkey`. If this value changes, users who log in through
-Facebook, Twitter, Google or Azure will not be able to resume stored
-interviews.
+interview answers for users who log in using [third-party logins]. It
+defaults to the same value as `secretkey`. If this value changes,
+users who log in through [third-party logins] will not be able to
+resume stored interviews.
 
 ## <a name="require referer"></a>Allowing referer blocking
 
@@ -4267,8 +4266,8 @@ auto login: google
 password login: False
 {% endhighlight %}
 
-Valid values are `phone`, `google`, `facebook`, `twitter`, `auth0`,
-`keycloak`, and `azure`.
+Valid values are `phone`, `google`, `facebook`, `auth0`, `keycloak`,
+`zitadel`, `miniorange`, and `azure`.
 
 If you wish to prevent the user from being automatically redirected
 when they visit `/user/sign-in`, you can add `from_logout=1` to the URL
@@ -5101,9 +5100,9 @@ The `pypirc path` directive refers to the file where the repository
 URL will be stored. You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
-## <a name="oauth"></a>Facebook, Twitter, Google, Auth0, Keycloak, Zitadel, miniOrange, and Azure login
+## <a name="oauth"></a>Facebook, X, Google, Auth0, Keycloak, Zitadel, miniOrange, and Azure login
 
-If you want to enable logging in with Facebook, Twitter, Google,
+If you want to enable logging in with Facebook, X, Google,
 Auth0, KeyCloak, Zitadel, miniOrange, or Microsoft Azure, you will need to tell
 **docassemble** your [OAuth2] keys for these services:
 
@@ -5113,7 +5112,7 @@ oauth:
     enable: True
     id: 423759825983740
     secret: 34993a09909c0909b9000a090d09f099
-  twitter:
+  x:
     enable: True
     id: Iweh63ReKfOCttaUBE3t27TET
     secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
@@ -5152,7 +5151,7 @@ You can disable these login methods by setting `enable` to `False` or
 by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
-[installation] page's sections on [Facebook], [Twitter], [Google],
+[installation] page's sections on [Facebook], [X], [Google],
 [Auth0], [Keycloak], [Zitadel], [miniOrange] and [Azure].
 
 Note that in [YAML], dictionary keys must be unique. So you can only
@@ -6553,7 +6552,7 @@ and Facebook API keys.
 [fork]: https://en.wikipedia.org/wiki/Fork_(software_development)
 [initial database setup]: {{ site.baseurl }}/docs/installation.html#setup
 [Facebook]: {{ site.baseurl }}/docs/installation.html#facebook
-[Twitter]: {{ site.baseurl }}/docs/installation.html#twitter
+[X]: {{ site.baseurl }}/docs/installation.html#x
 [Google]: {{ site.baseurl }}/docs/installation.html#google
 [Auth0]: {{ site.baseurl }}/docs/installation.html#auth0
 [Keycloak]: {{ site.baseurl }}/docs/installation.html#keycloak
@@ -6574,7 +6573,7 @@ and Facebook API keys.
 [`azure`]: #azure
 [`s3`]: #s3
 [`s4cmd`]: https://github.com/bloomreach/s4cmd
-[Facebook, Twitter, Google, or Azure]: #oauth
+[third-party logins]: #oauth
 [`certs`]: #certs
 [`log`]: #log
 [locale]: https://docs.python.org/3/library/locale.html

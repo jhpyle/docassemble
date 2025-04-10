@@ -3,6 +3,24 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.7.0](https://github.com/jhpyle/docassemble/releases/tag/v1.7.0) - 2025-04-09
+
+
+### Added
+- Under `attachment`, `valid formats` can now contain `code`.
+
+
+### Changed
+- Upgraded Python dependencies. Note that if you are using third-party
+  Python packages, you may encounter dependency conflicts. It is
+  possible that your interviews will need to be updated.
+- Upgraded Font Awesome, Bootstrap, and CodeMirror.
+- In the container, upgraded Python version from 3.10 to 3.12.
+- Dropped Twitter sign-on support.
+- The Playground Packages page, when generating a package, will
+  specify a dependency using a GitHub URL if the package was loaded on
+  the server from a GitHub URL.
+
 ## [1.6.5](https://github.com/jhpyle/docassemble/releases/tag/v1.6.5) - 2025-03-04
 
 
