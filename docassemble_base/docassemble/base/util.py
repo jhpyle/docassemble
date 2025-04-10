@@ -8586,7 +8586,7 @@ class Address(DAObject):
             else:
                 return ''
         if hasattr(self, 'unit') and self.unit != '' and self.unit is not None:
-            if not re.search(r'unit|floor|suite|apt|apartment|room|ste|fl', str(self.unit), flags=re.IGNORECASE):
+            if not re.search(r'apartment|apt|basement|bsmt|building|bldg|department|dept|floor|fl|front|frnt|hanger|hngr|key|lobby|lbby|lot|lower|lowr|office|ofc|penthouse|ph|pier|rear|room|rm|side|slip|space|spc|stop|suite|ste|trailer|trlr|unit|upper|uppr', str(self.unit), flags=re.IGNORECASE):
                 return word("Unit", language=language) + " " + str(self.unit)
             return str(self.unit)
         if hasattr(self, 'floor') and self.floor != '' and self.floor is not None:
