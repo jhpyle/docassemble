@@ -2303,9 +2303,6 @@ Parameters:
 
  - `key`: the API key (optional if the API key is passed in an `X-API-Key`
    header or cookie or as a bearer token).
- - `i`: the filename of the interview.  E.g.,
-   `docassemble.demo:data/questions/questions.yml`.
- - `session`: the session ID of the interview.
  - `extension` (optional): a specific file extension to return for the
    given file.
  - `filename` (optional): a specific filename to return from the given
@@ -2316,13 +2313,13 @@ Required privileges: None
 Responses on failure:
 
  - [403] "Access Denied" if the API key did not authenticate.
- - [400] "Parameters i and session are required" if the `i` parameter
-   and `session` parameters are not included.
- - [404] "File not found" if the given file could not be located.
+ - [404] "File not found" if the given file could not be located or if
+   the owner of the API key does not have access to the file.
 
 Response on success: [200]
 
-Body of response: the contents of the file
+Body of response: the contents of the file indicated by the integer
+`file_number`.
 
 ## <a name="playground_get"></a>List files in Playground or download a file
 
