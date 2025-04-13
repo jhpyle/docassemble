@@ -1,1 +1,17 @@
 include README.md
+graft docassemble/base/data
+recursive-exclude * *.egg-info
+recursive-exclude .git *
+recursive-exclude venv *
+recursive-exclude .github *
+recursive-exclude .pytest_cache *
+recursive-exclude .vscode *
+recursive-exclude build *
+recursive-exclude dist *
+recursive-exclude * __pycache__
+recursive-exclude * *.pyc
+recursive-exclude * *.pyo
+recursive-exclude * *.orig
+recursive-exclude * *~
+recursive-exclude * *.bak
+recursive-exclude * *.swp

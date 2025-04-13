@@ -7,7 +7,7 @@ bash -c \
 && cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/VERSION /usr/share/docassemble/webapp/ \
-&& cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local3.10/ \
+&& cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local3.12/ \
 && cp /tmp/docassemble/Docker/config/* /usr/share/docassemble/config/ \
 && cp /tmp/docassemble/Docker/cgi-bin/index.sh /usr/lib/cgi-bin/ \
 && cp /tmp/docassemble/Docker/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng.conf \
@@ -52,42 +52,42 @@ bash -c \
 && update-locale \
 && /usr/bin/pip3 install --break-system-packages unoconv \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
-&& python3.10 -m venv --copies /usr/share/docassemble/local3.10 \
-&& source /usr/share/docassemble/local3.10/bin/activate \
+&& python3 -m venv --copies /usr/share/docassemble/local3.12 \
+&& source /usr/share/docassemble/local3.12/bin/activate \
 && pip install --upgrade pip==25.0.1 \
 && pip install --upgrade wheel==0.45.1 \
 && pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \
-   acme==3.0.1 \
-   certbot==3.0.1 \
-   certbot-apache==3.0.1 \
-   certbot-nginx==3.0.1 \
-   certifi==2024.8.30 \
+   acme==3.3.0 \
+   certbot==3.3.0 \
+   certbot-apache==3.3.0 \
+   certbot-nginx==3.3.0 \
+   certifi==2025.1.31 \
    cffi==1.17.1 \
-   charset-normalizer==3.4.0 \
-   click==8.1.7 \
+   charset-normalizer==3.4.1 \
+   click==8.1.8 \
    ConfigArgParse==1.7 \
    configobj==5.0.9 \
-   cryptography==44.0.1 \
+   cryptography==44.0.2 \
    distro==1.9.0 \
    idna==3.10 \
    joblib==1.4.2 \
-   josepy==1.14.0 \
+   josepy==1.15.0 \
    nltk==3.9.1 \
    parsedatetime==2.6 \
    pycparser==2.22 \
-   pyOpenSSL==24.3.0 \
-   pyparsing==3.2.0 \
+   pyOpenSSL==25.0.0 \
+   pyparsing==3.2.3 \
    pyRFC3339==2.0.1 \
    python-augeas==1.1.0 \
-   pytz==2024.2 \
+   pytz==2025.2 \
    regex==2024.11.6 \
    requests==2.32.3 \
-   six==1.16.0 \
+   six==1.17.0 \
    tqdm==4.67.1 \
-   urllib3==2.2.3 \
+   typing_extensions==4.13.1 \
+   urllib3==2.3.0 \
 && pip install \
-   /tmp/docassemble/docassemble \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
    /tmp/docassemble/docassemble_webapp \
@@ -99,9 +99,9 @@ bash -c \
 && ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base \
 && mv /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/syslogng/syslog-ng.conf \
 && ln -s /usr/share/docassemble/syslogng/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf \
-&& { if [[ '$(dpkg --print-architecture)' == 'amd64' ]]; then cp /usr/share/docassemble/local3.10/lib/python3.10/site-packages/mod_wsgi/server/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.10; else cp /usr/share/docassemble/local3.10/lib/python3.10/site-packages/mod_wsgi/server/mod_wsgi-py310.cpython-310-aarch64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.10; fi; } \
+&& { if [[ '$(dpkg --print-architecture)' == 'amd64' ]]; then cp /usr/share/docassemble/local3.12/lib/python3.12/site-packages/mod_wsgi/server/mod_wsgi-py312.cpython-312-x86_64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.12; else cp /usr/share/docassemble/local3.12/lib/python3.12/site-packages/mod_wsgi/server/mod_wsgi-py312.cpython-312-aarch64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.12; fi; } \
 && rm -f /usr/lib/apache2/modules/mod_wsgi.so \
-&& ln -s /usr/lib/apache2/modules/mod_wsgi.so-3.10 /usr/lib/apache2/modules/mod_wsgi.so \
+&& ln -s /usr/lib/apache2/modules/mod_wsgi.so-3.12 /usr/lib/apache2/modules/mod_wsgi.so \
 && rm -f /etc/cron.daily/apt-compat \
 && sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf \
 && sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars \
@@ -119,16 +119,16 @@ bash -c \
 
 USER www-data
 RUN bash -c \
-"source /usr/share/docassemble/local3.10/bin/activate \
+"source /usr/share/docassemble/local3.12/bin/activate \
 && python /tmp/docassemble/Docker/nltkdownload.py \
 && cd /var/www/nltk_data/corpora \
 && unzip -o wordnet.zip \
 && unzip -o omw-1.4.zip \
 && cd /tmp \
 && mkdir -p /tmp/conv \
-&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false /usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/Legal-Template.yml --template=/usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/Legal-Template.tex --from=markdown+raw_tex-latex_macros -s -o /tmp/temp.pdf /usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/hello.md \
+&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false /usr/share/docassemble/local3.12/lib/python3.12/site-packages/docassemble/base/data/templates/Legal-Template.yml --template=/usr/share/docassemble/local3.12/lib/python3.12/site-packages/docassemble/base/data/templates/Legal-Template.tex --from=markdown+raw_tex-latex_macros -s -o /tmp/temp.pdf /usr/share/docassemble/local3.12/lib/python3.12/site-packages/docassemble/base/data/templates/hello.md \
 && rm /tmp/temp.pdf \
-&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false --template=/usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/Legal-Template.rtf -s -o /tmp/temp.rtf /usr/share/docassemble/local3.10/lib/python3.10/site-packages/docassemble/base/data/templates/hello.md \
+&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false --template=/usr/share/docassemble/local3.12/lib/python3.12/site-packages/docassemble/base/data/templates/Legal-Template.rtf -s -o /tmp/temp.rtf /usr/share/docassemble/local3.12/lib/python3.12/site-packages/docassemble/base/data/templates/hello.md \
 && rm /tmp/temp.rtf"
 
 USER root

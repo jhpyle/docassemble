@@ -74,7 +74,7 @@ Feature: Example interviews
     Then I should see the phrase "What is your date of birth?"
     And I set the text box to "03/31/1977"
     And I click the button "Continue"
-    Then I should see the phrase "You are 47 years old"
+    Then I should see the phrase "You are 48 years old"
 
   Scenario: Test the interview "Scheduled task"
     Given I start the interview "docassemble.base:data/questions/examples/alarm-clock.yml"
@@ -4725,6 +4725,14 @@ Feature: Example interviews
 
   Scenario: Test the interview "Output formats"
     Given I start the interview "docassemble.base:data/questions/examples/valid-formats.yml"
+    Then I should see the phrase "Your document is ready."
+    And I should see the phrase "The following document has been created for you."
+    And I should not see the phrase "RTF"
+    And I click the link "Markdown"
+    Then I should see the phrase "Hello, world!"
+
+  Scenario: Test the interview "Output formats code"
+    Given I start the interview "docassemble.base:data/questions/examples/valid-formats-code.yml"
     Then I should see the phrase "Your document is ready."
     And I should see the phrase "The following document has been created for you."
     And I should not see the phrase "RTF"
@@ -10282,6 +10290,7 @@ Feature: Example interviews
     And I set "Favorite dog" to "Dalmatian"
     And I should not see the phrase "Favorite fruit"
     And I click the button "Food"
+    And I wait 1 second
     Then I should see the phrase "Favorite fruit"
     And I set "Favorite fruit" to "Apple"
     And I set "Favorite vegetable" to "Turnip"
@@ -10294,9 +10303,11 @@ Feature: Example interviews
     And I should not see the phrase "Modernipsum dolor"
     And I should not see the phrase "Metaphysical art barbizon"
     And I click the button "What do I need to know before starting?"
+    And I wait 1 second
     Then I should see the phrase "Modernipsum dolor"
     And I should not see the phrase "Metaphysical art barbizon"
     And I click the button "What do I do after I finish the interview?"
+    And I wait 1 second
     Then I should see the phrase "Modernipsum dolor"
     And I should see the phrase "Metaphysical art barbizon"
     And I click the button "Continue"

@@ -31,10 +31,6 @@ oauth:
     secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
     domain: keycloak.example.com
     realm: default
-  twitter:
-    enable: False
-    id: Iweh63ReKfOCttaUBE3t27TET
-    secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
   azure:
     enable: False
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87

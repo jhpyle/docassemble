@@ -1036,7 +1036,7 @@ def custom_login():
         if app.config['AUTO_LOGIN'] is True:
             number_of_methods = 0
             the_method = None
-            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_ZITADEL_LOGIN', 'USE_TWITTER_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN', 'USE_MINIORANGE_LOGIN'):
+            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_ZITADEL_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN', 'USE_MINIORANGE_LOGIN'):
                 if app.config[login_method]:
                     number_of_methods += 1
                     the_method = re.sub(r'USE_(.*)_LOGIN', r'\1', login_method).lower()
@@ -1048,7 +1048,7 @@ def custom_login():
             return redirect(url_for('phone_login'))
         if the_method == 'google':
             return redirect(url_for('google_page', next=request.args.get('next', '')))
-        if the_method in ('facebook', 'twitter', 'auth0', 'keycloak', 'azure', 'zitadel', 'miniorange'):
+        if the_method in ('facebook', 'auth0', 'keycloak', 'azure', 'zitadel', 'miniorange'):
             return redirect(url_for('oauth_authorize', provider=the_method, next=request.args.get('next', '')))
     response = make_response(user_manager.render_function(user_manager.login_template,
                                                           form=login_form,
@@ -1506,7 +1506,6 @@ app.config['USE_GOOGLE_LOGIN'] = False
 app.config['USE_FACEBOOK_LOGIN'] = False
 app.config['USE_ZITADEL_LOGIN'] = False
 app.config['USE_MINIORANGE_LOGIN'] = False
-app.config['USE_TWITTER_LOGIN'] = False
 app.config['USE_AUTH0_LOGIN'] = False
 app.config['USE_KEYCLOAK_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
@@ -1524,7 +1523,6 @@ if 'oauth' in daconfig:
     app.config['USE_FACEBOOK_LOGIN'] = bool('facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False))
     app.config['USE_ZITADEL_LOGIN'] = bool('zitadel' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['zitadel'] and daconfig['oauth']['zitadel']['enable'] is False))
     app.config['USE_MINIORANGE_LOGIN'] = bool('miniorange' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['miniorange'] and daconfig['oauth']['miniorange']['enable'] is False))
-    app.config['USE_TWITTER_LOGIN'] = bool('twitter' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['twitter'] and daconfig['oauth']['twitter']['enable'] is False))
     app.config['USE_AUTH0_LOGIN'] = bool('auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False))
     app.config['USE_KEYCLOAK_LOGIN'] = bool('keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False))
     app.config['USE_AZURE_LOGIN'] = bool('azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False))
@@ -5078,44 +5076,6 @@ class KeycloakSignIn(OAuthSignIn):
         if 'family_name' in me:
             info_dict['last_name'] = me.get('family_name')
         return social_id, username, email, info_dict
-
-
-class TwitterSignIn(OAuthSignIn):
-
-    def __init__(self):
-        super().__init__('twitter')
-        self.service = OAuth1Service(
-            name='twitter',
-            consumer_key=self.consumer_id,
-            consumer_secret=self.consumer_secret,
-            request_token_url='https://api.twitter.com/oauth/request_token',
-            authorize_url='https://api.twitter.com/oauth/authorize',
-            access_token_url='https://api.twitter.com/oauth/access_token',
-            base_url='https://api.twitter.com/1.1/'
-        )
-
-    def authorize(self):
-        request_token = self.service.get_request_token(
-            params={'oauth_callback': self.get_callback_url()}
-        )
-        session['request_token'] = request_token
-        return redirect(self.service.get_authorize_url(request_token[0]))
-
-    def callback(self):
-        request_token = session.pop('request_token')
-        if 'oauth_verifier' not in request.args:
-            return None, None, None, None
-        oauth_session = self.service.get_auth_session(
-            request_token[0],
-            request_token[1],
-            data={'oauth_verifier': request.args['oauth_verifier']}
-        )
-        me = oauth_session.get('account/verify_credentials.json', params={'skip_status': 'true', 'include_email': 'true', 'include_entites': 'false'}).json()
-        # logmessage("Twitter returned " + json.dumps(me))
-        social_id = 'twitter$' + str(me.get('id_str'))
-        username = me.get('screen_name')
-        email = me.get('email')
-        return social_id, username, email, {'name': me.get('name', None)}
 
 
 # @flaskbabel.localeselector
@@ -17384,12 +17344,13 @@ def update_package():
                     return redirect(url_for('update_package_wait'))
                 flash(word("You do not have permission to install this package."), 'error')
             elif form.pippackage.data:
-                m = re.match(r'([^>=<]+)([>=<]+.+)', form.pippackage.data)
+                pippackage = re.sub(r'@.*', '', form.pippackage.data).strip()
+                m = re.match(r'([^>=<]+)([>=<]+.+)', pippackage)
                 if m:
                     packagename = m.group(1)
                     limitation = m.group(2)
                 else:
-                    packagename = form.pippackage.data
+                    packagename = pippackage
                     limitation = None
                 packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', packagename)
                 if user_can_edit_package(pkgname=packagename):
@@ -18035,12 +17996,17 @@ SOFTWARE.
 """
         gitignore = daconfig.get('default gitignore', DEFAULT_GITIGNORE)
         readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
+        pyprojecttoml = """\
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+"""
         manifestin = """\
 include README.md
 """
         setupcfg = """\
 [metadata]
-description_file = README
+long_description = file: README.md
 """
         setuppy = """\
 import os
@@ -18205,6 +18171,8 @@ class Fruit(DAObject):
             the_file.write(setupcfg)
         with open(os.path.join(packagedir, 'MANIFEST.in'), 'w', encoding='utf-8') as the_file:
             the_file.write(manifestin)
+        with open(os.path.join(packagedir, 'pyproject.toml'), 'w', encoding='utf-8') as the_file:
+            the_file.write(pyprojecttoml)
         with open(os.path.join(packagedir, 'docassemble', pkgname, '__init__.py'), 'w', encoding='utf-8') as the_file:
             the_file.write('__version__ = "0.0.1"')
         with open(os.path.join(packagedir, 'docassemble', pkgname, 'objects.py'), 'w', encoding='utf-8') as the_file:
@@ -20501,10 +20469,11 @@ def get_branches_of_repo(giturl):
         access_token = m.group(1)
     else:
         access_token = None
+    repo_name = re.sub(r'^git\+', '', repo_name)
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
+    repo_name = re.sub(r'[@#].*', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
-    repo_name = re.sub(r'#egg=.*', '', repo_name)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
     else:
@@ -20550,8 +20519,10 @@ def get_repo_info(giturl):
         access_token = m.group(1)
     else:
         access_token = None
+    repo_name = re.sub(r'^git\+', '', repo_name)
     repo_name = re.sub(r'^http.*github.com/', '', repo_name)
     repo_name = re.sub(r'.*@github.com:', '', repo_name)
+    repo_name = re.sub(r'[@#].*', '', repo_name)
     repo_name = re.sub(r'.git$', '', repo_name)
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
@@ -20851,7 +20822,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
                 the_list.append(inner_item)
             extracted[m.group(1)] = the_list
     info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': extracted.get('install_requires', []), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', ''), 'github_url': github_url, 'github_branch': branch, 'pypi_package_name': pypi_package}
-    info_dict['dependencies'] = [x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
+    info_dict['dependencies'] = [x.strip() for x in map(lambda y: re.sub(r'[\>\<\=@].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
     # output += "info_dict is set\n"
     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
     # if not user_can_edit_package(pkgname='docassemble.' + package_name):
@@ -21256,7 +21227,7 @@ def playground_packages():
                             extracted[m.group(1)] = the_list
                     info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
 
-                    info_dict['dependencies'] = [x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
+                    info_dict['dependencies'] = [x.strip() for x in map(lambda y: re.sub(r'[\>\<\=@].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
                     with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
                         the_yaml = standardyaml.safe_dump(info_dict, default_flow_style=False, default_style='|')
@@ -29620,7 +29591,7 @@ def api_playground_install():
                             extracted[m.group(1)] = the_list
                     info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
 
-                    info_dict['dependencies'] = [x for x in map(lambda y: re.sub(r'[\>\<\=].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
+                    info_dict['dependencies'] = [x.strip() for x in map(lambda y: re.sub(r'[\>\<\=@].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
                     package_name = re.sub(r'^docassemble\.', '', extracted.get('name', expected_name))
                     with open(os.path.join(directory_for(area['playgroundpackages'], current_project), 'docassemble.' + package_name), 'w', encoding='utf-8') as fp:
                         the_yaml = standardyaml.safe_dump(info_dict, default_flow_style=False, default_style='|')

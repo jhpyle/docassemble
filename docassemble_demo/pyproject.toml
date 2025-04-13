@@ -1,3 +1,28 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=78.1.0"]
 build-backend = "setuptools.build_meta"
+[project]
+name = "docassemble.demo"
+version = '1.7.0'
+description = "A demonstration package for docassemble."
+readme = "README.md"
+authors = [
+  {name = "Jonathan Pyle", email = "jhpyle@gmail.com"}
+]
+license = "MIT"
+license-files = ["LICENSE.txt"]
+requires-python = ">= 3.9"
+dependencies = [
+  'docassemble.base==1.7.0',
+  "googledrivedownloader",
+  "ics",
+  "matplotlib"
+]
+[tool.setuptools.packages.find]
+where = ["."]
+[project.urls]
+Homepage = "https://docassemble.org"
+Documentation = "https://docassemble.org/docs.html"
+Repository = "https://github.com/jhpyle/docassemble.git"
+"Bug Tracker" = "https://github.com/jhpyle/docassemble/issues"
+Changelog = "https://github.com/jhpyle/docassemble/blob/master/CHANGELOG.md"
