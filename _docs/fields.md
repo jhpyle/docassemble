@@ -2050,7 +2050,8 @@ will not be able to tie the field to the appropriate event triggers,
 and the field will always be hidden.
 
 The variable mentioned inside `val()` must be a literal string to tell
-Docassemble to monitor it. Your expression is parsed, but is not
+Docassemble to monitor it, and it must refer to a variable that is
+defined on the screen. Your expression is parsed, but is not
 evaluated, when determining what fields your expression references
 with [`val()`].  Thus, if you pass something other than a literal
 string to [`val()`], you may find that the showing or hiding is not
@@ -2063,6 +2064,26 @@ could be `someCondition && (true || val("variable"))` (where
 `variable` is the name of a field on the screen). This JavaScript
 expression will be evaluated when the screen loads and whenever the
 value of the `variable` field changes.
+
+While `val()` must refer to a variable defined on the same screen, you
+can refer to a variable defined on the previous screen by using Mako
+syntax. The Mako will be inserted literally into the JavaScript expression.
+You need to convert Python `True`/`False` into JavaScript `true`/`false`,
+and Python `None` into JavaScript `null`.
+
+For example:
+
+```yaml
+js show if: |
+  val("on_screen_var") && ${ str(previous_screen_true_false).lower() }
+```
+
+Or, for a string value:
+
+```yaml
+js show if: |
+  val("on_screen_var") && "${ previous_screen_string }" === "Literal value"
+```
 
 ## <a name="js hide if"></a>`js hide if`
 

@@ -4414,8 +4414,10 @@ the [note above].)
 
 ### <a name="Individual.salutation"></a>`.salutation()`
 
-Depending on the `gender` attribute, the `.salutation()` method
-returns "Mr." or "Ms."  This can be helpful when writing letters.
+Depending on the `gender` attribute (one of "male" or "female"),
+the `.salutation()` method returns "Mr." or "Ms." This can be helpful
+when writing letters. If `gender` is not one of "male" or "female"
+the individual's full name is returned.
 
 {% include side-by-side.html demo="salutation" %}
 
