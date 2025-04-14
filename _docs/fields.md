@@ -2067,23 +2067,25 @@ value of the `variable` field changes.
 
 While `val()` must refer to a variable defined on the same screen, you
 can refer to a variable defined on the previous screen by using Mako
-syntax. The Mako will be inserted literally into the JavaScript expression.
-You need to convert Python `True`/`False` into JavaScript `true`/`false`,
-and Python `None` into JavaScript `null`.
+syntax. The Mako will be inserted literally into the JavaScript
+expression.  Note that Python's built-in values `True`, `False`, and
+`None` will need to be converted into JavaScript's `true`, `false`,
+and `null`. The `json.dumps()` method can be useful for converting
+Python data into [JSON].
 
 For example:
 
-```yaml
+{% highlight yaml %}
 js show if: |
-  val("on_screen_var") && ${ str(previous_screen_true_false).lower() }
-```
+  val("on_screen_var") && ${ json.dumps(some_boolean_variable) }
+{% endhighlight %}
 
 Or, for a string value:
 
-```yaml
+{% highlight yaml %}
 js show if: |
-  val("on_screen_var") && "${ previous_screen_string }" === "Literal value"
-```
+  val("on_screen_var") && ${ json.dumps(some_string_variable) } === "Literal value"
+{% endhighlight %}
 
 ## <a name="js hide if"></a>`js hide if`
 
