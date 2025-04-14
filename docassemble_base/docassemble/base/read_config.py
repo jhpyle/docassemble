@@ -160,6 +160,8 @@ if __name__ == "__main__":
         print('export DASTABLEVERSION=true')
     if 'nginx ssl protocols' in daconfig and daconfig['nginx ssl protocols']:
         print('export DASSLPROTOCOLS=' + str(daconfig['nginx ssl protocols']))
+    if 'nginx ssl ciphers' in daconfig and daconfig['nginx ssl ciphers']:
+        print('export DASSLCIPHERS=' + str(daconfig['nginx ssl ciphers']))
     if 'websockets port' in daconfig and daconfig['websockets port']:
         print('export DAWEBSOCKETSPORT=' + str(daconfig['websockets port']))
     else:

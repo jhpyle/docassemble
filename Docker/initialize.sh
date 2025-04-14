@@ -129,6 +129,9 @@ if [ "${S3ENABLE:-null}" == "true" ] && [ "${S3BUCKET:-null}" != "null" ] && [ "
     export AWS_DEFAULT_REGION="$S3REGION"
 fi
 
+export AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED
+export AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED
+
 S4CMD_OPTS=""
 
 if [ "${S3ENDPOINTURL:-null}" != "null" ]; then
@@ -711,7 +714,8 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ] && [ "${DAREADONLYFILESYSTEM:-false}" =
         DASSLCERTIFICATE="/etc/ssl/docassemble/nginx.crt;"
         DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
     fi
-    DASSLPROTOCOLS=${DASSLPROTOCOLS:-TLSv1.2}
+    DASSLPROTOCOLS=${DASSLPROTOCOLS:-TLSv1.2 TLSv1.3}
+    DASSLCIPHERS=${DASSLCIPHERS:-HIGH:!aNULL:!MD5}
     if [ ! -f "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" ]; then
         rm -f /etc/letsencrypt/da_using_lets_encrypt
     fi
@@ -744,6 +748,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ] && [ "${DAREADONLYFILESYSTEM:-false}" =
                     -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
                     -e 's@{{DASSLCERTIFICATEKEY}}@'"${DASSLCERTIFICATEKEY}"'@' \
                     -e 's@{{DASSLPROTOCOLS}}@'"${DASSLPROTOCOLS}"'@' \
+                    -e 's@{{DASSLCIPHERS}}@'"${DASSLCIPHERS}"'@' \
                     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
                     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
                     -e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \

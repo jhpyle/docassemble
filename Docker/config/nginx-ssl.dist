@@ -6,6 +6,7 @@ server {
     ssl_certificate {{DASSLCERTIFICATE}}
     ssl_certificate_key {{DASSLCERTIFICATEKEY}}
     ssl_protocols {{DASSLPROTOCOLS}};
+    ssl_ciphers {{DASSLCIPHERS}};
     gzip on;
     gzip_types text/plain application/xml text/css text/javascript application/javascript image/vnd.microsoft.icon;
     {{DAREALIP}}

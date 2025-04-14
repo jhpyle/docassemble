@@ -8,7 +8,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver import Chrome
 from webdriver_manager.chrome import ChromeDriverManager
-default_path = "http://sheepie"
+default_path = "http://localhost"
 # default_path = "https://demo.docassemble.org"
 default_wait_seconds = 0
 use_firefox = False

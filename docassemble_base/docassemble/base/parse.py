@@ -5312,7 +5312,7 @@ class Question:
                             target['valid formats'] = [target['valid formats']]
                         elif isinstance(target['valid formats'], dict) and len(target['valid formats']) == 1 and 'code' in target['valid formats']:
                             target['valid formats'] = compile(str(target['valid formats']['code']), '<valid formats expression>', 'eval')
-                        elif not isinstance(target['valid formats'], list):
+                        elif not isinstance(target['valid formats'], (list, CodeType)):
                             raise DASourceError('Unknown data type in attachment valid formats.' + self.idebug(target))
                         if isinstance(target['valid formats'], list) and 'rtf to docx' in target['valid formats']:
                             raise DASourceError('Valid formats cannot include "rtf to docx" when "docx template file" is used' + self.idebug(target))
@@ -5439,7 +5439,7 @@ class Question:
                     target['valid formats'] = [target['valid formats']]
                 elif isinstance(target['valid formats'], dict) and len(target['valid formats']) == 1 and 'code' in target['valid formats']:
                     target['valid formats'] = compile(str(target['valid formats']['code']), '<valid formats expression>', 'eval')
-                elif not isinstance(target['valid formats'], list):
+                elif not isinstance(target['valid formats'], (list, CodeType)):
                     raise DASourceError('Unknown data type in attachment valid formats.' + self.idebug(target))
                 if isinstance(target['valid formats'], list) and 'rtf to docx' in target['valid formats'] and 'docx' in target['valid formats']:
                     raise DASourceError('Valid formats cannot include both "rtf to docx" and "docx."' + self.idebug(target))

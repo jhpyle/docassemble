@@ -2279,6 +2279,15 @@ class MyAsyncResult:
     def revoke(self, terminate=True):
         return server.worker_convert(self.obj).revoke(terminate=terminate)
 
+    def status(self):
+        return server.worker_convert(self.obj).status
+
+    def state(self):
+        return server.worker_convert(self.obj).state
+
+    def date_done(self):
+        return server.worker_convert(self.obj).date_done
+
 
 def worker_caller(func, ui_notification, action):
     # logmessage("Got to worker_caller in functions")

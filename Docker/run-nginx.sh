@@ -7,7 +7,7 @@ export DA_DEFAULT_LOCAL="local3.12"
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
-source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data | grep -e '^export LOCALE=' -e '^export DAHOSTNAME=' -e '^export EC2=' -e '^export BEHINDHTTPSLOADBALANCER=' -e '^export USELETSENCRYPT=' -e '^export DALOCATIONREWRITE=' -e '^export WSGIROOT=' -e '^export POSTURLROOT=' -e '^export DAMAXCONTENTLENGTH=' -e '^export DASSLPROTOCOLS=' -e '^export DAWEBSOCKETSIP=' -e '^export DAWEBSOCKETSPORT=' -e '^export PORT=' -e '^export USEHTTPS=' -e '^export DAREADONLYFILESYSTEM=')
+source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.base.read_config \"$DA_CONFIG_FILE\"" www-data | grep -e '^export LOCALE=' -e '^export DAHOSTNAME=' -e '^export EC2=' -e '^export BEHINDHTTPSLOADBALANCER=' -e '^export USELETSENCRYPT=' -e '^export DALOCATIONREWRITE=' -e '^export WSGIROOT=' -e '^export POSTURLROOT=' -e '^export DAMAXCONTENTLENGTH=' -e '^export DASSLPROTOCOLS=' -e '^export DASSLCIPHERS=' -e '^export DAWEBSOCKETSIP=' -e '^export DAWEBSOCKETSPORT=' -e '^export PORT=' -e '^export USEHTTPS=' -e '^export DAREADONLYFILESYSTEM=')
 
 set -- $LOCALE
 export LANG=$1
@@ -40,7 +40,8 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
 	DASSLCERTIFICATEKEY="/etc/ssl/docassemble/nginx.key;"
     fi
 
-    DASSLPROTOCOLS=${DASSLPROTOCOLS:-TLSv1.2}
+    DASSLPROTOCOLS=${DASSLPROTOCOLS:-TLSv1.2 TLSv1.3}
+    DASSLCIPHERS=${DASSLCIPHERS:-HIGH:!aNULL:!MD5}
 
     if [ "${POSTURLROOT}" == "/" ]; then
 	DALOCATIONREWRITE=" "
@@ -57,6 +58,7 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
     -e 's@{{DASSLCERTIFICATE}}@'"${DASSLCERTIFICATE}"'@' \
     -e 's@{{DASSLCERTIFICATEKEY}}@'"${DASSLCERTIFICATEKEY}"'@' \
     -e 's@{{DASSLPROTOCOLS}}@'"${DASSLPROTOCOLS}"'@' \
+    -e 's@{{DASSLCIPHERS}}@'"${DASSLCIPHERS}"'@' \
     -e 's@{{DAWEBSOCKETSIP}}@'"${DAWEBSOCKETSIP:-127.0.0.1}"'@' \
     -e 's@{{DAWEBSOCKETSPORT}}@'"${DAWEBSOCKETSPORT:-5000}"'@' \
     -e 's@{{DALISTENPORT}}@'"${PORT:-80}"'@' \

@@ -475,16 +475,16 @@ def add_dependencies(user_id, start_time=None):
     for package in db.session.execute(select(Package.name).filter_by(active=True)):
         packages_known.add(package.name)
     installed_packages = get_installed_distributions(start_time=start_time)
-    logmessage("add_dependencies: installed_packages is " + repr(installed_packages))
+    # logmessage("add_dependencies: installed_packages is " + repr(installed_packages))
     home_pages = None
     packages_to_add = []
     for package in installed_packages:
-        logmessage("add_dependencies: package is " + repr(package.key))
+        # logmessage("add_dependencies: package is " + repr(package.key))
         if package.key in packages_known:
             continue
         if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
             continue
-        logmessage("add_dependencies: going to delete " + repr(package.key))
+        # logmessage("add_dependencies: going to delete " + repr(package.key))
         db.session.execute(delete(Package).filter_by(name=package.key))
         packages_to_add.append(package)
     did_something = False
