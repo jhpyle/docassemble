@@ -4459,18 +4459,36 @@ system using `docker stop -t 600 <container ID>` followed by
 
 The `nginx ssl protocols` directive indicates the SSL protocols that
 [NGINX] should accept (assuming you are using [NGINX]). You might
-want to set it to `TLSv1 TLSv1.1 TLSv1.2` if you need to support older
+want to set it to `TLSv1 TLSv1.1 TLSv1.2 TLSv1.3` if you need to support older
 browsers.
 
 {% highlight yaml %}
-nginx ssl protocols: TLSv1 TLSv1.1 TLSv1.2
+nginx ssl protocols: TLSv1 TLSv1.1 TLSv1.2 TLSv1.3
 {% endhighlight %}
 
 The value is passed directly to the [NGINX] directive
-[`ssl_protocols`]. The default is `TLSv1.2`.
+[`ssl_protocols`]. The default is `TLSv1.2 TLSv1.3`.
 
 This variable is typically set through the environment variable
 [`DASSLPROTOCOLS`]. You can change `nginx ssl protocols` on a running
+server, but the change will only be effective if you restart the
+system using `docker stop -t 600 <container ID>` followed by `docker
+start <container ID>`.
+
+## <a name="nginx ssl ciphers"></a>SSL ciphers
+
+The `nginx ssl ciphers` directive indicates the SSL ciphers that
+[NGINX] should accept (assuming you are using [NGINX]).
+
+{% highlight yaml %}
+nginx ssl ciphers: ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305;
+{% endhighlight %}
+
+The value is passed directly to the [NGINX] directive
+[`ssl_ciphers`]. The default is `HIGH:!aNULL:!MD5`.
+
+This variable is typically set through the environment variable
+[`DASSLCIPHERS`]. You can change `nginx ssl ciphers` on a running
 server, but the change will only be effective if you restart the
 system using `docker stop -t 600 <container ID>` followed by `docker
 start <container ID>`.
@@ -6786,7 +6804,9 @@ and Facebook API keys.
 [`locale`]: #locale
 [meta tags]: https://en.wikipedia.org/wiki/Meta_element
 [`ssl_protocols`]: https://nginx.org/en/docs/http/configuring_https_servers.html
+[`ssl_ciphers`]: https://nginx.org/en/docs/http/configuring_https_servers.html
 [`DASSLPROTOCOLS`]: {{ site.baseurl }}/docs/docker.html#DASSLPROTOCOLS
+[`DASSLCIPHERS`]: {{ site.baseurl }}/docs/docker.html#DASSLCIPHERS
 [Docker section]: {{ site.baseurl }}/docs/docker.html#persistent s3
 [`store_variables_snapshot()`]: {{ site.baseurl }}/docs/functions.html#store_variables_snapshot
 [`db`]: #db

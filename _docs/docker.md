@@ -1500,10 +1500,17 @@ your container for the new configuration to take effect.
   fixes and security updates. See the [`stable version`]
   configuration directive.
 * <a name="DASSLPROTOCOLS"></a>`DASSLPROTOCOLS`: This indicates the
-  SSL protocols that [NGINX] should accept. The default is `TLSv1.2`.
-  You might want to set it to `TLSv1 TLSv1.1 TLSv1.2` if you need to
-  support older browsers. The value is passed directly to the [NGINX]
-  directive [`ssl_protocols`]. See the [`nginx ssl protocols`]
+  SSL protocols that [NGINX] should accept. The default is `TLSv1.2
+  TLSv1.3`.  You might want to set it to `TLSv1 TLSv1.1 TLSv1.2
+  TLSv1.3` if you need to support older browsers. The value is passed
+  directly to the [NGINX] directive [`ssl_protocols`]. See the [`nginx
+  ssl protocols`] configuration directive.
+* <a name="DASSLCIPHERS"></a>`DASSLCIPHERS`: This indicates the SSL
+  ciphers that [NGINX] should accept. The default is
+  `HIGH:!aNULL:!MD5`.  You might want to change it if you need to
+  support older browsers or remove support for ciphers that are
+  considered weak. The value is passed directly to the [NGINX]
+  directive [`ssl_ciphers`]. See the [`nginx ssl ciphers`]
   configuration directive.
 * <a name="PIPINDEXURL"></a>`PIPINDEXURL`: This controls the package
   index that `pip` uses. See the [`pip index url`] configuration
@@ -3695,6 +3702,7 @@ references a different base image.
 [`allow updates`]: {{ site.baseurl }}/docs/config.html#allow updates
 [`stable version`]: {{ site.baseurl }}/docs/config.html#stable version
 [`ssl_protocols`]: https://nginx.org/en/docs/http/configuring_https_servers.html
+[`ssl_ciphers`]: https://nginx.org/en/docs/http/configuring_https_servers.html
 [`sql ping`]: {{ site.baseurl }}/docs/config.html#sql ping
 [with Kubernetes]: https://github.com/jhpyle/charts
 [Rook]: https://rook.io/docs/rook/v0.8/object.html
@@ -3711,6 +3719,7 @@ references a different base image.
 [`use cloud urls`]: {{ site.baseurl }}/docs/config.html#use cloud urls
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [`nginx ssl protocols`]: {{ site.baseurl }}/docs/config.html#nginx ssl protocols
+[`nginx ssl ciphers`]: {{ site.baseurl }}/docs/config.html#nginx ssl ciphers
 [Helm]: https://helm.sh/
 [`BEHINDHTTPSLOADBALANCER`]: #BEHINDHTTPSLOADBALANCER
 [BusyBox]: https://hub.docker.com/_/busybox

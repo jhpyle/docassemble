@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.7.1](https://github.com/jhpyle/docassemble/releases/tag/v1.7.1) - 2025-04-
+
+
+### Added
+- The `DASSLCIPHERS` environment variable and `nginx ssl ciphers`
+  Configuration directive for controlling the `ssl_ciphers` NGINX
+  configuration option.
+
 ## [1.7.0](https://github.com/jhpyle/docassemble/releases/tag/v1.7.0) - 2025-04-09
 
 
