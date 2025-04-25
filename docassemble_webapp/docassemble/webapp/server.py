@@ -20676,7 +20676,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     data_files = {'templates': [], 'static': [], 'sources': [], 'interviews': [], 'modules': [], 'questions': []}
     directory = tempfile.mkdtemp(prefix='SavedFile')
     output = ''
-    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    pypi_url = daconfig.get('pypi url', 'https://pypi.org/pypi')
     expected_name = 'unknown'
     if github_url:
         github_url = re.sub(r'[^A-Za-z0-9\-\.\_\~\:\/\#\[\]\@\$\+\,\=]', '', github_url)
@@ -20891,7 +20891,7 @@ def playground_packages():
     allow_pypi = daconfig.get('pypi', False)
     pypi_username = current_user.pypi_username
     pypi_password = current_user.pypi_password
-    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    pypi_url = daconfig.get('pypi url', 'https://pypi.org/pypi')
     can_publish_to_pypi = bool(allow_pypi is True and pypi_username is not None and pypi_password is not None and pypi_username != '' and pypi_password != '')
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
@@ -31071,7 +31071,7 @@ def url_sanitize(url):
 
 def pypi_status(packagename):
     result = {}
-    pypi_url = daconfig.get('pypi url', 'https://pypi.python.org/pypi')
+    pypi_url = daconfig.get('pypi url', 'https://pypi.org/pypi')
     try:
         response = requests.get(url_sanitize(pypi_url + '/' + str(packagename) + '/json'), timeout=30)
         assert response.status_code == 200

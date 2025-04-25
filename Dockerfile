@@ -76,7 +76,7 @@ bash -c \
    nltk==3.9.1 \
    parsedatetime==2.6 \
    pycparser==2.22 \
-   pyOpenSSL==25.0.0 \
+   pyOpenSSL==24.2.1 \
    pyparsing==3.2.3 \
    pyRFC3339==2.0.1 \
    python-augeas==1.1.0 \
