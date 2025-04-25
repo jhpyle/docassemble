@@ -9991,6 +9991,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.demo:data/questions/fontlist.yml"
     Then I should see the phrase "Select a language to see the installed fonts for that language."
     And I choose "Albanian"
+    And I wait 1 second
     And I click the button "Continue"
     Then I should see the phrase "Maiden Orange"
 
