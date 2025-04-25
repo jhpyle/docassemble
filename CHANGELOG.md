@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.7.3] - 2025-04-25
+
+### Fixed
+- Downgraded Python packages to adjust for a Google library being
+  behind.
+
 ## [1.7.2] - 2025-04-24
 
 ### Fixed
