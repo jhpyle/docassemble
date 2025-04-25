@@ -45,7 +45,7 @@ class SQLObject:
                         self.db_null(column)
                     except (DAAttributeError, AttributeError):
                         pass
-                    except Exception as err:
+                    except BaseException as err:
                         logmessage("On SQLObject null, " + err.__class__.__name__ + ": " + str(err))
             self._orig = db_values
             self.db_cache()
@@ -56,7 +56,7 @@ class SQLObject:
     def __getstate__(self):
         try:
             self.db_save()
-        except Exception as err:
+        except BaseException as err:
             logmessage("On SQLObject write, " + err.__class__.__name__ + ": " + str(err))
         dict_to_save = copy.copy(self.__dict__)
         if '_orig' in dict_to_save:
@@ -67,7 +67,7 @@ class SQLObject:
         self.__dict__ = pickle_dict
         try:
             self.db_read()
-        except Exception as err:
+        except BaseException as err:
             logmessage("On SQLObject read, " + err.__class__.__name__ + ": " + str(err))
 
     @classmethod
@@ -263,9 +263,9 @@ class SQLObject:
                                 self.db_null(column)
                             except (DAAttributeError, AttributeError):
                                 pass
-                            except Exception as err:
+                            except BaseException as err:
                                 logmessage("On SQLObject null, " + err.__class__.__name__ + ": " + str(err))
-            except Exception as err:
+            except BaseException as err:
                 logmessage(err.__class__.__name__ + ": " + str(err))
                 if not required_ok:
                     return
@@ -310,7 +310,7 @@ class SQLObject:
         else:
             try:
                 db_entry = self.db_find_existing()
-            except Exception as err:
+            except BaseException as err:
                 logmessage("On SQLObject read, " + err.__class__.__name__ + ": " + str(err))
                 db_entry = None
             if db_entry is None and self._nascent:
@@ -336,7 +336,7 @@ class SQLObject:
                     self.db_null(column)
                 except (DAAttributeError, AttributeError):
                     pass
-                except Exception as err:
+                except BaseException as err:
                     logmessage("On SQLObject null, " + err.__class__.__name__ + ": " + str(err))
         self._orig = db_values
         self.db_cache()

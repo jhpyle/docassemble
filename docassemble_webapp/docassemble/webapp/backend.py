@@ -525,7 +525,7 @@ def fix_words():
                             logmessage("Error reading " + str(word_file) + ": xlsx for language " + lang + " could not be processed.")
                     if len(problems) > 0:
                         logmessage("Error reading " + str(word_file) + ": could not read lines " + ", ".join(problems) + ".")
-                except Exception as err:
+                except BaseException as err:
                     logmessage("Error reading " + str(word_file) + ": xlsx processing raised exception " + err.__class__.__name__ + ": " + str(err))
             elif filename.lower().endswith('.xlf') or filename.lower().endswith('.xliff'):
                 try:
@@ -588,7 +588,7 @@ def fix_words():
                             docassemble.base.functions.update_word_collection(lang, the_dict)
                         except:
                             logmessage("Error reading " + str(word_file) + ": xlf for language " + lang + " could not be processed.")
-                except Exception as err:
+                except BaseException as err:
                     logmessage("Error reading " + str(word_file) + ": xlf processing raised exception " + err.__class__.__name__ + ": " + str(err))
             else:
                 logmessage("filename " + filename + " had an unknown type")

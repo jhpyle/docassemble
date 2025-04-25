@@ -410,7 +410,7 @@ class InterviewSourceFile(InterviewSource):
         data['__debug__'] = bool(get_config('debug', True))
         try:
             self.set_content(template.render(data))
-        except Exception as err:
+        except BaseException as err:
             self.set_content("__error__: " + repr("Jinja2 rendering error: " + err.__class__.__name__ + ": " + str(err)))
         return True
 
@@ -1995,7 +1995,7 @@ class FileInPackage:
                     with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False) as temp_template_file:
                         try:
                             urlretrieve(url_sanitize(str(the_file_ref)), temp_template_file.name)
-                        except Exception as err:
+                        except BaseException as err:
                             raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
                         the_file_ref = temp_template_file.name
                 if not str(the_file_ref).startswith('/'):
@@ -2027,7 +2027,7 @@ class FileInPackage:
                         with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False) as temp_template_file:
                             try:
                                 urlretrieve(url_sanitize(str(the_file_ref)), temp_template_file.name)
-                            except Exception as err:
+                            except BaseException as err:
                                 raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
                             result.append(temp_template_file.name)
                     else:
@@ -6068,7 +6068,7 @@ class Question:
                                 the_val = eval(expression, user_dict)
                             except LazyNameError:
                                 raise
-                            except Exception as err:
+                            except BaseException as err:
                                 if self.interview.debug:
                                     logmessage("Exception in review block: " + err.__class__.__name__ + ": " + str(err))
                                 failed = True
@@ -6102,7 +6102,7 @@ class Question:
                                 extras['field metadata'][field.number] = recursive_eval_textobject_or_primitive(field.extras['field metadata'], user_dict)
                             except LazyNameError:
                                 raise
-                            except Exception as err:
+                            except BaseException as err:
                                 if self.interview.debug:
                                     logmessage("Exception in field metadata: " + err.__class__.__name__ + ": " + str(err))
                                 continue
@@ -6117,7 +6117,7 @@ class Question:
                                     extras[key][field.number] = field.extras[key].text(user_dict).strip()
                                 except LazyNameError:
                                     raise
-                                except Exception as err:
+                                except BaseException as err:
                                     if self.interview.debug:
                                         logmessage("Exception in review block: " + err.__class__.__name__ + ": " + str(err))
                                     continue
@@ -6133,7 +6133,7 @@ class Question:
                             helptexts[field.number] = field.helptext.text(user_dict)
                         except LazyNameError:
                             raise
-                        except Exception as err:
+                        except BaseException as err:
                             if self.interview.debug:
                                 logmessage("Exception in review block: " + err.__class__.__name__ + ": " + str(err))
                             continue
@@ -6145,7 +6145,7 @@ class Question:
                             labels[field.number] = field.label.text(user_dict)
                         except LazyNameError:
                             raise
-                        except Exception as err:
+                        except BaseException as err:
                             if self.interview.debug:
                                 logmessage("Exception in review block: " + err.__class__.__name__ + ": " + str(err))
                             continue
@@ -6658,7 +6658,7 @@ class Question:
                                 the_string = "_internal['objselections'][" + repr(saveas_to_use) + "][" + repr(key) + "] = " + real_key
                                 # logmessage("Doing " + the_string)
                                 exec(the_string, user_dict)
-                        except Exception as err:
+                        except BaseException as err:
                             raise DASourceError("Failure while processing field with datatype of object: " + err.__class__.__name__ + " " + str(err))
                     if hasattr(field, 'label'):
                         labels[field.number] = field.label.text(user_dict)
@@ -7356,7 +7356,7 @@ class Question:
                             with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False) as temp_template_file:
                                 try:
                                     urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
-                                except Exception as err:
+                                except BaseException as err:
                                     raise DASourceError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
                                 the_filename = temp_template_file.name
                         else:
@@ -8278,7 +8278,7 @@ class Interview:
                 for code_to_run in info['target']:
                     try:
                         exec(code_to_run, the_user_dict)
-                    except Exception as err:
+                    except BaseException as err:
                         logmessage("Exception raised by on change code: " + err.__class__.__name__ + ": " + str(err))
                 if backup_vars:
                     restore_backup_vars(the_user_dict, backup_vars)
@@ -8527,7 +8527,7 @@ class Interview:
                     if document is not None:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code, line_number=line_number)
                         self.names_used.update(question.fields_used)
-                except Exception as errMess:
+                except BaseException as errMess:
                     # logmessage(str(source_code))
                     try:
                         logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(errMess, source.path, line_number)}')
@@ -8540,7 +8540,7 @@ class Interview:
             else:
                 try:
                     document = safeyaml.load(source_code)
-                except Exception as errMess:
+                except BaseException as errMess:
                     self.success = False
                     try:
                         error_to_raise = DASourceError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(errMess, source.path, line_number)}')
@@ -9220,7 +9220,7 @@ class Interview:
                 else:
                     docassemble.base.functions.wrap_up()
                     raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
-        except Exception as the_error:
+        except BaseException as the_error:
             # logmessage("Untrapped exception")
             if self.debug:
                 the_error.interview = self
@@ -9605,7 +9605,7 @@ class Interview:
                                     with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", delete=False) as temp_template_file:
                                         try:
                                             urlretrieve(url_sanitize(str(the_filename)), temp_template_file.name)
-                                        except Exception as err:
+                                        except BaseException as err:
                                             raise DASourceError("askfor: error downloading " + str(the_filename) + ": " + str(err))
                                         the_filename = temp_template_file.name
                                 else:
@@ -9709,7 +9709,7 @@ class Interview:
                         try:
                             eval(missing_var, user_dict)
                             # question.mark_as_answered(user_dict)
-                        except Exception as err:
+                        except BaseException as err:
                             logmessage("Problem with attachments block: " + err.__class__.__name__ + ": " + str(err))
                             continue
                         question.post_exec(user_dict)
@@ -10380,7 +10380,7 @@ def exec_with_trap(the_question, the_dict, old_variable=None):
             except:
                 pass
         raise
-    except Exception:
+    except:
         cl, exc, tb = sys.exc_info()
         exc.user_dict = docassemble.base.functions.serializable_dict(the_dict)
         if len(traceback.extract_tb(tb)) == 2:
@@ -10980,7 +10980,7 @@ def get_docx_variables(the_path):
         the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
         the_xml = docx_template.patch_xml(the_xml)
         parsed_content = the_env.parse(the_xml)
-    except Exception as the_err:
+    except BaseException as the_err:
         raise DASourceError("There was an error parsing the docx file: " + the_err.__class__.__name__ + " " + str(the_err))
     for key in jinja2meta.find_undeclared_variables(parsed_content):
         if not key.startswith('__'):

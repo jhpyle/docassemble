@@ -16,7 +16,7 @@ if credential_json is None:
 else:
     try:
         credential_info = json.loads(credential_json, strict=False)
-    except Exception as err:
+    except BaseException as err:
         credential_info = None
         sys.stderr.write("Unable to load google service account credentials:\n")
         sys.stderr.write(str(err) + "\n")

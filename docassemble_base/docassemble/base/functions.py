@@ -2743,7 +2743,7 @@ def update_locale():
         the_locale = str(this_thread.language) + '_' + str(this_thread.locale)
     try:
         locale.setlocale(locale.LC_ALL, the_locale)
-    except Exception as err:
+    except BaseException as err:
         logmessage("update_locale error: unable to set the locale to " + the_locale)
         logmessage(err.__class__.__name__ + ": " + str(err))
         locale.setlocale(locale.LC_ALL, 'en_US.utf8')
@@ -4524,7 +4524,7 @@ def process_action():
                     del this_thread.current_info['action_list']._necessary_length
                 if hasattr(this_thread.current_info['action_list'], 'ask_number') and this_thread.current_info['action_list'].ask_number and hasattr(this_thread.current_info['action_list'], 'target_number') and int(this_thread.current_info['action_list'].target_number) > 0:
                     this_thread.current_info['action_list'].target_number = int(this_thread.current_info['action_list'].target_number) - 1
-            except Exception as err:
+            except BaseException as err:
                 logmessage("process_action: _da_list_remove error: " + str(err))
                 try:
                     logmessage("process_action: list is: " + str(this_thread.current_info['action_list'].instanceName))
@@ -4548,7 +4548,7 @@ def process_action():
                     this_thread.current_info['action_dict'].there_are_any = False
                 if hasattr(this_thread.current_info['action_dict'], 'ask_number') and this_thread.current_info['action_dict'].ask_number and hasattr(this_thread.current_info['action_dict'], 'target_number') and int(this_thread.current_info['action_dict'].target_number) > 0:
                     this_thread.current_info['action_dict'].target_number = int(this_thread.current_info['action_dict'].target_number) - 1
-            except Exception as err:
+            except BaseException as err:
                 logmessage("process_action: _da_dict_remove error: " + str(err))
                 try:
                     logmessage("process_action: dict is: " + str(this_thread.current_info['action_dict'].instanceName))

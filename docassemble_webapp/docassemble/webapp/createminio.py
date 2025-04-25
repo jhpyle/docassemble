@@ -11,5 +11,5 @@ minioClient = Minio(hostname,
 
 try:
     minioClient.make_bucket(sys.argv[4])
-except Exception as err:
+except BaseException as err:
     sys.stderr.write("Error: " + err.__class__.__name__ + "\n")

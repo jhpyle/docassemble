@@ -272,7 +272,7 @@ def run_cron(the_cron_type):
                                                         sys.stdout.write(interview_status.questionText.rstrip() + "\n")
                                                     except:
                                                         sys.stdout.write("Unable to write output to standard error\n")
-                                except Exception as err:
+                                except BaseException as err:
                                     release_lock(key, the_filename)
                                     logmessage("Cron error: " + str(key) + " " + str(the_filename) + " " + str(err.__class__.__name__) + ": " + str(err))
                                     if hasattr(err, 'traceback'):

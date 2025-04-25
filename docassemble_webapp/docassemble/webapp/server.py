@@ -1284,7 +1284,7 @@ def syslog_message(message):
     if request_active:
         try:
             sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': get_requester_ip(request), 'yamlfile': docassemble.base.functions.this_thread.current_info.get('yaml_filename', 'na'), 'user': the_user, 'session': docassemble.base.functions.this_thread.current_info.get('session', 'na')})
-        except Exception as err:
+        except BaseException as err:
             sys.stderr.write("Error writing log message " + str(message) + "\n")
             try:
                 sys.stderr.write("Error was " + err.__class__.__name__ + ": " + str(err) + "\n")
@@ -1293,7 +1293,7 @@ def syslog_message(message):
     else:
         try:
             sys_logger.debug('%s', LOGFORMAT % {'message': message, 'clientip': 'localhost', 'yamlfile': 'na', 'user': 'na', 'session': 'na'})
-        except Exception as err:
+        except BaseException as err:
             sys.stderr.write("Error writing log message " + str(message) + "\n")
             try:
                 sys.stderr.write("Error was " + err.__class__.__name__ + ": " + str(err) + "\n")
@@ -1398,8 +1398,11 @@ def import_necessary(url, url_root):
         docassemble.base.functions.this_thread.current_info.update({'yaml_filename': current_package + ':data/questions/test.yml'})
         try:
             importlib.import_module(module_name)
-        except Exception as err:
-            logmessage("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + str(err))
+        except BaseException as err:
+            try:
+                logmessage("Import of " + module_name + " failed.  " + err.__class__.__name__ + ": " + str(err))
+            except:
+                logmessage("Import of " + module_name + " failed.")
     current_app.login_manager._update_request_context_with_user()
 
 fax_provider = daconfig.get('fax provider', None) or 'clicksend'
@@ -2106,7 +2109,7 @@ def substitute_secret(oldsecret, newsecret, user=None, to_convert=None):
         for object_entry in db.session.execute(select(GlobalObjectStorage).filter_by(user_id=user.id, encrypted=True).with_for_update()).scalars():
             try:
                 object_entry.value = encrypt_object(decrypt_object(object_entry.value, oldsecret), newsecret)
-            except Exception as err:
+            except BaseException as err:
                 logmessage("Failure to change encryption of object " + object_entry.key + ": " + str(err))
         db.session.commit()
     if to_convert is None:
@@ -2286,7 +2289,7 @@ def proc_example_list(example_list, package, directory, examples):
                                 start_block = int(the_metadata.get('example start', 1))
                                 end_block = int(the_metadata.get('example end', start_block)) + 1
                                 break
-                        except Exception as err:
+                        except BaseException as err:
                             logmessage("proc_example_list: error processing " + example_file + ": " + str(err))
                             continue
                 if 'title' not in result:
@@ -2340,7 +2343,7 @@ def get_examples():
                         content = fp.read()
                         content = fix_tabs.sub('  ', content)
                         proc_example_list(safeyaml.load(content), the_package, the_directory, examples)
-                except Exception as the_err:
+                except BaseException as the_err:
                     logmessage("There was an error loading the Playground examples:" + str(the_err))
     # logmessage("Examples: " + str(examples))
     return examples
@@ -2796,7 +2799,7 @@ def sub_temp_other(user):
             if object_entry.encrypted and 'newsecret' in session:
                 try:
                     object_entry.value = encrypt_object(decrypt_object(object_entry.value, str(request.cookies.get('secret', None))), session['newsecret'])
-                except Exception as err:
+                except BaseException as err:
                     logmessage("Failure to change encryption of object " + object_entry.key + ": " + str(err))
         for object_entry in db.session.execute(select(GlobalObjectStorage).filter(and_(GlobalObjectStorage.temp_user_id == None, GlobalObjectStorage.user_id == None, GlobalObjectStorage.key.like('da:daglobal:userid:t{:d}:%'.format(session['tempuser'])))).with_for_update()).scalars():  # noqa: E711 # pylint: disable=singleton-comparison
             new_key = re.sub(r'^da:daglobal:userid:t{:d}:'.format(session['tempuser']), 'da:daglobal:userid:{:d}:'.format(user.id), object_entry.key)
@@ -3889,7 +3892,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
             try:
                 interview.assemble(user_dict, interview_status)
                 has_error = False
-            except Exception as errmess:
+            except BaseException as errmess:
                 has_error = True
                 error_message = str(errmess)
                 error_type = type(errmess)
@@ -4427,7 +4430,7 @@ def wait_for_task(task_id, timeout=None):
     except celery.exceptions.TimeoutError:  # pylint: disable=used-before-assignment
         logmessage("wait_for_task: timed out")
         return False
-    except Exception as the_error:
+    except BaseException as the_error:
         logmessage("wait_for_task: got error: " + str(the_error))
         return False
 
@@ -6458,7 +6461,7 @@ def checkin():
                                 commands.append({'value': docassemble.base.functions.safe_json(result.result.value), 'extra': result.result.extra})
                         else:
                             r.rpush(worker_key, worker_id)
-                    except Exception as errstr:
+                    except BaseException as errstr:
                         logmessage("checkin: got error " + str(errstr))
                         r.rpush(worker_key, worker_id)
                 workers_inspected += 1
@@ -7005,7 +7008,7 @@ def index(action_argument=None, refer=None):
     obtain_lock(user_code, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
-    except Exception as the_err:
+    except BaseException as the_err:
         try:
             logmessage("index: there was an exception " + str(the_err.__class__.__name__) + ": " + str(the_err) + " after fetch_user_dict with %s and %s, so we need to reset" % (user_code, yaml_filename))
         except:
@@ -7210,7 +7213,7 @@ def index(action_argument=None, refer=None):
                             continue
                     should_assemble = True
                     break
-            except Exception as the_err:
+            except BaseException as the_err:
                 logmessage("index: bad key was " + str(key) + " and error was " + the_err.__class__.__name__)
                 try:
                     logmessage("index: bad key error message was " + str(the_err))
@@ -7324,7 +7327,7 @@ def index(action_argument=None, refer=None):
                     result = docassemble.webapp.worker.email_attachments.delay(user_code, email_address, attachment_info, docassemble.base.functions.get_language(), subject=interview_status.extras.get('email_subject', None), body=interview_status.extras.get('email_body', None), html=interview_status.extras.get('email_html', None), config=interview.consolidated_metadata.get('email config', None))
                     r.rpush(worker_key, result.id)
                     success = True
-                except Exception as errmess:
+                except BaseException as errmess:
                     success = False
                     logmessage("index: failed with " + str(errmess))
                     break
@@ -7386,7 +7389,7 @@ def index(action_argument=None, refer=None):
             initial_string = 'import docassemble.base.util'
             try:
                 exec(initial_string, user_dict)
-            except Exception as errMess:
+            except BaseException as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
             file_field_tr = sub_indices(file_field, user_dict)
             if '_success' in post_data and post_data['_success']:
@@ -7404,7 +7407,7 @@ def index(action_argument=None, refer=None):
             try:
                 exec(the_string, user_dict)
                 changed = True
-            except Exception as errMess:
+            except BaseException as errMess:
                 try:
                     logmessage(errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string)
                 except:
@@ -7936,13 +7939,13 @@ def index(action_argument=None, refer=None):
         if is_date:
             try:
                 exec("import docassemble.base.util", user_dict)
-            except Exception as errMess:
+            except BaseException as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
         key_tr = sub_indices(key, user_dict)
         if is_ml:
             try:
                 exec("import docassemble.base.util", user_dict)
-            except Exception as errMess:
+            except BaseException as errMess:
                 error_messages.append(("error", "Error: " + str(errMess)))
             if orig_key in ml_info and 'train' in ml_info[orig_key]:
                 if not ml_info[orig_key]['train']:
@@ -7959,7 +7962,7 @@ def index(action_argument=None, refer=None):
             if set_to_empty in ('multiselect', 'checkboxes'):
                 try:
                     exec("import docassemble.base.util", user_dict)
-                except Exception as errMess:
+                except BaseException as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
                 data = 'docassemble.base.util.DADict(' + repr(key_tr) + ', auto_gather=False, gathered=True)'
             else:
@@ -7996,14 +7999,14 @@ def index(action_argument=None, refer=None):
                         field_error[the_key] = word("Please enter a valid value.")
                         validated = False
                         continue
-                except Exception as errstr:
+                except BaseException as errstr:
                     field_error[the_key] = str(errstr)
                     validated = False
                     continue
         try:
             exec(the_string, user_dict)
             changed = True
-        except Exception as errMess:
+        except BaseException as errMess:
             error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
             try:
                 logmessage("Tried to run " + the_string + " and got error " + errMess.__class__.__name__ + ": " + str(errMess))
@@ -8086,7 +8089,7 @@ def index(action_argument=None, refer=None):
                 initial_string = 'import docassemble.base.util'
                 try:
                     exec(initial_string, user_dict)
-                except Exception as errMess:
+                except BaseException as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
                 if should_assemble_now and not already_assembled:
                     interview.assemble(user_dict, interview_status)
@@ -8167,7 +8170,7 @@ def index(action_argument=None, refer=None):
                                                 field_error[the_key] = word("Please enter a valid value.")
                                                 validated = False
                                                 break
-                                        except Exception as errstr:
+                                        except BaseException as errstr:
                                             field_error[the_key] = str(errstr)
                                             validated = False
                                             break
@@ -8180,7 +8183,7 @@ def index(action_argument=None, refer=None):
                             try:
                                 exec(the_string, user_dict)
                                 changed = True
-                            except Exception as errMess:
+                            except BaseException as errMess:
                                 try:
                                     logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after trying to run " + the_string)
                                 except:
@@ -8203,7 +8206,7 @@ def index(action_argument=None, refer=None):
                         try:
                             exec(the_string, user_dict)
                             changed = True
-                        except Exception as errMess:
+                        except BaseException as errMess:
                             logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + " after running " + the_string)
                             error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
         if '_files' in post_data or (STRICT_MODE and (not disregard_input) and len(field_info['files']) > 0):
@@ -8240,7 +8243,7 @@ def index(action_argument=None, refer=None):
                 initial_string = 'import docassemble.base.util'
                 try:
                     exec(initial_string, user_dict)
-                except Exception as errMess:
+                except BaseException as errMess:
                     error_messages.append(("error", "Error: " + str(errMess)))
                 if not already_assembled:
                     interview.assemble(user_dict, interview_status)
@@ -8308,7 +8311,7 @@ def index(action_argument=None, refer=None):
                                                 field_error[the_key] = word("Please enter a valid value.")
                                                 validated = False
                                                 break
-                                        except Exception as errstr:
+                                        except BaseException as errstr:
                                             field_error[the_key] = str(errstr)
                                             validated = False
                                             break
@@ -8320,7 +8323,7 @@ def index(action_argument=None, refer=None):
                                 try:
                                     exec(the_string, user_dict)
                                     changed = True
-                                except Exception as errMess:
+                                except BaseException as errMess:
                                     logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string)
                                     error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
                     else:
@@ -8341,7 +8344,7 @@ def index(action_argument=None, refer=None):
                         try:
                             exec(the_string, user_dict)
                             changed = True
-                        except Exception as errMess:
+                        except BaseException as errMess:
                             logmessage("Error: " + errMess.__class__.__name__ + ": " + str(errMess) + "after running " + the_string)
                             error_messages.append(("error", "Error: " + errMess.__class__.__name__ + ": " + str(errMess)))
         if validated:
@@ -8409,7 +8412,7 @@ def index(action_argument=None, refer=None):
         if the_question is not None and the_question.validation_code:
             try:
                 exec(the_question.validation_code, user_dict)
-            except Exception as validation_error:
+            except BaseException as validation_error:
                 the_error_message = str(validation_error)
                 logmessage("index: exception during validation: " + the_error_message)
                 if the_error_message == '':
@@ -14088,7 +14091,7 @@ def do_serve_uploaded_page(number, page, download=False, size='page'):
     privileged = bool(current_user.is_authenticated and current_user.has_role('admin', 'advocate'))
     try:
         file_info = get_info_from_file_number(number, privileged=privileged, uids=get_session_uids())
-    except Exception as err:
+    except BaseException as err:
         logmessage("do_serve_uploaded_page: " + err.__class__.__name__ + str(err))
         return ('File not found', 404)
     if 'path' not in file_info:
@@ -14098,7 +14101,7 @@ def do_serve_uploaded_page(number, page, download=False, size='page'):
         the_file = DAFile(mimetype=file_info['mimetype'], extension=file_info['extension'], number=number, make_thumbnail=page)
         filename = the_file.page_path(page, size)
         assert filename is not None
-    except Exception as err:
+    except BaseException as err:
         logmessage("Could not make thumbnail: " + err.__class__.__name__ + ": " + str(err))
         filename = None
     if filename is None:
@@ -17317,7 +17320,7 @@ def update_package():
                     session['serverstarttime'] = START_TIME
                     return redirect(url_for('update_package_wait'))
                 flash(word("You do not have permission to install this package."), 'error')
-            except Exception as errMess:
+            except BaseException as errMess:
                 flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         else:
             if form.giturl.data:
@@ -19246,7 +19249,7 @@ def google_drive_page():
     while True:
         try:
             response = service.files().list(spaces="drive", pageToken=page_token, fields="nextPageToken, files(id, name, mimeType, shortcutDetails)", q="trashed=false and 'root' in parents and (mimeType = 'application/vnd.google-apps.folder' or (mimeType = 'application/vnd.google-apps.shortcut' and shortcutDetails.targetMimeType = 'application/vnd.google-apps.folder'))").execute()
-        except Exception as err:
+        except BaseException as err:
             logmessage("google_drive_page: " + err.__class__.__name__ + ": " + str(err))
             set_gd_folder(None)
             storage.release_lock()
@@ -19505,7 +19508,7 @@ def config_page():
                 yml = ruamel.yaml.YAML()
                 yml.allow_duplicate_keys = False
                 yml.load(form.config_content.data)
-            except Exception as errMess:
+            except BaseException as errMess:
                 ok = False
                 content = form.config_content.data
                 errMess = word("Configuration not updated.  There was a syntax error in the configuration YAML.") + '<pre>' + str(errMess) + '</pre>'
@@ -19562,7 +19565,7 @@ def view_source():
                 source = docassemble.base.parse.interview_source_from_string('docassemble.playground' + str(playground_user.id) + project_name(current_project) + ':' + source_path)
             except:
                 source = docassemble.base.parse.interview_source_from_string(source_path)
-    except Exception as errmess:
+    except BaseException as errmess:
         logmessage("view_source: no source: " + str(errmess))
         return ('File not found', 404)
     header = source_path
@@ -19813,12 +19816,12 @@ def cloud_trash(use_gd, use_od, section, the_file, current_project):
     if use_gd:
         try:
             trash_gd_file(section, the_file, current_project)
-        except Exception as the_err:
+        except BaseException as the_err:
             logmessage("cloud_trash: unable to delete file on Google Drive.  " + str(the_err))
     elif use_od:
         try:
             trash_od_file(section, the_file, current_project)
-        except Exception as the_err:
+        except BaseException as the_err:
             try:
                 logmessage("cloud_trash: unable to delete file on OneDrive.  " + str(the_err))
             except:
@@ -19955,7 +19958,7 @@ def playground_files():
                         area.finalize()
                         if section == 'modules':
                             need_to_restart = True
-                    except Exception as errMess:
+                    except BaseException as errMess:
                         flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
                 if need_to_restart:
                     flash(word('Since you uploaded a Python module, the server needs to restart in order to load your module.'), 'info')
@@ -20556,7 +20559,7 @@ def get_git_branches():
     giturl = request.args['url'].strip()
     try:
         return jsonify({'success': True, 'result': get_branches_of_repo(giturl)})
-    except Exception as err:
+    except BaseException as err:
         return jsonify({'success': False, 'reason': str(err)})
 
 
@@ -20753,17 +20756,17 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
                 return {'action': 'fail', 'message': word("The package you specified could not be downloaded from PyPI.")}
             if the_pypi_url is None:
                 return {'action': 'fail', 'message': word("The package you specified could not be downloaded from PyPI as a tar.gz file.")}
-        except Exception as err:
+        except BaseException as err:
             return {'action': 'error', 'message': "error getting information about PyPI package.  " + str(err)}
         try:
             urlretrieve(the_pypi_url, package_file.name)
-        except Exception as err:
+        except BaseException as err:
             return {'action': 'error', 'message': "error downloading PyPI package.  " + str(err)}
         try:
             tar = tarfile.open(package_file.name)
             tar.extractall(path=directory)
             tar.close()
-        except Exception as err:
+        except BaseException as err:
             return {'action': 'error', 'message': "error unpacking PyPI package.  " + str(err)}
         package_file.close()
     initial_directories = len(splitall(directory)) + 1
@@ -21125,7 +21128,7 @@ def playground_packages():
                         break
             if found is False:
                 github_message = word('This package is not yet published on your GitHub account.')
-        except Exception as e:
+        except BaseException as e:
             logmessage('playground_packages: GitHub error.  ' + str(e))
             github_message = word('Unable to determine if the package is published on your GitHub account.')
     if request.method == 'POST' and 'uploadfile' in request.files:
@@ -22135,12 +22138,12 @@ def playground_project():
                 if use_gd:
                     try:
                         rename_gd_project(current_project, form.name.data)
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         logmessage("playground_project: unable to rename project on Google Drive.  " + str(the_err))
                 elif use_od:
                     try:
                         rename_od_project(current_project, form.name.data)
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         try:
                             logmessage("playground_project: unable to rename project on OneDrive.  " + str(the_err))
                         except:
@@ -22173,12 +22176,12 @@ def playground_project():
                 if use_gd:
                     try:
                         trash_gd_project(current_project)
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         logmessage("playground_project: unable to delete project on Google Drive.  " + str(the_err))
                 elif use_od:
                     try:
                         trash_od_project(current_project)
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         try:
                             logmessage("playground_project: unable to delete project on OneDrive.  " + str(the_err))
                         except:
@@ -22394,7 +22397,7 @@ def playground_page():
                     r.incr('da:interviewsource:docassemble.playground' + str(playground_user.id) + project_name(current_project) + ':' + new_file)
                     flash(word("Uploaded %s to the Playground.") % (os.path.basename(filename),), 'success')
                     return redirect(url_for('playground_page', project=current_project, file=os.path.basename(filename)))
-                except Exception as errMess:
+                except BaseException as errMess:
                     flash("Error of type " + str(type(errMess)) + " processing upload: " + str(errMess), "error")
         return redirect(url_for('playground_page', project=current_project))
     if request.method == 'POST' and (form.submit.data or form.run.data or form.delete.data):
@@ -23371,8 +23374,15 @@ def server_error(the_error):
         if 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata:
             session['in error'] = True
             return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': {'error_message': orig_errmess, 'error_history': the_history, 'error_trace': the_trace}}, refer=['error'])
-    show_debug = not bool((not ((DEBUG and daconfig.get('development site is protected', False)) or (current_user.is_authenticated and current_user.has_role('admin', 'developer')))) and isinstance(the_error, (DAError, DAInvalidFilename)))
     if int(int(error_code)/100) == 4:
+        show_debug = False
+    elif isinstance(the_error, (DAError, DAInvalidFilename)):
+        show_debug = False
+    elif DEBUG and daconfig.get('development site is protected', False):
+        show_debug = True
+    elif current_user.is_authenticated and current_user.has_role('admin', 'developer'):
+        show_debug = True
+    else:
         show_debug = False
     if error_code == 404:
         the_template = 'pages/404.html'
@@ -23790,7 +23800,7 @@ def utilities():
                             target=language,
                             q=chunk
                         ).execute()
-                    except Exception as errstr:
+                    except BaseException as errstr:
                         logmessage("utilities: translation failed: " + str(errstr))
                         resp = None
                     if isinstance(resp, dict) and 'translations' in resp and isinstance(resp['translations'], list) and len(resp['translations']) == len(chunk):
@@ -23916,7 +23926,7 @@ def utilities():
                 the_file.save(pdf_file.name)
                 try:
                     fields_output = read_fields(pdf_file.name, the_file.filename, 'pdf', 'yaml')
-                except Exception as err:
+                except BaseException as err:
                     fields_output = str(err)
                 pdf_file.close()
             elif mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
@@ -23926,7 +23936,7 @@ def utilities():
                 the_file.save(docx_file.name)
                 try:
                     fields_output = read_fields(docx_file.name, the_file.filename, 'docx', 'yaml')
-                except Exception as err:
+                except BaseException as err:
                     fields_output = str(err)
                 docx_file.close()
         if form.officeaddin_submit.data:
@@ -24293,7 +24303,7 @@ def train():
                     try:
                         str(the_independent) + ""  # pylint: disable=expression-not-assigned
                         str(the_dependent) + ""  # pylint: disable=expression-not-assigned
-                    except Exception as e:
+                    except BaseException as e:
                         logmessage("Bad record: id " + str(record.id) + " where error was " + str(e))
                         continue
                     the_entry = {'independent': fix_pickle_obj(codecs.decode(bytearray(record.independent, encoding='utf-8'), 'base64')), 'dependent': the_dependent}
@@ -24777,7 +24787,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 if interview_info['encrypted']:
                     try:
                         dictionary = decrypt_dictionary(interview_info['dictionary'], secret)
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         if exclude_invalid:
                             continue
                         try:
@@ -24791,7 +24801,7 @@ def user_interviews(user_id=None, secret=None, exclude_invalid=True, action=None
                 else:
                     try:
                         dictionary = unpack_dictionary(interview_info['dictionary'])
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         if exclude_invalid:
                             continue
                         try:
@@ -25685,7 +25695,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                             steps += 1
                             user_dict['_internal']['steps'] = steps
                             changed = True
-                    except Exception as errMess:
+                    except BaseException as errMess:
                         logmessage("do_sms: error: " + str(errMess))
                         special_messages.append(word("Error") + ": " + str(errMess))
                     skip_it = True
@@ -25695,7 +25705,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
             elif hasattr(field, 'datatype') and field.datatype in ("ml", "mlarea"):
                 try:
                     exec("import docassemble.base.util", user_dict)
-                except Exception as errMess:
+                except BaseException as errMess:
                     special_messages.append("Error: " + str(errMess))
                 if 'ml_train' in interview_status.extras and field.number in interview_status.extras['ml_train']:
                     if not interview_status.extras['ml_train'][field.number]:
@@ -25757,7 +25767,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                                 steps += 1
                                 user_dict['_internal']['steps'] = steps
                                 changed = True
-                        except Exception as errMess:
+                        except BaseException as errMess:
                             logmessage("do_sms: error: " + str(errMess))
                             special_messages.append(word("Error") + ": " + str(errMess))
                         skip_it = True
@@ -25918,7 +25928,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         dateutil.parser.parse(inp)
                         data = "docassemble.base.util.as_datetime(" + repr(inp) + ")"
                         uses_util = True
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         logmessage("do_sms: date validation error was " + str(the_err))
                         if field.datatype == 'date':
                             special_messages.append('"' + inp + '" ' + word("is not a valid date."))
@@ -25934,7 +25944,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                         dateutil.parser.parse(inp)
                         data = "docassemble.base.util.as_datetime(" + repr(inp) + ").time()"
                         uses_util = True
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         logmessage("do_sms: time validation error was " + str(the_err))
                         special_messages.append('"' + inp + '" ' + word("is not a valid time."))
                         data = None
@@ -26064,7 +26074,7 @@ def do_sms(form, base_url, url_root, config='default', save=True):
                 # if 'smsgather' in user_dict['_internal'] and user_dict['_internal']['smsgather'] == saveas:
                 #     # logmessage("do_sms: deleting " + user_dict['_internal']['smsgather'])
                 #     del user_dict['_internal']['smsgather']
-            except Exception as the_err:
+            except BaseException as the_err:
                 logmessage("do_sms: failure to set variable with " + the_string)
                 logmessage("do_sms: error was " + str(the_err))
                 release_lock(sess_info['uid'], sess_info['yaml_filename'])
@@ -26884,7 +26894,7 @@ def api_user_list():
         start_id = None
     try:
         (user_list, start_id) = get_user_list(include_inactive=include_inactive, start_id=start_id)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status(str(err), 400)
     if start_id is None:
         next_id = None
@@ -26949,7 +26959,7 @@ def api_user():
         return jsonify_with_status("You do not have sufficient privileges to access user information", 403)
     try:
         user_info = get_user_info(user_id=current_user.id)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
         return jsonify_with_status('User not found', 404)
@@ -26969,7 +26979,7 @@ def api_user():
             return jsonify_with_status("You do not have sufficient privileges to change a user's password.", 403)
         try:
             set_user_info(user_id=current_user.id, **info)
-        except Exception as err:
+        except BaseException as err:
             return jsonify_with_status(str(err), 400)
         return ('', 204)
     return ('', 204)
@@ -26983,7 +26993,7 @@ def api_user_privileges():
         return jsonify_with_status("Access denied.", 403)
     try:
         user_info = get_user_info(user_id=current_user.id)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
         return jsonify_with_status('User not found', 404)
@@ -27031,7 +27041,7 @@ def api_create_user():
     try:
         password = str(password)
         user_id = create_user(post_data['username'], password, role_list, info)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status(str(err), 400)
     return jsonify_with_status({'user_id': user_id, 'password': password}, 200)
 
@@ -27064,7 +27074,7 @@ def invite_user(email_address, privilege=None, send=True):
             logmessage("Trying to send invite e-mail to " + str(user_invite.email))
             docassemble_flask_user.emails.send_invite_email(user_invite, accept_invite_link)
             logmessage("Sent e-mail invite to " + str(user_invite.email))
-        except Exception as e:
+        except BaseException as e:
             try:
                 logmessage("Failed to send invite e-mail: " + e.__class__.__name__ + ': ' + str(e))
             except:
@@ -27142,7 +27152,7 @@ def api_invite_user():
                 logmessage("Sent e-mail invite to " + str(user_invite.email))
                 info['invitation_sent'] = True
                 info['url'] = accept_invite_link
-            except Exception as e:
+            except BaseException as e:
                 try:
                     logmessage("Failed to send invite e-mail: " + e.__class__.__name__ + ': ' + str(e))
                 except:
@@ -27166,7 +27176,7 @@ def api_user_info():
     case_sensitive = true_or_false(request.args.get('case_sensitive', False))
     try:
         user_info = get_user_info(email=request.args['username'], case_sensitive=case_sensitive)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
         return jsonify_with_status("User not found.", 404)
@@ -27187,7 +27197,7 @@ def api_user_by_id(user_id):
         return jsonify_with_status("You do not have sufficient privileges to access user information", 403)
     try:
         user_info = get_user_info(user_id=user_id)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
         return jsonify_with_status("User not found.", 404)
@@ -27235,7 +27245,7 @@ def api_user_by_id(user_id):
             return jsonify_with_status("You must have admin privileges to change a password.", 403)
         try:
             set_user_info(user_id=user_id, **info)
-        except Exception as err:
+        except BaseException as err:
             return jsonify_with_status(str(err), 400)
         return ('', 204)
     return ('', 204)
@@ -27272,7 +27282,7 @@ def api_fields():
             return jsonify_with_status("Invalid input format.", 400)
         try:
             output = read_fields(temp_file.name, filename, input_format, output_format)
-        except Exception as err:
+        except BaseException as err:
             logmessage("api_fields: got error " + err.__class__.__name__ + ": " + str(err))
             if output_format == 'yaml':
                 return jsonify_with_status("No fields could be found.", 400)
@@ -27296,7 +27306,7 @@ def api_privileges():
     if request.method == 'GET':
         try:
             return jsonify(get_privileges_list())
-        except Exception as err:
+        except BaseException as err:
             return jsonify_with_status(str(err), 400)
     if request.method == 'DELETE':
         if not current_user.has_role_or_permission('admin', permissions=['edit_privileges']):
@@ -27305,7 +27315,7 @@ def api_privileges():
             return jsonify_with_status("A privilege name must be provided.", 400)
         try:
             remove_privilege(request.args['privilege'])
-        except Exception as err:
+        except BaseException as err:
             return jsonify_with_status(str(err), 400)
         return ('', 204)
     if request.method == 'POST':
@@ -27318,7 +27328,7 @@ def api_privileges():
             return jsonify_with_status("A privilege name must be provided.", 400)
         try:
             add_privilege(post_data['privilege'])
-        except Exception as err:
+        except BaseException as err:
             return jsonify_with_status(str(err), 400)
         return ('', 204)
     return ('', 204)
@@ -27379,7 +27389,7 @@ def api_user_by_id_privileges(user_id):
         return jsonify_with_status("Access denied.", 403)
     try:
         user_info = get_user_info(user_id=user_id)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
         return jsonify_with_status('User not found', 404)
@@ -27394,7 +27404,7 @@ def api_user_by_id_privileges(user_id):
                 return jsonify_with_status("A privilege name must be provided", 400)
             try:
                 remove_user_privilege(user_id, role_name)
-            except Exception as err:
+            except BaseException as err:
                 return jsonify_with_status(str(err), 400)
         elif request.method == 'POST':
             post_data = request.get_json(silent=True)
@@ -27405,7 +27415,7 @@ def api_user_by_id_privileges(user_id):
                 return jsonify_with_status("A privilege name must be provided", 400)
             try:
                 add_user_privilege(user_id, role_name)
-            except Exception as err:
+            except BaseException as err:
                 return jsonify_with_status(str(err), 400)
         db.session.commit()
         return ('', 204)
@@ -27597,7 +27607,7 @@ def api_get_secret():
         return jsonify_with_status("A username and password must be supplied", 400)
     try:
         secret = get_secret(str(username), str(password))
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status(str(err), 403)
     return jsonify(secret)
 
@@ -27659,7 +27669,7 @@ def api_users_interviews():
         include_dict = true_or_false(request.args.get('include_dictionary', False))
         try:
             (the_list, start_id) = user_interviews(user_id=user_id, secret=secret, exclude_invalid=False, tag=tag, filename=filename, session=session_id, query=query, include_dict=include_dict, start_id=start_id)
-        except Exception as err:
+        except BaseException as err:
             return jsonify_with_status("Error getting interview list.  " + str(err), 400)
         if start_id is None:
             next_id = None
@@ -27753,7 +27763,7 @@ def api_session_back():
     docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         data = go_back_in_session(yaml_filename, session_id, secret=secret, return_question=reply_with_question)
-    except Exception as the_err:
+    except BaseException as the_err:
         return jsonify_with_status(str(the_err), 400)
     if data is None:
         return ('', 204)
@@ -27790,7 +27800,7 @@ def transform_json_variables(obj):
                 if not isinstance(new_obj, TypeType):
                     raise DAException("name is not a class")
                 return new_obj
-            except Exception as err:
+            except BaseException as err:
                 logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + str(err))
                 return None
         if '_class' in obj and isinstance(obj['_class'], str) and 'instanceName' in obj and obj['_class'].startswith('docassemble.') and not illegal_variable_name(obj['_class']) and isinstance(obj['instanceName'], str):
@@ -27806,7 +27816,7 @@ def transform_json_variables(obj):
                         continue
                     setattr(new_obj, key, transform_json_variables(val))
                 return new_obj
-            except Exception as err:
+            except BaseException as err:
                 logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + str(err))
                 return None
         new_dict = {}
@@ -27837,7 +27847,7 @@ def api_session():
         docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
         try:
             variables = get_session_variables(yaml_filename, session_id, secret=secret)
-        except Exception as the_err:
+        except BaseException as the_err:
             return jsonify_with_status(str(the_err), 400)
         return jsonify(variables)
     if request.method == 'POST':
@@ -27925,7 +27935,7 @@ def api_session():
                 literal_variables[file_field] = "None"
         try:
             data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=reply_with_question, literal_variables=literal_variables, del_variables=del_variables, question_name=question_name, event_list=event_list, advance_progress_meter=advance_progress_meter, post_setting=post_setting)
-        except Exception as the_err:
+        except BaseException as the_err:
             return jsonify_with_status(str(the_err), 400)
         if data is None:
             return ('', 204)
@@ -27998,7 +28008,7 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True,
     docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=str(secret))  # pylint: disable=unused-variable
-    except Exception as the_err:
+    except BaseException as the_err:
         if use_lock:
             release_lock(session_id, yaml_filename)
         docassemble.base.functions.restore_thread_variables(tbackup)
@@ -28047,7 +28057,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None, return_question=F
     if return_question:
         try:
             data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, old_user_dict=old_user_dict, encode=encode)
-        except Exception as the_err:
+        except BaseException as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
             docassemble.base.functions.restore_thread_variables(tbackup)
@@ -28126,7 +28136,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
         interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
         try:
             interview.assemble(user_dict, interview_status)
-        except Exception as err:
+        except BaseException as err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
             restore_session(sbackup)
@@ -28145,7 +28155,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 exec(str(key) + ' = _xxxtempvarxxx', user_dict)
                 del user_dict['_xxxtempvarxxx']
             process_set_variable(str(key), user_dict, vars_set, old_values)
-    except Exception as the_err:
+    except BaseException as the_err:
         if '_xxxtempvarxxx' in user_dict:
             del user_dict['_xxxtempvarxxx']
         if use_lock:
@@ -28194,7 +28204,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
                 if illegal_variable_name(key):
                     raise DAException("Illegal value as variable name.")
                 exec('del ' + str(key), user_dict)
-        except Exception as the_err:
+        except BaseException as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
             restore_session(sbackup)
@@ -28236,7 +28246,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if return_question:
         try:
             data = get_question_data(yaml_filename, session_id, secret, use_lock=False, user_dict=user_dict, steps=steps, is_encrypted=is_encrypted, post_setting=post_setting, advance_progress_meter=advance_progress_meter, encode=encode)
-        except Exception as the_err:
+        except BaseException as the_err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
             restore_session(sbackup)
@@ -28284,7 +28294,7 @@ def api_session_new():
     docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, req=request)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status(err.__class__.__name__ + ': ' + str(err), 400)
     if encrypted and new_secret:
         return jsonify({'session': session_id, 'i': yaml_filename, 'secret': secret, 'encrypted': encrypted})
@@ -28328,7 +28338,7 @@ def create_new_interview(yaml_filename, secret, url_args=None, referer=None, req
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable:
         pass
-    except Exception as e:
+    except BaseException as e:
         release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
@@ -28361,7 +28371,7 @@ def api_session_question():
     docassemble.base.functions.this_thread.current_info['yaml_filename'] = yaml_filename
     try:
         data = get_question_data(yaml_filename, session_id, secret)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status(str(err), 400)
     if data.get('questionType', None) == 'response':
         return data['response']
@@ -28389,7 +28399,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if user_dict is None:
         try:
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
-        except Exception as err:
+        except BaseException as err:
             if use_lock:
                 release_lock(session_id, yaml_filename)
             raise DAException("Unable to obtain interview dictionary: " + str(err))
@@ -28405,7 +28415,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
         return {'questionType': 'undefined_variable', 'variable': err.variable, 'message_log': docassemble.base.functions.get_message_log()}
-    except Exception as e:
+    except BaseException as e:
         if use_lock:
             release_lock(session_id, yaml_filename)
         restore_session(sbackup)
@@ -28690,7 +28700,7 @@ def run_action_in_session(**kwargs):
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
         return {"status": "success"}
-    except Exception as e:
+    except BaseException as e:
         release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
@@ -28776,7 +28786,7 @@ def get_login_url(**kwargs):
     password = str(password)
     try:
         secret = get_secret(username, password)
-    except Exception as err:
+    except BaseException as err:
         return {"status": "auth_error", "message": str(err)}
     try:
         expire = int(kwargs.get('expire', 15))
@@ -28935,7 +28945,7 @@ def api_interviews():
     if request.method == 'GET':
         try:
             (the_list, start_id) = user_interviews(secret=secret, filename=filename, session=session_id, query=query, exclude_invalid=False, tag=tag, include_dict=include_dict, start_id=start_id)
-        except Exception as err:
+        except BaseException as err:
             return jsonify_with_status("Error reading interview list: " + str(err), 400)
         if start_id is None:
             next_id = None
@@ -29602,7 +29612,7 @@ def api_playground_install():
                         the_area.finalize()
                     # the_file = package_name
                 zippath.close()
-    except Exception as err:
+    except BaseException as err:
         logmessage("api_playground_install: " + err.__class__.__name__ + ": " + str(err))
         return jsonify_with_status("Error installing packages.", 400)
     if not found:
@@ -30162,7 +30172,7 @@ def api_user_userid_api(user_id):
             return jsonify_with_status("You do not have sufficient privileges to edit user API information", 403)
     try:
         user_info = get_user_info(user_id=user_id, admin=True)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error obtaining user information: " + str(err), 400)
     if user_info is None:
         return jsonify_with_status("User not found.", 404)
@@ -30180,11 +30190,11 @@ def api_interview_data():
         return jsonify_with_status("No filename supplied.", 400)
     try:
         interview_source = docassemble.base.parse.interview_source_from_string(filename, testing=True)
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error finding interview: " + str(err), 400)
     try:
         interview = interview_source.get_interview()
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("Error finding interview: " + str(err), 400)
     device_id = docassemble.base.functions.this_thread.current_info['user']['device_id']
     interview_status = docassemble.base.parse.InterviewStatus(current_info=current_info(yaml=filename, req=request, action=None, device_id=device_id))
@@ -30254,7 +30264,7 @@ def api_retrieve_stashed_data():
     try:
         data = retrieve_stashed_data(stash_key, secret, delete=do_delete, refresh=refresh)
         assert data is not None
-    except Exception as err:
+    except BaseException as err:
         return jsonify_with_status("The stashed data could not be retrieved: " + err.__class__.__name__ + " " + str(err) + ".", 400)
     return jsonify(docassemble.base.functions.safe_json(data))
 
@@ -30758,7 +30768,7 @@ def api_interview():
         else:
             try:
                 (encrypted, session_id) = create_new_interview(yaml_filename, secret, url_args=url_args, referer=referer, req=request)
-            except Exception as err:
+            except BaseException as err:
                 return jsonify_with_status(err.__class__.__name__ + ': ' + str(err), 400)
             user_info['sessions'][yaml_filename] = session_id
             changed = True
@@ -30778,7 +30788,7 @@ def api_interview():
                 variables["url_args[%s]" % (repr(key),)] = val
             try:
                 set_session_variables(yaml_filename, session_id, variables, secret=secret, use_lock=True)
-            except Exception as the_err:
+            except BaseException as the_err:
                 return jsonify_with_status(str(the_err), 400)
     obtain_lock(session_id, yaml_filename)
     if request.method == 'POST' and command == 'action':
@@ -30789,13 +30799,13 @@ def api_interview():
             return jsonify_with_status("Invalid action", 400)
         try:
             data = get_question_data(yaml_filename, session_id, secret, save=True, use_lock=False, action=action, post_setting=True, advance_progress_meter=True, encode=True)
-        except Exception as err:
+        except BaseException as err:
             release_lock(session_id, yaml_filename)
             return jsonify_with_status(str(err), 400)
     else:
         try:
             data = get_question_data(yaml_filename, session_id, secret, save=False, use_lock=False, encode=True)
-        except Exception as err:
+        except BaseException as err:
             release_lock(session_id, yaml_filename)
             return jsonify_with_status(str(err), 400)
     if request.method == 'POST':
@@ -30803,7 +30813,7 @@ def api_interview():
             if data['allow_going_back']:
                 try:
                     data = go_back_in_session(yaml_filename, session_id, secret=secret, return_question=True, encode=True)
-                except Exception as the_err:
+                except BaseException as the_err:
                     release_lock(session_id, yaml_filename)
                     return jsonify_with_status(str(the_err), 400)
         elif command is None:
@@ -30828,7 +30838,7 @@ def api_interview():
                     return jsonify_with_status("invalid variable name " + repr(key), 400)
             try:
                 data = set_session_variables(yaml_filename, session_id, variables, secret=secret, return_question=True, event_list=data.get('event_list', None), question_name=data.get('questionName', None), encode=True)
-            except Exception as the_err:
+            except BaseException as the_err:
                 release_lock(session_id, yaml_filename)
                 return jsonify_with_status(str(the_err), 400)
         elif command != 'action':
@@ -31547,7 +31557,7 @@ def error_notification(err, message=None, history=None, trace=None, referer=None
                 with open(json_filename, 'r', encoding='utf-8') as fp:
                     msg.attach('variables.json', 'application/json', fp.read())
             da_send_mail(msg)
-        except Exception as zerr:
+        except BaseException as zerr:
             logmessage(str(zerr))
             body = "There was an error in the " + app.config['APP_NAME'] + " application."
             html = "<html>\n  <body>\n    <p>There was an error in the " + app.config['APP_NAME'] + " application.</p>\n  </body>\n</html>"
@@ -32058,7 +32068,7 @@ def initialize():
                 obtain_lock('init' + hostname, 'init')
                 try:
                     copy_playground_modules()
-                except Exception as err:
+                except BaseException as err:
                     logmessage("There was an error copying the playground modules: " + err.__class__.__name__)
                 write_pypirc()
                 release_lock('init' + hostname, 'init')
@@ -32073,7 +32083,7 @@ def initialize():
                     os.remove(macro_path)
                 # else:
                 #     logmessage("File " + macro_path + " is missing or has the correct size")
-            except Exception as err:
+            except BaseException as err:
                 logmessage("Error was " + err.__class__.__name__ + ' ' + str(err))
             if DEBUG_BOOT:
                 boot_log("server: fixing API keys")

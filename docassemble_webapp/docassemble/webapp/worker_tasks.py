@@ -342,7 +342,7 @@ def sync_with_google_drive(user_id):
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except DAError as e:
         return worker_controller.functions.ReturnValue(ok=False, error=str(e), restart=False)
-    except Exception as e:
+    except BaseException as e:
         return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with Google Drive: " + worker_controller.noquote(str(e)), restart=False)
 
 
@@ -665,7 +665,7 @@ def sync_with_onedrive(user_id):
         return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except DAError as e:
         return worker_controller.functions.ReturnValue(ok=False, error=str(e), restart=False)
-    except Exception as e:
+    except BaseException as e:
         return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e) + str(traceback.format_tb(e.__traceback__)), restart=False)
 
 
@@ -799,7 +799,7 @@ def ocr_finalize(*pargs, **kwargs):
                 if kwargs.get('pdf', False):
                     try:
                         (target, dafilelist) = worker_controller.util.ocr_finalize(*pargs, **kwargs)
-                    except Exception as e:
+                    except BaseException as e:
                         return error_object(e)
                     user_info = kwargs['user']
                     yaml_filename = kwargs['yaml_filename']
@@ -815,7 +815,7 @@ def ocr_finalize(*pargs, **kwargs):
                     worker_controller.obtain_lock_patiently(session_code, yaml_filename)
                     try:
                         steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_finalize: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err)
                         logmessage(error_message)
@@ -836,7 +836,7 @@ def ocr_finalize(*pargs, **kwargs):
                         if dafilelist:
                             assert worker_controller.functions.illegal_variable_name(dafilelist.instanceName) is not True
                             exec(dafilelist.instanceName + '.elements = [' + dafilelist.instanceName + '.elements[0]]', user_dict)
-                    except Exception as the_err:
+                    except BaseException as the_err:
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_pdf: could not save file object: " + str(the_err.__class__.__name__) + ": " + str(the_err)
                         logmessage(error_message)
@@ -849,7 +849,7 @@ def ocr_finalize(*pargs, **kwargs):
                     worker_controller.release_lock(session_code, yaml_filename)
                     return worker_controller.functions.ReturnValue(ok=True, value=True)
                 return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.util.ocr_finalize(*pargs, **kwargs), extra=kwargs.get('extra', None))
-            except Exception as the_error:
+            except BaseException as the_error:
                 logmessage("Error in ocr_finalize: " + the_error.__class__.__name__ + ': ' + str(the_error))
                 return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
 
@@ -969,7 +969,7 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
                     worker_controller.da_send_mail(msg, config=config)
                     logmessage("Finished sending")
                     success = True
-                except Exception as errmess:
+                except BaseException as errmess:
                     try:
                         logmessage(str(errmess.__class__.__name__) + ": " + str(errmess))
                     except:
@@ -1036,7 +1036,7 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
 #                         worker_controller.da_send_mail(msg)
 #                         logmessage("Finished sending")
 #                         success = True
-#                     except Exception as errmess:
+#                     except BaseException as errmess:
 #                         logmessage(str(errmess))
 #                         success = False
 
@@ -1073,7 +1073,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             worker_controller.obtain_lock_patiently(session_code, yaml_filename)
             try:
                 steps, user_dict, is_encrypted = worker_controller.fetch_user_dict(session_code, yaml_filename, secret=secret)
-            except Exception as the_err:
+            except BaseException as the_err:
                 worker_controller.release_lock(session_code, yaml_filename)
                 logmessage("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err))
                 return worker_controller.functions.ReturnValue(extra=extra)
@@ -1087,7 +1087,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             old_language = worker_controller.functions.get_language()
             try:
                 interview.assemble(user_dict, interview_status)
-            except Exception as e:
+            except BaseException as e:
                 if hasattr(e, '__traceback__'):
                     logmessage("Error in assembly: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(traceback.format_tb(e.__traceback__)))
                 else:
@@ -1148,7 +1148,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 try:
                     interview.assemble(user_dict, interview_status)
                     has_error = False
-                except Exception as e:
+                except BaseException as e:
                     if hasattr(e, 'traceback'):
                         logmessage("Error in assembly during callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
                     else:

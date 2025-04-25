@@ -89,7 +89,7 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     old_language = worker_controller.functions.get_language()
     try:
         interview.assemble(user_dict, interview_status)
-    except Exception as e:
+    except BaseException as e:
         if hasattr(e, 'traceback'):
             logmessage("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))
         else:

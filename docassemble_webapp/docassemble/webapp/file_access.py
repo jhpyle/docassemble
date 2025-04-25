@@ -116,7 +116,7 @@ def get_info_from_file_reference(file_reference, **kwargs):
             # result['mimetype'] = headers.gettype()
             result['mimetype'] = response.headers['Content-Type']
             # logmessage("get_info_from_file_reference: mimetype is " + str(result['mimetype']))
-        except Exception:
+        except:
             logmessage("get_info_from_file_reference: could not get mimetype from headers")
             result['mimetype'] = possible_mimetype
             result['extension'] = possible_ext

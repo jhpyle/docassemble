@@ -105,7 +105,7 @@ def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
 
 
 def convertapi_to_pdf(from_file, to_file):
-    convertapi.api_secret = daconfig.get('convertapi secret')
+    convertapi.api_credentials = daconfig.get('convertapi secret')
     result = convertapi.convert('pdf', {'File': from_file})
     result.file.save(to_file)
 
@@ -370,7 +370,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
                 try:
                     gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password)
                     result = 0
-                except Exception as err:
+                except BaseException as err:
                     logmessage("Call to gotenberg failed")
                     logmessage(err.__class__.__name__ + ": " + str(err))
                     result = 1
@@ -382,8 +382,9 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
                 try:
                     convertapi_to_pdf(from_file, to_file)
                     result = 0
-                except:
+                except BaseException as err:
                     logmessage("Call to convertapi failed")
+                    logmessage(err.__class__.__name__ + ": " + str(err))
                     result = 1
                 use_libreoffice = False
             elif daconfig.get('cloudconvert secret', None) is not None:
@@ -391,7 +392,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
                 try:
                     cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password)
                     result = 0
-                except Exception as err:
+                except BaseException as err:
                     logmessage("Call to cloudconvert failed")
                     logmessage(err.__class__.__name__ + ": " + str(err))
                     result = 1
@@ -407,7 +408,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
             try:
                 gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password)
                 result = 0
-            except Exception as err:
+            except BaseException as err:
                 logmessage("Call to gotenberg failed")
                 logmessage(err.__class__.__name__ + ": " + str(err))
                 result = 1
@@ -426,7 +427,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
             try:
                 cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password)
                 result = 0
-            except Exception as err:
+            except BaseException as err:
                 logmessage("Call to cloudconvert failed")
                 logmessage(err.__class__.__name__ + ": " + str(err))
                 result = 1

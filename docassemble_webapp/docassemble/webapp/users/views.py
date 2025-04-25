@@ -388,7 +388,7 @@ def invite():
                 logmessage("Trying to send invite e-mail to " + str(user_invite.email))
                 emails.send_invite_email(user_invite, accept_invite_link)
                 logmessage("Sent e-mail invite to " + str(user_invite.email))
-            except Exception as e:
+            except BaseException as e:
                 try:
                     logmessage("Failed to send invite e-mail: " + e.__class__.__name__ + ': ' + str(e))
                 except:

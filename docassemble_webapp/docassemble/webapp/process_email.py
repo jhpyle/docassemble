@@ -25,7 +25,7 @@ def main():
     try:
         with open(sys.argv[1], 'r', encoding="utf-8") as email_fp:
             msg = email.message_from_file(email_fp)
-    except Exception as errMess:
+    except BaseException as errMess:
         fp.write("Failed to read e-mail message: " + str(errMess) + "\n")
         sys.exit("Failed to read e-mail message")
     raw_date = msg.get('Date', msg.get('Resent-Date', None))

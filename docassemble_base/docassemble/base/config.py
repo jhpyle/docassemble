@@ -131,7 +131,7 @@ def aws_get_secret(data):
         )
     try:
         response = this_thread.botoclient[region].get_secret_value(SecretId=data)
-    except Exception as e:
+    except BaseException as e:
         if e.__class__.__name__ == 'ClientError':
             if e.response['Error']['Code'] == 'DecryptionFailureException':
                 sys.stderr.write("aws_get_secret: Secrets Manager can't decrypt the protected secret text using the provided KMS key.\n")
@@ -192,7 +192,7 @@ def azure_get_secret(data):
         try:
             credential = DefaultAzureCredential()
             this_thread.azureclient[vault_name] = SecretClient(vault_url="https://" + vault_name + ".vault.azure.net/", credential=credential)
-        except Exception as err:
+        except BaseException as err:
             sys.stderr.write("azure_get_secret: unable to create key vault client: " + err.__class__.__name__ + str(err) + "\n")
             return data
     try:
@@ -200,7 +200,7 @@ def azure_get_secret(data):
             secret_data = this_thread.azureclient[vault_name].get_secret(secret_name, secret_version)
         else:
             secret_data = this_thread.azureclient[vault_name].get_secret(secret_name)
-    except Exception as err:
+    except BaseException as err:
         sys.stderr.write("azure_get_secret: unable to retrieve secret: " + err.__class__.__name__ + str(err) + "\n")
         return data
     if isinstance(secret_data.properties.content_type, str):

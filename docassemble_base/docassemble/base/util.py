@@ -5178,7 +5178,7 @@ class DAFile(DAObject):
         output_to.initialize(extension='pdf', filename=input_filename, reinitialize=output_to.ok)
         try:
             docassemble.base.pdftk.extract_pages(input_path, output_to.path(), first, last)
-        except Exception as err:
+        except BaseException as err:
             raise DAError("extract_pages: " + str(err))
         output_to.retrieve()
         output_to.commit()
@@ -7708,7 +7708,7 @@ def format_time(the_time, format=None, language=None):  # pylint: disable=redefi
         else:
             this_time = dateutil.parser.parse(the_time)
         return babel.dates.format_time(this_time, format=format, locale=babel_language(language))
-    except Exception as errmess:
+    except BaseException as errmess:
         return word("Bad date: " + str(errmess))
 
 
@@ -8420,7 +8420,7 @@ class Address(DAObject):
                 success = geocoder.geocode(the_address, language=get_language())
                 assert hasattr(geocoder.data, 'longitude')
                 assert success
-            except Exception as the_err:
+            except BaseException as the_err:
                 logmessage(the_err.__class__.__name__ + ": " + str(the_err))
                 try_number += 1
                 time.sleep(try_number)
@@ -8451,7 +8451,7 @@ class Address(DAObject):
             self.norm.location.longitude = geocoder.data.longitude
             try:
                 self.norm.location.description = self.norm.block()
-            except Exception as err:
+            except BaseException as err:
                 logmessage("Normalized address was incomplete: " + str(err))
                 self._geocode_success = False
                 self.geolocate_success = False
@@ -9384,7 +9384,7 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
                         twilio_client.messages.create(to=phone_number, from_=from_number, body=body, media_url=media)
                     else:
                         twilio_client.messages.create(to=phone_number, from_=from_number, body=body)
-                except Exception as errstr:
+                except BaseException as errstr:
                     logmessage("send_sms: failed to send message from " + from_number + " to " + phone_number + ": " + str(errstr))
                     return False
     if success and task is not None:
@@ -9565,7 +9565,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
             logmessage("send_email: starting to send")
             server.send_mail(msg, config=config)
             logmessage("send_email: finished sending")
-        except Exception as errmess:
+        except BaseException as errmess:
             logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + str(errmess))
             success = False
     if success and task is not None:
@@ -9682,7 +9682,7 @@ def get_work_bucket():
     except:
         try:
             bucket = client.create_bucket(bucket_name)
-        except Exception as err:
+        except BaseException as err:
             raise DAError("failed to create bucket named " + bucket_name + ": " + str(err))
     return bucket
 
@@ -10970,7 +10970,7 @@ def get_ocr_language(language):
                     else:
                         lang = langs[0]
                     raise DAError("could not get OCR language for language " + str(language) + "; using language " + str(lang))
-            except Exception as the_error:
+            except BaseException as the_error:
                 if 'eng' in langs:
                     lang = 'eng'
                 else:
@@ -11025,7 +11025,7 @@ def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=N
                     else:
                         lang = langs[0]
                     logmessage("ocr_file: could not get OCR language for language " + str(language) + "; using language " + str(lang))
-            except Exception as the_error:
+            except BaseException as the_error:
                 if 'eng' in langs:
                     lang = 'eng'
                 else:

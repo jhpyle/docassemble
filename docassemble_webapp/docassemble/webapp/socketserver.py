@@ -416,7 +416,7 @@ def get_dict(yaml_filename):
     docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
-    except Exception as err:
+    except BaseException as err:
         # release_lock(session_id, yaml_filename)
         logmessage('get_dict: attempt to get dictionary failed: ' + str(err))
         return None
@@ -441,7 +441,7 @@ def get_dict_encrypt(yaml_filename):
     docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
-    except Exception as err:
+    except BaseException as err:
         # release_lock(session_id, yaml_filename)
         logmessage('get_dict_encrypt: attempt to get dictionary failed: ' + str(err))
         return None, None
@@ -813,7 +813,7 @@ def monitor_chat_message(data):
     with session_scope() as dbsession:
         try:
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
-        except Exception as err:
+        except BaseException as err:
             # release_lock(session_id, yaml_filename)
             logmessage("monitor_chat_message: could not get dictionary: " + str(err))
             return
@@ -881,7 +881,7 @@ def monitor_chat_log(data):
         docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
         try:
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
-        except Exception as err:
+        except BaseException as err:
             # release_lock(session_id, yaml_filename)
             logmessage("monitor_chat_log: could not get dictionary: " + str(err))
             return

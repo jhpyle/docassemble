@@ -508,7 +508,7 @@ def apply_qpdf(filename):
     new_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
     try:
         pikepdf.Job(['pikepdf', filename, new_file.name]).run()
-    except Exception as err:
+    except BaseException as err:
         raise DAError("Could not fix PDF: " + err.__class__.__name__ + ": " + str(err))
     shutil.copyfile(new_file.name, filename)
     os.remove(new_file.name)
