@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.7.3](https://github.com/jhpyle/docassemble/releases/tag/v1.7.3) - 2025-04-25
+
+
+### Fixed
+- Downgraded Python packages to adjust for a Google library being
+  behind.
+
 ## [1.7.2](https://github.com/jhpyle/docassemble/releases/tag/v1.7.2) - 2025-04-24
 
 
