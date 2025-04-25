@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.7.2](https://github.com/jhpyle/docassemble/releases/tag/v1.7.2) - 2025-04-24
+
+
+### Fixed
+- Issue with Convert API.
+- Stack trace shown when not expected.
+
 ## [1.7.1](https://github.com/jhpyle/docassemble/releases/tag/v1.7.1) - 2025-04-13
 
 
