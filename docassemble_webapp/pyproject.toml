@@ -132,7 +132,7 @@ dependencies = [
   "grpcio-status==1.71.0",
   "gspread==6.2.0",
   "guess_language-spirit==0.5.3",
-  "h11==0.14.0",
+  "h11==0.16.0",
   "httpcore==1.0.7",
   "httplib2==0.22.0",
   "humanize==4.12.2",
