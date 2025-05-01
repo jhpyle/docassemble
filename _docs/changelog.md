@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.7.4](https://github.com/jhpyle/docassemble/releases/tag/v1.7.4) - 2025-04-30
+
+
+### Fixed
+- Accessibility issues with help icons.
+
 ## [1.7.3](https://github.com/jhpyle/docassemble/releases/tag/v1.7.3) - 2025-04-25
 
 
