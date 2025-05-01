@@ -562,8 +562,8 @@ def embed_input(status, variable):
 def help_wrap(content, helptext, status):
     if helptext is None:
         return content
-    help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-' + (status.extras.get('help button color', None) or BUTTON_COLOR_HELP) + '"><a tabindex="0" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="left" data-bs-content=%s><i class="fa-solid fa-question-circle"></i></a></div></div></div>'
-    return help_wrapper % (content, noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)))
+    help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-' + (status.extras.get('help button color', None) or BUTTON_COLOR_HELP) + '"><a tabindex="0" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="left" data-bs-content=%s aria-label="%s" role="button"><i class="fa-solid fa-question-circle"></i></a></div></div></div>'
+    return help_wrapper % (content, noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)), word('Information'))
 
 
 def field_item(field, grid_info, pre=None, row=True, floating=False, classes=None, hidden_message=None, label_for=None, label_classes=None, label_content=None, grid_type=None, content_classes=None, content=None, side_note=None, under_text=None, use_fieldset=0, required=False):
@@ -1477,7 +1477,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     field_class += ' da-field-container-inputtype-dropdown'
             field_class += extra_container_class
             if field.number in status.helptexts:
-                helptext_start = '<a tabindex="0" class="text-info ms-1 dapointer" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True, status=status)) + '>'
+                helptext_start = '<a tabindex="0" class="text-info ms-1 dapointer" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True, status=status)) + ' aria-label="' + word("Information") + '" role="button">'
                 helptext_end = '<i class="fa-solid fa-question-circle"></i></a>'
             else:
                 helptext_start = ''

@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.7.4] - 2025-04-30
+
+### Fixed
+- Accessibility issues with help icons.
+
 ## [1.7.3] - 2025-04-25
 
 ### Fixed

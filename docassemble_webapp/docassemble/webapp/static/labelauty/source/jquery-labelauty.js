@@ -283,23 +283,50 @@
       element.keydown(function (event) {
         $object.parents(".da-fieldset").first().find(".da-has-error").remove();
         var theCode = event.which || event.keyCode;
-        if (theCode === 40) {
-          event.preventDefault();
-          var nextElement = $object.next("label").next("input").next("label");
-          if (nextElement.length) {
-            nextElement.focus();
-            nextElement.click();
+        if ($object.closest(".dachoicewithhelp").length > 0) {
+          if (theCode === 40) {
+            event.preventDefault();
+            var nextElement = $object
+              .closest(".dachoicewithhelp")
+              .next("div")
+              .find("label");
+            if (nextElement.length) {
+              nextElement.focus();
+              nextElement.click();
+            }
+            return false;
           }
-          return false;
-        }
-        if (theCode === 38) {
-          event.preventDefault();
-          var prevElement = $object.prev("label");
-          if (prevElement.length) {
-            prevElement.focus();
-            prevElement.click();
+          if (theCode === 38) {
+            event.preventDefault();
+            var prevElement = $object
+              .closest(".dachoicewithhelp")
+              .prev("div")
+              .find("label");
+            if (prevElement.length) {
+              prevElement.focus();
+              prevElement.click();
+            }
+            return false;
           }
-          return false;
+        } else {
+          if (theCode === 40) {
+            event.preventDefault();
+            var nextElement = $object.next("label").next("input").next("label");
+            if (nextElement.length) {
+              nextElement.focus();
+              nextElement.click();
+            }
+            return false;
+          }
+          if (theCode === 38) {
+            event.preventDefault();
+            var prevElement = $object.prev("label");
+            if (prevElement.length) {
+              prevElement.focus();
+              prevElement.click();
+            }
+            return false;
+          }
         }
         if (theCode === 32 || theCode === 13) {
           event.preventDefault();
