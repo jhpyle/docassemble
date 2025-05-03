@@ -946,7 +946,7 @@ This leads to:
 > * Your fax number: **Not available**
 {: .blockquote}
 
-Calling `italic('apple')` function returns `_apple`.
+Calling `italic('apple')` function returns `_apple_`.
 
 The `plain()` function does not supply any formatting, but it
 will substitute the `default` keyword argument.
