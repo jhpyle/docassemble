@@ -1567,7 +1567,8 @@ validation will be enforced to make sure the user provides a value.
 
 If the user skips a non-required field, the variable will be blank for
 text-based fields, `0.0` for `number` and `currency` fields, `0` for
-`integer` fields, and `None` for multiple-choice and yes/no fields.
+`integer` fields, and `None` for multiple-choice, yes/no, and file
+fields.
 
 Some `datatype`s are never marked with a red asterisk.  For example,
 [`range`](#range) and [`yesno`](#fields yesno) fields are set to real
