@@ -18,7 +18,7 @@ there is interest in using it.
 
 To date, the vast majority of the work on **docassemble** has been
 undertaken by the lead developer, Jonathan Pyle.  If Jonathan Pyle
-were to be longer able to maintain **docassemble**, there would be a
+were no longer able to maintain **docassemble**, there would be a
 risk that **docassemble** would no longer be maintained.
 
 There are reasons to expect that **docassemble** would continue to be
