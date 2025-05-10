@@ -4510,7 +4510,7 @@ The following is a list of all of the language functions that
 * `possessify('Fred', 'cat')` returns `'Fred's cat'`.
 * `possessify_long('Fred', 'cat')` returns `'the cat of Fred'`.
 * `quantity_noun()` is described [above](#quantity_noun).
-* `salutation()` is described [above](#salutation).
+* `salutation()` is described in the [object section]({{ site.baseurl }}/docs/objects.html#Individual.salutation).
 * `she_subjective()` returns `'she'`.
 * `some('beads')` returns `'some beads'`.
 * `the('apple')` returns `'the apple'`.
