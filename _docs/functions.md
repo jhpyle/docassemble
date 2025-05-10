@@ -5694,7 +5694,7 @@ Returns a value from the **docassemble** configuration file. If the
 value is not defined, returns None.
 
 See the explanation of this function in the
-[configuration section]({{ site.baseurl }}/docs/config.html#get_config")
+[configuration section]({{ site.baseurl }}/docs/config.html#get_config)
 for more information.
 
 ## <a name="prevent_going_back"></a>prevent_going_back()
