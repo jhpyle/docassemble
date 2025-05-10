@@ -4081,8 +4081,7 @@ If `things` is a [Python list] with the elements
 
 * `comma_list(things)` returns `lions, tigers, bears`.
 * `comma_list(things, comma_string='; ')` returns `lions; tigers; bears`.
-* `comma_list('fish', 'toads', 'frogs')` returns `fish, toads, and
-  frogs`.
+* `comma_list('fish', 'toads', 'frogs')` returns `fish, toads, frogs`.
 * `comma_list('fish')` returns `fish`.
 
 ## <a name="add_separators"></a>add_separators()
