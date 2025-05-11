@@ -946,7 +946,7 @@ This leads to:
 > * Your fax number: **Not available**
 {: .blockquote}
 
-Calling `italic('apple')` function returns `_apple`.
+Calling `italic('apple')` function returns `_apple_`.
 
 The `plain()` function does not supply any formatting, but it
 will substitute the `default` keyword argument.
@@ -4081,8 +4081,7 @@ If `things` is a [Python list] with the elements
 
 * `comma_list(things)` returns `lions, tigers, bears`.
 * `comma_list(things, comma_string='; ')` returns `lions; tigers; bears`.
-* `comma_list('fish', 'toads', 'frogs')` returns `fish, toads, and
-  frogs`.
+* `comma_list('fish', 'toads', 'frogs')` returns `fish, toads, frogs`.
 * `comma_list('fish')` returns `fish`.
 
 ## <a name="add_separators"></a>add_separators()
@@ -4511,7 +4510,7 @@ The following is a list of all of the language functions that
 * `possessify('Fred', 'cat')` returns `'Fred's cat'`.
 * `possessify_long('Fred', 'cat')` returns `'the cat of Fred'`.
 * `quantity_noun()` is described [above](#quantity_noun).
-* `salutation()` is described [above](#salutation).
+* `salutation()` is described in the [object section]({{ site.baseurl }}/docs/objects.html#Individual.salutation).
 * `she_subjective()` returns `'she'`.
 * `some('beads')` returns `'some beads'`.
 * `the('apple')` returns `'the apple'`.
@@ -5695,7 +5694,7 @@ Returns a value from the **docassemble** configuration file. If the
 value is not defined, returns None.
 
 See the explanation of this function in the
-[configuration section]({{ site.baseurl }}/docs/config.html#get_config")
+[configuration section]({{ site.baseurl }}/docs/config.html#get_config)
 for more information.
 
 ## <a name="prevent_going_back"></a>prevent_going_back()
