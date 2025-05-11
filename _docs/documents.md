@@ -695,8 +695,8 @@ The `p` prefix in `{% raw %}{%p ... %}{% endraw %}` means "process the
 Jinja2 in this paragraph, but don't actually include this paragraph in
 the assembled document."
 
-You will need to do something similar when using [tables](#docx
-tables) in your DOCX file.  For example, when using a "for" loop over
+You will need to do something similar when using [tables](#docx tables)
+in your DOCX file.  For example, when using a "for" loop over
 the rows of a table, you would include two extra rows:
 
 | Name                                               | Age                                             |
