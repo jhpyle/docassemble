@@ -595,6 +595,7 @@ The available page names are:
   forget their password.
 * `404 page`: the page users see when they try to visit a URL that
   does not exist on the server.
+* `error page`: the page users see when Flask traps a Python exception.
 * `main page`: the pages of interviews. (This one is special; see below.)
 
 The aspects of the page that can be manipulated are:

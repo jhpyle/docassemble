@@ -2642,19 +2642,21 @@ available as the [JavaScript] variable `daQuestionData`.
 
 ## <a name="popover trigger"></a>Popover trigger
 
-By default, when you use [`terms`] or [`auto terms`], the definitions
-pop up when the user clicks the label.  The [Bootstrap popover
-feature] allows the triggering method to be set to `click`, `hover`,
-`focus`, or `manual`, and it allows you to specify multiple methods
-separated by spaces.
+The [`help`], [`terms`] and [`auto terms`] features use the [Bootstrap
+popover feature] to show a tooltip. This feature allows different
+methods of triggering the tooltip to appear, including `click`,
+`hover`, `focus`, and `manual`.
 
-The default trigger method is `focus`.  If you want to set the trigger
+The default trigger method is `focus`. If you want to set the trigger
 method to something else, set the `popover trigger` under `features`.
 
 ```
 features:
   popover trigger: hover
 ```
+
+[Bootstrap] allows you to specify multiple methods separated by
+spaces.
 
 ## <a name="custom datatypes to load"></a>Loading custom datatypes
 
