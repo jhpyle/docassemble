@@ -6889,8 +6889,9 @@ class Question:
                             if extension not in all_formats:
                                 all_formats.append(extension)
                     for doc_format in all_formats:
-                        if hasattr(the_att, doc_format):
-                            the_dafile = getattr(the_att, doc_format)
+                        attr_doc_format = 'docx' if doc_format == 'rtf to docx' else doc_format
+                        if hasattr(the_att, attr_doc_format):
+                            the_dafile = getattr(the_att, attr_doc_format)
                             if hasattr(the_dafile, 'number'):
                                 file_dict[doc_format] = the_dafile.number
                     if 'formats' not in the_att.info:
@@ -7772,7 +7773,7 @@ class Question:
                                 else:
                                     modified_metadata[key] = data
                             the_markdown += '---\n' + altyaml.dump_to_string(modified_metadata) + "\n...\n"
-                        docassemble.base.functions.set_context('pandoc')
+                        docassemble.base.functions.set_context('pandoc ' + doc_format)
                         the_markdown += the_content.text(the_user_dict)
                         # logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                         if emoji_match.search(the_markdown) and len(self.interview.images) > 0:

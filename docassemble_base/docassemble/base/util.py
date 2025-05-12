@@ -6922,9 +6922,13 @@ class DAContext(DADict):
             self.elements[key] = val
 
     def __str__(self):
-        if docassemble.base.functions.this_thread.evaluation_context in ('docx', 'pdf', 'pandoc'):
-            if docassemble.base.functions.this_thread.evaluation_context in self.elements:
-                return str(self.elements[docassemble.base.functions.this_thread.evaluation_context])
+        if isinstance(docassemble.base.functions.this_thread.evaluation_context, str) and docassemble.base.functions.this_thread.evaluation_context.startswith('pandoc'):
+            context = 'pandoc'
+        else:
+            context = docassemble.base.functions.this_thread.evaluation_context
+        if context in ('docx', 'pdf', 'pandoc'):
+            if context in self.elements:
+                return str(self.elements[context])
             return str(self.elements['document'])
         return str(self.elements['question'])
 

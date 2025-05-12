@@ -1,0 +1,24 @@
+metadata:
+  title: DOCX format from RTF
+  documentation: "https://docassemble.org/docs/documents.html#docx"
+---
+mandatory: True
+question: Here is your document.
+attachment code: the_document
+---
+attachment:
+  variable name: the_document
+  name: Summary of Benefits
+  filename: benefits_summary
+  valid formats:
+    - rtf to docx
+    - pdf    
+  content: |
+    [BOLDCENTER] Summary of Benefits
+
+    ${ client } is entitled to
+    benefits plan ${ benefits }.
+---
+code: |
+  client = "Jane Doe"
+  benefits = "G-432"

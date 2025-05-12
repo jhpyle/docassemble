@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.7.5] - 2025-05-11
+
+### Added
+- `error page` as a page type customizable in the Configuration.
+
+### Fixed
+- `rtf to docx` format did not work with standalone `attachment`
+  blocks.
+- Issue with popovers triggered by `focus` events.
+- Issue with `list collect` and `show if`.
+
 ## [1.7.4] - 2025-04-30
 
 ### Fixed

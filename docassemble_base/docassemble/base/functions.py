@@ -5829,7 +5829,7 @@ def ensure_definition(*pargs, **kwargs):
 
 def verbatim(text):
     """Disables the effect of formatting characters in the text."""
-    if this_thread.evaluation_context == 'pandoc':
+    if this_thread.evaluation_context in ('pandoc tex', 'pandoc pdf'):
         return '\\textrm{' + str(escape_latex(re.sub(r'\r?\n(\r?\n)+', '\n', str(text).strip()))) + '}'
     if this_thread.evaluation_context is None:
         text = '<span>' + re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', str(text).strip()))) + '</span>'

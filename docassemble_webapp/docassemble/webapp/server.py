@@ -1565,7 +1565,7 @@ def get_page_parts():
         else:
             the_page_parts['global footer'] = {'*': Markup(str(daconfig['global footer']))}
 
-    for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page'):
+    for page_key in ('login page', 'register page', 'interview page', 'start page', 'profile page', 'reset password page', 'forgot password page', 'change password page', '404 page', 'error page'):
         for part_key in ('title', 'tab title', 'extra css', 'extra javascript', 'heading', 'pre', 'submit', 'post', 'footer', 'navigation bar html'):
             key = page_key + ' ' + part_key
             if key in daconfig:
@@ -10115,7 +10115,7 @@ def index(action_argument=None, refer=None):
             value: JSON.stringify(collectToDelete)
           }).appendTo($(form));
         }
-       $("select.damultiselect:not(:disabled)").each(function(){
+        $("select.damultiselect:not(:disabled)").each(function(){
           var showifParents = $(this).parents(".dajsshowif,.dashowif");
           if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
             $(this).find('option').each(function(){
@@ -11382,15 +11382,29 @@ def index(action_argument=None, refer=None):
           if ($("#daform").valid()){
             var num = $(this).parent().parent().data('collectnum');
             $('[data-collectnum="' + num + '"]').show('fast');
-            $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
+            $('[data-collectnum="' + num + '"]').find('input, textarea, select').each(function(){
+              var showifParents = $(this).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
+                $(this).prop("disabled", false);
+              }
+            });
             $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
-               daComboBoxes[$(this).attr('id')].enable();
+              var showifParents = $(this).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
+                daComboBoxes[$(this).attr('id')].enable();
+              }
             });
             $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
-              $(this).slider('enable');
+              var showifParents = $(this).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
+                $(this).slider('enable');
+              }
             });
             $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
-              $(this).data("fileinput").enable();
+              var showifParents = $(this).parents(".dajsshowif,.dashowif");
+              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
+                $(this).data("fileinput").enable();
+              }
             });
             $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
             $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
@@ -11707,16 +11721,18 @@ def index(action_argument=None, refer=None):
         $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
         $("input.dainput-embedded").each(daAdjustInputWidth);
         var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+        var daPopoverTrigger = """ + json.dumps(interview.options.get('popover trigger', 'focus')) + """;
         var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
-          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: """ + json.dumps(interview.options.get('popover trigger', 'focus')) + """, html: true});
+          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: daPopoverTrigger, html: true});
         });
-        $('label a[data-bs-toggle="popover"], legend a[data-bs-toggle="popover"]').on('click', function(event){
-          event.preventDefault();
-          event.stopPropagation();
-          var thePopover = bootstrap.Popover.getOrCreateInstance(this);
-          thePopover.show();
-          return false;
-        });
+        if (daPopoverTrigger == "focus"){
+          $('label a[data-bs-toggle="popover"], legend a[data-bs-toggle="popover"]').on('click', function(event){
+            event.preventDefault();
+            event.stopPropagation();
+            $(this).focus();
+            return false;
+          });
+        }
         if (daPhoneAvailable){
           $("#daPhoneAvailable").removeClass("dainvisible");
         }
@@ -23365,6 +23381,9 @@ def server_error(the_error):
         daShowNotifications();
       });
     </script>"""  # noqa: W605
+    extra_js = get_part('error page extra javascript')
+    if extra_js:
+        script += extra_js
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
     if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and docassemble.base.functions.interview_path() is not None:
         try:
@@ -23393,7 +23412,7 @@ def server_error(the_error):
     except:
         yaml_filename = None
     show_retry = request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')
-    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, tab_title=word("Error"), page_title=word("Error"), error=errmess, historytext=str(the_history), logtext=str(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename, show_retry=show_retry), error_code
+    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, error=errmess, historytext=str(the_history), logtext=str(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename, show_retry=show_retry), error_code
 
 
 @app.route('/bundle.css', methods=['GET'])
