@@ -3,7 +3,7 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
-## [1.7.5](https://github.com/jhpyle/docassemble/releases/tag/v1.7.5) - 2025-05-
+## [1.7.5](https://github.com/jhpyle/docassemble/releases/tag/v1.7.5) - 2025-05-11
 
 
 ### Added
@@ -14,6 +14,7 @@ short_title: Change Log
 - `rtf to docx` format did not work with standalone `attachment`
   blocks.
 - Issue with popovers triggered by `focus` events.
+- Issue with `list collect` and `show if`.
 
 ## [1.7.4](https://github.com/jhpyle/docassemble/releases/tag/v1.7.4) - 2025-04-30
 
