@@ -7331,7 +7331,7 @@ method is similar to the `delete_by_id()` class method, except it uses
 the `_uid` of the table rather than the `id`.
 
 [SQL]: https://en.wikipedia.org/wiki/SQL
-[multiple inheritance]: https://docs.python.org/3.10/tutorial/classes.html#multiple-inheritance
+[multiple inheritance]: https://docs.python.org/3.12/tutorial/classes.html#multiple-inheritance
 [Alembic]: https://alembic.sqlalchemy.org/en/latest/front.html
 [custom classes]: #writing
 [SQLAlchemy]: https://www.sqlalchemy.org/
@@ -7501,9 +7501,9 @@ the `_uid` of the table rather than the `id`.
 [Redis]: https://redis.io/
 [in-memory database]: https://en.wikipedia.org/wiki/In-memory_database
 [`redis`]: https://github.com/andymccurdy/redis-py
-[pickling]: https://docs.python.org/3.10/library/pickle.html
-[pickled]: https://docs.python.org/3.10/library/pickle.html
-[pickles]: https://docs.python.org/3.10/library/pickle.html
+[pickling]: https://docs.python.org/3.12/library/pickle.html
+[pickled]: https://docs.python.org/3.12/library/pickle.html
+[pickles]: https://docs.python.org/3.12/library/pickle.html
 [date field]: {{ site.baseurl }}/docs/fields.html#date
 [`birthdate`]: #Individual.birthdate
 [`gender`]: #Individual.gender
@@ -7566,11 +7566,11 @@ the `_uid` of the table rather than the `id`.
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
 [Python book]: https://shop.oreilly.com/product/0636920028154.do
-[list comprehension]: https://docs.python.org/3.10/tutorial/datastructures.html#list-comprehensions
+[list comprehension]: https://docs.python.org/3.12/tutorial/datastructures.html#list-comprehensions
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [logic]: {{ site.baseurl }}/docs/logic.html
 [interview logic]: {{ site.baseurl }}/docs/logic.html
-[namespace]: https://docs.python.org/3.10/tutorial/classes.html#python-scopes-and-namespaces
+[namespace]: https://docs.python.org/3.12/tutorial/classes.html#python-scopes-and-namespaces
 [write your own functions]: {{ site.baseurl }}/docs/functions.html#yourown
 [`set_alt_text()`]: #DAFile.set_alt_text
 [`get_alt_text()`]: #DAFile.get_alt_text
@@ -7618,8 +7618,8 @@ the `_uid` of the table rather than the `id`.
 [`db`]: {{ site.baseurl }}/docs/config.html#db
 [`DALazyTemplate`]: #DALazyTemplate
 [decorator]: https://realpython.com/primer-on-python-decorators/
-[`Exception`]: https://docs.python.org/3.10/library/exceptions.html#Exception
-[Python OrderedDict]: https://docs.python.org/3.10/library/collections.html#collections.OrderedDict
+[`Exception`]: https://docs.python.org/3.12/library/exceptions.html#Exception
+[Python OrderedDict]: https://docs.python.org/3.12/library/collections.html#collections.OrderedDict
 [Python dict]: https://docs.python.org/3/library/stdtypes.html#dict
 [GET]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/GET
 [POST]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST
@@ -7654,11 +7654,11 @@ the `_uid` of the table rather than the `id`.
 [Tesseract]: https://en.wikipedia.org/wiki/Tesseract_(software)
 [Bates numbered]: https://en.wikipedia.org/wiki/Bates_numbering
 [`.reset_geocoding()`]: #Address.reset_geocoding
-[`sorted()`]: https://docs.python.org/3.10/howto/sorting.html
+[`sorted()`]: https://docs.python.org/3.12/howto/sorting.html
 [`reconsider()`]: {{ site.baseurl }}/docs/functions.html#reconsider
 [`force_ask()`]: {{ site.baseurl }}/docs/functions.html#force_ask
 [`invalidate()`]: {{ site.baseurl }}/docs/functions.html#invalidate
-[shallow copy]: https://docs.python.org/3.10/library/copy.html
+[shallow copy]: https://docs.python.org/3.12/library/copy.html
 [`phone_number_is_valid()`]: {{ site.baseurl }}/docs/functions.html#phone_number_is_valid
 [`background_action()`]: {{ site.baseurl }}/docs/background.html#background_action
 [`DAWeb`]: #DAWeb

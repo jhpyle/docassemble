@@ -358,10 +358,10 @@ cd /usr/share/docassemble
 git clone https://github.com/letsencrypt/letsencrypt
 {% endhighlight %}
 
-# <a name="python"></a>Installing Python 3.10
+# <a name="python"></a>Installing Python 3.12
 
 The most recent version of [Python] compatible with **docassemble** is
-Python 3.10. This version of docassemble is available in recent
+Python 3.12. This version of docassemble is available in recent
 versions of Linux distributions. If it isn't available in your
 distribution, you can compile it from source (see
 [https://python.org](https://python.org)).
@@ -388,7 +388,7 @@ which **docassemble** and the [Python virtual environment] will live:
 
 {% highlight bash %}
 sudo mkdir -p /etc/ssl/docassemble \
-   /usr/share/docassemble/local3.10 \
+   /usr/share/docassemble/local3.12 \
    /usr/share/docassemble/certs \
    /usr/share/docassemble/backup \
    /usr/share/docassemble/config \
@@ -404,7 +404,7 @@ sudo chown -R www-data.www-data /var/www
 sudo chown www-data.www-data /var/run/uwsgi
 sudo chown -R www-data.www-data \
    /tmp/docassemble \
-   /usr/share/docassemble/local3.10 \
+   /usr/share/docassemble/local3.12 \
    /usr/share/docassemble/log \
    /usr/share/docassemble/files
 {% endhighlight %}
@@ -456,8 +456,8 @@ and run the following as `www-data` (i.e., first do `sudo su www-data`):
 
 {% highlight bash %}
 cd /tmp
-python3.10 -m venv --copies /usr/share/docassemble/local3.10
-source /usr/share/docassemble/local3.10/bin/activate
+python3.12 -m venv --copies /usr/share/docassemble/local3.12
+source /usr/share/docassemble/local3.12/bin/activate
 pip3 install --upgrade pip
 pip3 install --upgrade \
   3to2 \
@@ -479,11 +479,11 @@ pip3 install --upgrade \
   ./docassemble/docassemble_base \
   ./docassemble/docassemble_demo \
   ./docassemble/docassemble_webapp
-cp ./docassemble/Docker/pip.conf /usr/share/docassemble/local3.10/
+cp ./docassemble/Docker/pip.conf /usr/share/docassemble/local3.12/
 {% endhighlight %}
 
-This will install a Python 3.10 virtual environment at
-`/usr/share/docassemble/local3.10` and install **docassemble** into it.
+This will install a Python 3.12 virtual environment at
+`/usr/share/docassemble/local3.12` and install **docassemble** into it.
 
 The `pip.conf` file is necessary because it enables the use of
 [GitHub] package references in the `setup.py` files of **docassemble**
@@ -560,7 +560,7 @@ and written by the web server:
 {% highlight bash %}
 sudo chown www-data.www-data /usr/share/docassemble/config/config.yml \
   /usr/share/docassemble/webapp/docassemble.wsgi
-sudo chown -R www-data.www-data /usr/share/docassemble/local3.10 \
+sudo chown -R www-data.www-data /usr/share/docassemble/local3.12 \
   /usr/share/docassemble/log /usr/share/docassemble/files
 sudo chmod ogu+r /usr/share/docassemble/config/config.yml
 {% endhighlight %}
@@ -613,7 +613,7 @@ Then set up the database by running the following commands.
 
 {% highlight bash %}
 echo "create role docassemble with login password 'abc123'; create database docassemble owner docassemble;" | sudo -u postgres psql
-sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.10/bin/activate && python -m docassemble.webapp.create_tables"
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.12/bin/activate && python -m docassemble.webapp.create_tables"
 {% endhighlight %}
 
 Note that these commands create a "role" in the [PostgreSQL] server
@@ -1494,8 +1494,8 @@ The [Celery] background process looks like this:
 
 {% highlight text %}
  1288 ?        S      0:00 bash /usr/share/docassemble/webapp/run-celery.sh
- 1295 ?        S      0:11 /usr/share/docassemble/local3.10/bin/python3.10 /usr/share/docassemble/local3.10/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
- 1349 ?        S      0:00 /usr/share/docassemble/local3.10/bin/python3.10 /usr/share/docassemble/local3.10/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
+ 1295 ?        S      0:11 /usr/share/docassemble/local3.12/bin/python3.12 /usr/share/docassemble/local3.12/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
+ 1349 ?        S      0:00 /usr/share/docassemble/local3.12/bin/python3.12 /usr/share/docassemble/local3.12/bin/celery worker -A docassemble.webapp.worker --loglevel=INFO
 {% endhighlight %}
 
 The [web sockets] background process looks like this:
@@ -1521,7 +1521,7 @@ about the virtual environment.  You can do this by running the
 following before you run any [Python] commands:
 
 {% highlight bash %}
-source /usr/share/docassemble/local3.10/bin/activate
+source /usr/share/docassemble/local3.12/bin/activate
 {% endhighlight %}
 
 If you encounter any errors, please register an "issue" on the
@@ -1588,7 +1588,7 @@ directory.)
 cd docassemble
 git pull
 sudo su www-data
-source /usr/share/docassemble/local3.10/bin/activate
+source /usr/share/docassemble/local3.12/bin/activate
 pip install --upgrade \
 ./docassemble \
 ./docassemble_base \
@@ -1607,7 +1607,7 @@ following first:
 
 {% highlight bash %}
 sudo su www-data
-source /usr/share/docassemble/local3.10/bin/activate
+source /usr/share/docassemble/local3.12/bin/activate
 pip uninstall docassemble
 pip uninstall docassemble.base
 pip uninstall docassemble.demo
@@ -1620,7 +1620,7 @@ tables or additional columns in tables.  The
 necessary modifications to the tables.
 
 {% highlight bash %}
-sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.10/bin/activate && python -m docassemble.webapp.create_tables"
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.12/bin/activate && python -m docassemble.webapp.create_tables"
 {% endhighlight %}
 
 If you get an error in your logs about a missing column and running
@@ -1632,7 +1632,7 @@ You can delete and recreate your database by running the following commands as r
 
 {% highlight bash %}
 echo "drop database docassemble; create database docassemble owner docassemble;" | sudo -u postgres psql
-sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.10/bin/activate && python -m docassemble.webapp.create_tables"
+sudo -H -u www-data bash -c "source /usr/share/docassemble/local3.12/bin/activate && python -m docassemble.webapp.create_tables"
 rm -rf /usr/share/docassemble/files/0*
 {% endhighlight %}
 

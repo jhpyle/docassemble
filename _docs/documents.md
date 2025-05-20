@@ -2302,7 +2302,7 @@ interview, see the [`cache documents` feature].
 [`words`]: {{ site.baseurl }}/docs/config.html#words
 [`send_email()`]: {{ site.baseurl }}/docs/functions.html#send_email
 [built-in filters]: https://jinja.palletsprojects.com/en/2.11.x/templates/#filters
-[Python built-in functions]: https://docs.python.org/3.10/library/functions.html
+[Python built-in functions]: https://docs.python.org/3.12/library/functions.html
 [filters]: https://jinja.palletsprojects.com/en/2.11.x/templates/#filters
 [tests]: https://jinja.palletsprojects.com/en/2.11.x/templates/#list-of-builtin-tests
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate

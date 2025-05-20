@@ -693,7 +693,7 @@ user will not longer see the calling instructions or the phone icon.
 [`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime.datetime
 [Coordinated Universal Time]: https://en.wikipedia.org/wiki/Coordinated_Universal_Time
 [`timezone_list()`]: {{ site.baseurl }}/docs/functions.html#timezone_list
-[`zoneinfo`]: https://docs.python.org/3.10/library/zoneinfo.html
+[`zoneinfo`]: https://docs.python.org/3.12/library/zoneinfo.html
 [WebSocket]: https://en.wikipedia.org/wiki/WebSocket
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME

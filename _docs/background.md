@@ -1520,7 +1520,7 @@ privileges and user identity of the [cron user].
 [Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [`DALazyTemplate`]: {{ site.baseurl }}/docs/objects.html#DALazyTemplate
 [HTML]: https://en.wikipedia.org/wiki/HTML
-[list]: https://docs.python.org/3.10/tutorial/datastructures.html
+[list]: https://docs.python.org/3.12/tutorial/datastructures.html
 [dict]: https://docs.python.org/3/library/stdtypes.html#dict
 [evaluates the interview]: {{ site.baseurl }}/docs/logic.html
 [`reload` modifier]: {{ site.baseurl }}/docs/modifiers.html#reload

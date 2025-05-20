@@ -1211,7 +1211,7 @@ internal names include:
 [`run_action_in_session`]: {{ site.baseurl }}/docs/functions.html#run_action_in_session
 [`run_python_module`]: {{ site.baseurl }}/docs/functions.html#run_python_module
 [`selections`]: {{ site.baseurl }}/docs/functions.html#selections
-[`self`]: https://docs.python.org/3.10/tutorial/classes.html
+[`self`]: https://docs.python.org/3.12/tutorial/classes.html
 [`send_email`]: {{ site.baseurl }}/docs/functions.html#send_email
 [`send_fax`]: {{ site.baseurl }}/docs/functions.html#send_fax
 [`send_sms`]: {{ site.baseurl }}/docs/functions.html#send_sms
@@ -1307,7 +1307,7 @@ internal names include:
 [Google Analytics]: https://analytics.google.com
 [`analytics id`]: {{ site.baseurl }}/docs/config.html#google analytics
 [`google`]: {{ site.baseurl }}/docs/config.html#google
-[`re`]: https://docs.python.org/3.10/library/re.html
+[`re`]: https://docs.python.org/3.12/library/re.html
 [`chain`]: https://docs.python.org/3/library/itertools.html#itertools.chain
 [`user_local`]: #user_local
 [`session_local`]: #session_local
