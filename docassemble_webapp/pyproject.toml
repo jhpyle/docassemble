@@ -265,7 +265,7 @@ dependencies = [
   "SecretStorage==3.3.3",
   "selenium==4.31.0",
   "sendgrid==6.11.0",
-  "setuptools==78.1.0",
+  "setuptools==78.1.1",
   "simple-websocket==1.1.0",
   "simplekv==0.14.1",
   "six==1.17.0",
