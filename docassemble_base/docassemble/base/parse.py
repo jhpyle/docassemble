@@ -485,8 +485,11 @@ class InterviewStatus:
 
     def get_fields_and_sub_fields_and_collect_fields(self, user_dict):
         all_fields = self.question.get_fields_and_sub_fields(user_dict)
+        mappings = {}
+        iterator_variable = None
         if 'list_collect' in self.extras:
             allow_append = self.extras['list_collect_allow_append']
+            iterator_variable = self.extras['list_iterator']
             iterator_re = re.compile(r"\[%s\]" % (self.extras['list_iterator'],))
             if 'sub_fields' in self.extras:
                 field_list = []
@@ -513,7 +516,8 @@ class InterviewStatus:
                     if hasattr(the_field, 'saveas'):
                         the_field.saveas = safeid(re.sub(iterator_re, '[' + str(list_indexno) + ']', from_safeid(field.saveas)))
                         all_fields.append(the_field)
-        return all_fields
+                        mappings[from_safeid(the_field.saveas)] = (list_indexno, from_safeid(field.saveas))
+        return all_fields, mappings, iterator_variable
 
     def is_empty_mc(self, field):
         if hasattr(field, 'choicetype') and not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):

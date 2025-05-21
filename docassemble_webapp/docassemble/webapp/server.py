@@ -7264,7 +7264,7 @@ def index(action_argument=None, refer=None):
                 post_data.add(empty_field, 'None')
                 no_input_values[empty_field] = 'None'
         ml_info = field_info['ml_info']
-        field_list = interview_status.get_fields_and_sub_fields_and_collect_fields(user_dict)
+        field_list, list_collect_mappings, iterator_variable = interview_status.get_fields_and_sub_fields_and_collect_fields(user_dict)
         authorized_fields = [from_safeid(field.saveas) for field in field_list if hasattr(field, 'saveas')]
         if 'allowed_to_set' in interview_status.extras:
             authorized_fields.extend(interview_status.extras['allowed_to_set'])
@@ -7278,6 +7278,8 @@ def index(action_argument=None, refer=None):
                 authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".there_is_another")
     else:
         field_list = []
+        list_collect_mappings = {}
+        iterator_variable = None
         if STRICT_MODE:
             empty_fields = []
         authorized_fields = set()
@@ -8446,6 +8448,59 @@ def index(action_argument=None, refer=None):
                 del user_dict['_internal']['dirty'][var_name]
             except:
                 pass
+            if iterator_variable is not None and var_name in list_collect_mappings:
+                iterator_value, the_var_name = list_collect_mappings[var_name]
+                if the_var_name in interview.invalidation_todo:
+                    if iterator_variable in user_dict:
+                        iterator_backed_up = True
+                        iterator_backup = user_dict[iterator_variable]
+                    else:
+                        iterator_backed_up = False
+                    if the_var_name in old_values:
+                        old_values_backed_up = True
+                        old_values_backup = old_values[the_var_name]
+                    else:
+                        old_values_backed_up = False
+                    old_values[the_var_name] = old_values[var_name]
+                    user_dict[iterator_variable] = iterator_value
+                    interview.invalidate_dependencies(the_var_name, user_dict, old_values)
+                    if iterator_backed_up:
+                        user_dict[iterator_variable] = iterator_backup
+                    else:
+                        del user_dict[iterator_variable]
+                    if old_values_backed_up:
+                        old_values[the_var_name] = old_values_backup
+                    else:
+                        del old_values[the_var_name]
+                elif the_var_name in interview.onchange_todo:
+                    if not already_assembled:
+                        interview.assemble(user_dict, interview_status)
+                        already_assembled = True
+                    if iterator_variable in user_dict:
+                        iterator_backed_up = True
+                        iterator_backup = user_dict[iterator_variable]
+                    else:
+                        iterator_backed_up = False
+                    if the_var_name in old_values:
+                        old_values_backed_up = True
+                        old_values_backup = old_values[the_var_name]
+                    else:
+                        old_values_backed_up = False
+                    old_values[the_var_name] = old_values[var_name]
+                    user_dict[iterator_variable] = iterator_value
+                    interview.invalidate_dependencies(the_var_name, user_dict, old_values)
+                    if iterator_backed_up:
+                        user_dict[iterator_variable] = iterator_backup
+                    else:
+                        del user_dict[iterator_variable]
+                    if old_values_backed_up:
+                        old_values[the_var_name] = old_values_backup
+                    else:
+                        del old_values[the_var_name]
+                try:
+                    del user_dict['_internal']['dirty'][the_var_name]
+                except:
+                    pass
     if action is not None:
         interview_status.current_info.update(action)
     interview.assemble(user_dict, interview_status, old_user_dict, force_question=special_question)
@@ -10449,7 +10504,6 @@ def index(action_argument=None, refer=None):
             $(daTargetDiv).html("error");
           }
           else{
-            theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
             $(daTargetDiv).html(theHtml);
           }
           if (daJsEmbed){
@@ -14885,7 +14939,6 @@ def observer():
             $(daTargetDiv).html("error");
           }
           else{
-            theHtml = theHtml.replace(/<script[^>]*>[^<]*<\/script>/g, '');
             $(daTargetDiv).html(theHtml);
           }
           if (daJsEmbed){
@@ -23213,164 +23266,169 @@ def server_error(the_error):
         errmess = '<blockquote class="blockquote">' + errmess + '</blockquote>'
     script = """
     <script>
-      var daGlobalEval = eval;
-      var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
-      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
-      if (!String.prototype.daSprintf){
-        Object.defineProperty(String.prototype, "daSprintf", {
-          value: function () {
-            var args = Array.from(arguments),
-              i = 0;
-            function defaultNumber(iValue) {
-              return iValue != undefined && !isNaN(iValue) ? iValue : "0";
-            }
-            function defaultString(iValue) {
-              return iValue == undefined ? "" : "" + iValue;
-            }
-            return this.replace(
-              /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
-              function (match, sign, filler, scale, precision, type) {
-                var strOut, space, value;
-                var asNumber = false;
-                if (match == "%%") return "%";
-                if (i >= args.length) return match;
-                value = args[i];
-                while (Array.isArray(value)) {
-                  args.splice(i, 1);
-                  for (var j = i; value.length > 0; j++)
-                    args.splice(j, 0, value.shift());
-                  value = args[i];
-                }
-                i++;
-                if (filler == undefined) filler = " "; // default
-                if (scale == undefined && !isNaN(filler)) {
-                  scale = filler;
-                  filler = " ";
-                }
-                if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
-                if (scale == undefined) scale = 0; // default
-                if (precision == undefined) precision = ".0"; // default
-                scale = parseInt(scale);
-                precision = parseInt(precision.substr(1));
-                switch (type) {
-                  case "d":
-                  case "i":
-                    // decimal integer
-                    asNumber = true;
-                    strOut = parseInt(defaultNumber(value));
-                    if (precision > 0) strOut += "." + "0".repeat(precision);
-                    break;
-                  case "e":
-                  case "E":
-                    // float in exponential notation
-                    asNumber = true;
-                    strOut = parseFloat(defaultNumber(value));
-                    if (precision == 0) strOut = strOut.toExponential();
-                    else strOut = strOut.toExponential(precision);
-                    if (type == "E") strOut = strOut.replace("e", "E");
-                    break;
-                  case "f":
-                    // decimal float
-                    asNumber = true;
-                    strOut = parseFloat(defaultNumber(value));
-                    if (precision != 0) strOut = strOut.toFixed(precision);
-                    break;
-                  case "o":
-                  case "h":
-                  case "H":
-                    // Octal or Hexagesimal integer notation
-                    strOut =
-                      "\\\\" +
-                      (type == "o" ? "0" : type) +
-                      parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
-                    break;
-                  case "q":
-                    // single quoted string
-                    strOut = "'" + defaultString(value) + "'";
-                    break;
-                  case "Q":
-                    // double quoted string
-                    strOut = '"' + defaultString(value) + '"';
-                    break;
-                  default:
-                    // string
-                    strOut = defaultString(value);
-                    break;
-                }
-                if (typeof strOut != "string") strOut = "" + strOut;
-                if ((space = strOut.length) < scale) {
-                  if (asNumber) {
-                    if (sign == "-") {
-                      if (strOut.indexOf("-") < 0)
-                        strOut = filler.repeat(scale - space) + strOut;
-                      else
-                        strOut =
-                          "-" +
-                          filler.repeat(scale - space) +
-                          strOut.replace("-", "");
-                    } else {
-                      if (strOut.indexOf("-") < 0)
-                        strOut = "+" + filler.repeat(scale - space - 1) + strOut;
-                      else
-                        strOut =
-                          "-" +
-                          filler.repeat(scale - space) +
-                          strOut.replace("-", "");
-                    }
-                  } else {
-                    if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
-                    else strOut = strOut + filler.repeat(scale - space);
-                  }
-                } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
-                  strOut = "+" + strOut;
-                return strOut;
+      if (daGlobalEval == undefined){
+        var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
+        var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
+        var daGlobalEval = eval;
+        if (!String.prototype.daSprintf){
+          Object.defineProperty(String.prototype, "daSprintf", {
+            value: function () {
+              var args = Array.from(arguments),
+                i = 0;
+              function defaultNumber(iValue) {
+                return iValue != undefined && !isNaN(iValue) ? iValue : "0";
               }
-            );
-          },
-        });
-        Object.defineProperty(window, "daSprintf", {
-          value: function (str, ...rest) {
-            if (typeof str == "string")
-              return String.prototype.daSprintf.apply(str, rest);
-            return "";
-          },
-        });
+              function defaultString(iValue) {
+                return iValue == undefined ? "" : "" + iValue;
+              }
+              return this.replace(
+                /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
+                function (match, sign, filler, scale, precision, type) {
+                  var strOut, space, value;
+                  var asNumber = false;
+                  if (match == "%%") return "%";
+                  if (i >= args.length) return match;
+                  value = args[i];
+                  while (Array.isArray(value)) {
+                    args.splice(i, 1);
+                    for (var j = i; value.length > 0; j++)
+                      args.splice(j, 0, value.shift());
+                    value = args[i];
+                  }
+                  i++;
+                  if (filler == undefined) filler = " "; // default
+                  if (scale == undefined && !isNaN(filler)) {
+                    scale = filler;
+                    filler = " ";
+                  }
+                  if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
+                  if (scale == undefined) scale = 0; // default
+                  if (precision == undefined) precision = ".0"; // default
+                  scale = parseInt(scale);
+                  precision = parseInt(precision.substr(1));
+                  switch (type) {
+                    case "d":
+                    case "i":
+                      // decimal integer
+                      asNumber = true;
+                      strOut = parseInt(defaultNumber(value));
+                      if (precision > 0) strOut += "." + "0".repeat(precision);
+                      break;
+                    case "e":
+                    case "E":
+                      // float in exponential notation
+                      asNumber = true;
+                      strOut = parseFloat(defaultNumber(value));
+                      if (precision == 0) strOut = strOut.toExponential();
+                      else strOut = strOut.toExponential(precision);
+                      if (type == "E") strOut = strOut.replace("e", "E");
+                      break;
+                    case "f":
+                      // decimal float
+                      asNumber = true;
+                      strOut = parseFloat(defaultNumber(value));
+                      if (precision != 0) strOut = strOut.toFixed(precision);
+                      break;
+                    case "o":
+                    case "h":
+                    case "H":
+                      // Octal or Hexagesimal integer notation
+                      strOut =
+                        "\\\\" +
+                        (type == "o" ? "0" : type) +
+                        parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
+                      break;
+                    case "q":
+                      // single quoted string
+                      strOut = "'" + defaultString(value) + "'";
+                      break;
+                    case "Q":
+                      // double quoted string
+                      strOut = '"' + defaultString(value) + '"';
+                      break;
+                    default:
+                      // string
+                      strOut = defaultString(value);
+                      break;
+                  }
+                  if (typeof strOut != "string") strOut = "" + strOut;
+                  if ((space = strOut.length) < scale) {
+                    if (asNumber) {
+                      if (sign == "-") {
+                        if (strOut.indexOf("-") < 0)
+                          strOut = filler.repeat(scale - space) + strOut;
+                        else
+                          strOut =
+                            "-" +
+                            filler.repeat(scale - space) +
+                            strOut.replace("-", "");
+                      } else {
+                        if (strOut.indexOf("-") < 0)
+                          strOut = "+" + filler.repeat(scale - space - 1) + strOut;
+                        else
+                          strOut =
+                            "-" +
+                            filler.repeat(scale - space) +
+                            strOut.replace("-", "");
+                      }
+                    } else {
+                      if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
+                      else strOut = strOut + filler.repeat(scale - space);
+                    }
+                  } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
+                    strOut = "+" + strOut;
+                  return strOut;
+                }
+              );
+            },
+          });
+          Object.defineProperty(window, "daSprintf", {
+            value: function (str, ...rest) {
+              if (typeof str == "string")
+                return String.prototype.daSprintf.apply(str, rest);
+              return "";
+            },
+          });
+        }
+        function flash(message, priority){
+          if (priority == null){
+            priority = 'info'
+          }
+          if (!$("#daflash").length){
+            $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
+          }
+          var newElement = $(daSprintf(daNotificationMessage, priority, message));
+          $("#daflash").append(newElement);
+          if (priority == 'success'){
+            setTimeout(function(){
+              $(newElement).hide(300, function(){
+                $(self).remove();
+              });
+            }, 3000);
+          }
+        }
+        var da_flash = flash;
+        function daShowNotifications(){
+          var n = daMessageLog.length;
+          for (var i = 0; i < n; i++){
+            var message = daMessageLog[i];
+            if (message.priority == 'console'){
+              console.log(message.message);
+            }
+            else if (message.priority == 'javascript'){
+              daGlobalEval(message.message);
+            }
+            else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'tertiary' || message.priority == 'info' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
+              da_flash(message.message, message.priority);
+            }
+            else{
+              da_flash(message.message, 'info');
+            }
+          }
+        }
       }
-      function flash(message, priority){
-        if (priority == null){
-          priority = 'info'
-        }
-        if (!$("#daflash").length){
-          $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
-        }
-        var newElement = $(daSprintf(daNotificationMessage, priority, message));
-        $("#daflash").append(newElement);
-        if (priority == 'success'){
-          setTimeout(function(){
-            $(newElement).hide(300, function(){
-              $(self).remove();
-            });
-          }, 3000);
-        }
-      }
-      var da_flash = flash;
-      function daShowNotifications(){
-        var n = daMessageLog.length;
-        for (var i = 0; i < n; i++){
-          var message = daMessageLog[i];
-          if (message.priority == 'console'){
-            console.log(message.message);
-          }
-          else if (message.priority == 'javascript'){
-            daGlobalEval(message.message);
-          }
-          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'tertiary' || message.priority == 'info' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
-            da_flash(message.message, message.priority);
-          }
-          else{
-            da_flash(message.message, 'info');
-          }
-        }
+      else {
+        daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
       }
       $( document ).ready(function() {
         $("#da-retry").on('click', function(e){
@@ -23381,9 +23439,6 @@ def server_error(the_error):
         daShowNotifications();
       });
     </script>"""  # noqa: W605
-    extra_js = get_part('error page extra javascript')
-    if extra_js:
-        script += extra_js
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
     if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and docassemble.base.functions.interview_path() is not None:
         try:
@@ -23412,7 +23467,11 @@ def server_error(the_error):
     except:
         yaml_filename = None
     show_retry = request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')
-    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, error=errmess, historytext=str(the_history), logtext=str(the_trace), extra_js=Markup(script), special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename, show_retry=show_retry), error_code
+    extra_js = Markup(script)
+    error_page_extra_js = get_part('error page extra javascript')
+    if isinstance(error_page_extra_js, Markup):
+        extra_js += error_page_extra_js
+    return render_template(the_template, verbose=daconfig.get('verbose error messages', True), version_warning=None, error=errmess, historytext=str(the_history), logtext=str(the_trace), extra_js=extra_js, special_error=special_error_html, show_debug=show_debug, yaml_filename=yaml_filename, show_retry=show_retry), error_code
 
 
 @app.route('/bundle.css', methods=['GET'])

@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.7.6] - 2025-05-
+
+### Fixed
+- Issue with `error page javascript` not running under some
+  circumstances.
+- Issue where `depends on` would not be triggered by changes to
+  variables on a `list collect` screen unless the variable was the
+  variable being sought.
+
 ## [1.7.5] - 2025-05-11
 
 ### Added
