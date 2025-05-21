@@ -1037,10 +1037,23 @@ of choices.
 
 {% include side-by-side.html demo="fields-choices-datalist" %}
 
-The "datalist" selector allows users to choose a selection from a list
-or enter a value of their own. This uses the browser's built-in
-"autocomplete" interface, which can be more accessible than the
-[`combobox`], but it also causes any input to filter the displayed choices.
+The "datalist" selector is a text box with a pop-down list of
+suggestions that allows users to choose a selection from that list or
+enter a value of their own. This selector is good when users are more
+likely to enter values of their own, especially when compared to the
+[`combobox`] which sometimes conforms the user's input into a matching
+choice.
+
+This uses the browser's built-in "autocomplete" interface, which is
+more [accessible](/docs/accessibility.html) than the [`combobox`], but
+it still isn't perfect. The "datalist" selector doesn't display a list of
+choices by default. If the field is empty, then clicking on the field,
+or pressing the down arrow key while having the field selected, will
+cause the choices to show. Any input in the field filters the list of
+choices. There is also no way to show all of the choices without
+clearing all of the input from the field.
+
+it also causes any input to filter the displayed choices.
 
 ## <a name="combobox"></a>Multiple-choice combobox
 
