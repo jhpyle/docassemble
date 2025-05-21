@@ -6284,6 +6284,15 @@
           - "${ 'Apples' }": apple
           - Oranges: orange
           - Pears: pear
+"fields-choices-datalist":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": "question: |\n  What is your favorite color?\nfields:\n  - Color: favorite_color\n\
+    \    input type: datalist\n    choices: \n      - Red\n      - Green\n      -\
+    \ Purple\n---\nmandatory: True\nquestion: All done\nsubquestion: |\n  Your favorite\
+    \ color is\n  ${ favorite_color }."
 "fields-choices-combobox":
   "height": !!int |-
     176

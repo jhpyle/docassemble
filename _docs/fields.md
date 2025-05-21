@@ -449,6 +449,7 @@ to use. The possible values of [`input type`] are:
 * [`area`](#area)
 * [`dropdown`](#select)
 * [`radio`](#radio)
+* [`datalist`](#combobox)
 * [`combobox`](#combobox)
 * [`ajax`](#ajax)
 * [`hidden`](#hidden)
@@ -1019,13 +1020,27 @@ You can also include `input type: dropdown`:
 {% include side-by-side.html demo="fields-choices-dropdown-input-type" %}
 
 The `input type: dropdown` does not actually have any effect, since
-`dropdown` is the default `input type`.  (The other options for `input
-type` are [`radio`](#radio) and [`combobox`](#combobox).)
+`dropdown` is the default `input type`. (The other options for
+`input type` are [`radio`](#radio), [`datalist`](#combobox), and
+[`combobox`](#combobox).)
 
 The [`code`](#code) option, which uses [Python] code to generate the
 list of choices, is often used in combination with
 [`exclude`](#exclude), which excludes one or more items from the list
 of choices.
+
+## <a name="datalist"></a>Multiple-choice datalist
+
+`input type: datalist` shows a [`choices`](#choices) list as a
+[datalist] instead of as a dropdown [select] element (which is
+[the default](#select)).
+
+{% include side-by-side.html demo="fields-choices-datalist" %}
+
+The "datalist" selector allows users to choose a selection from a list
+or enter a value of their own. This uses the browser's built-in
+"autocomplete" interface, which can be more accessible than the
+[`combobox`], but it also causes any input to filter the displayed choices.
 
 ## <a name="combobox"></a>Multiple-choice combobox
 
@@ -1553,11 +1568,12 @@ stored.  For a full explanation of how this is used, see
 
 ## <a name="inputtype"></a>`input type`
 
-The `input type` is similar to `datatype`.  It is used in situations
+The `input type` is similar to `datatype`. It is used in situations
 where the `datatype` might be [`date`], [`number`], etc., but you want
 the field to use a particular type of multiple-choice input element,
-such as a list of [radio buttons](#radio) or [a combobox](#combobox).
-For a full explanation of how this is used, see [above](#input types).
+such as a list of [radio buttons](#radio), a [datalist](#datalist), or
+a [combobox](#combobox). For a full explanation of how this is used,
+see [above](#input types).
 
 ## <a name="required"></a>`required`
 
@@ -1642,8 +1658,8 @@ starts typing in the information.  In HTML, this text is known as the
 {% include side-by-side.html demo="text-hint" %}
 
 The `hint` is also used to provide the default text the user sees when
-they fill out a [multiple-choice dropdown] or a [`combobox`] input
-element within a [`fields`] question.
+they fill out a [multiple-choice dropdown], a [`datalist`], or a
+[`combobox`] input element within a [`fields`] question.
 
 ## <a name="help"></a>`help`
 
@@ -3775,8 +3791,10 @@ why this needs to be done manually as opposed to automatically:
 [`maximum image size` configuration directive]: {{ site.baseurl }}/docs/config.html#maximum image size
 [`maximum image size` interview feature]: {{ site.baseurl }}/docs/initial.html#maximum image size
 [combobox]: https://github.com/danielfarrell/bootstrap-combobox
+[datalist]: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/datalist
 [multiple-choice dropdown]: #select
 [`combobox`]: #combobox
+[`datalist`]: #datalist
 [`images`]: {{ site.baseurl }}/docs/initial.html#images
 [`image sets`]: {{ site.baseurl }}/docs/initial.html#image sets
 [`sets`]: {{ site.baseurl }}/docs/modifiers.html#sets
