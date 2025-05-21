@@ -2907,7 +2907,7 @@ contained:
 [`table width`]: #table width
 [`features`]: #features
 [document]: {{ site.baseurl }}/docs/documents.html
-[list]: https://docs.python.org/3.10/tutorial/datastructures.html
+[list]: https://docs.python.org/3.12/tutorial/datastructures.html
 [dictionary]: https://docs.python.org/3/library/stdtypes.html#dict
 [set]: https://docs.python.org/3/library/stdtypes.html#set
 [group]: {{ site.baseurl }}/docs/groups.html

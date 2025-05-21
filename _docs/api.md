@@ -3715,8 +3715,8 @@ function.
 [`/api/session`]: #session_post
 [`/api/session/new`]: #session_new
 [`/api/session/question`]: #session_question
-[Python dict]: https://docs.python.org/3.10/tutorial/datastructures.html#dictionaries
-[Python objects]: https://docs.python.org/3.10/tutorial/classes.html
+[Python dict]: https://docs.python.org/3.12/tutorial/datastructures.html#dictionaries
+[Python objects]: https://docs.python.org/3.12/tutorial/classes.html
 [`all_variables()`]: {{ site.baseurl }}/docs/functions.html#all_variables
 [`url_args`]: {{ site.baseurl }}/docs/special.html#url_args
 [`multi_user`]: {{ site.baseurl }}/docs/special.html#multi_user
@@ -3747,7 +3747,7 @@ function.
 [`/api/package`]: #package_install
 [pip]: https://en.wikipedia.org/wiki/Pip_%28package_manager%29
 [302 redirect]: https://en.wikipedia.org/wiki/HTTP_302
-[pickle]: https://docs.python.org/3.10/library/pickle.html
+[pickle]: https://docs.python.org/3.12/library/pickle.html
 [`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
 [YAML]: https://en.wikipedia.org/wiki/YAML
 [sample-form.pdf]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/templates/sample-form.pdf

@@ -22,9 +22,11 @@ to `3`.
 
 Starting with [version 0.5.71], **docassemble** ended support for
 Python 2.7 and upgraded to Python 3.6. Starting with [version 1.2.0],
-**docassemble** only supports Python 3.8. In [version 1.4.0] of the
-Docker container, **docassemble** started using Python 3.10, but the
-Python application still supports Python 3.8.
+**docassemble** only supported Python 3.8. In [version 1.4.0] of the
+Docker container, **docassemble** started using Python 3.10 (which
+maintained support for Python 3.8), In [version 1.7.0] of the Docker
+container, **docassemble** started using Python 3.12 and raised the
+minimum supported Python version to 3.9.
 
 If you are currently running a **docassemble** instance on [Docker]
 using Python 2.7, you can upgrade by doing `docker stop`, `docker rm`,
@@ -150,6 +152,7 @@ data.  The following procedure will avoid these problems:
 [version 0.5.70]: https://github.com/jhpyle/docassemble/releases/tag/v0.5.70
 [version 1.2.0]: https://github.com/jhpyle/docassemble/releases/tag/v1.2.0
 [version 1.4.0]: https://github.com/jhpyle/docassemble/releases/tag/v1.4.0
+[version 1.7.0]: https://github.com/jhpyle/docassemble/releases/tag/v1.7.0
 [is no longer maintained]: https://www.python.org/dev/peps/pep-0373/
 [pip]: https://pip.pypa.io/en/stable/
 [`text_type()`]: {{ site.baseurl }}/docs/functions.html#text_type

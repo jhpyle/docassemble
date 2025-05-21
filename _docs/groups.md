@@ -1796,9 +1796,9 @@ after it is defined.
 [`basic-questions.yml`]: {{ site.github.repository_url }}/blob/master/docassemble_base/docassemble/base/data/questions/basic-questions.yml
 [`.number()`]: {{ site.baseurl }}/docs/objects.html#DAList.number
 [`.number_gathered()`]: {{ site.baseurl }}/docs/objects.html#DAList.number_gathered
-[Python interpreter]: https://docs.python.org/3.10/tutorial/interpreter.html
-[Python list]: https://docs.python.org/3.10/tutorial/datastructures.html
-[Python lists]: https://docs.python.org/3.10/tutorial/datastructures.html
+[Python interpreter]: https://docs.python.org/3.12/tutorial/interpreter.html
+[Python list]: https://docs.python.org/3.12/tutorial/datastructures.html
+[Python lists]: https://docs.python.org/3.12/tutorial/datastructures.html
 [Python dict]: https://docs.python.org/3/library/stdtypes.html#dict
 [Python set]: https://docs.python.org/3/library/stdtypes.html#set
 [`sorted()` function]: https://docs.python.org/3/library/functions.html#sorted
