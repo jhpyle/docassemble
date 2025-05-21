@@ -1,0 +1,22 @@
+metadata:
+  title: Datalist within fields
+  short title: Datalist
+  documentation: "https://docassemble.org/docs/fields.html#datalist"
+  example start: 1
+  example end: 2
+---
+question: |
+  What is your favorite color?
+fields:
+  - Color: favorite_color
+    input type: datalist
+    choices: 
+      - Red
+      - Green
+      - Purple
+---
+mandatory: True
+question: All done
+subquestion: |
+  Your favorite color is
+  ${ favorite_color }.
