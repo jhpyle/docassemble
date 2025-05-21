@@ -3187,6 +3187,8 @@ def input_for(status, field, embedded=False, floating_label=None):
                 daobject = ''
             if hasattr(field, 'inputtype') and field.inputtype == 'combobox' and defaultvalue:
                 datadefault = ' data-default=' + fix_double_quote(str(defaultvalue))
+            elif hasattr(field, 'inputtype') and field.inputtype == 'datalist' and defaultvalue:
+                datadefault = ' value=' + fix_double_quote(str(defaultvalue))
             else:
                 datadefault = ''
             if embedded:
@@ -3202,11 +3204,26 @@ def input_for(status, field, embedded=False, floating_label=None):
                     if floating_label:
                         emb_text += ' da-combobox-floating'
                     emb_text += '" '
+                elif hasattr(field, 'inputtype') and field.inputtype == 'datalist':
+                    emb_text = 'class="form-control' + daobject
+                    if floating_label:
+                        emb_text += ' da-datalist-floating'
+                    emb_text += '" '
                 else:
                     emb_text = 'class="form-select dasingleselect' + daobject + '" '
             if embedded:
                 output += '<span class="da-inline-error-wrapper">'
-            output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '"' + datadefault + ' id="' + escape_id(saveas_string) + '" ' + disable_others_data + req_attr + disabled_attr + '>'
+            if hasattr(field, 'inputtype') and field.inputtype == 'datalist':
+                input_type = 'text'
+                if hasattr(field, 'datatype'):
+                    if field.datatype == 'integer':
+                        input_type = 'number'
+                        emb_text += ' step="1"'
+                    elif field.datatype in ('number', 'float'):
+                        input_type = 'number'
+                output += '<input type="' + input_type + '" list="' + escape_id(saveas_string) + 'list" ' + emb_text + 'name="' + escape_id(saveas_string) + '"' + datadefault + ' id="' + escape_id(saveas_string) + '" ' + placeholdertext + disable_others_data + req_attr + disabled_attr + '><datalist id="' + escape_id(saveas_string) + 'list">'
+            else:
+                output += '<select ' + emb_text + 'name="' + escape_id(saveas_string) + '"' + datadefault + ' id="' + escape_id(saveas_string) + '" ' + disable_others_data + req_attr + disabled_attr + '>'
             first_option = ''
             if hasattr(field, 'inputtype') and field.inputtype == 'combobox' and not embedded:
                 if placeholdertext == '':
@@ -3215,6 +3232,8 @@ def input_for(status, field, embedded=False, floating_label=None):
                     first_option += '<option value=""></option>'
                 else:
                     first_option += '<option value="">' + option_escape(str(status.hints[field.number].replace('\n', ' '))) + '</option>'
+            elif hasattr(field, 'inputtype') and field.inputtype == 'datalist' and not embedded:
+                pass
             else:
                 if placeholdertext == '':
                     first_option += '<option value="">' + option_escape(word('Select...')) + '</option>'
@@ -3263,10 +3282,14 @@ def input_for(status, field, embedded=False, floating_label=None):
             if (not status.extras['required'][field.number]) or (not found_default):
                 output += first_option
             output += other_options
-            if embedded:
-                output += '</select></span> '
+            if hasattr(field, 'inputtype') and field.inputtype == 'datalist':
+                output += '</datalist>'
             else:
-                output += '</select> '
+                output += '</select>'
+            if embedded:
+                output += '</span> '
+            else:
+                output += ' '
     elif hasattr(field, 'datatype'):
         if field.datatype == 'boolean' and not is_hidden:
             label_text = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True, escape=(not embedded), do_terms=False)

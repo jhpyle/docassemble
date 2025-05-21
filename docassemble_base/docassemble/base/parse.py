@@ -4017,7 +4017,7 @@ class Question:
                             raise DASourceError("An ajax field must have an associated action." + self.idebug(data))
                         if 'choices' in field or 'code' in field:
                             raise DASourceError("An ajax field cannot contain a list of choices except through an action." + self.idebug(data))
-                    if field['input type'] in ('radio', 'combobox', 'pulldown') and not ('choices' in field or 'code' in field):
+                    if field['input type'] in ('radio', 'combobox', 'datalist', 'pulldown') and not ('choices' in field or 'code' in field):
                         raise DASourceError("A multiple choice field must refer to a list of choices." + self.idebug(data))
                 if len(field) == 1 and 'code' in field:
                     field_info['type'] = 'fields_code'
@@ -6288,7 +6288,7 @@ class Question:
                     only_empty_fields_exist = True
                 commands_to_run = []
                 for field in self.fields:
-                    if hasattr(field, 'inputtype') and field.inputtype == 'combobox':
+                    if hasattr(field, 'inputtype') and field.inputtype in ('combobox', 'datalist'):
                         only_empty_fields_exist = False
                     docassemble.base.functions.this_thread.misc['current_field'] = field.number
                     if hasattr(field, 'has_code') and field.has_code:
