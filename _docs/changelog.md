@@ -3,6 +3,22 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.7.6](https://github.com/jhpyle/docassemble/releases/tag/v1.7.6) - 2025-05-23
+
+
+### Added
+- The `datalist` input type.
+
+
+### Fixed
+- Issue with `error page javascript` not running under some
+  circumstances.
+- Issue where `depends on` would not be triggered by changes to
+  variables on a `list collect` screen unless the variable was the
+  variable being sought.
+- Using `.add_action()` on a `DADict` no longer requires that the
+  interview logic runs `.gather()` on the `DADict`.
+
 ## [1.7.5](https://github.com/jhpyle/docassemble/releases/tag/v1.7.5) - 2025-05-11
 
 

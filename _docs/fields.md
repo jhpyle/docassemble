@@ -449,7 +449,7 @@ to use. The possible values of [`input type`] are:
 * [`area`](#area)
 * [`dropdown`](#select)
 * [`radio`](#radio)
-* [`datalist`](#combobox)
+* [`datalist`](#datalist)
 * [`combobox`](#combobox)
 * [`ajax`](#ajax)
 * [`hidden`](#hidden)
@@ -1020,40 +1020,14 @@ You can also include `input type: dropdown`:
 {% include side-by-side.html demo="fields-choices-dropdown-input-type" %}
 
 The `input type: dropdown` does not actually have any effect, since
-`dropdown` is the default `input type`. (The other options for
-`input type` are [`radio`](#radio), [`datalist`](#combobox), and
-[`combobox`](#combobox).)
+`dropdown` is the default `input type`. (The other options for `input
+type` are [`radio`](#radio), [`combobox`](#combobox), and
+[`datalist`](#datalist).)
 
 The [`code`](#code) option, which uses [Python] code to generate the
 list of choices, is often used in combination with
 [`exclude`](#exclude), which excludes one or more items from the list
 of choices.
-
-## <a name="datalist"></a>Multiple-choice datalist
-
-`input type: datalist` shows a [`choices`](#choices) list as a
-[datalist] instead of as a dropdown [select] element (which is
-[the default](#select)).
-
-{% include side-by-side.html demo="fields-choices-datalist" %}
-
-The "datalist" selector is a text box with a pop-down list of
-suggestions that allows users to choose a selection from that list or
-enter a value of their own. This selector is good when users are more
-likely to enter values of their own, especially when compared to the
-[`combobox`] which sometimes conforms the user's input into a matching
-choice.
-
-This uses the browser's built-in "autocomplete" interface, which is
-more [accessible](/docs/accessibility.html) than the [`combobox`], but
-it still isn't perfect. The "datalist" selector doesn't display a list of
-choices by default. If the field is empty, then clicking on the field,
-or pressing the down arrow key while having the field selected, will
-cause the choices to show. Any input in the field filters the list of
-choices. There is also no way to show all of the choices without
-clearing all of the input from the field.
-
-it also causes any input to filter the displayed choices.
 
 ## <a name="combobox"></a>Multiple-choice combobox
 
@@ -1135,6 +1109,33 @@ fields:
     action: wordlist
     trigger at: 3
 {% endhighlight %}
+
+## <a name="datalist"></a>Multiple-choice datalist
+
+Similar to the [`combobox`], `input type: datalist` provides a text
+box into which the user can type any value they want, while drop-down
+selections appear when the user starts typing. The user is not
+required to enter a value from the list of `choices`.
+
+{% include side-by-side.html demo="fields-choices-datalist" %}
+
+Unlike the [`combobox`], there is no button in the UI that can be
+clicked to show the entire drop-down list; a selection of dropdown
+values is only shown when the user presses the down arrow key or
+starts typing. The browser filters the list of dropdown values based
+on what the user has typed. The dropdown list shows not only the list
+of `choices`, but also values that the browser suggests, based on
+values that the user has entered in the past.
+
+While the [`combobox`] is built from JavaScript, the `datalist` uses
+the HTML5 [datalist] element, so the functionality is entirely
+determined by how the user's browser implements [datalist]. Although
+[datalist] has been part of the HTML5 specification for many years,
+its implementation in browsers has been incomplete, and many
+developers have chosen not to use [datalist]. However, the [datalist]
+element could have superior [accessibility] because screen readers may
+have a built-in method for presenting the [datalist] choices to the
+user.
 
 ## <a name="radio"></a>Radio buttons
 
@@ -3927,3 +3928,4 @@ why this needs to be done manually as opposed to automatically:
 [`disable if`]: #disable if
 [`js disable if`]: #js disable if
 [`disabled`]: #disabled
+[accessibility]: {{ site.baseurl }}/docs/accessibility.html

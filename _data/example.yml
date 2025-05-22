@@ -4372,6 +4372,15 @@
     \   - pdf    \n    content: |\n      [BOLDCENTER] Summary of Benefits\n\n    \
     \  ${ client } is entitled to\n      benefits plan ${ benefits }.\nmandatory:\
     \ True"
+"document-docx-from-rtf-standalone":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: Here is your document.
+    attachment code: the_document
 "document-email-custom":
   "height": !!int |-
     630
@@ -6300,6 +6309,15 @@
     488
   "yaml": "question: |\n  What is your favorite color?\nfields:\n  - Color: favorite_color\n\
     \    input type: combobox\n    choices: \n      - Red\n      - Green\n      -\
+    \ Purple\n---\nmandatory: True\nquestion: All done\nsubquestion: |\n  Your favorite\
+    \ color is\n  ${ favorite_color }."
+"fields-choices-datalist":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": "question: |\n  What is your favorite color?\nfields:\n  - Color: favorite_color\n\
+    \    input type: datalist\n    choices: \n      - Red\n      - Green\n      -\
     \ Purple\n---\nmandatory: True\nquestion: All done\nsubquestion: |\n  Your favorite\
     \ color is\n  ${ favorite_color }."
 "fields-choices-dropdown":
