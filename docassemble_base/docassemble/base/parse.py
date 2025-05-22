@@ -520,7 +520,7 @@ class InterviewStatus:
         return all_fields, mappings, iterator_variable
 
     def is_empty_mc(self, field):
-        if hasattr(field, 'choicetype') and not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+        if hasattr(field, 'choicetype') and not (hasattr(field, 'inputtype') and field.inputtype in ('combobox', 'datalist')):
             if field.choicetype in ['compute', 'manual']:
                 if field.number not in self.selectcompute:
                     return False
@@ -3994,7 +3994,7 @@ class Question:
                     field['code'] = field['choices']['code']
                     del field['choices']
                 if 'datatype' in field:
-                    if field['datatype'] in ('radio', 'combobox', 'pulldown', 'ajax'):
+                    if field['datatype'] in ('radio', 'combobox', 'datalist', 'pulldown', 'ajax'):
                         field['input type'] = field['datatype']
                         field['datatype'] = 'text'
                     if field['datatype'] == 'mlarea':
@@ -6321,7 +6321,7 @@ class Question:
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + ".gathered = True")
                             else:
-                                if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                                if not (hasattr(field, 'inputtype') and field.inputtype in ('combobox', 'datalist')):
                                     commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif hasattr(field, 'choicetype') and field.choicetype == 'compute':
                         # multiple choice field in choices
@@ -6382,7 +6382,7 @@ class Question:
                                 ensure_object_exists(from_safeid(field.saveas), field.datatype, user_dict, commands=commands_to_run)
                                 commands_to_run.append(from_safeid(field.saveas) + '.gathered = True')
                             else:
-                                if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                                if not (hasattr(field, 'inputtype') and field.inputtype in ('combobox', 'datalist')):
                                     commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif hasattr(field, 'choicetype') and field.choicetype == 'manual':
                         if 'exclude' in field.selections:
@@ -6426,7 +6426,7 @@ class Question:
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         else:
-                            if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                            if not (hasattr(field, 'inputtype') and field.inputtype in ('combobox', 'datalist')):
                                 commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif hasattr(field, 'saveas') and self.question_type == "multiple_choice":
                         selectcompute[field.number] = []
@@ -6450,7 +6450,7 @@ class Question:
                         if len(selectcompute[field.number]) > 0:
                             only_empty_fields_exist = False
                         else:
-                            if not (hasattr(field, 'inputtype') and field.inputtype == 'combobox'):
+                            if not (hasattr(field, 'inputtype') and field.inputtype in ('combobox', 'datalist')):
                                 commands_to_run.append(from_safeid(field.saveas) + ' = None')
                     elif self.question_type == "multiple_choice":
                         selectcompute[field.number] = []

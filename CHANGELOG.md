@@ -2,6 +2,9 @@
 
 ## [1.7.6] - 2025-05-
 
+### Added
+- The `datalist` input type.
+
 ### Fixed
 - Issue with `error page javascript` not running under some
   circumstances.
