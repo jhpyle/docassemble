@@ -827,14 +827,14 @@ def ocr_finalize(*pargs, **kwargs):
                         return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError)
                     user_dict['__PDF_OCR_OBJECT'] = target
                     try:
-                        assert worker_controller.functions.illegal_variable_name(target.instanceName) is not True
+                        assert worker_controller.functions.invalid_variable_name(target.instanceName) is not True
                         for attribute in ('number', 'file_info', 'filename', 'has_specific_filename', 'ok', 'extension', 'mimetype', 'page_task', 'screen_task'):
                             if hasattr(target, attribute):
                                 exec(target.instanceName + '.' + attribute + ' = __PDF_OCR_OBJECT.' + attribute, user_dict)
                             else:
                                 exec(target.instanceName + '.delattr(' + repr(attribute) + ')', user_dict)
                         if dafilelist:
-                            assert worker_controller.functions.illegal_variable_name(dafilelist.instanceName) is not True
+                            assert worker_controller.functions.invalid_variable_name(dafilelist.instanceName) is not True
                             exec(dafilelist.instanceName + '.elements = [' + dafilelist.instanceName + '.elements[0]]', user_dict)
                     except BaseException as the_err:
                         worker_controller.release_lock(session_code, yaml_filename)

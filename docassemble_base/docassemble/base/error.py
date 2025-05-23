@@ -1,8 +1,9 @@
 import re
+import ast
+from keyword import iskeyword
 
-
-valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
+invalid_variable_name_chars = re.compile(r'[\x00-\x1f\x7f-\x9f\u200b-\u200d\u202a-\u202e\u2060\ufeff+\-*/&|^<>=!{}();,@#\\]')
 
 class DAIndexError(IndexError):
     pass
@@ -69,15 +70,34 @@ class DANameError(NameError):
     pass
 
 
-def invalid_variable_name(varname):
+def illegal_variable_name(varname: str) -> bool:
+    if invalid_variable_name_chars.search(varname):
+        return True
+    try:
+        tree = ast.parse(varname)
+    except SyntaxError:
+        return True
+    allowed_nodes = (ast.Module, ast.Expr, ast.Name, ast.Attribute, ast.Constant, ast.Subscript, ast.Slice, ast.Load)
+    for node in ast.walk(tree):
+        if not isinstance(node, allowed_nodes):
+            return True
+    return False
+
+
+def invalid_variable_name(varname: str) -> bool:
     if not isinstance(varname, str):
         return True
-    if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
+    if invalid_variable_name_chars.search(varname):
         return True
-    varname = re.sub(r'[\.\[].*', '', varname)
-    if not valid_variable_match.match(varname):
-        return True
+    varname_segments = varname.split(".")
+    for segment in varname_segments:
+        first, sep, _ = segment.partition("[")
+        if not first.isidentifier() or iskeyword(first):
+            return True
+        if sep:
+            return illegal_variable_name(segment)
     return False
+
 
 
 def intrinsic_name_of(var_name, the_user_dict):

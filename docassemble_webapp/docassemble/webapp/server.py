@@ -51,7 +51,7 @@ import docassemble.base.astparser
 from docassemble.webapp.api_key import encrypt_api_key
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError, DAInvalidFilename, DASourceError
 import docassemble.base.functions
-from docassemble.base.functions import get_default_timezone, ReturnValue, word
+from docassemble.base.functions import get_default_timezone, ReturnValue, word, invalid_variable_name
 import docassemble.base.DA
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.base.interview_cache
@@ -157,7 +157,6 @@ docassemble.base.util.set_knn_machine_learner(docassemble.webapp.machinelearning
 docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearning.MachineLearningEntry)
 docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machinelearning.RandomForestMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
-
 
 min_system_version = '1.2.0'
 re._MAXCACHE = 10000
@@ -7155,7 +7154,7 @@ def index(action_argument=None, refer=None):
     if not STRICT_MODE:
         if '_list_collect_list' in post_data:
             the_list = json.loads(myb64unquote(post_data['_list_collect_list']))
-            if not illegal_variable_name(the_list):
+            if not invalid_variable_name(the_list):
                 list_collect_list = the_list
                 exec(list_collect_list + '._allow_appending()', user_dict)
         if '_checkboxes' in post_data:
@@ -7382,7 +7381,7 @@ def index(action_argument=None, refer=None):
             file_field = from_safeid(field_info['signature_saveas'])
         else:
             file_field = from_safeid(post_data['_save_as'])
-        if illegal_variable_name(file_field):
+        if invalid_variable_name(file_field):
             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
         else:
             if not already_assembled:
@@ -7466,7 +7465,7 @@ def index(action_argument=None, refer=None):
             if STRICT_MODE and key not in authorized_fields:
                 raise DAError("The variable " + repr(key) + " was not in the allowed fields, which were " + repr(authorized_fields))
             objname = re.sub(r'\.gathered$', '', key)
-            if illegal_variable_name(objname):
+            if invalid_variable_name(objname):
                 error_messages.append(("error", "Error: Invalid key " + objname))
                 break
             try:
@@ -7531,7 +7530,7 @@ def index(action_argument=None, refer=None):
             real_key = safeid(whole_key)
             if STRICT_MODE and (pre_bracket_key not in authorized_fields or pre_bracket_key + '.gathered' not in authorized_fields) and (key not in authorized_fields):
                 raise DAError("The variables " + repr(pre_bracket_key) + " and " + repr(key) + " were not in the allowed fields, which were " + repr(authorized_fields))
-            if illegal_variable_name(whole_key) or illegal_variable_name(core_key_name) or illegal_variable_name(key):
+            if invalid_variable_name(whole_key) or invalid_variable_name(core_key_name) or invalid_variable_name(key):
                 error_messages.append(("error", "Error: Invalid key " + whole_key))
                 break
             if whole_key in user_dict:
@@ -7598,7 +7597,7 @@ def index(action_argument=None, refer=None):
                 break
             if STRICT_MODE and key not in authorized_fields:
                 raise DAError("The variable " + repr(key) + " was not in the allowed fields, which were " + repr(authorized_fields))
-        if illegal_variable_name(key):
+        if invalid_variable_name(key):
             error_messages.append(("error", "Error: Invalid key " + key))
             break
         do_append = False
@@ -7971,10 +7970,10 @@ def index(action_argument=None, refer=None):
                 data = 'None'
         if do_append and not set_to_empty:
             key_to_use = from_safeid(real_key)
-            if illegal_variable_name(data):
+            if invalid_variable_name(data):
                 logmessage("Received illegal variable name " + str(data))
                 continue
-            if illegal_variable_name(key_to_use):
+            if invalid_variable_name(key_to_use):
                 logmessage("Received illegal variable name " + str(key_to_use))
                 continue
             if do_opposite:
@@ -8025,7 +8024,7 @@ def index(action_argument=None, refer=None):
             if STRICT_MODE and key not in authorized_fields:
                 raise DAError("The variable " + repr(key) + " was not in the allowed fields, which were " + repr(authorized_fields))
             process_set_variable(key + '.gathered', user_dict, vars_set, old_values)
-            if illegal_variable_name(key):
+            if invalid_variable_name(key):
                 logmessage("Received illegal variable name " + str(key))
                 continue
             if empty_fields[orig_key] in ('object_multiselect', 'object_checkboxes'):
@@ -8046,7 +8045,7 @@ def index(action_argument=None, refer=None):
                 tableName = myb64unquote(tableName)
                 # if STRICT_MODE and tableName not in authorized_fields:
                 #     raise DAError("The variable " + repr(tableName) + " was not in the allowed fields, which were " + repr(authorized_fields))
-                if illegal_variable_name(tableName):
+                if invalid_variable_name(tableName):
                     error_messages.append(("error", "Error: Invalid character in table reorder: " + str(tableName)))
                     continue
                 try:
@@ -8081,7 +8080,7 @@ def index(action_argument=None, refer=None):
                     break
                 if STRICT_MODE and file_field not in authorized_fields:
                     raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
-                if illegal_variable_name(file_field):
+                if invalid_variable_name(file_field):
                     has_invalid_fields = True
                     error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                     break
@@ -8149,7 +8148,7 @@ def index(action_argument=None, refer=None):
                                 break
                             if STRICT_MODE and file_field not in authorized_fields:
                                 raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
-                            if illegal_variable_name(file_field):
+                            if invalid_variable_name(file_field):
                                 error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                                 break
                             file_field_tr = sub_indices(file_field, user_dict)
@@ -8199,7 +8198,7 @@ def index(action_argument=None, refer=None):
                             break
                         if STRICT_MODE and file_field not in authorized_fields:
                             raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
-                        if illegal_variable_name(file_field):
+                        if invalid_variable_name(file_field):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                             break
                         the_string = file_field + " = None"
@@ -8234,7 +8233,7 @@ def index(action_argument=None, refer=None):
                     break
                 if STRICT_MODE and file_field not in authorized_fields:
                     raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
-                if illegal_variable_name(file_field):
+                if invalid_variable_name(file_field):
                     has_invalid_fields = True
                     error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                     break
@@ -8290,7 +8289,7 @@ def index(action_argument=None, refer=None):
                                 break
                             if STRICT_MODE and file_field not in authorized_fields:
                                 raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
-                            if illegal_variable_name(file_field):
+                            if invalid_variable_name(file_field):
                                 error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                                 break
                             file_field_tr = sub_indices(file_field, user_dict)
@@ -8338,7 +8337,7 @@ def index(action_argument=None, refer=None):
                             continue
                         if STRICT_MODE and file_field not in authorized_fields:
                             raise DAError("The variable " + repr(file_field) + " was not in the allowed fields, which were " + repr(authorized_fields))
-                        if illegal_variable_name(file_field):
+                        if invalid_variable_name(file_field):
                             error_messages.append(("error", "Error: Invalid character in file_field: " + str(file_field)))
                             break
                         the_string = file_field + " = None"
@@ -27866,7 +27865,7 @@ def transform_json_variables(obj):
     if isinstance(obj, (bool, int, float)):
         return obj
     if isinstance(obj, dict):
-        if '_class' in obj and obj['_class'] == 'type' and 'name' in obj and isinstance(obj['name'], str) and obj['name'].startswith('docassemble.') and not illegal_variable_name(obj['name']):
+        if '_class' in obj and obj['_class'] == 'type' and 'name' in obj and isinstance(obj['name'], str) and obj['name'].startswith('docassemble.') and not invalid_variable_name(obj['name']):
             if '.' in obj['name']:
                 the_module = re.sub(r'\.[^\.]+$', '', obj['name'])
             else:
@@ -27881,7 +27880,7 @@ def transform_json_variables(obj):
             except BaseException as err:
                 logmessage("transform_json_variables: " + err.__class__.__name__ + ": " + str(err))
                 return None
-        if '_class' in obj and isinstance(obj['_class'], str) and 'instanceName' in obj and obj['_class'].startswith('docassemble.') and not illegal_variable_name(obj['_class']) and isinstance(obj['instanceName'], str):
+        if '_class' in obj and isinstance(obj['_class'], str) and 'instanceName' in obj and obj['_class'].startswith('docassemble.') and not invalid_variable_name(obj['_class']) and isinstance(obj['instanceName'], str):
             the_module = re.sub(r'\.[^\.]+$', '', obj['_class'])
             try:
                 importlib.import_module(the_module)
@@ -28000,7 +27999,7 @@ def api_session():
                     process_file(saved_file, temp_file.name, mimetype, extension)
                     files_to_process.append((filename, file_number, mimetype, extension))
             file_field = file_variables[filekey]
-            if illegal_variable_name(file_field):
+            if invalid_variable_name(file_field):
                 return jsonify_with_status("Malformed file variable.", 400)
             if len(files_to_process) > 0:
                 elements = []
@@ -28222,7 +28221,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             raise DAException("Error processing session: " + err.__class__.__name__ + ": " + str(err))
     try:
         for key, val in variables.items():
-            if illegal_variable_name(key):
+            if invalid_variable_name(key):
                 raise DAException("Illegal value as variable name.")
             if isinstance(val, (str, bool, int, float, NoneType)):
                 exec(str(key) + ' = ' + repr(val), user_dict)
@@ -28244,7 +28243,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if literal_variables is not None:
         exec('import docassemble.base.util', user_dict)
         for key, val in literal_variables.items():
-            if illegal_variable_name(key):
+            if invalid_variable_name(key):
                 if use_lock:
                     release_lock(session_id, yaml_filename)
                 restore_session(sbackup)
@@ -28279,7 +28278,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     if del_variables is not None:
         try:
             for key in del_variables:
-                if illegal_variable_name(key):
+                if invalid_variable_name(key):
                     raise DAException("Illegal value as variable name.")
                 exec('del ' + str(key), user_dict)
         except BaseException as the_err:
@@ -28295,7 +28294,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
     #     logmessage("No event stack.")
     if event_list is not None and len(event_list) and 'event_stack' in user_dict['_internal'] and session_uid in user_dict['_internal']['event_stack'] and len(user_dict['_internal']['event_stack'][session_uid]):
         for event_name in event_list:
-            if illegal_variable_name(event_name):
+            if invalid_variable_name(event_name):
                 raise DAException("Illegal value as event name.")
             if user_dict['_internal']['event_stack'][session_uid][0]['action'] == event_name:
                 user_dict['_internal']['event_stack'][session_uid].pop(0)
@@ -31285,18 +31284,6 @@ def get_short_code(**pargs):
     if new_record is None:
         raise SystemError("Failed to generate unique short code")
     return new_short
-
-
-def illegal_variable_name(var):
-    if re.search(r'[\n\r]', var):
-        return True
-    try:
-        t = ast.parse(var)
-    except:
-        return True
-    detector = docassemble.base.astparser.detectIllegal()
-    detector.visit(t)
-    return detector.illegal
 
 
 def illegal_sessions_query(expr):

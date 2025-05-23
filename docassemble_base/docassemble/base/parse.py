@@ -52,7 +52,7 @@ import docassemble.base.file_docx
 from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError, DAException, DANameError, DASourceError
 import docassemble.base.functions
 import docassemble.base.util
-from docassemble.base.functions import pickleable_objects, word, get_language, RawValue, get_config
+from docassemble.base.functions import pickleable_objects, word, get_language, RawValue, get_config, invalid_variable_name
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc
 from docassemble.base.mako.template import Template as MakoTemplate
@@ -7989,18 +7989,6 @@ def restore_backup_vars(the_user_dict, backups):
         the_user_dict[var] = val
 
 
-def illegal_variable_name(var):
-    if re.search(r'[\n\r]', var):
-        return True
-    try:
-        t = ast.parse(var)
-    except:
-        return True
-    detector = docassemble.base.astparser.detectIllegal()
-    detector.visit(t)
-    return detector.illegal
-
-
 def double_to_single(text):
     if text.startswith('[') and text.endswith(']'):
         try:
@@ -8821,13 +8809,13 @@ class Interview:
                     if interview_status.current_info['action'] in ('_da_list_remove', '_da_list_add', '_da_list_complete'):
                         for the_key in ('list', 'item', 'items'):
                             if the_key in interview_status.current_info['arguments']:
-                                if illegal_variable_name(interview_status.current_info['arguments'][the_key]):
+                                if invalid_variable_name(interview_status.current_info['arguments'][the_key]):
                                     raise DASourceError("Invalid name " + interview_status.current_info['arguments'][the_key])
                                 interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
                     if interview_status.current_info['action'] in ('_da_dict_remove', '_da_dict_add', '_da_dict_complete'):
                         for the_key in ('dict', 'item', 'items'):
                             if the_key in interview_status.current_info['arguments']:
-                                if illegal_variable_name(interview_status.current_info['arguments'][the_key]):
+                                if invalid_variable_name(interview_status.current_info['arguments'][the_key]):
                                     raise DASourceError("Invalid name " + interview_status.current_info['arguments'][the_key])
                                 interview_status.current_info['action_' + the_key] = eval(interview_status.current_info['arguments'][the_key], user_dict)
                 # else:
@@ -10363,14 +10351,6 @@ def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
         for command in commands:
             # logmessage("Doing " + command)
             exec(command, the_user_dict)
-
-
-def invalid_variable_name(varname):
-    if not isinstance(varname, str):
-        return True
-    if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
-        return True
-    return illegal_variable_name(varname)
 
 
 def exec_with_trap(the_question, the_dict, old_variable=None):
