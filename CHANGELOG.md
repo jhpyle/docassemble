@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.7.6] - 2025-05-
+## [1.7.6] - 2025-05-23
 
 ### Added
 - The `datalist` input type.
@@ -11,6 +11,8 @@
 - Issue where `depends on` would not be triggered by changes to
   variables on a `list collect` screen unless the variable was the
   variable being sought.
+- Using `.add_action()` on a `DADict` no longer requires that the
+  interview logic runs `.gather()` on the `DADict`.
 
 ## [1.7.5] - 2025-05-11
 

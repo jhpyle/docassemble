@@ -4585,7 +4585,8 @@ def process_action():
     if the_action == '_da_dict_complete' and 'action_dict' in this_thread.current_info:
         # logmessage("_da_dict_complete")
         the_dict = this_thread.current_info['action_dict']
-        the_dict._validate(the_dict.object_type, the_dict.complete_attribute)
+        the_dict.gathered_and_complete()
+        # the_dict._validate(the_dict.object_type, the_dict.complete_attribute)
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack'] and len(this_thread.internal['event_stack'][unique_id]) and this_thread.internal['event_stack'][unique_id][0]['action'] == the_action and this_thread.internal['event_stack'][unique_id][0]['arguments']['dict'] == the_dict.instanceName:
             this_thread.internal['event_stack'][unique_id].pop(0)
@@ -4656,12 +4657,10 @@ def process_action():
             the_dict.reset_gathered()
             if the_dict.auto_gather:
                 if the_dict.ask_number:
-                    if hasattr(the_dict, 'target_number'):
-                        the_dict.target_number = int(the_dict.target_number) + 1
+                    the_dict.target_number = len(the_dict.elements) + 1
                 else:
                     the_dict.there_is_another = False
-                    if len(the_dict.elements) > 0:
-                        the_dict.there_is_one_other = True
+                    the_dict.there_is_one_other = True
         if the_dict.auto_gather and not the_dict.ask_number:
             the_dict.there_are_any = True
         unique_id = this_thread.current_info['user']['session_uid']

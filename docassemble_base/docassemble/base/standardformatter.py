@@ -3232,7 +3232,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                     first_option += '<option value=""></option>'
                 else:
                     first_option += '<option value="">' + option_escape(str(status.hints[field.number].replace('\n', ' '))) + '</option>'
-            elif hasattr(field, 'inputtype') and field.inputtype == 'datalist' and not embedded:
+            elif hasattr(field, 'inputtype') and field.inputtype == 'datalist':
                 pass
             else:
                 if placeholdertext == '':

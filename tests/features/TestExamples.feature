@@ -10333,3 +10333,10 @@ Feature: Example interviews
 
   # Scenario: Test the interview "testdatabase2"
   #   Given I start the interview "docassemble.demo:data/questions/examples/testdatabase2.yml"
+
+  Scenario: Test the interview "datalist" in fields with selection
+    Given I start the interview "docassemble.base:data/questions/examples/fields-choices-datalist.yml"
+    Then I should see the phrase "What is your favorite color?"
+    And I set "Color" to "Red"
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite color is Red."
