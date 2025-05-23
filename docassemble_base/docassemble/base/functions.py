@@ -12,6 +12,7 @@ import ast
 import datetime
 import threading
 import random
+from keyword import iskeyword
 from collections.abc import Iterable
 from unicodedata import normalize
 from enum import Enum
@@ -71,7 +72,7 @@ contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 invalid_variable_name_chars = re.compile(r'[\x00-\x1f\x7f-\x9f\u200b-\u200d\u202a-\u202e\u2060\ufeff+\-*/&|^<>=!{}();,@#\\]')
 
-__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'current_context', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'invite_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot', 'update_terms', 'set_variables', 'language_name', 'run_action_in_session']
+__all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'current_context', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'invite_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot', 'update_terms', 'set_variables', 'language_name', 'run_action_in_session', 'invalid_variable_name',]
 
 # debug = False
 # default_dialect = 'us'
@@ -4134,14 +4135,14 @@ def force_ask(*pargs, **kwargs):
             this_thread.internal['event_stack'][unique_id] = []
     if kwargs.get('persistent', True):
         for item in the_pargs:
-            if isinstance(item, str) and illegal_variable_name(item):
+            if isinstance(item, str) and invalid_variable_name(item):
                 raise DAError("Illegal variable name")
         raise ForcedNameError(*the_pargs, user_dict=get_user_dict(), evaluate=kwargs.get('evaluate', False))
     force_ask_nameerror(the_pargs[0])
 
 
 def force_ask_nameerror(variable_name, priority=False):
-    if illegal_variable_name(variable_name):
+    if invalid_variable_name(variable_name):
         raise DAError("Illegal variable name")
     raise DANameError("name '" + str(variable_name) + "' is not defined")
 
@@ -4174,7 +4175,7 @@ def force_gather(*pargs, forget_prior=False, evaluate=False):
             this_thread.internal['gather'].append({'var': variable_name, 'context': the_context})
         last_variable_name = variable_name
     if last_variable_name is not None:
-        if illegal_variable_name(last_variable_name):
+        if invalid_variable_name(last_variable_name):
             raise DAError("Illegal variable name")
         raise ForcedNameError(last_variable_name, gathering=True, user_dict=the_user_dict)
 
@@ -4568,7 +4569,7 @@ def process_action():
     if the_action in ('_da_list_ensure_complete', '_da_dict_ensure_complete') and 'group' in this_thread.current_info['arguments']:
         # logmessage("the_action is " + the_action)
         group_name = this_thread.current_info['arguments']['group']
-        if illegal_variable_name(group_name):
+        if invalid_variable_name(group_name):
             raise DAError("Illegal variable name")
         value(group_name).gathered_and_complete()
         unique_id = this_thread.current_info['user']['session_uid']
@@ -4888,7 +4889,7 @@ def dispatch(var):
     """Shows a menu screen."""
     if not isinstance(var, str):
         raise DAError("dispatch() must be given a string")
-    if illegal_variable_name(var):
+    if invalid_variable_name(var):
         raise DAError("Illegal variable name")
     while value(var) != 'None':
         value(value(var))
@@ -5149,6 +5150,21 @@ def illegal_variable_name(varname: str) -> bool:
     for node in ast.walk(tree):
         if not isinstance(node, allowed_nodes):
             return True
+    return False
+
+
+def invalid_variable_name(varname: str) -> bool:
+    if not isinstance(varname, str):
+        return True
+    if invalid_variable_name_chars.search(varname):
+        return True
+    varname_segments = varname.split(".")
+    for segment in varname_segments:
+        first, sep, _ = segment.partition("[")
+        if not first.isidentifier() or iskeyword(first):
+            return True
+        if sep:
+            return illegal_variable_name(segment)
     return False
 
 
