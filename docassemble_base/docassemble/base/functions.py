@@ -69,6 +69,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
+invalid_variable_name_chars = re.compile(r'[\x00-\x1f\x7f-\x9f\u200b-\u200d\u202a-\u202e\u2060\ufeff+\-*/&|^<>=!{}();,@#\\]')
 
 __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'current_context', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'invite_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot', 'update_terms', 'set_variables', 'language_name', 'run_action_in_session']
 
@@ -5137,16 +5138,18 @@ def showifdef(var: str, alternative='', prior=False):
     return _defined_internal(var, DefCaller.SHOWIFDEF, alt=alternative, prior=prior)
 
 
-def illegal_variable_name(var):
-    if re.search(r'[\n\r]', var):
+def illegal_variable_name(varname: str) -> bool:
+    if invalid_variable_name_chars.search(varname):
         return True
     try:
-        t = ast.parse(var)
-    except:
+        tree = ast.parse(varname)
+    except SyntaxError:
         return True
-    detector = docassemble.base.astparser.detectIllegal()
-    detector.visit(t)
-    return detector.illegal
+    allowed_nodes = (ast.Module, ast.Expr, ast.Name, ast.Attribute, ast.Constant, ast.Subscript, ast.Slice, ast.Load)
+    for node in ast.walk(tree):
+        if not isinstance(node, allowed_nodes):
+            return True
+    return False
 
 
 def single_paragraph(text):

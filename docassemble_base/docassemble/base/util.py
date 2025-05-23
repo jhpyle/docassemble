@@ -2,6 +2,7 @@ from collections import OrderedDict, abc
 from decimal import Decimal
 from functools import reduce
 from itertools import chain
+import ast
 import codecs
 import copy
 import datetime
@@ -24,6 +25,7 @@ import zipfile
 import base64
 import requests
 import yaml
+from keyword import iskeyword
 from requests_oauthlib import OAuth2Session
 from requests.auth import HTTPDigestAuth, HTTPBasicAuth, AuthBase
 from requests.exceptions import RequestException
@@ -73,9 +75,9 @@ from docassemble.webapp.da_flask_mail import Message
 capitalize_func = capitalize
 NoneType = type(None)
 
-valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 match_inside_and_outside_brackets = re.compile(r'(.*)\[([^\]]+)\]$')
 is_number = re.compile(r'^[0-9]+$')
+invalid_variable_name_chars = re.compile(r'[\x00-\x1f\x7f-\x9f\u200b-\u200d\u202a-\u202e\u2060\ufeff+\-*/&|^<>=!{}();,@#\\]')
 
 QPDF_PATH = 'qpdf'
 
@@ -10194,15 +10196,34 @@ def validation_error(the_message, field=None):
     raise DAValidationError(the_message, field=field)
 
 
-def invalid_variable_name(varname):
+def illegal_variable_name(varname: str) -> bool:
+    if invalid_variable_name_chars.search(varname):
+        return True
+    try:
+        tree = ast.parse(varname)
+    except SyntaxError:
+        return True
+    allowed_nodes = (ast.Module, ast.Expr, ast.Name, ast.Attribute, ast.Constant, ast.Subscript, ast.Slice, ast.Load)
+    for node in ast.walk(tree):
+        if not isinstance(node, allowed_nodes):
+            return True
+    return False
+
+
+def invalid_variable_name(varname: str) -> bool:
     if not isinstance(varname, str):
         return True
-    if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
+    if invalid_variable_name_chars.search(varname):
         return True
-    varname = re.sub(r'[\.\[].*', '', varname)
-    if not valid_variable_match.match(varname):
-        return True
+    varname_segments = varname.split(".")
+    for segment in varname_segments:
+        first, sep, _ = segment.partition("[")
+        if not first.isidentifier() or iskeyword(first):
+            return True
+        if sep:
+            return illegal_variable_name(segment)
     return False
+
 
 contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
 

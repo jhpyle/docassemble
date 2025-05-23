@@ -158,6 +158,7 @@ docassemble.base.util.set_machine_learning_entry(docassemble.webapp.machinelearn
 docassemble.base.util.set_random_forest_machine_learner(docassemble.webapp.machinelearning.RandomForestMachineLearner)
 docassemble.base.util.set_svm_machine_learner(docassemble.webapp.machinelearning.SVMMachineLearner)
 
+invalid_variable_name_chars = re.compile(r'[\x00-\x1f\x7f-\x9f\u200b-\u200d\u202a-\u202e\u2060\ufeff+\-*/&|^<>=!{}();,@#\\]')
 
 min_system_version = '1.2.0'
 re._MAXCACHE = 10000
@@ -31287,16 +31288,18 @@ def get_short_code(**pargs):
     return new_short
 
 
-def illegal_variable_name(var):
-    if re.search(r'[\n\r]', var):
+def illegal_variable_name(varname: str) -> bool:
+    if invalid_variable_name_chars.search(varname):
         return True
     try:
-        t = ast.parse(var)
-    except:
+        tree = ast.parse(varname)
+    except SyntaxError:
         return True
-    detector = docassemble.base.astparser.detectIllegal()
-    detector.visit(t)
-    return detector.illegal
+    allowed_nodes = (ast.Module, ast.Expr, ast.Name, ast.Attribute, ast.Constant, ast.Subscript, ast.Slice, ast.Load)
+    for node in ast.walk(tree):
+        if not isinstance(node, allowed_nodes):
+            return True
+    return False
 
 
 def illegal_sessions_query(expr):

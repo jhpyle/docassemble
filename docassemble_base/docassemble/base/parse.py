@@ -17,6 +17,7 @@ import tempfile
 import json
 import platform
 import textwrap
+from keyword import iskeyword
 from urllib.request import urlretrieve
 from io import StringIO
 from collections import abc, OrderedDict, namedtuple
@@ -95,6 +96,7 @@ match_inside_brackets = re.compile(r'\[(.+?)\]')
 match_brackets = re.compile(r'(\[.+?\])')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
 complications = re.compile(r'[\.\[]')
+invalid_variable_name_chars = re.compile(r'[\x00-\x1f\x7f-\x9f\u200b-\u200d\u202a-\u202e\u2060\ufeff+\-*/&|^<>=!{}();,@#\\]')
 list_of_indices = ['i', 'j', 'k', 'l', 'm', 'n']
 extension_of_doc_format = {'pdf': 'pdf', 'docx': 'docx', 'rtf': 'rtf', 'rtf to docx': 'docx', 'tex': 'tex', 'html': 'html', 'md': 'md', 'raw': 'raw'}
 DO_NOT_TRANSLATE = """<%doc>
@@ -7989,16 +7991,18 @@ def restore_backup_vars(the_user_dict, backups):
         the_user_dict[var] = val
 
 
-def illegal_variable_name(var):
-    if re.search(r'[\n\r]', var):
+def illegal_variable_name(varname: str) -> bool:
+    if invalid_variable_name_chars.search(varname):
         return True
     try:
-        t = ast.parse(var)
-    except:
+        tree = ast.parse(varname)
+    except SyntaxError:
         return True
-    detector = docassemble.base.astparser.detectIllegal()
-    detector.visit(t)
-    return detector.illegal
+    allowed_nodes = (ast.Module, ast.Expr, ast.Name, ast.Attribute, ast.Constant, ast.Subscript, ast.Slice, ast.Load)
+    for node in ast.walk(tree):
+        if not isinstance(node, allowed_nodes):
+            return True
+    return False
 
 
 def double_to_single(text):
@@ -10365,12 +10369,19 @@ def ensure_object_exists(saveas, datatype, the_user_dict, commands=None):
             exec(command, the_user_dict)
 
 
-def invalid_variable_name(varname):
+def invalid_variable_name(varname: str) -> bool:
     if not isinstance(varname, str):
         return True
-    if re.search(r'[\n\r\(\)\{\}\*\^\#]', varname):
+    if invalid_variable_name_chars.search(varname):
         return True
-    return illegal_variable_name(varname)
+    varname_segments = varname.split(".")
+    for segment in varname_segments:
+        first, sep, _ = segment.partition("[")
+        if not first.isidentifier() or iskeyword(first):
+            return True
+        if sep:
+            return illegal_variable_name(segment)
+    return False
 
 
 def exec_with_trap(the_question, the_dict, old_variable=None):
