@@ -3901,6 +3901,18 @@
       people.gather()
       people.table
       final_screen
+"describe-file-types":
+  "height": !!int |-
+    630
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: Here is your document.
+    attachments:
+      - name: Praecipe to discontinue
+        docx template file: praecipe_discontinue.docx
+    describe file types: True
+    mandatory: True
 "device":
   "height": !!int |-
     106
@@ -6293,15 +6305,6 @@
           - "${ 'Apples' }": apple
           - Oranges: orange
           - Pears: pear
-"fields-choices-datalist":
-  "height": !!int |-
-    176
-  "width": !!int |-
-    488
-  "yaml": "question: |\n  What is your favorite color?\nfields:\n  - Color: favorite_color\n\
-    \    input type: datalist\n    choices: \n      - Red\n      - Green\n      -\
-    \ Purple\n---\nmandatory: True\nquestion: All done\nsubquestion: |\n  Your favorite\
-    \ color is\n  ${ favorite_color }."
 "fields-choices-combobox":
   "height": !!int |-
     176

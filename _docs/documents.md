@@ -2113,7 +2113,7 @@ filename`:
 
 {% include side-by-side.html demo="allow-downloading-true-zip-filename" %}
 
-## <a name="include download tab"></a><a name="include attachment notice"></a><a name="manual attachment list"></a>Omitting parts of the display
+## <a name="include download tab"></a><a name="include attachment notice"></a><a name="manual attachment list"></a><a name="describe file types"></a>Omitting parts of the display
 
 By default, when an attachment is available, a message appears saying
 "The following document has been created for you."  To omit this, set
@@ -2124,6 +2124,11 @@ Sometimes there is a "Preview" tab or a "Markdown" tab.  To omit this
 tab bar, set `include download tab` to `False`.
 
 {% include side-by-side.html demo="attachment-notice" %}
+
+To omit the descriptions of what each file type means, set `describe
+file types` to `False`.
+
+{% include side-by-side.html demo="describe-file-types" %}
 
 To omit all of the attachment display except for the "Email these
 documents" and/or the "Download all documents as a ZIP file" boxes,

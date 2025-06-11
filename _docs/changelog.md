@@ -3,6 +3,17 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.7.7](https://github.com/jhpyle/docassemble/releases/tag/v1.7.7) - 2025-06-10
+
+
+### Added
+- The `describe file types` attachment modifier.
+
+
+### Fixed
+- Issue with retrieving the JSON representation of `question` that
+  uses `list collect` and `uncheck others`.
+
 ## [1.7.6](https://github.com/jhpyle/docassemble/releases/tag/v1.7.6) - 2025-05-23
 
 
