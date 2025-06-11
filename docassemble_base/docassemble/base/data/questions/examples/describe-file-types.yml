@@ -1,0 +1,10 @@
+metadata:
+  title: Description of file types
+  documentation: "https://docassemble.org/docs/documents.html#describe file types"
+---
+question: Here is your document.
+attachments:
+  - name: Praecipe to discontinue
+    docx template file: praecipe_discontinue.docx
+describe file types: True
+mandatory: True

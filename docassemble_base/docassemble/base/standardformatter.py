@@ -68,6 +68,12 @@ DEFAULT_LABELAUTY_NOTA_COLOR = daconfig['button colors'].get('labelauty nota', D
 DEFAULT_LABELAUTY_AOTA_COLOR = daconfig['button colors'].get('labelauty aota', DEFAULT_LABELAUTY_COLOR)
 
 
+def paren_phrase(status, phrase):
+    if status.extras.get('describe_file_types', True) and phrase != "":
+        return " (" + phrase + ")"
+    return ""
+
+
 def process_help(help_section, status, full_page=True):
     output = ''
     if full_page:
@@ -2346,21 +2352,21 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     output += '                <div class="tab-pane show active da-attachment-tab-download" id="dadownload' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dadownload-tab' + str(attachment_index) + '">\n'
                 else:
                     output += '                <div>\n'
-                if multiple_formats:
+                if status.extras.get('describe_file_types', True) and multiple_formats:
                     output += '                  <p class="da-attachment-tab-download-intro">' + word('The document is available in the following formats:') + '</p>\n'
                 if attachment.get('raw', False):
-                    output += '                  <p class="da-attachment-tab-download-raw"><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fa-solid fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a> (' + word('for downloading') + ')</p>\n'
+                    output += '                  <p class="da-attachment-tab-download-raw"><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fa-solid fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a>' + paren_phrase(status, word('for downloading')) + '</p>\n'
                 else:
                     if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-pdf"><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fa-solid fa-print fa-fw"></i> PDF</a> (' + word('for printing; requires Adobe Reader or similar application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-pdf"><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fa-solid fa-print fa-fw"></i> PDF</a>' + paren_phrase(status, word('for printing; requires Adobe Reader or similar application')) + '</p>\n'
                     if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-rtf"><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> RTF</a> (' + word('for editing; requires Microsoft Word, Wordpad, or similar application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-rtf"><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> RTF</a>' + paren_phrase(status, word('for editing; requires Microsoft Word, Wordpad, or similar application')) + '</p>\n'
                     if 'docx' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a>' + paren_phrase(status, word('for editing; requires Microsoft Word or compatible application')) + '</p>\n'
                     if 'rtf to docx' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a> (' + word('for editing; requires Microsoft Word or compatible application') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a>' + paren_phrase(status, word('for editing; requires Microsoft Word or compatible application')) + '</p>\n'
                     if 'tex' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-tex"><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> LaTeX</a> (' + word('for debugging PDF output') + ')</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-tex"><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> LaTeX</a>' + paren_phrase(status, word('for debugging PDF output')) + '</p>\n'
                     if 'md' in attachment['valid_formats']:
                         output += '                  <p class="da-attachment-tab-download-md"><a href="' + server.url_finder(attachment['file']['md'], display_filename=attachment['filename'] + '.md') + '" target="_blank"><i class="fa-brands fa-markdown fa-fw"></i> Markdown</a></p>\n'
                     for output_format in extra_formats:
