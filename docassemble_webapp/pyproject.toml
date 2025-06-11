@@ -3,7 +3,7 @@ requires = ["setuptools>=78.1.1"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "docassemble.webapp"
-version = '1.7.6'
+version = '1.7.7'
 description = "The web application components of the docassemble system."
 readme = "README.md"
 authors = [
@@ -13,8 +13,8 @@ license = "MIT"
 license-files = ["LICENSE.txt"]
 requires-python = ">= 3.9"
 dependencies = [
-  'docassemble.base==1.7.6',
-  'docassemble.demo==1.7.6',
+  'docassemble.base==1.7.7',
+  'docassemble.demo==1.7.7',
   "3to2==1.1.1",
   "acme==3.1.0",
   "aiohappyeyeballs==2.6.1",

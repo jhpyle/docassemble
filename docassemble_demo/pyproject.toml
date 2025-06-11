@@ -3,7 +3,7 @@ requires = ["setuptools>=78.1.1"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "docassemble.demo"
-version = '1.7.6'
+version = '1.7.7'
 description = "A demonstration package for docassemble."
 readme = "README.md"
 authors = [
@@ -13,7 +13,7 @@ license = "MIT"
 license-files = ["LICENSE.txt"]
 requires-python = ">= 3.9"
 dependencies = [
-  'docassemble.base==1.7.6',
+  'docassemble.base==1.7.7',
   "googledrivedownloader",
   "ics",
   "matplotlib"
