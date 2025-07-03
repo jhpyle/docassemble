@@ -475,7 +475,6 @@ pip3 install --upgrade \
   six \
   setuptools
 pip3 install --upgrade \
-  ./docassemble/docassemble \
   ./docassemble/docassemble_base \
   ./docassemble/docassemble_demo \
   ./docassemble/docassemble_webapp
@@ -1590,7 +1589,6 @@ git pull
 sudo su www-data
 source /usr/share/docassemble/local3.12/bin/activate
 pip install --upgrade \
-./docassemble \
 ./docassemble_base \
 ./docassemble_demo \
 ./docassemble_webapp
@@ -1608,7 +1606,6 @@ following first:
 {% highlight bash %}
 sudo su www-data
 source /usr/share/docassemble/local3.12/bin/activate
-pip uninstall docassemble
 pip uninstall docassemble.base
 pip uninstall docassemble.demo
 pip uninstall docassemble.webapp
