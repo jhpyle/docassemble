@@ -11,6 +11,8 @@ db:
   host: localhost
   port: Null
   table_prefix: Null
+google:
+  use places api new: True
 oauth:
   facebook:
     enable: False
@@ -86,3 +88,5 @@ new markdown to docx: True
 new template markdown behavior: True
 enable unoconv: True
 allow configuration editing: True
+javascript defer: True
+use nginx to serve files: True

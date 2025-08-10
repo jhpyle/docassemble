@@ -3,7 +3,6 @@
 "Access shared repositories": Null
 "Account did not exist.": Null
 "Account disabled": Null
-"A chat message has arrived.": Null
 "A confirmation email has been sent to %(email)s with instructions to complete your registration.": Null
 "Action": Null
 "Actions": Null
@@ -84,6 +83,7 @@
 "Available interviews": Null
 "Available Interviews": Null
 "Available": Null
+"A valid SPDX identifier must be provided, e.g., MIT, GPL-3.0, Apache-2.0.": Null
 "Azerbaijan": Null
 "back": Null
 "Back": Null
@@ -494,6 +494,7 @@
 "Invite!": Null
 "Invite": Null
 "Invite User": Null
+"IP Address": Null
 "Iran, Islamic Republic of": Null
 "Iraq": Null
 "Ireland": Null
@@ -642,6 +643,7 @@
 "n": Null
 "No access code was entered.": Null
 "No administrators could be found.": Null
+"No authentication": Null
 "No data existed in training set.  JSON file not created.": Null
 "No files have been uploaded yet.": Null
 "No models were found.": Null
@@ -811,6 +813,7 @@
 "Read this screen out loud": Null
 "Reason for needing developer account (optional)": Null
 "Reconfigure": Null
+"Referring URL": Null
 "Refresh": Null
 "Register for an account on": Null
 "Register": Null

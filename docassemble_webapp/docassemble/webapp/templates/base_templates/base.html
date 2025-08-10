@@ -178,75 +178,20 @@
     </footer>
     {% endif %}
 
-    <script src="{{ url_for('static', filename='app/adminbundle.js', v=config['DA_VERSION']) }}"></script>
+    <script{% if config['DEFER'] %} defer{% endif %} src="{{ url_for('static', filename='app/adminbundle.min.js', v=config['DA_VERSION']) }}"></script>
     <script>
       {%- if config['AUTO_COLOR_SCHEME'] and color_scheme < 2 %}
+      var daAutoColorScheme = true;
       var daCurrentColorScheme = {{ color_scheme }};
-      var daDesiredColorScheme;
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        daDesiredColorScheme = 1;
-      }
-      else {
-        daDesiredColorScheme = 0;
-      }
-      if (daCurrentColorScheme != daDesiredColorScheme){
-        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme ? 'dark' : 'light');
-        $.ajax({
-          type: "PATCH",
-          url: "{{ url_for('change_color_scheme') }}",
-          xhrFields: {
-            withCredentials: true
-          },
-          data: 'scheme=' + daDesiredColorScheme,
-          success: function(data){
-            daCurrentColorScheme = data.scheme;
-          },
-          error: function(xhr, status, error){
-            console.log("Unable to change desired color scheme.")
-          },
-          dataType: 'json'
-        });
-      }
+      var daUrlChangeColorScheme = {{ url_for('change_color_scheme')|tojson }};
+      {%- else %}
+      var daAutoColorScheme = false;
       {%- endif %}
-      var daWhichButton = null;
-      $( document ).ready(function(){
-        {%- if request.path in ["/user/sign-in", "/user/register", "/user/forgot-password"] %}
-        $(".da-form-group input").first().focus();
-        {%- elif request.path != "/playgroundfiles" %}
-        $(".form").find('input[type=text],textarea,select').filter(':visible:first').focus();
-        {%- endif %}
-        setTimeout(function () {
-          window.scrollTo(0, 1);
-        }, 10);
-        setTimeout(function(){
-          $("#flash .alert-success").hide(300, function(){
-            $(self).remove();
-          });
-        }, 3000);
-        $(".btn-da").click(function(){
-          daWhichButton = this;
-        });
-        $(".form").on('submit', function(){
-          $(this).find(".btn-da").each(function(){
-            var the_button = this;
-            var disable_button = $(the_button).data('disable-button');
-            if (typeof(disable_button) != "undefined" && !disable_button){
-              return;
-            }
-            setTimeout(function(){
-              $(the_button).prop("disabled", true);
-            }, 1);
-            if (this != daWhichButton){
-              $(this).removeClass("{{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_STYLE'] }}error {{ config['BUTTON_STYLE'] }}success");
-              $(this).addClass("{{ config['BUTTON_STYLE'] }}secondary");
-            }
-            else{
-              $(daWhichButton).removeClass("{{ config['BUTTON_STYLE'] }}primary {{ config['BUTTON_STYLE'] }}info {{ config['BUTTON_STYLE'] }}warning {{ config['BUTTON_STYLE'] }}error {{ config['BUTTON_STYLE'] }}secondary");
-              $(daWhichButton).addClass("{{ config['BUTTON_STYLE'] }}success");
-            }
-          });
-        });
-      });
-    </script>{{ page_js }}{{ extra_js }}{{ config['GLOBAL_JS']|safe }}
+      var daRequestPath = {{ request.path|tojson }};
+      var daButtonStyle = {{ config['BUTTON_STYLE']|tojson }};
+      {%- if request.path == "/interviews" %}
+      var daAreYouSureDelete = {{ word("Are you sure you want to delete all saved interviews?")|tojson }};
+      {%- endif %}
+    </script>{{ extra_js }}{{ config['GLOBAL_JS']|safe }}
   </body>
 </html>

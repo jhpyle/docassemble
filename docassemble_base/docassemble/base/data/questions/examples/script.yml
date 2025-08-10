@@ -10,11 +10,9 @@ subquestion: |
   <span id="beg"></span>
 yesno: wants_to_build_snowman
 script: |
-  <script>
-    setTimeout(function(){
-      $("#beg").html("Pretty please?");
-    }, 3000);
-  </script>
+  setTimeout(function(){
+    $("#beg").html("Pretty please?");
+  }, 3000);
 ---
 mandatory: True
 question: |

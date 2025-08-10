@@ -251,11 +251,15 @@ def edit_user_profile_page(user_id):
     confirmation_feature = bool(user.id > 2)
     script = """
     <script>
-      $(".dadeleteaccount").click(function(event){
-        if (!confirm(""" + json.dumps(word("Are you sure you want to permanently delete this user's account?")) + """)){
-          event.preventDefault();
-          return false;
-        }
+      document.addEventListener("DOMContentLoaded", function () {
+        $( document ).ready(function() {
+          $(".dadeleteaccount").click(function(event){
+            if (!confirm(""" + json.dumps(word("Are you sure you want to permanently delete this user's account?")) + """)){
+              event.preventDefault();
+              return false;
+            }
+          });
+        });
       });
     </script>"""
     form.role_id.process_data(the_role_id)

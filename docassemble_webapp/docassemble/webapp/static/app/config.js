@@ -1,0 +1,18 @@
+var daAutoComp = [];
+document.addEventListener("DOMContentLoaded", function () {
+  $(document).ready(function () {
+    var daCm = daNewEditor(
+      $("#config_container")[0],
+      daContent,
+      "yml",
+      daKeymap,
+      false,
+    );
+    $("#config_form").bind("submit", function () {
+      {
+        $("#config_content").val(daCm.state.doc.toString());
+        return true;
+      }
+    });
+  });
+});

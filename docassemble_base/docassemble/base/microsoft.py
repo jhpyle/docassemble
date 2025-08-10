@@ -13,7 +13,7 @@ from docassemble.base.error import DAException
 logger = logging.getLogger('azure.mgmt.resource')
 logger.setLevel(logging.WARNING)
 
-epoch = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=datetime.timezone.utc)
+epoch = datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
 
 
 class azureobject:
@@ -153,7 +153,7 @@ class azurekey:
             snapshot=self.blob_client.snapshot,
             account_key=self.blob_client.credential.account_key,
             permission=BlobSasPermissions(read=True),
-            expiry=datetime.datetime.utcnow() + datetime.timedelta(seconds=seconds),
+            expiry=datetime.datetime.now(datetime.UTC).replace(tzinfo=None) + datetime.timedelta(seconds=seconds),
             cache_control='no-cache',
             content_disposition=disposition,
             content_type=content_type

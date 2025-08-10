@@ -12,7 +12,7 @@ import operator
 import pprint
 import copy
 import codecs
-import array  # pylint: disable=import-error
+import array
 import tempfile
 import json
 import platform
@@ -1393,7 +1393,7 @@ class InterviewStatus:
             for question_type in ('question', 'help'):
                 if question_type not in output:
                     continue
-                phrase = docassemble.base.functions.server.to_text('<div>' + output[question_type] + '</div>')  # pylint: disable=assignment-from-none
+                phrase = docassemble.base.functions.server.to_text('<div>' + output[question_type] + '</div>')
                 if (not phrase) or len(phrase) < 10:
                     phrase = "The sky is blue."
                 phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
@@ -9231,7 +9231,7 @@ class Interview:
                     raise DASourceError("no question available: " + str(qError))
                 else:
                     docassemble.base.functions.wrap_up()
-                    raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye and offers an Exit button.')
+                    raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye.')
         except BaseException as the_error:
             # logmessage("Untrapped exception")
             if self.debug:

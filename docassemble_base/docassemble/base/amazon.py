@@ -4,7 +4,7 @@ import datetime
 from botocore.errorfactory import ClientError
 import boto3
 
-epoch = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=datetime.timezone.utc)
+epoch = datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
 
 
 class s3object:

@@ -1,0 +1,151 @@
+modules:
+  - .interrelated
+---
+objects:
+  - s: Situation
+---
+code: |
+  s.entities[i].name.text
+  s.reconcile()
+  s.entities[i].complete = True
+---
+code: |
+  s.representatives[i].name.text
+  s.reconcile()
+  s.representatives[i].complete = True
+---
+code: |
+  s.corporate_directors[i].name.text
+  s.reconcile()
+  s.corporate_directors[i].complete = True
+---
+table: s.entities.table
+rows: s.entities
+columns:
+  - Name of Entity: row_item.name.text
+  - Legal form: row_item.form
+edit:
+  - name.text
+show if empty: False
+---
+mandatory: true
+question: |
+  Entities:
+subquestion: |
+  So far, you have added ${ s.entities.quantity_noun('entity') }.
+
+  ${ s.entities.table }
+
+  ${ s.entities.add_action(label="Add entity") }
+continue button field: review_entities
+---
+table: s.corporate_directors.table
+rows: s.corporate_directors
+columns:
+  - Director: row_item.name.text
+  - Directs: row_item.directing
+edit:
+  - name.text
+show if empty: False
+---
+mandatory: true
+question: |
+  Corporate directors
+subquestion: |
+  So far, you have added ${ s.corporate_directors.quantity_noun('corporate director') }.
+
+  ${ s.corporate_directors.table }
+
+  ${ s.corporate_directors.add_action(label="Add director") }
+continue button field: review_corporate_directors
+---
+table: s.representatives.table
+rows: s.representatives
+columns:
+  - Name: row_item
+  - Represents: row_item.representing
+edit:
+  - name.text
+show if empty: False
+---
+mandatory: true
+question: |
+  Representatives
+subquestion: |
+  So far, you have added ${ s.representatives.quantity_noun('representative') }.
+
+  ${ s.representatives.table }
+
+  ${ s.representatives.add_action(label="Add representative") }
+continue button field: review_representatives
+---
+question: |
+  Describe the ${ ordinal(i) } entity.
+fields:
+  - Entity Name: s.entities[i].name.text
+  - Form of Entity: s.entities[i].form
+---
+question: |
+  Add natural persons being representatives of entities or corporate directors.
+fields:
+  - Name: s.representatives[i].name.text
+  - Date of birth: s.representatives[i].birthdate
+    datatype: date
+  - Representing: s.representatives[i].representing
+    datatype: object_multiselect
+    choices: s.entities + s.corporate_directors
+---
+question: 
+  Add legal persons being corporate directors of any Entity
+fields:
+  - Name: s.corporate_directors[i].name.text
+  - Director of: s.corporate_directors[i].directing
+    datatype: object_multiselect
+    choices: s.entities
+---
+mandatory: True
+question: |
+  Summary
+subquestion: |
+  % for entity in s.entities:
+  #### Entity ${ entity }
+
+  Directors:
+
+  % for director in s.directors_of_entity(entity):
+  * ${ director }\
+    % if len(s.representives_of(director)) > 0:
+  , who is represented by ${ comma_and_list(s.representives_of(director)) }
+    % endif
+
+  % endfor
+
+  % if len(s.representives_of(entity)) > 0:
+  Representatives:
+
+    % for representative in s.representives_of(entity):
+  * ${ representative }
+
+    % endfor
+  % endif
+  % endfor
+
+  [Edit entities](${ url_action('review_entities') })
+
+  #### Directors
+
+  % for director in s.corporate_directors:
+  * ${ director } directs ${ director.directing }.
+  % endfor  
+   
+  [Edit corporate directors](${ url_action('review_corporate_directors') })
+
+  #### Representative
+
+  % for representative in s.representatives:
+  * ${ representative } represents ${ representative.representing }.
+  % endfor  
+   
+  [Edit representatives](${ url_action('review_representatives') })
+buttons:
+  - Exit: exit

@@ -314,6 +314,9 @@ def load(**kwargs):
             daconfig['google'] = {}
     else:
         daconfig['google'] = {}
+    daconfig['google']['use places api new'] = bool(daconfig['google'].get('use places api new', False))
+    if (daconfig['google'].get('google maps api key', None) or daconfig['google'].get('google maps api key', None)) and not daconfig['google']['use places api new']:
+        config_error("Google has migrated to 'Places API (New)' and the old 'Places API' is now deprecated. Please enable Places API (New) in Google Cloud Console and set 'use places api new: True' within your 'google' configuration. Support for the old 'Places API' will be removed in a future version.")
     if 'analytics id' in daconfig['google']:
         if isinstance(daconfig['google']['analytics id'], str):
             daconfig['google']['analytics id'] = [daconfig['google']['analytics id']]
@@ -352,6 +355,7 @@ def load(**kwargs):
             daconfig['grid classes'] = {}
     else:
         daconfig['grid classes'] = {}
+    daconfig['javascript defer'] = bool(daconfig.get('javascript defer', False))
     for key in ('vertical navigation', 'flush left', 'centered'):
         if key not in daconfig['grid classes']:
             daconfig['grid classes'][key] = {}

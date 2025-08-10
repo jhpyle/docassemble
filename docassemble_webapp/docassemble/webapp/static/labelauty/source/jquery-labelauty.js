@@ -384,7 +384,7 @@
   function getRealWidth(element) {
     var width = 0;
     var $target = element;
-    var css_class = "hidden_element";
+    var css_class = "hiddenelement";
 
     $target = $target.clone().attr("class", css_class).appendTo("body");
     width = $target.width(true);

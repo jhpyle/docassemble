@@ -25,6 +25,10 @@ fields:
     required: False
   - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
     required: False
+  - "administrative_area_&#8203;level_6": the_address.administrative_area_level_6
+    required: False
+  - "administrative_area_&#8203;level_7": the_address.administrative_area_level_7
+    required: False
   - colloquial_area: the_address.colloquial_area
     required: False
   - country: the_address.country
@@ -52,8 +56,6 @@ fields:
   - room: the_address.room
     required: False
   - route: the_address.route
-    required: False
-  - suite: the_address.suite
     required: False
   - street_number: the_address.street_number
     required: False

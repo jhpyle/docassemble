@@ -20,6 +20,8 @@ db:
   ssl root cert: {{DBSSLROOTCERT}}
   table prefix: {{DBTABLEPREFIX}}
   backup: {{DBBACKUP}}
+google:
+  use places api new: True
 oauth:
   facebook:
     enable: False
@@ -128,3 +130,5 @@ default icons: font awesome
 config from: {{CONFIGFROM}}
 enable unoconv: {{ENABLEUNOCONV}}
 gotenberg url: {{GOTENBERGURL}}
+javascript defer: True
+use nginx to serve files: {{USENGINXTOSERVEFILES}}

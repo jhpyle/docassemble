@@ -4,893 +4,955 @@ html {
 }
 
 body.dabody {
-    border: 0px;
-    margin: 0px;
-    padding-bottom: 40px;
+  border: 0;
+  margin: 0;
+  padding-bottom: 40px;
+}
+
+.cm-editor {
+  font-size: 14px;
+}
+
+.cm-full-screen > .cm-editor {
+  position: fixed !important;
+  margin-top: 0;
+  height: inherit !important;
+  inset: 0;
+  z-index: 10000;
+  overflow: auto;
+  background-color: #fff;
 }
 
 .daconfigform .cm-editor {
-    height: 75vh;
+  height: 75vh;
 }
 
 .pgmain {
-    display: flex;
-    flex-flow: column;
-    align-items: stretch;
+  display: flex;
+  flex-flow: column;
+  align-items: stretch;
 }
 
 .pgright {
-    height: 75vh;
-    display: flex;
-    flex-flow: column;
-    align-items: stretch;
+  height: 75vh;
+  display: flex;
+  flex-flow: column;
+  align-items: stretch;
 }
 
 .pgmain .pgform {
-    flex: 1;
-    display: flex;
-    flex-flow: column;
-    align-items: stretch;
-    padding: 1px;
-}
-
-.pgmain .pgform .cm-editor {
-    height: 65vh;
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+  align-items: stretch;
+  padding: 1px;
 }
 
 .pgreadme .cm-editor {
-    height: 65vh;
+  height: 65vh;
+}
+
+.pgmain .pgform .cm-editor {
+  height: 65vh;
 }
 
 .pgright .playgroundbox {
-    flex: 1;
-    overflow: hidden;
+  flex: 1;
+  overflow: hidden;
 }
 
 body.dasignature {
-    border: 0px;
-    margin: 0px;
+  border: 0;
+  margin: 0;
+}
+
+div.dahide-navbar .navbar {
+  display: none;
 }
 
 body.dainactive {
-    background-color: #f2dede;
+  background-color: #f2dede;
 }
 
-body.dainactive .form-control{
-    background-color: #f2dede;
+body.dainactive .form-control {
+  background-color: #f2dede;
 }
 
 body.dainactive > div > div > .navbar {
-    background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
+  background-image: linear-gradient(to bottom, #883c3c 0, #522 100%);
 }
 
 body.dacontrolled > div > div > .navbar {
-    background-image: linear-gradient(to bottom,#883c3c 0,#522 100%);
+  background-image: linear-gradient(to bottom, #883c3c 0, #522 100%);
 }
 
 .slider-horizontal {
-    width: 100% !important;
-    margin-top: 15px;
+  width: 100% !important;
+  margin-top: 15px;
 }
 
 .slider .datooltip-inner {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    padding: .1rem .4rem;
+  user-select: none;
+  padding: 0.1rem 0.4rem;
 }
 
 .alert {
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.da-alert {
+  max-height: 150px;
+  overflow-y: auto;
 }
 
 .alert a {
-    cursor: pointer;
+  cursor: pointer;
+}
+
+.dachatbutton a {
+  font-size: 14px;
+  margin-bottom: 0.75em;
+  float: right;
+}
+
+.danavpillssmaller > li > a {
+  padding: 10px 12px;
+}
+
+div.dainline a {
+  position: relative;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+div.dainline span {
+  vertical-align: middle;
+  position: relative;
+  font-weight: bold;
+}
+
+.daimagepreview img {
+  max-width: 100%;
 }
 
 .daiconbox {
-    font-size: 14px;
-    font-family: Roboto,arial,sans-serif;
-    font-weight:700;
-    border-style:solid;
-    border-width:1px;
-    color: #262626;
-    border-color: rgba(0, 0, 0, 0.17);
-    border-radius: 2px;
-    box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    margin-top: 5px;
-    padding: 0;
+  font-size: 14px;
+  font-family: Roboto, arial, sans-serif;
+  font-weight: 700;
+  border-style: solid;
+  border-width: 1px;
+  color: #262626;
+  border-color: rgba(0, 0, 0, 0.17);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+  text-align: center;
+  margin-top: 5px;
+  padding: 0;
+}
+
+div.dachoicehelp a {
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 25px;
+  padding-bottom: 0.5rem;
+}
+
+div.daconstraintlist a {
+  text-decoration: none;
+}
+
+ul.da-example-list > li > a {
+  outline: none;
+  padding: 2px 15px;
 }
 
 .daiconbox > a:focus,
 .daiconbox > a:hover {
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
 }
 
 .danomargin {
-    margin: 0;
+  margin: 0;
 }
 
 .daiconbox td img {
-    margin: 2px 0px 2px 0px;
+  margin: 2px 0;
 }
 
 a.danohover {
-    display: block;
+  display: block;
 }
 
 a.danohover:hover {
-    text-decoration: none !important;
+  text-decoration: none !important;
 }
 
 .btn-darevisit {
-    margin-bottom: 5px;
+  margin-bottom: 5px;
 }
 
 .btn-da {
-    margin-bottom: 5px;
-    white-space: normal;
+  margin-bottom: 5px;
+  white-space: normal;
 }
 
 .btn-da-custom {
-    width: 8em;
-    height: 8em;
-    text-align: center;
-    vertical-align: middle;
+  width: 8em;
+  height: 8em;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .btn-da-custom svg {
-    width: 4em !important;
-    height: 4em !important;
-    text-align: center;
-    vertical-align: middle;
+  width: 4em !important;
+  height: 4em !important;
+  text-align: center;
+  vertical-align: middle;
 }
 
 .btn-da-custom span:first-of-type::after {
-    content: "";
-    display: block;
+  content: "";
+  display: block;
 }
 
 .btn-da-custom:focus {
-    outline: 1px dotted !important;
+  outline: 1px dotted !important;
 }
 
 .dainvisible {
-    display: none !important;
+  display: none !important;
 }
 
 .da-chat-session {
-    overflow: hidden;
+  overflow: hidden;
 }
 
 i.da-chat-active {
-    color: #45bf41;
+  color: #45bf41;
 }
 
 i.da-chat-active:hover {
-    color: #55cf51;
+  color: #55cf51;
 }
 
 i.da-chat-inactive {
-    color: #4f4f4f;
+  color: #4f4f4f;
 }
 
 i.da-chat-inactive:hover {
-    color: #5f5f5f;
+  color: #5f5f5f;
+}
+
+div.da-field-container-datatype-range .da-top-label {
+  margin-bottom: 1.5rem;
 }
 
 .da-form-group.darequired .dawidecol {
-    position: relative;
+  position: relative;
 }
 
-.da-form-group.darequired .dawidecol:before {
-    position: absolute;
-    content: '*';
-    color: red;
-    top: 0rem;
-    left: -0.2rem;
+.da-form-group.darequired .dawidecol::before {
+  position: absolute;
+  content: "*";
+  color: red;
+  top: 0;
+  left: -0.2rem;
 }
 
-.da-form-group.darequired .dagridwide:before {
-    position: absolute;
-    content: '*';
-    color: red;
-    top: 0rem;
-    left: -0.2rem;
+.da-form-group.darequired .dagridwide::before {
+  position: absolute;
+  content: "*";
+  color: red;
+  top: 0;
+  left: -0.2rem;
 }
 
-[data-bs-theme=dark] .da-form-group.darequired .dawidecol:before {
-    color: var(--bs-red);
+[data-bs-theme=dark] .da-form-group.darequired .dawidecol::before {
+  color: var(--bs-red);
 }
 
-[data-bs-theme=dark] .da-form-group.darequired .dagridwide:before {
-    color: var(--bs-red);
+[data-bs-theme=dark] .da-form-group.darequired .dagridwide::before {
+  color: var(--bs-red);
+}
+
+.dafullwidth + label {
+  width: 100%;
+}
+
+.dafullwidth + div.da-legend {
+  width: 100%;
+}
+
+.da-embed-radio-wrapper > label {
+  font-weight: normal;
+}
+
+.da-embed-yesno-wrapper > label {
+  font-weight: normal;
+}
+
+.da-embed-threestate-wrapper > label {
+  font-weight: normal;
+}
+
+.da-embed-checkbox-wrapper > label {
+  font-weight: normal;
 }
 
 .da-grid-container.da-form-group-floating label {
-    margin-left: calc(var(--bs-gutter-x) * .5);
-    margin-right: calc(var(--bs-gutter-x) * .5);
+  margin-left: calc(var(--bs-gutter-x) * 0.5);
+  margin-right: calc(var(--bs-gutter-x) * 0.5);
 }
 
 .da-grid-container.da-form-group-floating div.da-legend {
-    margin-left: calc(var(--bs-gutter-x) * .5);
-    margin-right: calc(var(--bs-gutter-x) * .5);
+  margin-left: calc(var(--bs-gutter-x) * 0.5);
+  margin-right: calc(var(--bs-gutter-x) * 0.5);
 }
 
 .da-grid-container {
-    position: relative;
+  position: relative;
 }
 
 .da-form-group.darequired .danolabel {
-    position: relative;
+  position: relative;
 }
 
-.da-form-group.darequired .danolabel:before {
-    position: absolute;
-    content: '*';
-    color: red;
-    top: 0rem;
-    left: -0.2rem;
+.da-form-group.darequired .danolabel::before {
+  position: absolute;
+  content: "*";
+  color: red;
+  top: 0;
+  left: -0.2rem;
 }
 
-[data-bs-theme=dark] .da-form-group.darequired .danolabel:before {
-    color: var(--bs-red);
+[data-bs-theme=dark] .da-form-group.darequired .danolabel::before {
+  color: var(--bs-red);
 }
 
 div.da-legend.da-top-label {
-    font-size: inherit;
+  font-size: inherit;
 }
 
 .da-form-group.darequired .da-top-label {
-    position: relative;
+  position: relative;
 }
 
-.da-form-group.darequired .da-top-label:after {
-    content: '*';
-    color: red;
-    margin-left: 0.2em;
+.da-form-group.darequired .da-top-label::after {
+  content: "*";
+  color: red;
+  margin-left: 0.2em;
 }
 
-[data-bs-theme=dark] .da-form-group.darequired .da-top-label:after {
-    color: var(--bs-red);
+[data-bs-theme=dark] .da-form-group.darequired .da-top-label::after {
+  color: var(--bs-red);
 }
 
 .da-form-group.darequired .da-form-label {
-    position: relative;
+  position: relative;
 }
 
-.da-form-group.darequired .da-form-label:after {
-    position: absolute;
-    content: '*';
-    color: red;
+.da-form-group.darequired .da-form-label::after {
+  position: absolute;
+  content: "*";
+  color: red;
 }
 
-[data-bs-theme=dark] .da-form-group.darequired .da-form-label:after {
-    color: var(--bs-red);
+[data-bs-theme=dark] .da-form-group.darequired .da-form-label::after {
+  color: var(--bs-red);
 }
 
-@media (max-width: 767px) {
-    .da-form-group.darequired .dawidecol:before {
-	left: 0.2rem;
-    }
-    .da-form-group.darequired .danolabel:before {
-	left: 0.2rem;
-    }
-    .da-form-group.darequired .da-form-label:after {
-	bottom: 0.7rem;
-    }
-    .da-grid-container.dayesnospacing + .da-grid-container.dayesnospacing {
-	margin-top: -1.0rem;
-    }
+@media (width <= 767px) {
+  .da-form-group.darequired .dawidecol::before {
+    left: 0.2rem;
+  }
+  .da-form-group.darequired .danolabel::before {
+    left: 0.2rem;
+  }
+  .da-form-group.darequired .da-form-label::after {
+    bottom: 0.7rem;
+  }
+  .da-grid-container.dayesnospacing + .da-grid-container.dayesnospacing {
+    margin-top: -1rem;
+  }
 }
-@media (min-width: 768px) {
-    .da-form-group.darequired .da-form-label:after {
-	top: 5px;
-	right: 5px;
-    }
+@media (width >= 768px) {
+  .da-form-group.darequired .da-form-label::after {
+    top: 5px;
+    right: 5px;
+  }
+}
+.da-form-group.darequired.greyedout .da-form-label::after {
+  display: none;
 }
 
-.da-form-group.darequired.greyedout .da-form-label:after {
-    display: none;
-}
 .da-form-group.dagreyedout .da-form-label {
-    color: #999999;
-}
-.daselect {
-    margin-top: 7px;
+  color: #999;
 }
 
-.dagoogleMap {
-    width: 100%;
+.daselect {
+  margin-top: 7px;
+}
+
+.dagooglemap {
+  width: 100%;
 }
 
 .daterm {
-    cursor: pointer;
-    color: #408E30
+  cursor: pointer;
+  color: #408e30;
 }
 
 .daterm:hover {
-    cursor: pointer;
-    color: #408E30;
-    text-decoration: none;
+  cursor: pointer;
+  color: #408e30;
+  text-decoration: none;
 }
 
 .daiconfloat {
-    image-orientation: from-image;
-    float: right;
+  image-orientation: from-image;
+  float: right;
 }
 
 .daicon {
-    image-orientation: from-image;
+  image-orientation: from-image;
 }
 
 .daclear {
-    clear: both;
+  clear: both;
 }
 
 .daactive {
-    background-color: yellow;
+  background-color: yellow;
 }
 
 .dabackicon {
-    background: none;
-    cursor: pointer;
-    border: none;
-    margin: 0;
-    padding: 0;
-    margin-left: -5px;
+  background: none;
+  cursor: pointer;
+  border: none;
+  margin: 0;
+  padding: 0;
+  margin-left: -5px;
 }
 
 .dabackicon span.nav-link {
-    padding: 0;
+  padding: 0;
 }
 
 .dabackicon a.nav-link {
-    padding: 0;
+  padding: 0;
 }
 
 a.dabackbuttoncolor:hover,
 a.dabackbuttoncolor:focus {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 .dabackbuttoncolor {
-    -webkit-appearance: none;
+  appearance: none;
 }
 
-@media (max-width: 767px) {
-    .datext-right {
-	min-height: 1.5rem;
-    }
-    .file-input-ajax-new .file-preview {
-	display: none;
-    }
+@media (width <= 767px) {
+  .datext-right {
+    min-height: 1.5rem;
+  }
+  .file-input-ajax-new .file-preview {
+    display: none;
+  }
 }
-
-@media (min-width: 768px) {
-    .datext-right {
-	text-align: right !important;
-    }
+@media (width >= 768px) {
+  .datext-right {
+    text-align: right !important;
+  }
 }
-
 .daback {
-    margin-left: 0.1em;
+  margin-left: 0.1em;
 }
 
 .datab {
-    display: inline-block;
-    width: 4em;
+  display: inline-block;
+  width: 4em;
 }
 
 table.datable {
-    margin-left: auto;
-    margin-right: auto;
-    margin-bottom: 1em;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 1em;
 }
 
 .daborder {
-    border-style: solid;
-    border-width: 1px;
+  border-style: solid;
+  border-width: 1px;
 }
 
 .daflushleft {
-    text-align: left;
+  text-align: left;
 }
 
 .daflushright {
-    text-align: right;
+  text-align: right;
 }
 
 .dabold {
-    font-weight: bold;
+  font-weight: bold;
 }
 
 .dacenter {
-    text-align: center;
+  text-align: center;
 }
 
 .dawrappre {
-    white-space: pre-wrap;
-    max-height: 400px;
-    overflow: auto;
+  white-space: pre-wrap;
+  max-height: 400px;
+  overflow: auto;
 }
 
 .davspace {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .damynavbar-right {
-    float: right;
-    -webkit-box-orient: horizontal;
-    flex-direction: row;
+  float: right;
+  -webkit-box-orient: horizontal;
+  flex-direction: row;
 }
 
 .damynavbar-right .nav-link {
-    padding-right: .5rem;
-    padding-left: .5rem;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
 }
 
 .daactivetext {
-    color: yellow;
+  color: yellow;
 }
 
 .daactivetext:hover {
-    color: #ffff99;
-}
-
-div.playgroundbox div.card-body {
-    height: 30em;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    position: relative;
-    padding-right: 0px;
-}
-
-div.playgroundbox table td {
-    padding-bottom: 5px;
-}
-
-div.playgroundbox table td.playground-warning-box {
-    padding-right: 15px;
-    font-size: 14px;
-    padding-bottom: 0px;
-}
-
-#daform pre,
-.daadminbody pre {
-    margin: 0;
-    padding: 9.5px;
-    word-break: break-all;
-    word-wrap: break-word;
-    /* background-color: #f5f5f5; */
-    /* border: 1px solid #ccc; */
-    border-radius: 4px;
-}
-
-textarea.datextarea {
-    resize: both;
-}
-
-textarea.dalogs {
-    display: block;
-    margin: 0;
-    padding: 9.5px;
-    word-break: break-all;
-    word-wrap: break-word;
-    /* background-color: #f5f5f5 !important; */
-    /* border: 1px solid #ccc; */
-    border-radius: 4px;
-    font-size: 0.875em;
-    font-family: monospace, monospace;
-    direction: ltr;
-    unicode-bidi: bidi-override;
-    width: 100%;
-    resize: both;
-}
-
-img.da-example-screenshot {
-    border-style: solid;
-    border-color: #cccccc;
-    border-width: 1px;
-    border-radius: 4px;
-    padding-bottom: 20px;
-    max-width: 100%;
-    background-color: white;
-}
-
-[data-bs-theme=dark] img.da-example-screenshot {
-    border-color: #333333;
-    background-color: #212529;
-}
-
-.da-example-link {
-    cursor: pointer;
-}
-
-.da-example-heading {
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.da-example-list {
-    outline: none;
-    flex-wrap: nowrap;
-}
-
-div > ul.da-example-list {
-    max-height: 35em;
-    overflow-y: auto;
-    position: relative;
-}
-
-ul.da-example-list ul {
-    margin-left: 20px;
-}
-
-ul.da-example-list > li > a{
-    outline: none;
-    padding: 2px 15px;
-}
-
-ul.da-example-list > li {
-    margin-top: 0px;
-}
-
-.da-example-hidden {
-    display: none;
-}
-
-div.da-example-source-col {
-    min-height: 600px;
-}
-
-div.da-example-source-col div.highlight {
-    max-height: none;
-}
-
-div.dahighlight {
-    border-radius: 10px;
-    padding: 10px;
-    background-color: rgb(248, 249, 250);
-}
-
-[data-bs-theme=dark] div.dahighlight {
-    background-color: #282c34;
-}
-
-div.dahighlight pre {
-    margin-bottom: 0;
-}
-
-a.da-example-copy {
-    font-size: 14px;
-    float: right;
-}
-
-a.da-example-documentation {
-    font-size: 14px;
-    float: right;
-}
-
-a.dacorner-remove {
-    float: right;
-    cursor: pointer;
-    color: #666666;
-    font-size: 20px;
-}
-
-a.dacorner-remove:hover {
-    color: #000000;
-}
-
-table.daplaygroundtable {
-    table-layout:fixed;
-    width: 100%;
+  color: #ff9;
 }
 
 table.daplaygroundtable td {
-    line-height: 20px;
+  line-height: 20px;
+}
+
+div.playgroundbox div.card-body {
+  height: 30em;
+  overflow: hidden scroll;
+  position: relative;
+  padding-right: 0;
+}
+
+div.playgroundbox table td {
+  padding-bottom: 5px;
+}
+
+div.playgroundbox table td.playground-warning-box {
+  padding-right: 15px;
+  font-size: 14px;
+  padding-bottom: 0;
+}
+
+.daadminbody pre {
+  margin: 0;
+  padding: 9.5px;
+  word-break: break-all;
+  word-wrap: break-word;
+  border-radius: 4px;
+}
+
+div.dahighlight pre {
+  margin-bottom: 0;
+}
+
+#daform pre {
+  margin: 0;
+  padding: 9.5px;
+  word-break: break-all;
+  word-wrap: break-word;
+  border-radius: 4px;
+}
+
+textarea.datextarea {
+  resize: both;
+}
+
+textarea.dalogs {
+  display: block;
+  margin: 0;
+  padding: 9.5px;
+  word-break: break-all;
+  word-wrap: break-word;
+  /* background-color: #f5f5f5 !important; */
+  /* border: 1px solid #ccc; */
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: monospace;
+  direction: ltr;
+  unicode-bidi: bidi-override;
+  width: 100%;
+  resize: both;
+}
+
+img.da-example-screenshot {
+  border-style: solid;
+  border-color: #ccc;
+  border-width: 1px;
+  border-radius: 4px;
+  padding-bottom: 20px;
+  max-width: 100%;
+  background-color: white;
+}
+
+[data-bs-theme=dark] img.da-example-screenshot {
+  border-color: #333;
+  background-color: #212529;
+}
+
+.da-example-link {
+  cursor: pointer;
+}
+
+.da-example-heading {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.da-example-list {
+  outline: none;
+  flex-wrap: nowrap;
+}
+
+div > ul.da-example-list {
+  max-height: 35em;
+  overflow-y: auto;
+  position: relative;
+}
+
+ul.da-example-list ul {
+  margin-left: 20px;
+}
+
+ul.da-example-list > li {
+  margin-top: 0;
+}
+
+.da-example-hidden {
+  display: none;
+}
+
+div.da-example-source-col {
+  min-height: 600px;
+}
+
+div.da-example-source-col div.highlight {
+  max-height: none;
+}
+
+div.dahighlight {
+  border-radius: 10px;
+  padding: 10px;
+  background-color: rgb(248, 249, 250);
+}
+
+[data-bs-theme=dark] div.dahighlight {
+  background-color: #282c34;
+}
+
+a.da-example-copy {
+  font-size: 14px;
+  float: right;
+}
+
+a.da-example-documentation {
+  font-size: 14px;
+  float: right;
+}
+
+a.dacorner-remove {
+  float: right;
+  cursor: pointer;
+  color: #666;
+  font-size: 20px;
+}
+
+a.dacorner-remove:hover {
+  color: #000;
+}
+
+table.daplaygroundtable {
+  table-layout: fixed;
+  width: 100%;
 }
 
 table.daplaygroundtable td table {
-    margin-top: 5px;
-    table-layout:fixed;
-    width: 100%;
+  margin-top: 5px;
+  table-layout: fixed;
+  width: 100%;
 }
 
 table.daplaygroundtable td table td {
-    padding-left: 10px;
+  padding-left: 10px;
 }
 
 .da-example-hider {
-    float: right;
-    cursor: pointer;
+  float: right;
+  cursor: pointer;
 }
 
 #da-example-source-before {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 
 #da-example-source-after {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 
 #da-example-source-before pre {
-    background-color: rgb(248, 249, 250);
-}
-
-[data-bs-theme=dark] #da-example-source-before pre {
-    background-color: #282c34;
+  background-color: rgb(248, 249, 250);
 }
 
 #da-example-source-after pre {
-    background-color: rgb(248, 249, 250);
+  background-color: rgb(248, 249, 250);
+}
+
+[data-bs-theme=dark] #da-example-source-before pre {
+  background-color: #282c34;
 }
 
 [data-bs-theme=dark] #da-example-source-after pre {
-    background-color: #282c34;
+  background-color: #282c34;
 }
 
 a.da-review-action {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 a.da-review-action-button {
-    /* font-size: 14px; */
-    float: right;
+  /* font-size: 14px; */
+  float: right;
 }
 
 table.da-review-tabular > tbody > tr > td {
-    vertical-align: top;
+  vertical-align: top;
 }
 
 a.da-example-share {
-    font-size: 14px;
-    float: right;
+  font-size: 14px;
+  float: right;
 }
 
 .dachatbox {
-    max-height: 20em;
-    overflow-y: auto;
-    margin-bottom: 5px;
-}
-
-.dachatbutton a {
-    font-size: 14px;
-    margin-bottom: 0.75em;
-    float: right;
+  max-height: 20em;
+  overflow-y: auto;
+  margin-bottom: 5px;
 }
 
 a.da-example-share:focus {
-    outline: none;
+  outline: none;
 }
 
 a.dashowmethods:focus {
-    outline: none;
+  outline: none;
 }
 
 img.daimageicon {
-    height: 14px;
-    display: inline-block;
-    line-height: normal;
+  height: 14px;
+  display: inline-block;
+  line-height: normal;
 }
 
 .playground-variable {
-    vertical-align: middle;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    display: inline-block;
-    padding-left: 7.2px;
-    padding-right: 7.2px;
-    padding-bottom: 3.6px;
-    padding-top: 3.6px;
-    line-height: normal;
-    max-width: 90%;
-    white-space: nowrap;
+  vertical-align: middle;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+  padding: 3.6px 7.2px;
+  line-height: normal;
+  max-width: 90%;
+  white-space: nowrap;
 }
 
 span.daparenthetical {
-    color: #777777;
-    font-size: 14px;
-    cursor: pointer;
-    display: inline-block;
-    line-height: normal;
+  color: #777;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-block;
+  line-height: normal;
 }
 
 .daquestionsign {
-    color: #5cb85c;
-    vertical-align: middle;
-    cursor: pointer;
-    text-decoration: none !important;
-    line-height: normal;
-    float: right;
-    margin-right: 3px;
-    font-size: 16px;
+  color: #5cb85c;
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none !important;
+  line-height: normal;
+  float: right;
+  margin-right: 3px;
+  font-size: 16px;
 }
 
 .dashowattributes {
-    color: rgb(160, 160, 160);
-    vertical-align: middle;
-    cursor: pointer;
-    text-decoration: none !important;
-    line-height: normal;
-    float: right;
-    margin-right: 3px;
+  color: rgb(160, 160, 160);
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none !important;
+  line-height: normal;
+  float: right;
+  margin-right: 3px;
 }
 
 .dainfosign {
-    color: rgb(49, 112, 143);
-    vertical-align: middle;
-    cursor: pointer;
-    text-decoration: none !important;
-    line-height: normal;
-    float: right;
-    margin-right: 3px;
+  color: rgb(49, 112, 143);
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none !important;
+  line-height: normal;
+  float: right;
+  margin-right: 3px;
 }
 
 .datrain {
-    color: rgb(217, 7, 53);
-    vertical-align: middle;
-    cursor: pointer;
-    text-decoration: none !important;
-    line-height: normal;
-    float: right;
-    margin-right: 3px;
-    outline: 0;
+  color: rgb(217, 7, 53);
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none !important;
+  line-height: normal;
+  float: right;
+  margin-right: 3px;
+  outline: 0;
 }
 
 .datrain:link,
 .datrain:visited,
 .datrain:active {
-    color: rgb(217, 7, 53);
+  color: rgb(217, 7, 53);
 }
 
 .datrain:hover {
-    color: rgb(247, 37, 83);
+  color: rgb(247, 37, 83);
 }
 
 .dashowmethods {
-    color: rgb(49, 112, 143);
-    vertical-align: middle;
-    cursor: pointer;
-    text-decoration: none !important;
-    line-height: normal;
-    float: right;
-    margin-right: 3px;
+  color: rgb(49, 112, 143);
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none !important;
+  line-height: normal;
+  float: right;
+  margin-right: 3px;
 }
 
 .daobservebutton {
-    font-size: 14px;
-    float: right;
-    margin-bottom: 4px;
-    margin-left: 4px;
+  font-size: 14px;
+  float: right;
+  margin-bottom: 4px;
+  margin-left: 4px;
 }
 
 .da-chat-status-label {
-    width: 6em;
-    font-size: 14px;
-    float: left;
-    margin-bottom: 4px;
-    margin-right: 8px;
+  width: 6em;
+  font-size: 14px;
+  float: left;
+  margin-bottom: 4px;
+  margin-right: 8px;
 }
 
 .dachatcontrol {
-    height: 24px
+  height: 24px;
 }
 
 div.dafieldpart > label:first-of-type {
-    margin-top: 0px;
+  margin-top: 0;
 }
 
 div.dafieldpart > div.da-legend:first-of-type {
-    margin-top: 0px;
+  margin-top: 0;
 }
 
 div.datopcenter {
-    position: fixed;
-    top: 5px;
-    left: 0;
-    right: 0;
-    z-index: 2000;
-    margin: 0 auto;
+  position: fixed;
+  top: 5px;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  margin: 0 auto;
 }
 
 div.dacol-centered {
-    margin-left: auto;
-    margin-right: auto;
-    float: none;
+  margin-left: auto;
+  margin-right: auto;
+  float: none;
 }
 
 select.playground-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    border: 0;
-    max-width: 8em;
-    border-radius: 5px;
-    background-image: url(option-vertical.svg);
-    background-repeat: no-repeat;
-    background-position: right;
-    background-size: 1em 1em;
-    padding: 2px 20px 2px 2px;
-    outline: 0;
+  appearance: none;
+  border: 0;
+  max-width: 8em;
+  border-radius: 5px;
+  background-image: url("option-vertical.svg");
+  background-repeat: no-repeat;
+  background-position: right;
+  background-size: 1em 1em;
+  padding: 2px 20px 2px 2px;
+  outline: 0;
 }
 
 a.dauploadbutton {
-    padding-top: 1px;
-    padding-bottom: 1px;
+  padding-top: 1px;
+  padding-bottom: 1px;
 }
 
 .daobserver-container {
-    height: 324px;
-    overflow: hidden;
-    margin: 0rem 0rem 0.75rem 0rem;
+  height: 324px;
+  overflow: hidden;
+  margin: 0 0 0.75rem;
 }
 
 iframe.daobserver {
-    width: 600px;
-    height: 432px;
-    overflow: auto;
-    -moz-transform: scale(0.75, 0.75);
-    -webkit-transform: scale(0.75, 0.75);
-    -o-transform: scale(0.75, 0.75);
-    -ms-transform: scale(0.75, 0.75);
-    transform: scale(0.75, 0.75);
-    -moz-transform-origin: top left;
-    -webkit-transform-origin: top left;
-    -o-transform-origin: top left;
-    -ms-transform-origin: top left;
-    transform-origin: top left;
-    border: solid #ccc 3px;
-    margin: 0;
-    padding: 0;
+  width: 600px;
+  height: 432px;
+  overflow: auto;
+  transform: scale(0.75, 0.75);
+  transform-origin: top left;
+  border: solid #ccc 3px;
+  margin: 0;
+  padding: 0;
 }
 
 .dadelete-observation {
-    float: right;
-    margin: 0;
+  float: right;
+  margin: 0;
 }
 
 .datopspace {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 .da-no-outline:focus {
-    text-decoration: none;
-    box-shadow: 0 0 0 .25rem rgba(0,0,0,0);
-    outline: 0;
+  text-decoration: none;
+  box-shadow: 0 0 0 0.25rem rgba(0, 0, 0, 0);
+  outline: 0;
 }
 
 .da-new-message {
-    background-color: #ffff99;
+  background-color: #ff9;
 }
 
 .da-chat-notifier {
-    position: fixed;
-    right: 10px;
-    background-color: #ffff99;
-    color: #444444;
-    padding: 10px;
-    border-color: #f0cc77;
-    border-style: solid;
+  position: fixed;
+  right: 10px;
+  background-color: #ff9;
+  color: #444;
+  padding: 10px;
+  border-color: #f0cc77;
+  border-style: solid;
 }
 
 .da-chat-notifier-below {
-    bottom: 0px;
-    border-radius: 15px 15px 0 0;
-    border-width: 3px 3px 0px 3px;
+  bottom: 0;
+  border-radius: 15px 15px 0 0;
+  border-width: 3px 3px 0;
 }
 
 .da-chat-notifier-above {
-    top: 51px;
-    border-radius: 0 0 15px 15px;
-    border-width: 0px 3px 3px 3px;
+  top: 51px;
+  border-radius: 0 0 15px 15px;
+  border-width: 0 3px 3px;
 }
 
 .da-chat-title-label {
@@ -898,92 +960,65 @@ iframe.daobserver {
 }
 
 div.datop-alert {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 2000;
-    color: #444444;
-    font-size: 14px;
-    border-radius: 0 0 15px 15px;
-    background-color: #ffff99;
-    padding: 5px;
-    text-align: center;
-    border-color: #f0cc77;
-    border-style: solid;
-    border-width: 0px 3px 3px 3px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  color: #444;
+  font-size: 14px;
+  border-radius: 0 0 15px 15px;
+  background-color: #ff9;
+  padding: 5px;
+  text-align: center;
+  border-color: #f0cc77;
+  border-style: solid;
+  border-width: 0 3px 3px;
 }
 
 .da-click-selected {
-  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(102, 175, 233, .6);
-          box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(102, 175, 233, .6);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 16px rgba(102, 175, 233, 0.6);
 }
 
 .danobold {
-    font-weight: normal;
+  font-weight: normal;
 }
 
-@media (max-width: 767px) {
-    .navbar-nav li .dropdown-menu {
-        display: block;
-    }
-    .navbar-nav li .dropdown-toggle {
-	display: none;
-    }
+@media (width <= 767px) {
+  .navbar-nav li .dropdown-menu {
+    display: block;
+  }
+  .navbar-nav li .dropdown-toggle {
+    display: none;
+  }
 }
-
 div.da-spinner-container {
-    position: fixed;
-    left: 0px;
-    width: 100%;
-    margin-top: -10px;
+  position: fixed;
+  left: 0;
+  width: 100%;
+  margin-top: -10px;
 }
 
 .da-top-for-navbar {
-    top: 66px;
+  top: 66px;
 }
 
 span.da-spinner {
-    z-index: 2000;
-    font-size: 40px;
+  z-index: 2000;
+  font-size: 40px;
 }
 
 img.da-sig-spinner {
-    z-index: 2000;
-    font-size: 40px;
-}
-
-.dafullwidth + label {
-    width: 100%;
-}
-
-.dafullwidth + div.da-legend {
-    width: 100%;
+  z-index: 2000;
+  font-size: 40px;
 }
 
 .dafullheight {
-    max-height: none !important;
-}
-
-.cm-editor {
-    font-size: 14px;
-}
-
-.cm-full-screen > .cm-editor {
-    position: fixed !important;
-    margin-top: 0px;
-    height: inherit !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10000;
-    overflow: auto;
-    background-color: #fff;
+  max-height: none !important;
 }
 
 [data-bs-theme=dark] .cm-full-screen > .cm-editor {
-    background-color: #282c34;
+  background-color: #282c34;
 }
 
 .da-search-error {
@@ -991,539 +1026,448 @@ img.da-sig-spinner {
 }
 
 .dasearchicon {
-    vertical-align: middle;
-    cursor: pointer;
-    text-decoration: none !important;
-    line-height: normal;
-    font-size: 16px;
-    margin-right: 4px;
+  vertical-align: middle;
+  cursor: pointer;
+  text-decoration: none !important;
+  line-height: normal;
+  font-size: 16px;
+  margin-right: 4px;
 }
 
 .dasearchthis {
-    color: #999999;
+  color: #999;
 }
 
 .dasearchthis:hover {
-    color: #333333;
+  color: #333;
 }
 
 .dasearchother {
-    color: #cccccc;
+  color: #ccc;
 }
 
 .dasearchother:hover {
-    color: #666666;
+  color: #666;
 }
 
 .dapointer {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 div.daundertext {
-    margin-top: 10px;
+  margin-top: 10px;
 }
 
 input.dainput-embedded {
-    -webkit-box-shadow: none;
-    box-shadow: none;
-    display: inline;
-    padding: 0px 8px;
-    border-style: solid;
-    line-height: inherit;
-    border-color: #888888;
-    min-width: 8em;
-    max-width: 100%;
-    border-radius: 2px;
-    width: auto;
-    background-color: #f0f0ff;
-    border-width: 0px 0px 1px 0px;
-    margin: 4px 0px 3px 0px;
-    height: 31px;
+  box-shadow: none;
+  display: inline;
+  padding: 0 8px;
+  border-style: solid;
+  line-height: inherit;
+  border-color: #888;
+  min-width: 8em;
+  max-width: 100%;
+  border-radius: 2px;
+  width: auto;
+  background-color: #f0f0ff;
+  border-width: 0 0 1px;
+  margin: 4px 0 3px;
+  height: 31px;
 }
 
 input.dainput-embedded:focus {
-    -webkit-box-shadow: none;
-    box-shadow: none;
-    border-width: 0px 0px 0px 0px;
-    background-color: #e0e0ff;
-    height: 30px;
-    color: #222222;
-    margin: 4px 0px 4px 0px;
+  box-shadow: none;
+  border-width: 0;
+  background-color: #e0e0ff;
+  height: 30px;
+  color: #222;
+  margin: 4px 0;
 }
 
 input.dadate-embedded {
-    min-width: 10em;
+  min-width: 10em;
 }
 
 textarea.dainput-embedded {
-    -webkit-box-shadow: none;
-    box-shadow: none;
-    padding: 0px 8px;
-    border-style: solid;
-    border-width: 0px 0px 0px 0px;
-    background-color: #f0f0ff;
-    line-height: inherit;
-    border-radius: 2px;
-    margin: 10px 0px 0px 0px;
+  box-shadow: none;
+  padding: 0 8px;
+  border-style: solid;
+  border-width: 0;
+  background-color: #f0f0ff;
+  line-height: inherit;
+  border-radius: 2px;
+  margin: 10px 0 0;
 }
 
 textarea.dainput-embedded:focus {
-    -webkit-box-shadow: none;
-    box-shadow: none;
-    background-color: #e0e0ff;
-    color: #222222;
+  box-shadow: none;
+  background-color: #e0e0ff;
+  color: #222;
 }
 
 textarea.dainput-embedded:hover {
-    -webkit-box-shadow: none;
-    box-shadow: none;
-    border-color: #888888;
+  box-shadow: none;
+  border-color: #888;
 }
 
 span.dainput-embedded {
-    display: inline-block;
-    padding: 0px 8px;
-    border-style: solid;
-    border-width: 0px 0px 0px 0px;
-    border-radius: 0;
-    line-height: inherit;
-    height: 30px;
-    margin: 4px 0px 4px 0px;
+  display: inline-block;
+  padding: 0 8px;
+  border-style: solid;
+  border-width: 0;
+  border-radius: 0;
+  line-height: inherit;
+  height: 30px;
+  margin: 4px 0;
 }
 
 select.dainput-embedded {
-    display: inline;
-    padding: 0px 4px;
-    line-height: inherit;
-    border-style: solid;
-    min-width: 8em;
-    background-color: #f0f0ff;
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    border-color: #888888;
-    border-radius: 2px;
-    border-width: 0px 0px 1px 0px;
-    margin: 4px 0px 3px 0px;
-    height: 31px;
+  display: inline;
+  padding: 0 4px;
+  line-height: inherit;
+  border-style: solid;
+  min-width: 8em;
+  background-color: #f0f0ff;
+  appearance: none;
+  border-color: #888;
+  border-radius: 2px;
+  border-width: 0 0 1px;
+  margin: 4px 0 3px;
+  height: 31px;
 }
 
 select.dainput-embedded:focus {
-    color: #222222;
-    background-color: #e0e0ff;
-    border-width: 0px 0px 0px 0px;
-    height: 30px;
-    margin: 4px 0px 4px 0px;
+  color: #222;
+  background-color: #e0e0ff;
+  border-width: 0;
+  height: 30px;
+  margin: 4px 0;
 }
 
 select.dainput-embedded option {
-    border-style: none;
-    margin: 0px;
-}
-
-input.dacheckbox-embedded{
-
-}
-
-input.daradio-embedded {
-
+  border-style: none;
+  margin: 0;
 }
 
 input.dafile-embedded {
-    display: inline;
-    padding: 0px 4px 0px 0px;
-    line-height: inherit;
-    min-width: 8em;
-    background-color: #f0f0ff;
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    border-style: none;
-    border-radius: 2px;
-    border-width: 0px;
-    margin: 4px 0px 3px 0px;
-    height: 31px;
-}
-
-div.daslider-embedded {
-
+  display: inline;
+  padding: 0 4px 0 0;
+  line-height: inherit;
+  min-width: 8em;
+  background-color: #f0f0ff;
+  appearance: none;
+  border-style: none;
+  border-radius: 2px;
+  border-width: 0;
+  margin: 4px 0 3px;
+  height: 31px;
 }
 
 textarea.translation-box {
-    height: 20em;
-    font-family: monospace;
+  height: 20em;
+  font-family: monospace;
 }
 
 .daheightlim {
-    max-height: 27em;
-    overflow-y: auto;
-}
-
-.danavpillssmaller > li > a {
-    padding: 10px 12px;
+  max-height: 27em;
+  overflow-y: auto;
 }
 
 .navbar {
-    /*font-size: 14px;*/
+  /* font-size: 14px; */
 }
 
 body.daadminbody {
-    border: 0px;
-    margin: 0px;
-    padding-bottom: 40px;
-    /*font-size: 14px;*/
+  border: 0;
+  margin: 0;
+  padding-bottom: 40px;
+  /* font-size: 14px; */
 }
 
 .da-pad-for-navbar {
-    padding-top: 66px;
+  padding-top: 66px;
 }
 
 svg.damfasvg {
-    width: 300px;
+  width: 300px;
 }
 
 blockquote.dalimheight {
-    max-height: 6em;
-    overflow-y: auto;
+  max-height: 6em;
+  overflow-y: auto;
 }
 
 .daimagepreview {
-    max-height: 12em;
-    overflow-y: auto;
-}
-
-.daimagepreview img {
-    max-width: 100%;
+  max-height: 12em;
+  overflow-y: auto;
 }
 
 .daonright {
-    float: right;
-    color: black;
+  float: right;
+  color: black;
 }
 
 .dadecoration {
-    float: right;
+  float: right;
 }
 
 div.danavnested {
-    padding-left: 20px;
+  padding-left: 20px;
+}
+
+.danavlink {
+  cursor: text;
+  position: relative;
 }
 
 div.danav-horiz .danavlink {
-    align-self: flex-end !important;
-    text-align: center;
+  align-self: flex-end !important;
+  text-align: center;
 }
 
 div.danavnested-horiz {
-    font-size: 80%;
+  font-size: 80%;
 }
 
-@media (max-width: 767px) {
-    div.danav-horiz > .danavlink {
-	border-width: 0 0 0.1rem 0;
-	margin: 0px 3px 0px 0px;
-	padding: 0.5rem 0.25rem 0.4rem 0.25rem;
-    }
-
-    div.danav-horiz > .danotavailableyet {
-	border-width: 0;
-    }
-
-    div.danav-horiz > .inactive {
-	border-width: 0;
-    }
+@media (width <= 767px) {
+  div.danav-horiz > .danavlink {
+    border-width: 0 0 0.1rem;
+    margin: 0 3px 0 0;
+    padding: 0.5rem 0.25rem 0.4rem;
+  }
+  div.danav-horiz > .danotavailableyet {
+    border-width: 0;
+  }
+  div.danav-horiz > .inactive {
+    border-width: 0;
+  }
 }
-
-@media (max-width: 575px) {
-    div.danav-horiz > .danavlink {
-	font-size: 11px;
-    }
+@media (width <= 575px) {
+  div.danav-horiz > .danavlink {
+    font-size: 11px;
+  }
 }
-
 .danav > .danotavailableyet {
-    text-decoration: inherit;
-    background-color: inherit;
-    outline-offset: inherit;
+  text-decoration: inherit;
+  background-color: inherit;
+  outline-offset: inherit;
 }
 
 .danav > .danotavailableyet:hover,
 .danav > .danotavailableyet:focus {
-    text-decoration: inherit;
-    background-color: inherit;
-    outline-offset: inherit;
+  text-decoration: inherit;
+  background-color: inherit;
+  outline-offset: inherit;
 }
 
 div.danav {
-    flex-wrap: nowrap;
+  flex-wrap: nowrap;
 }
 
 div.dasections {
-    line-height: 45px;
-}
-
-div.dainline a {
-    position: relative;
-    font-weight: bold;
-}
-
-div.dainline span {
-    position: relative;
-    font-weight: bold;
+  line-height: 45px;
 }
 
 span.dainlinearrow {
-    padding-left: 5px;
-    padding-right: 5px;
-    vertical-align: middle;
-}
-
-div.dainline a {
-    vertical-align: middle;
-}
-
-div.dainline span {
-    vertical-align: middle;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: middle;
 }
 
 div.dainline > div {
-    font-weight: normal;
+  font-weight: normal;
 }
 
 div.dasections .btn {
-    font-size: 18px;
-    cursor: text !important;
-    padding: 5px 5px 5px 5px;
+  font-size: 18px;
+  cursor: text !important;
+  padding: 5px;
 }
 
 div.dasections a.btn.daclickable {
-    cursor: pointer !important;
+  cursor: pointer !important;
 }
 
 .daclickable {
-    cursor: pointer !important;
+  cursor: pointer !important;
 }
 
 div.dainlineinside {
-    display: inline;
+  display: inline;
 }
 
 div.dasections div.dainlineinside .btn {
-    font-size: 14px;
-    margin-top: 2px;
-    margin-bottom: 2px;
+  font-size: 14px;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 div.danavdiv {
-    margin-top: 30px;
-}
-
-.danavlink {
-    cursor: text;
-    position: relative;
+  margin-top: 30px;
 }
 
 .danavlink .toggler {
-    position: absolute;
-    left: 0;
-    cursor: pointer;
+  position: absolute;
+  left: 0;
+  cursor: pointer;
 }
 
 .danavlink .toggler:hover {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 div.dachoicewithhelp {
-    display: table;
-    width: 100%;
+  display: table;
+  width: 100%;
 }
 
 div.dachoicewithhelp > div {
-    display: table-row;
+  display: table-row;
 }
 
 div.dachoicewithhelp > div > div {
-    display: table-cell;
+  display: table-cell;
 }
 
 div.dachoicehelp {
-    text-align: right;
-    width: 32px;
-    vertical-align: top;
-}
-
-div.dachoicehelp a {
-    text-decoration: none;
-    cursor: pointer;
-    font-size: 25px;
-    padding-bottom: 0.5rem;
+  text-align: right;
+  width: 32px;
+  vertical-align: top;
 }
 
 div.danavbar {
-    max-height: 51px;
-    overflow: hidden;
+  max-height: 51px;
+  overflow: hidden;
 }
 
 .dabrand:focus,
 .dabrand:hover {
-    color: #9d9d9d !important;
+  color: #9d9d9d !important;
 }
 
 .da-container.dayesnospacing + .da-container.dayesnospacing {
-    margin-top: -1.0rem;
+  margin-top: -1rem;
 }
 
 .dainterviewhaserror {
-    color: #a94442;
+  color: #a94442;
 }
 
 .dainterviewhaserror:hover,
 .dainterviewhaserror:focus {
-    color: #843534;
+  color: #843534;
 }
 
 .daimageref + .daimageref {
-    margin-left: 5px;
+  margin-left: 5px;
 }
 
 .davideo43 {
-	padding-bottom: 75%;
+  padding-bottom: 75%;
 }
 
 .davideo169 {
-	padding-bottom: 56.25%;
+  padding-bottom: 56.25%;
 }
 
 .davideo {
-	position: relative;
-	height: 0;
-	margin-bottom: 10px;
+  position: relative;
+  height: 0;
+  margin-bottom: 10px;
 }
 
 .davideo iframe {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .dawidevideo {
-    width: 100% !important;
-    height: auto !important;
+  width: 100% !important;
+  height: auto !important;
 }
 
 .daspaceafter {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .dapdfscreen {
-    border-radius: 5px;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(77, 77, 77, .6);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(77, 77, 77, .6);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 16px rgba(77, 77, 77, 0.6);
 }
 
 .da-inline-error-wrapper {
-    position: relative;
+  position: relative;
 }
 
 .da-embed-area-wrapper > .da-has-error {
-    display: block;
-    color: black;
-    padding: 2px;
-    z-index: 1020;
-    background-color: #ffdddd;
-    -webkit-box-shadow: 0px 2px 3px rgba(0,0,0,.075), -3px 2px 4px rgba(0,0,0,.075), 3px 2px 4px rgba(0,0,0,.075);
-    box-shadow: 0px 2px 3px rgba(0,0,0,.075), -3px 2px 4px rgba(0,0,0,.075), 3px 2px 4px rgba(0,0,0,.075);
+  display: block;
+  color: black;
+  padding: 2px;
+  z-index: 1020;
+  background-color: #fdd;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.075), -3px 2px 4px rgba(0, 0, 0, 0.075), 3px 2px 4px rgba(0, 0, 0, 0.075);
 }
 
 .da-inline-error-wrapper > .da-has-error {
-    display: block;
-    position: absolute;
-    left: 0px;
-    right: 0px;
-    top: 27px;
-    color: black;
-    padding: 2px;
-    z-index: 1020;
-    background-color: #ffdddd;
-    -webkit-box-shadow: 0px 2px 3px rgba(0,0,0,.075), -3px 2px 4px rgba(0,0,0,.075), 3px 2px 4px rgba(0,0,0,.075);
-    box-shadow: 0px 2px 3px rgba(0,0,0,.075), -3px 2px 4px rgba(0,0,0,.075), 3px 2px 4px rgba(0,0,0,.075);
-}
-
-.da-embed-currency-symbol {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 27px;
+  color: black;
+  padding: 2px;
+  z-index: 1020;
+  background-color: #fdd;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.075), -3px 2px 4px rgba(0, 0, 0, 0.075), 3px 2px 4px rgba(0, 0, 0, 0.075);
 }
 
 .da-embed-currency-wrapper {
-    display: inline-block;
-}
-
-.da-embed-radio-wrapper > label {
-    font-weight: normal;
-}
-
-.da-embed-yesno-wrapper > label {
-    font-weight: normal;
+  display: inline-block;
 }
 
 .da-embed-area-wrapper {
-    position: relative;
-}
-
-.da-embed-threestate-wrapper > label {
-    font-weight: normal;
-}
-
-.da-embed-checkbox-wrapper > label {
-    font-weight: normal;
+  position: relative;
 }
 
 .da-embed-radio-wrapper > span.da-has-error::before {
-    content: " ";
+  content: " ";
 }
 
 .da-embed-yesno-wrapper > span.da-has-error::before {
-    content: " ";
+  content: " ";
 }
 
 .da-embed-threestate-wrapper > span.da-has-error::before {
-    content: " ";
+  content: " ";
 }
 
 .da-embed-checkbox-wrapper > span.da-has-error::before {
-    content: " ";
+  content: " ";
 }
 
 span.damldatakey {
-    font-weight: bold;
-}
-
-span.damldatavalue {
+  font-weight: bold;
 }
 
 div.damldatacontainer {
-    padding-left: 20px;
-}
-
-span.dasubtitle {
-}
-
-span.dainterviewsubtitle {
+  padding-left: 20px;
 }
 
 .playground-back {
-    margin: 0;
-    padding: 0;
-    margin-left: -5px;
-}
-
-div.daconstraintlist a {
-    text-decoration: none;
+  margin: 0;
+  padding: 0;
+  margin-left: -5px;
 }
 
 div.daconstraintlist div + div {
-    margin-top: 2px;
+  margin-top: 2px;
 }
 
 .da-material-icons {
-  font-family: 'Material Icons';
+  font-family: "Material Icons", monospace;
   font-weight: normal;
   font-style: normal;
   display: inline-block;
@@ -1533,23 +1477,18 @@ div.daconstraintlist div + div {
   white-space: nowrap;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizelegibility;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'liga';
+  font-feature-settings: "liga";
 }
 
 @font-face {
-  font-family: 'Material Icons';
+  font-family: "Material Icons";
   font-style: normal;
   font-weight: 400;
-  src: url(MaterialIcons-Regular.eot);
-  src: local('Material Icons'),
-    local('MaterialIcons-Regular'),
-    url(MaterialIcons-Regular.woff2) format('woff2'),
-    url(MaterialIcons-Regular.woff) format('woff'),
-    url(MaterialIcons-Regular.ttf) format('truetype');
+  src: url("MaterialIcons-Regular.eot");
+  src: local("Material Icons"), local("MaterialIcons-Regular"), url("MaterialIcons-Regular.woff2") format("woff2"), url("MaterialIcons-Regular.woff") format("woff"), url("MaterialIcons-Regular.ttf") format("truetype");
 }
-
 .da-page-header {
   padding-bottom: 9px;
   margin: 40px 0 20px;
@@ -1558,246 +1497,225 @@ div.daconstraintlist div + div {
 
 .dabadge {
   display: inline-block;
-  padding: .35em .65em;
-  font-size: .75em;
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
   font-weight: 700;
   line-height: 1;
   text-align: center;
   white-space: nowrap;
   vertical-align: baseline;
-  border-radius: .25rem;
+  border-radius: 0.25rem;
 }
 
 .da-larger-badge {
-    font-size: 1.0rem;
+  font-size: 1rem;
 }
 
 .dasigbuttons {
-    margin-top: 4px;
+  margin-top: 4px;
 }
 
 .dasigbottompart {
-    text-align: center;
+  text-align: center;
 }
 
-@media (max-width: 575px) and (orientation: landscape) {
-    .dasignature .danavbarcontainer {
-	display: none;
-    }
-    body.dasignature {
-	position: fixed;
-	top: 0px;
-	left: 0px;
-	margin: 0px;
-	width: 100%;
-	overflow: hidden;
-	font-size: small;
-	user-select: none;
-	padding-top: 40px;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	-ms-touch-action: none;
-	-webkit-tap-highlight-color: rgba(0,0,0,0);
-    }
-    body.dasignature > div > div.container > div.row > div.col {
-	padding: 0;
-    }
-    #dasigcontent{
-	padding: 0;
-    }
-    .dasigmidpart p {
-	margin: 0;
-	font-size: 14px;
-	line-height: 1.42857143;
-    }
-    .dasigheader {
-	top: 0px;
-	left: 0px;
-	right: 0px;
-	height: 42px;
-	padding: 6px;
-    }
-    .dasigfooter {
-	bottom: 0px;
-	left: 0px;
-	right: 0px;
-	height: 42px;
-	padding: 2px;
-    }
-    .dasigtitle {
-	line-height: 26px;
-	font-size: 18px;
-	color: #9d9d9d;
-	text-decoration: none;
-	text-shadow: 0 -1px 0 rgba(0,0,0,.25);
-    }
-    .dasigtoppart {
-	text-align: center;
-	padding: 0px;
-    }
-    .dasigmidpart {
-	text-align: center;
-	padding-top: 6px;
-	padding-bottom: 6px;
-    }
-    .dasigbottompart {
-	padding-top: 6px;
-    }
-    .dasigpost {
-	display: none;
-    }
-    .dasignature > div > .daright {
-	display: none;
-    }
-    .dasignature > div > .daattributions {
-	display: none;
-    }
-}
-
-.dasigheader{
+@media (width <= 575px) and (orientation: landscape) {
+  .dasignature .danavbarcontainer {
+    display: none;
+  }
+  body.dasignature {
     position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
+    font-size: small;
+    padding-top: 40px;
+    user-select: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  body.dasignature > div > div.container > div.row > div.col {
+    padding: 0;
+  }
+  #dasigcontent {
+    padding: 0;
+  }
+  .dasigmidpart p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4286;
+  }
+  .dasigheader {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 42px;
+    padding: 6px;
+  }
+  .dasigfooter {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 42px;
+    padding: 2px;
+  }
+  .dasigtitle {
+    line-height: 26px;
+    font-size: 18px;
+    color: #9d9d9d;
+    text-decoration: none;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  }
+  .dasigtoppart {
+    text-align: center;
+    padding: 0;
+  }
+  .dasigmidpart {
+    text-align: center;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+  .dasigbottompart {
+    padding-top: 6px;
+  }
+  .dasigpost {
+    display: none;
+  }
+  .dasignature > div > .daright {
+    display: none;
+  }
+  .dasignature > div > .daattributions {
+    display: none;
+  }
+}
+.dasigheader {
+  position: fixed;
 }
 
 .dasignav-left {
-    float:left;
-    margin-right: 10px;
+  float: left;
+  margin-right: 10px;
 }
 
 .dasignav-right {
-    float:right
+  float: right;
 }
 
 .dasignavbutton {
-    max-height: 30px;
+  max-height: 30px;
 }
 
-#dasigcanvas{
-    cursor: crosshair;
-    padding: 0;
+#dasigcanvas {
+  cursor: crosshair;
+  padding: 0;
 }
 
 .dasighidesmall {
-    display: none;
+  display: none;
 }
+
 .dasigshowsmallblock {
-    display: block;
+  display: block;
 }
 
 .dasigerrormessage {
-    text-align: center;
-    color: blue;
-    padding-bottom: 10px;
+  text-align: center;
+  color: blue;
+  padding-bottom: 10px;
 }
 
 .dasignotshowing {
-    display: none;
+  display: none;
 }
 
 .da-to-labelauty {
-    display: none;
+  display: none;
 }
 
 .dawordplayground .dasearchicon {
-    display: none;
+  display: none;
 }
 
-@media (max-width: 991px) {
-    .darlap-parent {
-	margin-bottom: 0 !important;
-    }
+@media (width <= 991px) {
+  .darlap-parent {
+    margin-bottom: 0 !important;
+  }
 }
-
-@media (min-width: 992px) {
-    .darlap-parent {
-	position: relative;
-    }
-    .darlap {
-	position: absolute;
-	margin-left: 100%;
-	width: 50%;
-    }
+@media (width >= 992px) {
+  .darlap-parent {
+    position: relative;
+  }
+  .darlap {
+    position: absolute;
+    margin-left: 100%;
+    width: 50%;
+  }
 }
-
 div.progress + div.daaudiovideo-control {
-    margin-top: 0.5rem !important;
+  margin-top: 0.5rem !important;
 }
 
 .daaudio-control {
-    width: 100%;
+  width: 100%;
 }
 
 .dajs-embedded {
-    overflow: auto;
+  overflow: auto;
 }
 
-div.dahide-navbar .navbar {
-    display: none;
-}
-
-tr:first-child .datableup, tr:last-child .databledown {
-    opacity: 0.5;
-    cursor: not-allowed !important;
+tr:first-child .datableup,
+tr:last-child .databledown {
+  opacity: 0.5;
+  cursor: not-allowed !important;
 }
 
 .datablehighlighted {
-  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(102, 102, 102, .6);
-          box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 16px rgba(102, 102, 102, .6);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 16px rgba(102, 102, 102, 0.6);
 }
 
 .danavbar-title {
-    max-width: 45%;
-    overflow: hidden;
+  max-width: 45%;
+  overflow: hidden;
 }
 
-@media (min-width: 992px) {
-    .danavbar-title {
-	max-width: 55%;
-    }
+@media (width >= 992px) {
+  .danavbar-title {
+    max-width: 55%;
+  }
 }
-
 .dalistright {
-    border-top-left-radius: 1em !important;
-    border-top-right-radius: 1em !important;
-    border-bottom-right-radius: 0em !important;
-    border-bottom-left-radius: 1em !important;
-    margin-left: 25%;
-    margin-bottom: 0.5em !important;
-    border-width: 0px;
+  border-radius: 1em 1em 0 !important;
+  margin-left: 25%;
+  margin-bottom: 0.5em !important;
+  border-width: 0;
 }
-
 
 .dalistleft {
-    border-top-left-radius: 1em !important;
-    border-top-right-radius: 1em !important;
-    border-bottom-right-radius: 1em !important;
-    border-bottom-left-radius: 0em !important;
-    margin-right: 25%;
-    margin-bottom: 0.5em !important;
-    border-width: 0px;
+  border-radius: 1em 1em 1em 0 !important;
+  margin-right: 25%;
+  margin-bottom: 0.5em !important;
+  border-width: 0;
 }
 
-.daChatMessage {
-    border-top-left-radius: 1em !important;
-    border-top-right-radius: 1em !important;
-    border-bottom-right-radius: 1em !important;
-    border-bottom-left-radius: 1em !important;
-    margin-left: 25%;
-    margin-right: 0.5em;
+.dachatmessage {
+  border-radius: 1em !important;
+  margin-left: 25%;
+  margin-right: 0.5em;
 }
 
-@media (max-width: 575px) {
-    .daChatMessage {
-	margin-left: 0;
-    }
+@media (width <= 575px) {
+  .dachatmessage {
+    margin-left: 0;
+  }
+}
+.dachatmessage:disabled {
+  cursor: not-allowed !important;
 }
 
-.daChatMessage:disabled {
-    cursor: not-allowed !important;
-}
-
-.daChatButton:disabled {
-    cursor: not-allowed !important;
+.dachatbutton:disabled {
+  cursor: not-allowed !important;
 }
 
 .dawide .col-xl-1,
@@ -1833,10 +1751,9 @@ tr:first-child .datableup, tr:last-child .databledown {
 .dawide .col-md-9,
 .dawide .col-md-10,
 .dawide .col-md-11 {
-    -webkit-box-flex: 0 !important;
-    -ms-flex: 0 0 100% !important;
-    flex: 0 0 100% !important;
-    max-width: 100% !important;
+  -webkit-box-flex: 0 !important;
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
 }
 
 .dawide .offset-md-2,
@@ -1845,36 +1762,36 @@ tr:first-child .datableup, tr:last-child .databledown {
 .dawide .offset-xl-1,
 .dawide .offset-xl-3,
 .dawide .offset-lg-3 {
-    margin-left: 0 !important;
+  margin-left: 0 !important;
 }
 
 .dawide .datext-right {
-    text-align: left !important;
+  text-align: left !important;
 }
 
-.dawide .da-form-group.darequired .da-form-label:after {
-    bottom: 0.7rem !important;
-    top: auto !important;
-    right: auto !important;
+.dawide .da-form-group.darequired .da-form-label::after {
+  bottom: 0.7rem !important;
+  top: auto !important;
+  right: auto !important;
 }
 
 .dawideimage {
-    width: 100%;
-    height: auto;
+  width: 100%;
+  height: auto;
 }
 
 .navbar .dropdown .dropdown-toggle {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .da-wrap-toggle {
-    float: right;
+  float: right;
 }
 
 .da-wrap-toggle svg {
-    width: 1em;
-    height: 1em;
-    fill: currentColor;
+  width: 1em;
+  height: 1em;
+  fill: currentcolor;
 }
 
 .dafooter {
@@ -1892,12 +1809,12 @@ body.da-pad-for-footer {
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
 input[type=number] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .da-review-button {
@@ -1917,76 +1834,75 @@ a.dadisabled {
   pointer-events: none;
 }
 
-.danavlinknopad {
-}
-
 @media (orientation: portrait) {
-    .da-d-sm-block {
-	display: block !important;
-    }
-    .da-d-sm-none {
-	display: none !important;
-    }
+  .da-d-sm-block {
+    display: block !important;
+  }
+  .da-d-sm-none {
+    display: none !important;
+  }
 }
-
-div.da-field-container-datatype-range .da-top-label {
-    margin-bottom: 1.5rem;
-}
-
 code {
-    white-space: pre;
+  white-space: pre;
 }
 
 div.form-text .daterm {
-    color: inherit;
+  color: inherit;
 }
 
 .dalabelauty {
-    margin-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 div.da-grid-container > div.dafieldpart > div.da-field-radio {
-    margin-bottom: -0.5rem;
+  margin-bottom: -0.5rem;
 }
 
 div.da-grid-container > div.dafieldpart > div.da-field-checkbox {
-    margin-bottom: -0.5rem;
+  margin-bottom: -0.5rem;
 }
 
 div.da-grid-container > div.dafieldpart > div.da-field-checkboxes {
-    margin-bottom: -0.5rem;
+  margin-bottom: -0.5rem;
 }
 
 [data-bs-theme=dark] #dasigcanvas {
-    background-color: #777;
+  background-color: #777;
 }
 
 .da-paper-stack {
-    position: relative;
-    display: inline-block;
-    margin-right: 10px;
-    margin-bottom: 10px;
+  position: relative;
+  display: inline-block;
+  margin-right: 10px;
+  margin-bottom: 10px;
 }
+
 .da-paper {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: white;
-    border: 1px solid #ddd;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
 .da-paper:nth-child(1) {
-    z-index: 10;
+  z-index: 10;
 }
+
 .da-paper:nth-child(2) {
-    transform: translate(5px, 5px);
-    z-index: 9;
+  transform: translate(5px, 5px);
+  z-index: 9;
 }
+
 .da-paper:nth-child(3) {
-    transform: translate(10px, 10px);
-    z-index: 8;
+  transform: translate(10px, 10px);
+  z-index: 8;
 }
+
 .da-paper:nth-child(4) {
-    transform: translate(15px, 15px);
-    z-index: 7;
+  transform: translate(15px, 15px);
+  z-index: 7;
 }
+
+/*# sourceMappingURL=app.css.map */

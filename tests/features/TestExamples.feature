@@ -28,6 +28,18 @@ Feature: Example interviews
     Then I should see the phrase "Ok, I am done"
     And I should see the phrase "The answer is 555."
 
+  Scenario: Test the interview "Return a value and show a message"
+    Given I start the interview "docassemble.base:data/questions/examples/background_action_flash.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Your answer will appear shortly."
+    And I wait 12 seconds
+    Then I should see the phrase "The answer is 555."
+    And I click the button "Continue"
+    Then I should see the phrase "All done."
+    And I should see the phrase "The answer is 555."
+
   Scenario: Test the interview "Preview"
     Given I start the interview "docassemble.demo:data/questions/examples/preview.yml"
     Then I should see the phrase "The food section"
@@ -209,18 +221,6 @@ Feature: Example interviews
     Then I should see the phrase "A tall green creature that explodes if you get too close."
     And I click the button "No"
     Then I should see the phrase "You clearly need to play more Minecraft."
-
-  Scenario: Test the interview "Return a value and show a message"
-    Given I start the interview "docassemble.base:data/questions/examples/background_action_flash.yml"
-    Then I should see the phrase "How much shall I add to 553?"
-    And I set "Number" to "2"
-    And I click the button "Continue"
-    Then I should see the phrase "Your answer will appear shortly."
-    And I wait 12 seconds
-    Then I should see the phrase "The answer is 555."
-    And I click the button "Continue"
-    Then I should see the phrase "All done."
-    And I should see the phrase "The answer is 555."
 
   # Scenario: Test the interview "Return a value and run Javascript"
   #   Given I start the interview "docassemble.base:data/questions/examples/background_action_javascript.yml"
@@ -4104,10 +4104,10 @@ Feature: Example interviews
   Scenario: Test the interview "Sections as list"
     Given I start the interview "docassemble.base:data/questions/examples/sections-keywords-get-sections.yml"
     Then I should see the phrase "Welcome to the interview"
-    Then I should see the phrase "[{'intro': 'Introduction'}"
-    And I should see the phrase "'about': 'About you'"
-    And I should see the phrase "'subsections': [{'contact': 'Contact info'}, {'demographic': 'Demographics'}]"
-    And I should see the phrase "{'prefs': 'Preferences'}, {'conclusion': 'Conclusion'}"
+    Then I should see the phrase "Introduction"
+    And I should see the phrase "About you"
+    And I should see the phrase "subsections"
+    And I should see the phrase "Preferences"
 
   Scenario: Test the interview "Navigation with review pages"
     Given I start the interview "docassemble.base:data/questions/examples/sections-keywords-review.yml"
@@ -5391,7 +5391,7 @@ Feature: Example interviews
   Scenario: Test the interview "Missing mandatory"
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/no-mandatory.yml"
     Then I should explicitly see the phrase "Error"
-    And I should explicitly see the phrase "Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any). It is a best practice to end your interview with a question that says goodbye and offers an Exit button."
+    And I should explicitly see the phrase "Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any). It is a best practice to end your interview with a question that says goodbye."
 
   Scenario: Test the interview "Number format"
     Given I start the interview "docassemble.base:data/questions/examples/number-formatting.yml"
@@ -5813,7 +5813,7 @@ Feature: Example interviews
     Then I should see the phrase "What is your date of birth?"
     And I set the text box to "08/01/1989"
     And I click the button "Continue"
-    Then I should see the phrase "You are 35 years old."
+    Then I should see the phrase "You are 36 years old."
 
   # Scenario: Test the interview "Test e-mail attachment"
   #   Given I start the interview "docassemble.demo:data/questions/testattach.yml"
@@ -8215,7 +8215,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/fields-ajax-list-collect.yml"
     Then I should see the phrase "What is your first favorite word?"
     And I set the combobox text to "friendly"
-    And I wait 1 second
+    And I wait 3 seconds
     And I select "friendly" from the combobox dropdown
     And I unfocus
     And I click the button "Continue"

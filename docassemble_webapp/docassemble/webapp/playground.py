@@ -100,7 +100,7 @@ class DAInterview(DAObject):
         info['readme'] = ""
         info['description'] = self.title
         info['version'] = "1.0"
-        info['license'] = "The MIT License"
+        info['license'] = "MIT"
         info['url'] = "https://docassemble.org"
         for block in self.all_blocks():
             if hasattr(block, 'templates_used'):
@@ -488,8 +488,8 @@ class Playground(PlaygroundSection):
         temp_current_info['yaml_filename'] = "docassemble.playground" + str(self.user_id) + project_name(self.project) + ":_temp.yml"
         interview_status = docassemble.base.parse.InterviewStatus(current_info=temp_current_info)
         user_dict = docassemble.base.parse.get_initial_dict()
-        user_dict['_internal']['starttime'] = datetime.datetime.utcnow()
-        user_dict['_internal']['modtime'] = datetime.datetime.utcnow()
+        user_dict['_internal']['starttime'] = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        user_dict['_internal']['modtime'] = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
         try:
             interview.assemble(user_dict, interview_status)
         except:

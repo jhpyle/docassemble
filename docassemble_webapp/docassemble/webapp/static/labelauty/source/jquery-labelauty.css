@@ -9,102 +9,92 @@
 
 /* Edited by Jonathan Pyle, 2018 */
 
-.hidden_element {
-    position: absolute !important;
-    top: -1000 !important;
+.hiddenelement {
+  position: absolute !important;
+  top: -1000 !important;
 }
 
 /* Hide original checkboxes. They are ugly! */
-input.labelauty { display: none !important; }
+input.labelauty {
+  display: none !important;
+}
 
 /*
  * Let's style the input
  * Feel free to work with it as you wish!
  */
-input.labelauty + label
-{
-	display: table;
-	font-size: 16px;
-	padding: 10px 10px 10px 2rem;
-	line-height: 1.0;
-	cursor: pointer;
-
-	border-radius: 3px 3px 3px 3px;
-	-moz-border-radius: 3px 3px 3px 3px;
-	-webkit-border-radius: 3px 3px 3px 3px;
-
-	-moz-user-select: none;
-	-khtml-user-select: none;
-	-webkit-user-select: none;
-	-o-user-select: none;
-	position: relative;
+input.labelauty + label {
+  display: table;
+  font-size: 16px;
+  padding: 10px 10px 10px 2rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+  user-select: none;
+  position: relative;
 }
 
 /* Stylish text inside label */
 
 input.labelauty + label > span.labelauty-unchecked,
-input.labelauty + label > span.labelauty-checked
-{
-	display: inline;
-	line-height: 16px;
-	vertical-align: bottom;
+input.labelauty + label > span.labelauty-checked {
+  display: inline;
+  line-height: 16px;
+  vertical-align: bottom;
 }
 
 /* Stylish icons inside label */
 
 input.labelauty + label > span.labelauty-unchecked-image,
-input.labelauty + label > span.labelauty-checked-image
-{
-	display: inline-block;
-	width: 16px;
-	height: 16px;
-	vertical-align: bottom;
-	position: absolute;
-	left: 10px;
-	top: 11px;
+input.labelauty + label > span.labelauty-checked-image {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: bottom;
+  position: absolute;
+  left: 10px;
+  top: 11px;
 }
 
 /* When there's a label, add a little margin to the left */
-input.labelauty + label > span.labelauty-unchecked-image + span.labelauty-unchecked,
-input.labelauty + label > span.labelauty-checked-image + span.labelauty-checked
-{
-    /* margin-left: 7px; */
+input.labelauty
+  + label
+  > span.labelauty-unchecked-image
+  + span.labelauty-unchecked,
+input.labelauty
+  + label
+  > span.labelauty-checked-image
+  + span.labelauty-checked {
+  /* margin-left: 7px; */
 }
 
 /* When not Checked */
-input.labelauty:not(:checked) + label > span.labelauty-checked-image
-{
-	display: none;
+input.labelauty:not(:checked) + label > span.labelauty-checked-image {
+  display: none;
 }
 
-input.labelauty:not(:checked) + label > span.labelauty-checked
-{
-	display: none;
+input.labelauty:not(:checked) + label > span.labelauty-checked {
+  display: none;
 }
 
 /* When Checked */
-input.labelauty:checked + label > span.labelauty-unchecked-image
-{
-	display: none;
+input.labelauty:checked + label > span.labelauty-unchecked-image {
+  display: none;
 }
 
-input.labelauty:checked + label > span.labelauty-unchecked
-{
-	display: none;
+input.labelauty:checked + label > span.labelauty-unchecked {
+  display: none;
 }
 
-input.labelauty:checked + label > span.labelauty-checked
-{
-	display: inline;
+input.labelauty:checked + label > span.labelauty-checked {
+  display: inline;
 }
 
-input.labelauty.no-label:checked + label > span.labelauty-checked
-{
-	display: block;
+input.labelauty.no-label:checked + label > span.labelauty-checked {
+  display: block;
 }
 
 /* When Disabled */
-input.labelauty[disabled] + label
-{
-	opacity: 0.5;
+input.labelauty[disabled] + label {
+  opacity: 0.5;
 }

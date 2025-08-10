@@ -66,7 +66,11 @@ BUTTON_COLOR_BACK_TO_QUESTION = daconfig['button colors'].get('back to question'
 DEFAULT_LABELAUTY_COLOR = daconfig['button colors'].get('labelauty', 'primary')
 DEFAULT_LABELAUTY_NOTA_COLOR = daconfig['button colors'].get('labelauty nota', DEFAULT_LABELAUTY_COLOR)
 DEFAULT_LABELAUTY_AOTA_COLOR = daconfig['button colors'].get('labelauty aota', DEFAULT_LABELAUTY_COLOR)
-
+USE_GOOGLE_PLACES_NEW_API = daconfig['google']['use places api new']
+if USE_GOOGLE_PLACES_NEW_API:
+    DEFAULT_AUTOCOMPLETE = {"types": ["street_address"], "fields": ["addressComponents"]}
+else:
+    DEFAULT_AUTOCOMPLETE = {"types": ["address"], "fields": ["address_components"]}
 
 def paren_phrase(status, phrase):
     if status.extras.get('describe_file_types', True) and phrase != "":
@@ -795,6 +799,10 @@ def sub_indices(the_var, special_vars):
     return the_var
 
 
+def strip_script_tags(script):
+    return re.sub(r'</?script[^>]*>', '', script)
+
+
 def as_html(status, debug, root, validation_rules, field_error, the_progress_bar, steps):
     decorations = []
     audio_text = ''
@@ -819,7 +827,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     labels_above = status.question.interview.options.get('labels above', False)
     floating_labels = status.question.interview.options.get('floating labels', False)
     if 'script' in status.extras and status.extras['script'] is not None:
-        status.extra_scripts.append(status.extras['script'])
+        status.extra_scripts.append({"type": "custom", "script": strip_script_tags(status.extras['script'])})
     if 'css' in status.extras and status.extras['css'] is not None:
         status.extra_css.append(status.extras['css'])
     if status.continueLabel:
@@ -1262,7 +1270,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     validation_rules['messages'][the_saveas] = {}
                 if 'address_autocomplete' in status.extras and field.number in status.extras['address_autocomplete'] and status.extras['address_autocomplete'][field.number]:
                     if isinstance(status.extras['address_autocomplete'][field.number], bool):
-                        autocomplete_info.append([the_saveas, {"types": ["address"], "fields": ["address_components"]}])
+                        autocomplete_info.append([the_saveas, DEFAULT_AUTOCOMPLETE])
                     elif isinstance(status.extras['address_autocomplete'][field.number], dict):
                         autocomplete_info.append([the_saveas, status.extras['address_autocomplete'][field.number]])
                     else:
@@ -2252,6 +2260,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += help_button_area
         if showUnderText:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
+        if 'track_location' in status.extras and status.extras['track_location']:
+            output += '            <form>\n'
+            output += tracker_tag(status)
+            output += '            </form>\n'
     else:
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'
@@ -2526,8 +2538,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                   <div class="col">
                     <div class="input-group">
                       <label for="daMessage" class="visually-hidden">""" + word("Chat message you want to send") + """</label>
-                      <input type="text" class="form-control daChatMessage" id="daMessage" placeholder=""" + fix_double_quote(word("Type your message here.")) + """>
-                      <button class="btn """ + BUTTON_STYLE + """secondary daChatButton" id="daSend" type="button">""" + word("Send") + """</button>
+                      <input type="text" class="form-control dachatmessage" id="daMessage" placeholder=""" + fix_double_quote(word("Type your message here.")) + """>
+                      <button class="btn """ + BUTTON_STYLE + """secondary dachatbutton" id="daSend" type="button">""" + word("Send") + """</button>
                     </div>
                   </div>
                 </div>
@@ -2581,129 +2593,22 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     add_validation(status.extra_scripts, validation_rules, field_error)
     for element_id_unescaped in onchange:
         element_id = re.sub(r'(:|\.|\[|\]|,|=)', r'\\\\\1', element_id_unescaped)
-        the_script = """\
-    <script>
-      $('[name=""" + '"' + element_id + '"' + """]').change(function(){
-        if ($(this).attr('type') == "checkbox" || $(this).attr('type') == "radio"){
-          theVal = $('[name=""" + '"' + element_id + '"' + """]:checked').val();
-        }
-        else{
-          theVal = $( this ).val();
-        }
-        var n = 0;
-        if ($(this).data('disableothers')){
-          var id_list = JSON.parse(decodeURIComponent(escape(atob($(this).data('disableothers')))));
-          n = id_list.length;
-        }
-        if (n){
-          for(var i = 0; i < n; ++i){
-            var the_element_id = id_list[i].replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            if (theVal == null || theVal == ""){
-              daDisableIfNotHidden("#daform [name='" + the_element_id + "']:not([type=hidden])", false);
-              daDisableIfNotHidden("#daform [id='" + the_element_id + "']:not([type=hidden])", false);
-            }
-            else{
-              daDisableIfNotHidden("#daform [name='" + the_element_id + "']:not([type=hidden])", true);
-              daDisableIfNotHidden("#daform [id='" + the_element_id + "']:not([type=hidden])", true);
-            }
-          }
-        }
-        else{
-          if (theVal == null || theVal == ""){
-            daDisableIfNotHidden("#daform input:not([name='""" + element_id + """']):not([id^='""" + element_id + """']):not([type=hidden])", false);
-            daDisableIfNotHidden("#daform select:not([name='""" + element_id + """']):not([id^='""" + element_id + """']):not([type=hidden])", false);
-            daDisableIfNotHidden("#daform textarea:not([name='""" + element_id + """']):not([type=hidden])", false);
-          }
-          else{
-            daDisableIfNotHidden("#daform input:not([name='""" + element_id + """']):not([id^='""" + element_id + """']):not([type=hidden])", true);
-            daDisableIfNotHidden("#daform select:not([name='""" + element_id + """']):not([id^='""" + element_id + """']):not([type=hidden])", true);
-            daDisableIfNotHidden("#daform textarea:not([name='""" + element_id + """']):not([type=hidden])", true);
-          }
-        }
-      });
-      $("[data-disableothers]").trigger('change');
-    </script>
-"""  # noqa: W605
-        status.extra_scripts.append(the_script)
+        status.extra_scripts.append({"type": "listeners", "element": element_id})
     if 'track_location' in status.extras and status.extras['track_location']:
-        track_js = """\
-    <script>
-      function daSetPosition(position) {
-        document.getElementById('da_track_location').value = JSON.stringify({'latitude': position.coords.latitude, 'longitude': position.coords.longitude})
-      }
-      function daShowError(error) {
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            document.getElementById('da_track_location').value = JSON.stringify({error: "User denied the request for Geolocation"});
-            console.log("User denied the request for Geolocation.");
-            break;
-          case error.POSITION_UNAVAILABLE:
-            document.getElementById('da_track_location').value = JSON.stringify({error: "Location information is unavailable"});
-            console.log("Location information is unavailable.");
-            break;
-          case error.TIMEOUT:
-            document.getElementById('da_track_location').value = JSON.stringify({error: "The request to get user location timed out"});
-            console.log("The request to get user location timed out.");
-            break;
-          case error.UNKNOWN_ERROR:
-            document.getElementById('da_track_location').value = JSON.stringify({error: "An unknown error occurred"});
-            console.log("An unknown error occurred.");
-            break;
-        }
-      }
-      $( document ).ready(function() {
-        $(function () {
-          if (navigator.geolocation) {
-            document.getElementById('da_track_location').value = JSON.stringify({error: "getCurrentPosition was still running"});
-            navigator.geolocation.getCurrentPosition(daSetPosition, daShowError, {timeout: 1000, maximumAge: 3600000});
-          }
-          else{
-            document.getElementById('da_track_location').value = JSON.stringify({error: "navigator.geolocation not available in browser"});
-          }
-        });
-      });
-    </script>"""
-        status.extra_scripts.append(track_js)
+        status.extra_scripts.append({"type": "enable_tracking"})
     if len(autocomplete_info) > 0:
-        status.extra_scripts.append("""
-<script>
-  daInitAutocomplete(""" + json.dumps(autocomplete_info) + """);
-</script>
-""")
+        status.extra_scripts.append({"type": "autocomplete" if USE_GOOGLE_PLACES_NEW_API else "autocomplete_old", "info": autocomplete_info})
     if len(status.maps) > 0:
-        status.extra_scripts.append("""
-<script>
-  daInitMap([""" + ", ".join(status.maps) + """]);
-</script>
-""")
-        # google_config = daconfig.get('google', {})
-        # if 'google maps api key' in google_config:
-        #     api_key = google_config.get('google maps api key')
-        # elif 'api key' in google_config:
-        #     api_key = google_config.get('api key')
-        # else:
-        #     raise DAException('google API key not provided')
-        # status.extra_scripts.append('<script async defer src="https://maps.googleapis.com/maps/api/js?key=' + urllibquote(api_key) + '&callback=daInitMap"></script>')
+        status.extra_scripts.append({"type": "map", "maps": [json.loads(item) for item in status.maps]})
     return master_output
 
 
 def add_validation(extra_scripts, validation_rules, field_error):
-    if field_error is None:
-        error_show = ''
-    else:
-        error_mess = {}
+    error_mess = {}
+    if field_error is not None:
         for key, val in field_error.items():
             error_mess[key] = val
-        error_show = "\n    daValidator.showErrors(" + json.dumps(error_mess) + ");"
-    extra_scripts.append("""<script>
-  var daValidationRules = """ + json.dumps(validation_rules) + """;
-  daValidationRules.submitHandler = daValidationHandler;
-  daValidationRules.invalidHandler = daInvalidHandler;
-  daValidationRules.onfocusout = daInjectTrim($.validator.defaults.onfocusout);
-  if ($("#daform").length > 0){
-    var daValidator = $("#daform").validate(daValidationRules);""" + error_show + """
-  }
-</script>""")
+    extra_scripts.append({"type": "validation", "rules": validation_rules, "messages": error_mess})
 
 
 def locale_format_string(the_value):
@@ -2862,6 +2767,8 @@ def input_for(status, field, embedded=False, floating_label=None):
         autocomplete_off = ''
     if 'css class' in status.extras and field.number in status.extras['css class']:
         extra_class += ' ' + clean_whitespace(status.extras['css class'][field.number])
+    if USE_GOOGLE_PLACES_NEW_API and 'address_autocomplete' in status.extras and field.number in status.extras['address_autocomplete'] and status.extras['address_autocomplete'][field.number]:
+        extra_class += ' da-address-combobox'
     is_hidden = hasattr(field, 'inputtype') and field.inputtype == 'hidden'
     if hasattr(field, 'choicetype') and not is_hidden:
         if field.choicetype in ['compute', 'manual']:
@@ -3496,7 +3403,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                     output += '<span class="daslider daslider-embedded"' + title_text + '><input alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + disable_others_data + disabled_attr + ' data-slider-id="' + escape_id(saveas_string) + '_slider" /></span><br>'
                 else:
                     output += '<input class="daslider" alt="' + word('Select a value between') + ' ' + min_string + ' ' + word('and') + ' ' + max_string + '" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + the_default + ' data-slider-max="' + max_string + '" data-slider-min="' + min_string + '"' + the_step + disable_others_data + disabled_attr + ' data-slider-id="' + escape_id(saveas_string) + '_slider" />'
-                status.extra_scripts.append('<script>$("#' + escape_for_jquery(saveas_string) + '").slider({tooltip: "always", enabled: ' + ('false' if is_disabled else 'true') + '});</script>\n')
+                status.extra_scripts.append({"type": "slider", "id": escape_for_jquery(saveas_string), "enabled": not is_disabled})
         elif hasattr(field, 'inputtype') and field.inputtype == 'area':
             if embedded:
                 output += '<span class="da-embed-area-wrapper">'

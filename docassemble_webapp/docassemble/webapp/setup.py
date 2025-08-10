@@ -125,3 +125,4 @@ app.config['USER_PROFILE_FIELDS'] = daconfig.get('user profile fields', [])
 app.config['GRID_CLASSES_USER'] = daconfig['grid classes']['user']
 app.config['GRID_CLASSES_WIDE'] = daconfig['grid classes']['admin wide']
 app.config['GRID_CLASSES_ADMIN'] = daconfig['grid classes']['admin']
+app.config['DEFER'] = daconfig['javascript defer']

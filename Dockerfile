@@ -54,39 +54,39 @@ bash -c \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
 && python3 -m venv --copies /usr/share/docassemble/local3.12 \
 && source /usr/share/docassemble/local3.12/bin/activate \
-&& pip install --upgrade pip==25.1.1 \
+&& pip install --upgrade pip==25.2 \
 && pip install --upgrade wheel==0.45.1 \
 && pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \
-   acme==3.1.0 \
-   certbot==3.1.0 \
-   certbot-apache==3.1.0 \
-   certbot-nginx==3.1.0 \
-   certifi==2025.1.31 \
+   acme==4.1.1 \
+   certbot==4.1.1 \
+   certbot-apache==4.1.1 \
+   certbot-nginx==4.1.1 \
+   certifi==2025.8.3 \
    cffi==1.17.1 \
-   charset-normalizer==3.4.1 \
-   click==8.1.8 \
-   ConfigArgParse==1.7 \
+   charset-normalizer==3.4.2 \
+   click==8.2.1 \
+   ConfigArgParse==1.7.1 \
    configobj==5.0.9 \
-   cryptography==43.0.3 \
+   cryptography==45.0.5 \
    distro==1.9.0 \
    idna==3.10 \
-   joblib==1.4.2 \
-   josepy==1.15.0 \
+   joblib==1.5.1 \
+   josepy==2.1.0 \
    nltk==3.9.1 \
    parsedatetime==2.6 \
    pycparser==2.22 \
-   pyOpenSSL==24.2.1 \
+   pyOpenSSL==25.1.0 \
    pyparsing==3.2.3 \
    pyRFC3339==2.0.1 \
-   python-augeas==1.1.0 \
+   python-augeas==1.2.0 \
    pytz==2025.2 \
-   regex==2024.11.6 \
-   requests==2.32.3 \
+   regex==2025.7.34 \
+   requests==2.32.4 \
    six==1.17.0 \
    tqdm==4.67.1 \
-   typing_extensions==4.13.1 \
-   urllib3==2.3.0 \
+   typing_extensions==4.14.1 \
+   urllib3==2.5.0 \
 && pip install \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \

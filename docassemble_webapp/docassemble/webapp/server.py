@@ -17,6 +17,8 @@ import logging
 import math
 import mimetypes
 import operator
+import tomli
+import tomli_w
 import os
 import pickle
 import re
@@ -76,7 +78,7 @@ from docassemble.webapp.develop import CreatePackageForm, CreatePlaygroundPackag
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, DEFAULT_GITIGNORE
 from docassemble.webapp.fixpickle import fix_pickle_obj
 from docassemble.webapp.info import system_packages
-from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection
+from docassemble.webapp.jsonstore import read_answer_json, write_answer_json, delete_answer_json, variables_snapshot_connection, variables_snapshot_connect
 import docassemble.webapp.machinelearning
 from docassemble.webapp.packages.models import Package, PackageAuth
 from docassemble.webapp.playground import PlaygroundSection
@@ -131,7 +133,7 @@ except ImportError:
     from backports import zoneinfo
 import qrcode
 import qrcode.image.svg
-from rauth import OAuth1Service, OAuth2Service
+from rauth import OAuth2Service
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import requests
@@ -145,6 +147,7 @@ import twilio.twiml.voice_response
 from twilio.rest import Client as TwilioRestClient
 import werkzeug.exceptions
 import werkzeug.utils
+from werkzeug.datastructures import Headers
 import wtforms
 import xlsxwriter
 from user_agents import parse as ua_parse
@@ -174,6 +177,7 @@ ERROR_TYPES_NO_EMAIL = daconfig.get('suppress error notificiations', [])
 COOKIELESS_SESSIONS = daconfig.get('cookieless sessions', False)
 BAN_IP_ADDRESSES = daconfig.get('ip address ban enabled', True)
 CONCURRENCY_LOCK_TIMEOUT = daconfig.get('concurrency lock timeout', 4)
+DEFER = ' defer' if daconfig['javascript defer'] else ''
 
 if DEBUG:
     PREVENT_DEMO = False
@@ -208,6 +212,7 @@ PERMISSIONS_LIST = [
 
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 GITHUB_BRANCH = daconfig.get('github default branch name', 'main')
+USE_GOOGLE_PLACES_NEW_API = daconfig['google']['use places api new']
 request_active = True
 
 global_css = ''
@@ -474,6 +479,66 @@ ok_extensions = {
 }
 
 
+def nginx_send_file(path, mimetype=None, as_attachment=False, download_name=None):
+    headers = Headers()
+    f_stat = os.stat(path)
+    size = f_stat.st_size
+    mtime = f_stat.st_mtime
+    if download_name is None:
+        download_name = os.path.basename(path)
+
+    if mimetype is None:
+        if download_name is None:
+            raise TypeError(
+                "Unable to detect the MIME type because a file name is"
+                " not available. Either set 'download_name', pass a"
+                " path instead of a file, or set 'mimetype'."
+            )
+        mimetype, encoding = mimetypes.guess_type(download_name)  # pylint: disable=unused-variable
+        if mimetype is None:
+            mimetype = "application/octet-stream"
+
+    if download_name is not None:
+        try:
+            download_name.encode("ascii")
+        except UnicodeEncodeError:
+            simple = unicodedata.normalize("NFKD", download_name)
+            simple = simple.encode("ascii", "ignore").decode("ascii")
+            quoted = urllibquote(download_name, safe="!#$&+-.^_`|~")
+            names = {"filename": simple, "filename*": f"UTF-8''{quoted}"}
+        else:
+            names = {"filename": download_name}
+        value = "attachment" if as_attachment else "inline"
+        headers.set("Content-Disposition", value, **names)
+    elif as_attachment:
+        raise TypeError(
+            "No name provided for attachment. Either set"
+            " 'download_name' or pass a path instead of a file."
+        )
+    headers['X-Accel-Redirect'] = '/xaccel' + path
+    rv = Response(
+        None, mimetype=mimetype, headers=headers, direct_passthrough=True
+    )
+    if size is not None:
+        rv.content_length = size
+    if mtime is not None:
+        rv.last_modified = mtime
+    rv.cache_control.no_cache = True
+    max_age = app.get_send_file_max_age(path)
+    if max_age is not None:
+        if max_age > 0:
+            rv.cache_control.no_cache = None
+            rv.cache_control.public = True
+        rv.cache_control.max_age = max_age
+        rv.expires = int(time.time() + max_age)
+    return rv
+
+if daconfig['web server'] == 'nginx' and daconfig.get('use nginx to serve files', False):
+    custom_send_file = nginx_send_file
+else:
+    custom_send_file = send_file
+
+
 def update_editable():
     try:
         if 'editable mimetypes' in daconfig and isinstance(daconfig['editable mimetypes'], list):
@@ -497,6 +562,12 @@ default_yaml_filename = daconfig.get('default interview', None)
 final_default_yaml_filename = daconfig.get('default interview', 'docassemble.base:data/questions/default-interview.yml')
 keymap = daconfig.get('keymap', None)
 google_config = daconfig['google']
+if 'google maps api key' in google_config:
+    google_api_key = google_config.get('google maps api key')
+elif 'api key' in google_config:
+    google_api_key = google_config.get('api key')
+else:
+    google_api_key = None
 
 contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
 is_integer = re.compile(r'^[0-9]+$')
@@ -688,6 +759,22 @@ def _get_safe_next_param(param_name, default_endpoint):
 #     return redirect(safe_next)
 
 
+def redis_script(data):
+    js = f"Object.assign(window, {json.dumps(data)});"
+    while True:
+        random_key = str(uuid.uuid4())
+        key = 'da:rjs:' + random_key
+        with r.pipeline() as pipe:
+            pipe.watch(key)
+            if not pipe.exists(key):
+                pipe.multi()
+                pipe.set(key, js)
+                pipe.expire(key, 60)
+                pipe.execute()
+                break
+    return f'<script{DEFER} src="{url_for("rjs", key=random_key)}"></script>'
+
+
 def custom_resend_confirm_email():
     user_manager = current_app.user_manager
     form = user_manager.resend_confirm_email_form(request.form)
@@ -875,7 +962,7 @@ def custom_register():
         if user_invite:
             if user_invite.email == register_form.email.data:
                 require_email_confirmation = False
-                db_adapter.update_object(user, confirmed_at=datetime.datetime.utcnow())
+                db_adapter.update_object(user, confirmed_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None))
 
         db_adapter.commit()
 
@@ -1020,11 +1107,11 @@ def custom_login():
         return jsonify(action='login', csrf_token=generate_csrf())
     # if 'officeaddin' in safe_next:
     #     extra_css = """
-    # <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.debug.js"></script>"""
+    # <script src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.debug.js"></script>"""
     #     extra_js = """
-    # <script type="text/javascript" src=""" + '"' + url_for('static', filename='office/fabric.js') + '"' + """></script>
-    # <script type="text/javascript" src=""" + '"' + url_for('static', filename='office/polyfill.js') + '"' + """></script>
-    # <script type="text/javascript" src=""" + '"' + url_for('static', filename='office/app.js') + '"' + """></script>"""
+    # <script src=""" + '"' + url_for('static', filename='office/fabric.js') + '"' + """></script>
+    # <script src=""" + '"' + url_for('static', filename='office/polyfill.js') + '"' + """></script>
+    # <script src=""" + '"' + url_for('static', filename='office/app.js') + '"' + """></script>"""
     #     return render_template(user_manager.login_template,
     #                            form=login_form,
     #                            login_form=login_form,
@@ -1867,11 +1954,11 @@ def get_url_from_file_reference(file_reference, **kwargs):
         return url_for('interview_list', **kwargs)
     if file_reference == 'exit':
         remove_question_package(kwargs_with_i)
-        encrypt_next(kwargs)
+        encrypt_next(kwargs_with_i)
         return url_for('exit_endpoint', **kwargs_with_i)
     if file_reference == 'exit_logout':
         remove_question_package(kwargs_with_i)
-        encrypt_next(kwargs)
+        encrypt_next(kwargs_with_i)
         return url_for('exit_logout', **kwargs_with_i)
     if file_reference == 'dispatch':
         remove_question_package(kwargs)
@@ -2045,7 +2132,7 @@ def pad_to_16(the_string):
 
 def decrypt_session(secret, user_code=None, filename=None):
     # logmessage("decrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
-    nowtime = datetime.datetime.utcnow()
+    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     if user_code is None or filename is None or secret is None:
         return
     for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
@@ -2068,7 +2155,7 @@ def decrypt_session(secret, user_code=None, filename=None):
 
 def encrypt_session(secret, user_code=None, filename=None):
     # logmessage("encrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
-    nowtime = datetime.datetime.utcnow()
+    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     if user_code is None or filename is None or secret is None:
         return
     for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=False).with_for_update()).scalars():
@@ -2350,7 +2437,7 @@ def get_examples():
 
 
 def add_timestamps(the_dict, manual_user_id=None):
-    nowtime = datetime.datetime.utcnow()
+    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     the_dict['_internal']['starttime'] = nowtime
     the_dict['_internal']['modtime'] = nowtime
     if manual_user_id is not None or (current_user and current_user.is_authenticated):
@@ -2474,81 +2561,54 @@ def do_refresh(is_ajax, yaml_filename):
 
 def standard_scripts(interview_language=DEFAULT_LANGUAGE, external=False):
     if interview_language in ('ar', 'cs', 'et', 'he', 'ka', 'nl', 'ro', 'th', 'zh', 'az', 'da', 'fa', 'hu', 'kr', 'no', 'ru', 'tr', 'bg', 'de', 'fi', 'id', 'kz', 'pl', 'sk', 'uk', 'ca', 'el', 'fr', 'it', 'sl', 'uz', 'cr', 'es', 'gl', 'ja', 'lt', 'pt', 'sv', 'vi'):
-        fileinput_locale = '\n    <script src="' + url_for('static', filename='bootstrap-fileinput/js/locales/' + interview_language + '.js', v=da_version, _external=external) + '"></script>'
+        fileinput_locale = f'\n  <script{DEFER} src="{url_for("static", filename="bootstrap-fileinput/js/locales/" + interview_language + ".js", v=da_version, _external=external)}"></script>'
     else:
         fileinput_locale = ''
-    return '\n    <script src="' + url_for('static', filename='app/bundle.js', v=da_version, _external=external) + '"></script>' + fileinput_locale
+    return f'\n  <script{DEFER} src="{url_for('static', filename='app/bundle.min.js', v=da_version, _external=external)}"></script>{fileinput_locale}'
 
 
-def additional_scripts(interview_status, yaml_filename, as_javascript=False):
-    scripts = ''
-    interview_package = re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename))
-    interview_filename = re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE)
-    if 'google maps api key' in google_config:
-        api_key = google_config.get('google maps api key')
-    elif 'api key' in google_config:
-        api_key = google_config.get('api key')
-    else:
-        api_key = None
-    if ga_configured and interview_status.question.interview.options.get('analytics on', True):
-        ga_ids = google_config.get('analytics id')
-    else:
-        ga_ids = None
-    output_js = ''
-    if api_key is not None:
-        region = google_config.get('region', None)
-        if region is None:
-            region = ''
+def additional_scripts(ga_ids, as_javascript=False):
+    output = ''
+    if google_api_key is not None:
+        if USE_GOOGLE_PLACES_NEW_API:
+            script_text = f"""\
+    (g=>{{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={{}});var d=b.maps||(b.maps={{}}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${{c}}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))}})({{
+      key: "{google_api_key}",
+      v: "weekly",
+    }});
+"""
+            if as_javascript:
+                output += script_text
+            else:
+                output += f"""\
+  <script>
+    {script_text}
+  </script>
+"""
         else:
-            region = '&region=' + region
-        scripts += "\n" + '    <script src="https://maps.googleapis.com/maps/api/js?key=' + api_key + region + '&libraries=places&callback=dagoogleapicallback"></script>'
-        if as_javascript:
-            output_js += """\
-      var daScript = document.createElement('script');
-      daScript.src = "https://maps.googleapis.com/maps/api/js?key=""" + api_key + """&libraries=places&callback=dagoogleapicallback";
-      document.head.appendChild(daScript);
+            region = google_config.get('region', None)
+            if region is None:
+                region = ''
+            else:
+                region = '&region=' + region
+            url = json.dumps(f"https://maps.googleapis.com/maps/api/js?key={google_api_key}{region}&libraries=places&loading=async")
+            if as_javascript:
+                output += f"""\
+    var daScript = document.createElement('script');
+    daScript.src = {url};
+    document.head.appendChild(daScript);
 """
+            else:
+                output += f"""
+  <script async src={url}></script>"""
     if ga_ids is not None:
-        the_js = """\
-      var dataLayer = window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      function daPageview(){
-        var idToUse = daQuestionID['id'];
-        if (daQuestionID['ga'] != undefined && daQuestionID['ga'] != null){
-          idToUse = daQuestionID['ga'];
-        }
-        if (idToUse != null){
-          if (!daGAConfigured){"""
-        for ga_id in ga_ids:
-            the_js += """
-            gtag('config', """ + json.dumps(ga_id) + """, {'send_page_view': false""" + (", 'cookie_flags': 'SameSite=None;Secure'" if app.config['SESSION_COOKIE_SECURE'] else '') + """});"""
-        the_js += """
-            daGAConfigured = true;
-          }
-          gtag('set', 'page_path', """ + json.dumps(interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_'));
-          gtag('event', 'page_view', {'page_path': """ + json.dumps(interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
-          //gtag('event', 'page_view', {'page_title': document.title, 'page_location': location.protocol + "//" + location.host + """ + json.dumps("/" + interview_package + "/" + interview_filename + "/") + """ + idToUse.replace(/[^A-Za-z0-9]+/g, '_')});
-        }
-      }
-"""
-        scripts += """
-    <script async src="https://www.googletagmanager.com/gtag/js?id=""" + ga_ids[0] + """"></script>
-    <script>
-""" + the_js + """
-    </script>
-"""
         if as_javascript:
-            # Not good to enable this, since most web sites would have Google Analytics already.
-            #             output_js += """
-            #       var daScript = document.createElement('script');
-            #       daScript.src = "https://www.googletagmanager.com/gtag/js?id=""" + ga_id + """";
-            #       document.head.appendChild(daScript);
-            # """
-            output_js += the_js
-    if as_javascript:
-        return output_js
-    return scripts
+            output += ""  # If embedding, Google Analytics needs to be handled by the host page.
+        else:
+            output += f"""
+  <script defer src="https://www.googletagmanager.com/gtag/js?id={ga_ids[0]}"></script>
+"""
+    return output
 
 
 def additional_css(interview_status, js_only=False):
@@ -2556,8 +2616,7 @@ def additional_css(interview_status, js_only=False):
         segment_id = daconfig['segment id']
     else:
         segment_id = None
-    start_output = ''
-    the_js = ''
+    output = ''
     if segment_id is not None:
         segment_js = """\
       !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t,e){var n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src="https://cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.1.0";
@@ -2588,16 +2647,17 @@ def additional_css(interview_status, js_only=False):
         }
       }
 """
-        start_output += """
-    <script>
-""" + segment_js + """\
+        if js_only:
+            return segment_js
+        output += f"""
+    <script{DEFER}>
+{segment_js}
     </script>"""
-        the_js += segment_js
+    elif js_only:
+        return ''
     if len(interview_status.extra_css) > 0:
-        start_output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
-    if js_only:
-        return the_js
-    return start_output
+        output += '\n' + indent_by("".join(interview_status.extra_css).strip(), 4).rstrip()
+    return output
 
 
 def standard_html_start(interview_language=DEFAULT_LANGUAGE, debug=False, bootstrap_theme=None, external=False, page_title=None, social=None, yaml_filename=None):
@@ -2863,7 +2923,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
         del user_dict['device_local']
     if 'user_local' in user_dict:
         del user_dict['user_local']
-    nowtime = datetime.datetime.utcnow()
+    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     if steps is not None:
         user_dict['_internal']['steps'] = steps
     user_dict['_internal']['modtime'] = nowtime
@@ -3141,7 +3201,7 @@ def progress_bar(progress, interview):
 
 
 def get_unique_name(filename, secret):
-    nowtime = datetime.datetime.utcnow()
+    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     while True:
         newname = random_alphanumeric(32)
         obtain_lock(newname, filename)
@@ -4427,7 +4487,7 @@ def wait_for_task(task_id, timeout=None):
         result.get(timeout=timeout)
         # logmessage("wait_for_task: returning true")
         return True
-    except celery.exceptions.TimeoutError:  # pylint: disable=used-before-assignment
+    except celery.exceptions.TimeoutError:  # pylint: disable=possibly-used-before-assignment
         logmessage("wait_for_task: timed out")
         return False
     except BaseException as the_error:
@@ -4671,7 +4731,7 @@ def formatted_current_time():
         the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
         the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
-    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
+    return datetime.datetime.now(datetime.UTC).replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
 
 
 def formatted_current_date():
@@ -4679,7 +4739,7 @@ def formatted_current_date():
         the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
         the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
-    return datetime.datetime.utcnow().replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
+    return datetime.datetime.now(datetime.UTC).replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
 
 
 class Object:
@@ -5095,6 +5155,18 @@ def get_user_object(user_id):
 @lm.user_loader
 def load_user(the_id):
     return UserModel.query.options(db.joinedload(UserModel.roles)).get(int(the_id))
+
+
+@app.route('/rjs/<key>.js', methods=['GET'])
+def rjs(key):
+    the_key = 'da:rjs:' + key
+    data = r.getdel(the_key)
+    if data is None:
+        return ('File not found', 404)
+    response = make_response(data, 200)
+    response.headers['Content-Type'] = 'text/javascript; charset=utf-8'
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
 
 
 @app.route('/goto', methods=['GET'])
@@ -5653,6 +5725,7 @@ def manage_account():
         temp_user_id = int(session['tempuser'])
     else:
         logged_in = True
+        temp_user_id = -1
     delete_shared = daconfig.get('delete account deletes shared', False)
     form = ManageAccountForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -6612,8 +6685,15 @@ def test_embed():
         pass
     current_language = docassemble.base.functions.get_language()
     page_title = word("Embed test")
+    if interview.options.get('analytics on', True):
+        if ga_configured:
+            ga_ids = google_config.get('analytics id')
+        else:
+            ga_ids = None
+    else:
+        ga_ids = None
     start_part = standard_html_start(interview_language=current_language, debug=False, bootstrap_theme=interview_status.question.interview.get_bootstrap_theme(), external=True, page_title=page_title, social=daconfig['social'], yaml_filename=yaml_filename) + global_css + additional_css(interview_status)
-    scripts = standard_scripts(interview_language=current_language, external=True) + additional_scripts(interview_status, yaml_filename) + global_js
+    scripts = standard_scripts(interview_language=current_language, external=True) + additional_scripts(ga_ids) + global_js
     response = make_response(render_template('pages/test_embed.html', scripts=scripts, start_part=start_part, interview_url=url_for('index', i=yaml_filename, js_target='dablock', _external=True), page_title=page_title), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -6767,6 +6847,37 @@ def remove_i_from_dict(the_dict):
     return the_dict
 
 
+def standard_app_values():
+    return {
+        "daThicknessScalingFactor": daconfig.get("signature pen thickness scaling factor"),
+        "daCsrf": generate_csrf(),
+        "daComboboxButtonLabel": word("Dropdown"),
+        "daInputBox": word("Input box"),
+        "daNotificationContainer": NOTIFICATION_CONTAINER,
+        "daNotificationMessage": NOTIFICATION_MESSAGE,
+        "daImageToPreLoad": url_for('static', filename='app/chat.ico', v=da_version),
+        "daLiveHelpMessage": word("Get help through live chat by clicking here."),
+        "daLiveHelpMessagePhone": word("Click here to get help over the phone."),
+        "daNewChatMessage": word("New chat message"),
+        "daLiveHelpAvailableMessage": word("Live chat is available"),
+        "daScreenBeingControlled": word("Your screen is being controlled by an operator."),
+        "daScreenNoLongerBeingControlled": word("The operator is no longer controlling your screen."),
+        "daPathRoot": ROOT,
+        "daAreYouSure": word("Are you sure you want to delete this item?"),
+        "daOtherUser": word("other user"),
+        "daOtherUsers": word("other users"),
+        "daOperator": word("operator"),
+        "daOperators": word("operators"),
+        "daAllButtonClasses": app.config['BUTTON_STYLE'] + 'primary ' + app.config['BUTTON_STYLE'] + 'info ' + app.config['BUTTON_STYLE'] + 'warning ' + app.config['BUTTON_STYLE'] + 'danger ' + app.config['BUTTON_STYLE'] + 'secondary',
+        "daButtonStyle": app.config['BUTTON_STYLE'],
+        "daCurrencyDecimalPlaces": daconfig.get('currency decimal places', 2),
+        "daSecureCookies": bool(app.config['SESSION_COOKIE_SECURE']),
+        "daEmailAddressRequired": word("An e-mail address is required."),
+        "daNeedCompleteEmail": word("You need to enter a complete e-mail address."),
+        "daToggleWord": word("Toggle")
+    }
+
+
 @app.route(index_path, methods=['POST', 'GET'])
 def index(action_argument=None, refer=None):
     # if refer is None and request.method == 'GET':
@@ -6782,12 +6893,12 @@ def index(action_argument=None, refer=None):
     elif 'js_target' in request.args and request.args['js_target'] != '':
         the_interface = 'web'
         is_json = False
+        is_js = True
         docassemble.base.functions.this_thread.misc['jsembed'] = request.args['js_target']
         if is_ajax:
             js_target = False
         else:
             js_target = request.args['js_target']
-            is_js = True
     else:
         the_interface = 'web'
         is_json = False
@@ -7057,6 +7168,7 @@ def index(action_argument=None, refer=None):
         save_user_dict_key(user_code, yaml_filename)
         update_session(yaml_filename, key_logged=True)
     url_args_changed = False
+    old_url_args = {}
     if len(request.args) > 0:
         for argname in request.args:
             if argname in reserved_argnames:
@@ -7372,7 +7484,7 @@ def index(action_argument=None, refer=None):
                     files_to_zip.append(str(the_attachment['file'][the_format]))
                     attached_file_count += 1
             the_zip_file = docassemble.base.util.zip_file(*files_to_zip, filename=zip_file_name)
-            response = send_file(the_zip_file.path(), mimetype='application/zip', as_attachment=True, download_name=zip_file_name)
+            response = custom_send_file(the_zip_file.path(), mimetype='application/zip', as_attachment=True, download_name=zip_file_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             if response_wrapper:
                 response_wrapper(response)
@@ -8436,6 +8548,8 @@ def index(action_argument=None, refer=None):
                 validated = False
                 steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     if validated:
+        iterator_backup = {}
+        old_values_backup = {}
         for var_name in vars_set:
             if var_name in interview.invalidation_todo:
                 interview.invalidate_dependencies(var_name, user_dict, old_values)
@@ -8529,6 +8643,7 @@ def index(action_argument=None, refer=None):
             update_session(yaml_filename, uid=user_code, key_logged=True)
         steps = 1
         changed = False
+        action = None
         interview.assemble(user_dict, interview_status)
     elif interview_status.question.question_type == "new_session":
         manual_checkout(manual_filename=yaml_filename)
@@ -8550,7 +8665,7 @@ def index(action_argument=None, refer=None):
     title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
     if interview_status.question.question_type == "interview_exit":
-        exit_link = title_info.get('exit link', 'exit')
+        exit_link = title_info.get('exit link', 'leave')
         if exit_link in ('exit', 'leave', 'logout', 'exit_logout'):
             interview_status.question.question_type = exit_link
     if interview_status.question.question_type == "exit":
@@ -8679,7 +8794,7 @@ def index(action_argument=None, refer=None):
         if not os.path.isfile(the_path):
             logmessage("index: could not send file because file (" + the_path + ") not found")
             return ('File not found', 404)
-        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+        response_to_send = custom_send_file(the_path, mimetype=interview_status.extras['content_type'])
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     elif interview_status.question.question_type == "redirect":
         logmessage("Redirecting because of a redirect.")
@@ -8752,24 +8867,44 @@ def index(action_argument=None, refer=None):
         if 'ga_id' in interview_status.extras:
             question_id_dict['ga'] = interview_status.extras['ga_id']
     append_script_urls = []
-    append_javascript = ''
+    scripts = ''
+    if interview_status.question.question_type == "signature":
+        if 'pen color' in interview_status.extras and 0 in interview_status.extras['pen color']:
+            pen_color = interview_status.extras['pen color'][0].strip()
+        else:
+            pen_color = '#000'
+        interview_status.extra_scripts.append({"type": "signature", "color": pen_color})
     if not is_ajax:
-        scripts = standard_scripts(interview_language=current_language) + additional_scripts(interview_status, yaml_filename)
+        if interview.options.get('analytics on', True):
+            if ga_configured:
+                ga_ids = google_config.get('analytics id')
+            else:
+                ga_ids = None
+            if 'segment id' in daconfig:
+                segment_id = daconfig['segment id']
+            else:
+                segment_id = None
+        else:
+            ga_ids = None
+            segment_id = None
         if is_js:
-            append_javascript += additional_scripts(interview_status, yaml_filename, as_javascript=True)
+            scripts = additional_scripts(ga_ids, as_javascript=True)
+        else:
+            scripts = standard_scripts(interview_language=current_language) + additional_scripts(ga_ids)
         if 'javascript' in interview.external_files:
             for packageref, fileref in interview.external_files['javascript']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
                 if the_url is not None:
-                    scripts += "\n" + '    <script src="' + get_url_from_file_reference(fileref, _package=packageref) + '"></script>'
                     if is_js:
                         append_script_urls.append(get_url_from_file_reference(fileref, _package=packageref))
+                    else:
+                        scripts += "\n" + f'    <script{DEFER} src="{get_url_from_file_reference(fileref, _package=packageref)}"></script>'
                 else:
                     logmessage("index: could not find javascript file " + str(fileref))
         if interview_status.question.checkin is not None:
-            do_action = json.dumps(interview_status.question.checkin)
+            do_action = interview_status.question.checkin
         else:
-            do_action = 'null'
+            do_action = None
         chat_available = user_dict['_internal']['livehelp']['availability']
         chat_mode = user_dict['_internal']['livehelp']['mode']
         if chat_available == 'unavailable':
@@ -8784,59 +8919,24 @@ def index(action_argument=None, refer=None):
             chat_status = 'ringing'
             update_session(yaml_filename, chatstatus='ringing')
         if chat_status != 'off':
-            send_changes = 'true'
+            send_changes = True
         else:
-            if do_action != 'null':
-                send_changes = 'true'
-            else:
-                send_changes = 'false'
+            send_changes = bool(do_action is not None)
         if current_user.is_authenticated:
             user_id_string = str(current_user.id)
-            if current_user.has_role('admin', 'developer', 'advocate'):
-                is_user = 'false'
-            else:
-                is_user = 'true'
+            is_user = bool(not current_user.has_role('admin', 'developer', 'advocate'))
         else:
             user_id_string = 't' + str(session['tempuser'])
-            is_user = 'true'
-        if r.get('da:control:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)) is not None:
-            being_controlled = 'true'
-        else:
-            being_controlled = 'false'
+            is_user = True
+        being_controlled = bool(r.get('da:control:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)) is not None)
         if debug_mode:
-            debug_readability_help = """
-            $("#dareadability-help").show();
-            $("#dareadability-question").hide();
-"""
-            debug_readability_question = """
-            $("#dareadability-help").hide();
-            $("#dareadability-question").show();
-"""
+            debug_readability_help = True
+            debug_readability_question = True
         else:
-            debug_readability_help = ''
-            debug_readability_question = ''
-        if interview.force_fullscreen is True or (re.search(r'mobile', str(interview.force_fullscreen).lower()) and is_mobile_or_tablet()):
-            forceFullScreen = """
-          if (data.steps > 1 && window != top) {
-            top.location.href = location.href;
-            return;
-          }
-"""
-        else:
-            forceFullScreen = ''
+            debug_readability_help = False
+            debug_readability_question = False
+        forceFullScreen = bool(interview.force_fullscreen is True or (re.search(r'mobile', str(interview.force_fullscreen).lower()) and is_mobile_or_tablet()))
         the_checkin_interval = interview.options.get('checkin interval', CHECKIN_INTERVAL)
-        if interview.options.get('analytics on', True):
-            if ga_configured:
-                ga_ids = google_config.get('analytics id')
-            else:
-                ga_ids = None
-            if 'segment id' in daconfig:
-                segment_id = daconfig['segment id']
-            else:
-                segment_id = None
-        else:
-            ga_ids = None
-            segment_id = None
         page_sep = "#page"
         if refer is None:
             location_bar = url_for('index', **index_params)
@@ -8860,4217 +8960,13 @@ def index(action_argument=None, refer=None):
                 location_bar = url_for('index', **index_params)
         index_params_external = copy.copy(index_params)
         index_params_external['_external'] = True
-        if session.get('color_scheme', 0) < 2 and daconfig.get("auto color scheme", True) and not is_js:
-            color_scheme = """\
-      var daCurrentColorScheme = """ + str(session.get('color_scheme', 0)) + """;
-      var daDesiredColorScheme;
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        daDesiredColorScheme = 1;
-      }
-      else {
-        daDesiredColorScheme = 0;
-      }
-      if (daCurrentColorScheme != daDesiredColorScheme){
-        document.documentElement.setAttribute('data-bs-theme', daDesiredColorScheme ? 'dark': 'light');
-        $.ajax({
-          type: "PATCH",
-          url: """ + json.dumps(url_for('change_color_scheme')) + """,
-          xhrFields: {
-            withCredentials: true
-          },
-          data: 'scheme=' + daDesiredColorScheme,
-          success: function(data){
-            daCurrentColorScheme = data.scheme;
-          },
-          error: function(xhr, status, error){
-            console.log("Unable to change desired color scheme.")
-          },
-          dataType: 'json'
-        });
-      }
-"""
-        else:
-            color_scheme = ''
-        the_js = color_scheme + """\
-      if (typeof($) == 'undefined'){
-        var $ = jQuery.noConflict();
-      }
-      var daRequestPending = false;
-      var isAndroid = /android/i.test(navigator.userAgent.toLowerCase());
-      var daMapInfo = null;
-      var daThicknessScalingFactor = """ + str(daconfig.get("signature pen thickness scaling factor")) + """;
-      var daWhichButton = null;
-      var daSocket = null;
-      var daChatHistory = [];
-      var daCheckinCode = null;
-      var daCheckingIn = 0;
-      var daShowingHelp = 0;
-      var daIframeEmbed;
-      if ( window.location !== window.parent.location ) {
-        daIframeEmbed = true;
-      }
-      else {
-        daIframeEmbed = false;
-      }
-      var daJsEmbed = """ + (json.dumps(js_target) if is_js else 'false') + """;
-      var daAllowGoingBack = """ + ('true' if allow_going_back else 'false') + """;
-      var daSteps = """ + str(steps) + """;
-      var daIsUser = """ + is_user + """;
-      var daUserId = """ + ('null' if current_user.is_anonymous else str(current_user.id)) + """;
-      var daChatStatus = """ + json.dumps(chat_status) + """;
-      var daChatAvailable = """ + json.dumps(chat_available) + """;
-      var daChatPartnersAvailable = 0;
-      var daPhoneAvailable = false;
-      var daChatMode = """ + json.dumps(chat_mode) + """;
-      var daSendChanges = """ + send_changes + """;
-      var daInitialized = false;
-      var daNotYetScrolled = true;
-      var daBeingControlled = """ + being_controlled + """;
-      var daInformedChanged = false;
-      var daInformed = """ + json.dumps(user_dict['_internal']['informed'].get(user_id_string, {})) + """;
-      var daShowingSpinner = false;
-      var daSpinnerTimeout = null;
-      var daSubmitter = null;
-      var daUsingGA = """ + ("true" if ga_ids is not None else 'false') + """;
-      var daGAConfigured = false;
-      var daUsingSegment = """ + ("true" if segment_id is not None else 'false') + """;
-      var daDoAction = """ + do_action + """;
-      var daQuestionID = """ + json.dumps(question_id_dict) + """;
-      var daCsrf = """ + json.dumps(generate_csrf()) + """;
-      var daComboboxButtonLabel = """ + json.dumps(word("Dropdown")) + """;
-      var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list', '_null_question'];
-      var daVarLookup = Object();
-      var daVarLookupRev = Object();
-      var daVarLookupMulti = Object();
-      var daVarLookupRevMulti = Object();
-      var daVarLookupSelect = Object();
-      var daVarLookupCheckbox = Object();
-      var daVarLookupOption = Object();
-      var daTargetDiv;
-      var daComboBoxes = Object();
-      var daGlobalEval = eval;
-      var daInterviewUrl = """ + json.dumps(url_for('index', **index_params)) + """;
-      var daLocationBar = """ + json.dumps(location_bar) + """;
-      var daPostURL = """ + json.dumps(url_for('index', **index_params_external)) + """;
-      var daYamlFilename = """ + json.dumps(yaml_filename) + """;
-      var daFetchAcceptIncoming = false;
-      var daFetchAjaxTimeout = null;
-      var daFetchAjaxTimeoutRunning = null;
-      var daFetchAjaxTimeoutFetchAfter = null;
-      var daShowHideHappened = false;
-      if (daJsEmbed){
-        daTargetDiv = '#' + daJsEmbed;
-      }
-      else{
-        daTargetDiv = "#dabody";
-      }
-      var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
-      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
-      Object.defineProperty(String.prototype, "daSprintf", {
-        value: function () {
-          var args = Array.from(arguments),
-            i = 0;
-          function defaultNumber(iValue) {
-            return iValue != undefined && !isNaN(iValue) ? iValue : "0";
-          }
-          function defaultString(iValue) {
-            return iValue == undefined ? "" : "" + iValue;
-          }
-          return this.replace(
-            /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
-            function (match, sign, filler, scale, precision, type) {
-              var strOut, space, value;
-              var asNumber = false;
-              if (match == "%%") return "%";
-              if (i >= args.length) return match;
-              value = args[i];
-              while (Array.isArray(value)) {
-                args.splice(i, 1);
-                for (var j = i; value.length > 0; j++)
-                  args.splice(j, 0, value.shift());
-                value = args[i];
-              }
-              i++;
-              if (filler == undefined) filler = " "; // default
-              if (scale == undefined && !isNaN(filler)) {
-                scale = filler;
-                filler = " ";
-              }
-              if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
-              if (scale == undefined) scale = 0; // default
-              if (precision == undefined) precision = ".0"; // default
-              scale = parseInt(scale);
-              precision = parseInt(precision.substr(1));
-              switch (type) {
-                case "d":
-                case "i":
-                  // decimal integer
-                  asNumber = true;
-                  strOut = parseInt(defaultNumber(value));
-                  if (precision > 0) strOut += "." + "0".repeat(precision);
-                  break;
-                case "e":
-                case "E":
-                  // float in exponential notation
-                  asNumber = true;
-                  strOut = parseFloat(defaultNumber(value));
-                  if (precision == 0) strOut = strOut.toExponential();
-                  else strOut = strOut.toExponential(precision);
-                  if (type == "E") strOut = strOut.replace("e", "E");
-                  break;
-                case "f":
-                  // decimal float
-                  asNumber = true;
-                  strOut = parseFloat(defaultNumber(value));
-                  if (precision != 0) strOut = strOut.toFixed(precision);
-                  break;
-                case "o":
-                case "h":
-                case "H":
-                  // Octal or Hexagesimal integer notation
-                  strOut =
-                    "\\\\" +
-                    (type == "o" ? "0" : type) +
-                    parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
-                  break;
-                case "q":
-                  // single quoted string
-                  strOut = "'" + defaultString(value) + "'";
-                  break;
-                case "Q":
-                  // double quoted string
-                  strOut = '"' + defaultString(value) + '"';
-                  break;
-                default:
-                  // string
-                  strOut = defaultString(value);
-                  break;
-              }
-              if (typeof strOut != "string") strOut = "" + strOut;
-              if ((space = strOut.length) < scale) {
-                if (asNumber) {
-                  if (sign == "-") {
-                    if (strOut.indexOf("-") < 0)
-                      strOut = filler.repeat(scale - space) + strOut;
-                    else
-                      strOut =
-                        "-" +
-                        filler.repeat(scale - space) +
-                        strOut.replace("-", "");
-                  } else {
-                    if (strOut.indexOf("-") < 0)
-                      strOut = "+" + filler.repeat(scale - space - 1) + strOut;
-                    else
-                      strOut =
-                        "-" +
-                        filler.repeat(scale - space) +
-                        strOut.replace("-", "");
-                  }
-                } else {
-                  if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
-                  else strOut = strOut + filler.repeat(scale - space);
-                }
-              } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
-                strOut = "+" + strOut;
-              return strOut;
-            }
-          );
-        },
-      });
-      Object.defineProperty(window, "daSprintf", {
-        value: function (str, ...rest) {
-          if (typeof str == "string")
-            return String.prototype.daSprintf.apply(str, rest);
-          return "";
-        },
-      });
-      function daGoToAnchor(target){
-        if (daJsEmbed){
-          scrollTarget = $(target).first().position().top - 60;
-        }
-        else{
-          scrollTarget = $(target).first().offset().top - 60;
-        }
-        if (scrollTarget != null){
-          if (daJsEmbed){
-            $(daTargetDiv).animate({
-              scrollTop: scrollTarget
-            }, 500);
-          }
-          else{
-            $("html, body").animate({
-              scrollTop: scrollTarget
-            }, 500);
-          }
-        }
-      }
-      function atou(b64) {
-        return decodeURIComponent(escape(atob(b64)));
-      }
-      function utoa(data) {
-        return btoa(unescape(encodeURIComponent(data)));
-      }
-      function dabtoa(str) {
-        return window.utoa(str).replace(/[\\n=]/g, '');
-      }
-      function daatob(str) {
-        return atou(str);
-      }
-      function hideTablist() {
-        var anyTabs = $("#daChatAvailable").is(":visible")
-            || $("daPhoneAvailable").is(":visible")
-            || $("#dahelptoggle").is(":visible");
-        if (anyTabs) {
-          $("#nav-bar-tab-list").removeClass("dainvisible");
-          $("#daquestionlabel").parent().removeClass("dainvisible");
-        } else {
-          $("#nav-bar-tab-list").addClass("dainvisible");
-          $("#daquestionlabel").parent().addClass("dainvisible");
-        }
-      }
-      function getFields(){
-        var allFields = [];
-        for (var rawFieldName in daVarLookup){
-          if (daVarLookup.hasOwnProperty(rawFieldName)){
-            var fieldName = atou(rawFieldName);
-            if (allFields.indexOf(fieldName) == -1){
-              allFields.push(fieldName);
-            }
-          }
-        }
-        return allFields;
-      }
-      var daGetFields = getFields;
-      function daAppendIfExists(fieldName, theArray){
-        var elem = $("[name='" + fieldName + "']");
-        if (elem.length > 0){
-          for (var i = 0; i < theArray.length; ++i){
-            if (theArray[i] == elem[0]){
-              return;
-            }
-          }
-          theArray.push(elem[0]);
-        }
-      }
-      function getField(fieldName, notInDiv){
-        if (daVarLookupCheckbox[fieldName]){
-          var n = daVarLookupCheckbox[fieldName].length;
-          for (var i = 0; i < n; ++i){
-            var elem = daVarLookupCheckbox[fieldName][i].checkboxes[0].elem;
-            if (!$(elem).prop('disabled')){
-              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
-                if (notInDiv && $.contains(notInDiv, elem)){
-                  continue;
-                }
-                return daVarLookupCheckbox[fieldName][i].elem;
-              }
-            }
-          }
-        }
-        if (daVarLookupSelect[fieldName]){
-          var n = daVarLookupSelect[fieldName].length;
-          for (var i = 0; i < n; ++i){
-            var elem = daVarLookupSelect[fieldName][i].select;
-            if (!$(elem).prop('disabled')){
-              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
-                if (notInDiv && $.contains(notInDiv, elem)){
-                  continue;
-                }
-                return elem;
-              }
-            }
-          }
-        }
-        var fieldNameEscaped = dabtoa(fieldName);
-        var possibleElements = [];
-        daAppendIfExists(fieldNameEscaped, possibleElements);
-        if (daVarLookupMulti.hasOwnProperty(fieldNameEscaped)){
-          for (var i = 0; i < daVarLookupMulti[fieldNameEscaped].length; ++i){
-            daAppendIfExists(daVarLookupMulti[fieldNameEscaped][i], possibleElements);
-          }
-        }
-        var returnVal = null;
-        for (var i = 0; i < possibleElements.length; ++i){
-          if (!$(possibleElements[i]).prop('disabled') || $(possibleElements[i]).parents(".file-input.is-locked").length > 0 ){
-            var showifParents = $(possibleElements[i]).parents(".dajsshowif,.dashowif");
-            if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
-              if (notInDiv && $.contains(notInDiv, possibleElements[i])){
-                continue;
-              }
-              returnVal = possibleElements[i];
-            }
-          }
-        }
-        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('div.da-field-group').length > 0){
-          var fieldSet = $(returnVal).parents('div.da-field-group')[0];
-          if (!$(fieldSet).hasClass('da-field-checkbox') && !$(fieldSet).hasClass('da-field-checkboxes')){
-            return fieldSet;
-          }
-        }
-        return returnVal;
-      }
-      var daGetField = getField;
-      function setChoices(fieldName, choices){
-        var elem = daGetField(fieldName);
-        if (elem == null){
-          console.log("setChoices: reference to non-existent field " + fieldName);
-          return;
-        }
-        var isCombobox = ($(elem).attr('type') == "hidden" && $(elem).parents('.combobox-container').length > 0);
-        if (isCombobox){
-          var comboInput = $(elem).parents('.combobox-container').first().find('input.combobox').first();
-          var comboObject = daComboBoxes[$(comboInput).attr('id')];
-          var oldComboVal = comboObject.$target.val();
-          elem = comboObject.$source;
-        }
-        if ($(elem).prop('tagName') != "SELECT"){
-          console.log("setField: field " + fieldName + " is not a dropdown field");
-          return;
-        }
-        var oldVal = $(elem).val();
-        $(elem).find("option[value!='']").each(function(){
-          $(this).remove();
-        });
-        var n = choices.length;
-        for (var i = 0; i < n; i++){
-          var opt = $("<option>");
-          opt.val(choices[i][0]);
-          opt.text(choices[i][1]);
-          if (oldVal == choices[i][0]){
-            opt.attr("selected", "selected")
-          }
-          $(elem).append(opt);
-        }
-        if (isCombobox){
-          comboObject.refresh();
-          comboObject.clearTarget();
-          if (oldComboVal != ""){
-            daSetField(fieldName, oldComboVal);
-          }
-        }
-      }
-      var daSetChoices = setChoices;
-      function setField(fieldName, theValue){
-        var elem = daGetField(fieldName);
-        if (elem == null){
-          console.log('setField: reference to non-existent field ' + fieldName);
-          return;
-        }
-        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
-          elem = $(elem).find('input')[0];
-        }
-        if ($(elem).attr('type') == "checkbox"){
-          if (theValue){
-            if ($(elem).prop('checked') != true){
-              $(elem).click();
-            }
-          }
-          else{
-            if ($(elem).prop('checked') != false){
-              $(elem).click();
-            }
-          }
-        }
-        else if ($(elem).attr('type') == "radio"){
-          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          var wasSet = false;
-          if (theValue === true){
-            theValue = 'True';
-          }
-          if (theValue === false){
-            theValue = 'False';
-          }
-          $("input[name='" + fieldNameEscaped + "']").each(function(){
-            if ($(this).val() == theValue){
-              if ($(this).prop('checked') != true){
-                $(this).prop('checked', true);
-                $(this).trigger('change');
-              }
-              wasSet = true;
-              return false;
-            }
-          });
-          if (!wasSet){
-            console.log('setField: could not set radio button ' + fieldName + ' to ' + theValue);
-          }
-        }
-        else if ($(elem).attr('type') == "hidden"){
-          if ($(elem).val() != theValue){
-            if ($(elem).parents('.combobox-container').length > 0){
-              var comboInput = $(elem).parents('.combobox-container').first().find('input.combobox').first();
-              daComboBoxes[$(comboInput).attr('id')].manualSelect(theValue);
-            }
-            else{
-              $(elem).val(theValue);
-              $(elem).trigger('change');
-            }
-          }
-        }
-        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
-          if (!Array.isArray(theValue)){
-            throw new Error('setField: value must be an array');
-          }
-          var n = theValue.length;
-          $(elem).find('input').each(function(){
-            if ($(this).hasClass('danota-checkbox')){
-              $(this).prop('checked', n == 0);
-              $(this).trigger('change');
-              return;
-            }
-            if ($(this).hasClass('daaota-checkbox')){
-              $(this).prop('checked', false);
-              $(this).trigger('change');
-              return;
-            }
-            if ($(this).attr('name').substr(0, 7) === '_ignore'){
-              return;
-            }
-            var theVal = atou($(this).data('cbvalue'));
-            if ($(elem).hasClass("daobject")){
-              theVal = atou(theVal);
-            }
-            var oldVal = $(this).prop('checked') == true;
-            var newVal = false;
-            for (var i = 0; i < n; ++i){
-              if (theValue[i] == theVal){
-                newVal = true;
-              }
-            }
-            if (oldVal != newVal){
-              $(this).click();
-            }
-          });
-        }
-        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
-          if (daVarLookupSelect[fieldName]){
-            var n = daVarLookupSelect[fieldName].length;
-            for (var i = 0; i < n; ++i){
-              if (daVarLookupSelect[fieldName][i].select === elem){
-                var oldValue = $(daVarLookupSelect[fieldName][i].option).prop('selected') == true;
-                if (oldValue != theValue){
-                  $(daVarLookupSelect[fieldName][i].option).prop('selected', theValue);
-                  $(elem).trigger('change');
-                }
-              }
-            }
-          }
-          else{
-            if (!Array.isArray(theValue)){
-              throw new Error('setField: value must be an array');
-            }
-            var n = theValue.length;
-            var changed = false;
-            $(elem).find('option').each(function(){
-              var thisVal = daVarLookupOption[$(this).val()];
-              var oldVal = $(this).prop('selected') == true;
-              var newVal = false;
-              for (var i = 0; i < n; ++i){
-                if (thisVal == theValue[i]){
-                  newVal = true;
-                }
-              }
-              if (newVal !== oldVal){
-                changed = true;
-                $(this).prop('selected', newVal);
-              }
-            });
-            if (changed){
-              $(elem).trigger('change');
-            }
-          }
-        }
-        else{
-          if ($(elem).val() != theValue){
-            $(elem).val(theValue);
-            $(elem).trigger('change');
-          }
-        }
-      }
-      var daSetField = setField;
-      function val(fieldName){
-        var elem = daGetField(fieldName);
-        if (elem == null){
-          return null;
-        }
-        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
-          elem = $(elem).find('input')[0];
-        }
-        if ($(elem).attr('type') == "checkbox"){
-          if ($(elem).prop('checked')){
-            theVal = true;
-          }
-          else{
-            theVal = false;
-          }
-        }
-        else if ($(elem).attr('type') == "radio"){
-          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          theVal = $("input[name='" + fieldNameEscaped + "']:checked").val();
-          if (typeof(theVal) == 'undefined'){
-            theVal = null;
-          }
-          else{
-            if ($(elem).hasClass("daobject")){
-              theVal = atou(theVal);
-            }
-            else if (theVal == 'True'){
-              theVal = true;
-            }
-            else if (theVal == 'False'){
-              theVal = false;
-            }
-          }
-        }
-        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
-          var cbSelected = [];
-          $(elem).find('input').each(function(){
-            if ($(this).attr('name').substr(0,7) === '_ignore'){
-              return;
-            }
-            var theVal = atou($(this).data('cbvalue'));
-            if ($(elem).hasClass("daobject")){
-              theVal = atou(theVal);
-            }
-            if ($(this).prop('checked')){
-              cbSelected.push(theVal);
-            }
-          });
-          return cbSelected;
-        }
-        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
-          if (daVarLookupSelect[fieldName]){
-            var n = daVarLookupSelect[fieldName].length;
-            for (var i = 0; i < n; ++i){
-              if (daVarLookupSelect[fieldName][i].select === elem){
-                return $(daVarLookupSelect[fieldName][i].option).prop('selected');
-              }
-            }
-          }
-          else{
-            var selectedVals = [];
-            $(elem).find('option').each(function(){
-              if ($(this).prop('selected')){
-                if (daVarLookupOption[$(this).val()]){
-                  selectedVals.push(daVarLookupOption[$(this).val()]);
-                }
-              }
-            });
-            return selectedVals;
-          }
-        }
-        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('daobject')){
-          theVal = atou($(elem).val());
-        }
-        else{
-          theVal = $(elem).val();
-        }
-        return theVal;
-      }
-      var da_val = val;
-      function daFormAsJSON(elem){
-        var isInitial = false;
-        var formData = $("#daform").serializeArray();
-        var data = Object();
-        if (elem == 'initial'){
-          elem = null;
-          data['_initial'] = true;
-        }
-        else{
-          data['_initial'] = false;
-        }
-        if (elem !== null && $(elem).hasClass('combobox')){
-          elem = $(elem).parent().find('input[type="hidden"]');
-        }
-        data['_changed'] = null;
-        var n = formData.length;
-        for (var i = 0; i < n; ++i){
-          var key = formData[i]['name'];
-          var val = formData[i]['value'];
-          if ($.inArray(key, daFieldsToSkip) != -1 || key.indexOf('_ignore') == 0){
-            continue;
-          }
-          var isChangedElem = false;
-          if (elem !== null && key == $(elem).attr('name')){
-            isChangedElem = true;
-          }
-          if (typeof daVarLookupRev[key] != "undefined"){
-            data[atou(daVarLookupRev[key])] = val;
-            if (isChangedElem){
-              data['_changed'] = atou(daVarLookupRev[key])
-            }
-          }
-          else{
-            data[atou(key)] = val;
-            if (isChangedElem){
-              data['_changed'] = atou(key)
-            }
-          }
-        }
-        return JSON.stringify(data);
-      }
-      var daMessageLog = JSON.parse(atou(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
-      function daPreloadImage(url){
-        var img = new Image();
-        img.src = url;
-      }
-      daPreloadImage('""" + str(url_for('static', filename='app/chat.ico', v=da_version)) + """');
-      function daShowHelpTab(){
-          $('#dahelptoggle').tab('show');
-      }
-      function addCsrfHeader(xhr, settings){
-        if (daJsEmbed && !/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)){
-          xhr.setRequestHeader("X-CSRFToken", daCsrf);
-        }
-      }
-      function flash(message, priority, clear){
-        if (priority == null){
-          priority = 'info'
-        }
-        if (!$("#daflash").length){
-          $(daTargetDiv).append(daSprintf(daNotificationContainer, ""));
-        }
-        if (clear){
-          $("#daflash").empty();
-        }
-        if (message != null){
-          var newElement = $(daSprintf(daNotificationMessage, priority, message));
-          $("#daflash").append(newElement);
-          if (priority == 'success'){
-            setTimeout(function(){
-              newElement.hide(300, function(){
-                $(this).remove();
-              });
-            }, 3000);
-          }
-        }
-      }
-      var da_flash = flash;
-      function url_action(action, args){
-        if (args == null){
-          args = {};
-        }
-        data = {action: action, arguments: args};
-        var url;
-        if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-        }
-        else{
-          if (daLocationBar.indexOf('?') !== -1){
-            url = daLocationBar + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-          }
-          else {
-            url = daLocationBar + "?action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-          }
-        }
-        return url;
-      }
-      var da_url_action = url_action;
-      function action_call(action, args, callback, forgetPrior=false){
-        if (args == null){
-            args = {};
-        }
-        if (forgetPrior){
-          args = {_action: action, _arguments: args};
-          action = '_da_priority_action';
-        }
-        if (callback == null){
-            callback = function(){};
-        }
-        var data = {action: action, arguments: args};
-        var url;
-        if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-        }
-        else{
-          url = daInterviewUrl + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-        }
-        return $.ajax({
-          type: "GET",
-          url: url,
-          success: callback,
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          }
-        });
-      }
-      var da_action_call = action_call;
-      var url_action_call = action_call;
-      function action_perform(action, args, forgetPrior=false){
-        if (args == null){
-          args = {};
-        }
-        if (forgetPrior){
-          args = {_action: action, _arguments: args};
-          action = '_da_priority_action';
-        }
-        var data = {action: action, arguments: args};
-        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        daRequestPending = true;
-        return $.ajax({
-          type: "POST",
-          url: daInterviewUrl,
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          data: $.param({_action: utoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, $("#daform"), 1);
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          },
-          dataType: 'json'
-        });
-      }
-      var da_action_perform = action_perform;
-      var url_action_perform = action_perform;
-      function action_perform_with_next(action, args, next_data, forgetPrior=false){
-        //console.log("action_perform_with_next: " + action + " | " + next_data)
-        if (args == null){
-            args = {};
-        }
-        if (forgetPrior){
-          args = {_action: action, _arguments: args};
-          action = '_da_priority_action';
-        }
-        var data = {action: action, arguments: args};
-        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        daRequestPending = true;
-        return $.ajax({
-          type: "POST",
-          url: daInterviewUrl,
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          data: $.param({_action: utoa(JSON_stringify(data)), _next_action_to_set: utoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, $("#daform"), 1);
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          },
-          dataType: 'json'
-        });
-      }
-      var da_action_perform_with_next = action_perform_with_next;
-      var url_action_perform_with_next = action_perform_with_next;
-      function get_interview_variables(callback){
-        if (callback == null){
-          callback = function(){};
-        }
-        return $.ajax({
-          type: "GET",
-          url: """ + '"' + url_for('get_variables', i=yaml_filename) + '"' + """,
-          success: callback,
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          }
-        });
-      }
-      var da_get_interview_variables = get_interview_variables;
-      function daInformAbout(subject, chatMessage){
-        if (subject in daInformed || (subject != 'chatmessage' && !daIsUser)){
-          return;
-        }
-        if (daShowingHelp && subject != 'chatmessage'){
-          daInformed[subject] = 1;
-          daInformedChanged = true;
-          return;
-        }
-        if (daShowingHelp && subject == 'chatmessage'){
-          return;
-        }
-        var target;
-        var message;
-        var waitPeriod = 3000;
-        if (subject == 'chat'){
-          target = "#daChatAvailable a";
-          message = """ + json.dumps(word("Get help through live chat by clicking here.")) + """;
-        }
-        else if (subject == 'chatmessage'){
-          target = "#daChatAvailable a";
-          //message = """ + json.dumps(word("A chat message has arrived.")) + """;
-          message = chatMessage;
-        }
-        else if (subject == 'phone'){
-          target = "#daPhoneAvailable a";
-          message = """ + json.dumps(word("Click here to get help over the phone.")) + """;
-        }
-        else{
-          return;
-        }
-        if (subject != 'chatmessage'){
-          daInformed[subject] = 1;
-          daInformedChanged = true;
-        }
-        if (subject == 'chatmessage'){
-          $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body", "title": """ + json.dumps(word("New chat message")) + """});
-        }
-        else {
-          $(target).popover({"content": message, "placement": "bottom", "trigger": "manual", "container": "body", "title": """ + json.dumps(word("Live chat is available")) + """});
-        }
-        $(target).popover('show');
-        setTimeout(function(){
-          $(target).popover('dispose');
-          $(target).removeAttr('title');
-        }, waitPeriod);
-      }
-      // function daCloseSocket(){
-      //   if (typeof daSocket !== 'undefined' && daSocket.connected){
-      //     //daSocket.emit('terminate');
-      //     //io.unwatch();
-      //   }
-      // }
-      function daPublishMessage(data){
-        var newDiv = document.createElement('li');
-        $(newDiv).addClass("list-group-item");
-        if (data.is_self){
-          $(newDiv).addClass("list-group-item-primary dalistright");
-        }
-        else{
-          $(newDiv).addClass("list-group-item-secondary dalistleft");
-        }
-        //var newSpan = document.createElement('span');
-        //$(newSpan).html(data.message);
-        //$(newSpan).appendTo($(newDiv));
-        //var newName = document.createElement('span');
-        //$(newName).html(userNameString(data));
-        //$(newName).appendTo($(newDiv));
-        $(newDiv).html(data.message);
-        $("#daCorrespondence").append(newDiv);
-      }
-      function daScrollChat(){
-        var chatScroller = $("#daCorrespondence");
-        if (chatScroller.length){
-          var height = chatScroller[0].scrollHeight;
-          //console.log("Slow scrolling to " + height);
-          if (height == 0){
-            daNotYetScrolled = true;
-            return;
-          }
-          chatScroller.animate({scrollTop: height}, 800);
-        }
-        else{
-          console.log("daScrollChat: error");
-        }
-      }
-      function daScrollChatFast(){
-        var chatScroller = $("#daCorrespondence");
-        if (chatScroller.length){
-          var height = chatScroller[0].scrollHeight;
-          if (height == 0){
-            daNotYetScrolled = true;
-            return;
-          }
-          //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
-          chatScroller.scrollTop(height);
-        }
-        else{
-          console.log("daScrollChatFast: error");
-        }
-      }
-      function daSender(){
-        //console.log("daSender");
-        if ($("#daMessage").val().length){
-          daSocket.emit('chatmessage', {data: $("#daMessage").val(), i: daYamlFilename});
-          $("#daMessage").val("");
-          $("#daMessage").focus();
-        }
-        return false;
-      }
-      function daShowControl(mode){
-        //console.log("You are now being controlled");
-        if ($("body").hasClass("dacontrolled")){
-          return;
-        }
-        $('input[type="submit"], button[type="submit"]').prop("disabled", true);
-        $("body").addClass("dacontrolled");
-        var newDiv = document.createElement('div');
-        $(newDiv).addClass("datop-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 dacol-centered");
-        $(newDiv).html(""" + json.dumps(word("Your screen is being controlled by an operator.")) + """)
-        $(newDiv).attr('id', "dacontrolAlert");
-        $(newDiv).css("display", "none");
-        $(newDiv).appendTo($(daTargetDiv));
-        if (mode == 'animated'){
-          $(newDiv).slideDown();
-        }
-        else{
-          $(newDiv).show();
-        }
-      }
-      function daHideControl(){
-        //console.log("You are no longer being controlled");
-        if (! $("body").hasClass("dacontrolled")){
-          return;
-        }
-        $('input[type="submit"], button[type="submit"]').prop("disabled", false);
-        $("body").removeClass("dacontrolled");
-        $("#dacontrolAlert").html(""" + json.dumps(word("The operator is no longer controlling your screen.")) + """);
-        setTimeout(function(){
-          $("#dacontrolAlert").slideUp(300, function(){
-            $("#dacontrolAlert").remove();
-          });
-        }, 2000);
-      }
-      function daInitializeSocket(){
-        if (daSocket != null){
-            if (daSocket.connected){
-                //console.log("Calling connectagain");
-                if (daChatStatus == 'ready'){
-                  daSocket.emit('connectagain', {i: daYamlFilename});
-                }
-                if (daBeingControlled){
-                    daShowControl('animated');
-                    daSocket.emit('start_being_controlled', {i: daYamlFilename});
-                }
-            }
-            else{
-                //console.log('daInitializeSocket: daSocket.connect()');
-                daSocket.connect();
-            }
-            return;
-        }
-        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            daSocket = io.connect('http://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
-        }
-        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            daSocket = io.connect('https://' + document.domain + '/wsinterview', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
-        }
-        //console.log("daInitializeSocket: socket is " + daSocket);
-        if (daSocket != null){
-            daSocket.on('connect', function() {
-                if (daSocket == null){
-                    console.log("Error: socket is null");
-                    return;
-                }
-                //console.log("Connected socket with sid " + daSocket.id);
-                if (daChatStatus == 'ready'){
-                    daChatStatus = 'on';
-                    daDisplayChat();
-                    daPushChanges();
-                    //daTurnOnChat();
-                    //console.log("Emitting chat_log from on connect");
-                    daSocket.emit('chat_log', {i: daYamlFilename});
-                }
-                if (daBeingControlled){
-                    daShowControl('animated')
-                    daSocket.emit('start_being_controlled', {i: daYamlFilename});
-                }
-            });
-            daSocket.on('chat_log', function(arg) {
-                //console.log("Got chat_log");
-                $("#daCorrespondence").html('');
-                daChatHistory = [];
-                var messages = arg.data;
-                for (var i = 0; i < messages.length; ++i){
-                    daChatHistory.push(messages[i]);
-                    daPublishMessage(messages[i]);
-                }
-                daScrollChatFast();
-            });
-            daSocket.on('chatready', function(data) {
-                //var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                //console.log('chatready');
-            });
-            daSocket.on('terminate', function() {
-                //console.log("interview: terminating socket");
-                daSocket.disconnect();
-            });
-            daSocket.on('controllerstart', function(){
-              daBeingControlled = true;
-              daShowControl('animated');
-            });
-            daSocket.on('controllerexit', function(){
-              daBeingControlled = false;
-              //console.log("Hiding control 2");
-              daHideControl();
-              if (daChatStatus != 'on'){
-                if (daSocket != null && daSocket.connected){
-                  //console.log('Terminating interview socket because control over');
-                  daSocket.emit('terminate');
-                }
-              }
-            });
-            daSocket.on('disconnect', function() {
-                //console.log("Manual disconnect");
-                //daSocket.emit('manual_disconnect', {i: daYamlFilename});
-                //console.log("Disconnected socket");
-                //daSocket = null;
-            });
-            daSocket.on('reconnected', function() {
-                //console.log("Reconnected");
-                daChatStatus = 'on';
-                daDisplayChat();
-                daPushChanges();
-                daTurnOnChat();
-                //console.log("Emitting chat_log from reconnected");
-                daSocket.emit('chat_log', {i: daYamlFilename});
-            });
-            daSocket.on('mymessage', function(arg) {
-                //console.log("Received " + arg.data);
-                $("#daPushResult").html(arg.data);
-            });
-            daSocket.on('departure', function(arg) {
-                //console.log("Departure " + arg.numpartners);
-                if (arg.numpartners == 0){
-                    daCloseChat();
-                }
-            });
-            daSocket.on('chatmessage', function(arg) {
-                //console.log("Received chat message " + arg.data);
-                daChatHistory.push(arg.data);
-                daPublishMessage(arg.data);
-                daScrollChat();
-                daInformAbout('chatmessage', arg.data.message);
-            });
-            daSocket.on('newpage', function(incoming) {
-                //console.log("newpage received");
-                var data = incoming.obj;
-                daProcessAjax(data, $("#daform"), 1);
-            });
-            daSocket.on('controllerchanges', function(data) {
-                //console.log("controllerchanges: " + data.parameters);
-                var valArray = Object();
-                var values = JSON.parse(data.parameters);
-                for (var i = 0; i < values.length; i++) {
-                    valArray[values[i].name] = values[i].value;
-                }
-                //console.log("valArray is " + JSON.stringify(valArray));
-                $("#daform").each(function(){
-                    $(this).find(':input').each(function(){
-                        var type = $(this).attr('type');
-                        var id = $(this).attr('id');
-                        var name = $(this).attr('name');
-                        if (type == 'checkbox'){
-                            if (name in valArray){
-                                if (valArray[name] == 'True'){
-                                    if ($(this).prop('checked') != true){
-                                        $(this).prop('checked', true);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                                else{
-                                    if ($(this).prop('checked') != false){
-                                        $(this).prop('checked', false);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                            }
-                            else{
-                                if ($(this).prop('checked') != false){
-                                    $(this).prop('checked', false);
-                                    $(this).trigger('change');
-                                }
-                            }
-                        }
-                        else if (type == 'radio'){
-                            if (name in valArray){
-                                if (valArray[name] == $(this).val()){
-                                    if ($(this).prop('checked') != true){
-                                        $(this).prop('checked', true);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                                else{
-                                    if ($(this).prop('checked') != false){
-                                        $(this).prop('checked', false);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                            }
-                        }
-                        else if ($(this).data().hasOwnProperty('sliderMax')){
-                            $(this).slider('setValue', parseInt(valArray[name]));
-                        }
-                        else{
-                            if (name in valArray){
-                                $(this).val(valArray[name]);
-                            }
-                        }
-                    });
-                });
-                if (data.clicked){
-                    //console.log("Need to click " + data.clicked);
-                    $(data.clicked).prop("disabled", false);
-                    $(data.clicked).addClass("da-click-selected");
-                    if ($(data.clicked).prop("tagName") == 'A' && typeof $(data.clicked).attr('href') != 'undefined' && ($(data.clicked).attr('href').indexOf('javascript') == 0 || $(data.clicked).attr('href').indexOf('#') == 0)){
-                      setTimeout(function(){
-                        $(data.clicked).removeClass("da-click-selected");
-                      }, 2200);
-                    }
-                    setTimeout(function(){
-                      //console.log("Clicking it now");
-                      $(data.clicked).click();
-                      //console.log("Clicked it.");
-                    }, 200);
-                }
-            });
-        }
-      }
-      var daCheckinSeconds = """ + str(the_checkin_interval) + """;
-      var daCheckinInterval = null;
-      var daReloader = null;
-      var daDisable = null;
-      var daChatRoles = """ + json.dumps(user_dict['_internal']['livehelp']['roles']) + """;
-      var daChatPartnerRoles = """ + json.dumps(user_dict['_internal']['livehelp']['partner_roles']) + """;
-      function daUnfakeHtmlResponse(text){
-        text = text.substr(text.indexOf('ABCDABOUNDARYSTARTABC') + 21);
-        text = text.substr(0, text.indexOf('ABCDABOUNDARYENDABC')).replace(/\s/g, '');
-        text = atou(text);
-        return text;
-      }
-      function daInjectTrim(handler){
-        return function (element, event) {
-          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password" && element.type !== "date" && element.type !== "datetime" && element.type !== "file")) {
-            setTimeout(function(){
-              element.value = $.trim(element.value);
-            }, 10);
-          }
-          return handler.call(this, element, event);
-        };
-      }
-      function daInvalidHandler(form, validator){
-        var errors = validator.numberOfInvalids();
-        var scrollTarget = null;
-        if (errors && $(validator.errorList[0].element).parents('.da-form-group').length > 0) {
-          if (daJsEmbed){
-            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().position().top - 60;
-          }
-          else{
-            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().offset().top - 60;
-          }
-        }
-        if (scrollTarget != null){
-          if (daJsEmbed){
-            $(daTargetDiv).animate({
-              scrollTop: scrollTarget
-            }, 1000);
-          }
-          else{
-            $("html, body").animate({
-              scrollTop: scrollTarget
-            }, 1000);
-          }
-        }
-      }
-      function daValidationHandler(form){
-        //form.submit();
-        //console.log("daValidationHandler");
-        var visibleElements = [];
-        var seen = Object();
-        $(form).find("input, select, textarea").filter(":not(:disabled)").each(function(){
-          //console.log("Considering an element");
-          if ($(this).attr('name') && $(this).attr('type') != "hidden" && (($(this).hasClass('da-active-invisible') && $(this).parent().is(":visible")) || $(this).is(":visible"))){
-            var theName = $(this).attr('name');
-            //console.log("Including an element " + theName);
-            if (!seen.hasOwnProperty(theName)){
-              visibleElements.push(theName);
-              seen[theName] = 1;
-            }
-          }
-        });
-        $(form).find("input[name='_visible']").val(utoa(JSON_stringify(visibleElements)));
-        $(form).each(function(){
-          $(this).find(':input').off('change', daOnChange);
-        });
-        $("meta[name=viewport]").attr('content', "width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0");
-        if (daCheckinInterval != null){
-          clearInterval(daCheckinInterval);
-        }
-        daDisable = setTimeout(function(){
-          $(form).find('input[type="submit"]').prop("disabled", true);
-          $(form).find('button[type="submit"]').prop("disabled", true);
-        }, 1);
-        if (daWhichButton != null){
-          $(".da-field-buttons .btn-da").each(function(){
-            if (this != daWhichButton){
-              $(this).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """primary """ + app.config['BUTTON_STYLE'] + """info """ + app.config['BUTTON_STYLE'] + """warning """ + app.config['BUTTON_STYLE'] + """danger """ + app.config['BUTTON_STYLE'] + """secondary");
-              $(this).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """light");
-            }
-          });
-          if ($(daWhichButton).hasClass(""" + '"' + app.config['BUTTON_STYLE'] + """success")){
-            $(daWhichButton).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """success");
-            $(daWhichButton).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """primary");
-          }
-          else{
-            $(daWhichButton).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """primary """ + app.config['BUTTON_STYLE'] + """info """ + app.config['BUTTON_STYLE'] + """warning """ + app.config['BUTTON_STYLE'] + """danger """ + app.config['BUTTON_STYLE'] + """success """ + app.config['BUTTON_STYLE'] + """light");
-            $(daWhichButton).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """secondary");
-          }
-        }
-        var tableOrder = {};
-        var tableOrderChanges = {};
-        $("a.datableup").each(function(){
-          var tableName = $(this).data('tablename');
-          if (!tableOrder.hasOwnProperty(tableName)){
-            tableOrder[tableName] = [];
-          }
-          tableOrder[tableName].push(parseInt($(this).data('tableitem')));
-        });
-        var tableChanged = false;
-        for (var tableName in tableOrder){
-          if (tableOrder.hasOwnProperty(tableName)){
-            var n = tableOrder[tableName].length;
-            for (var i = 0; i < n; ++i){
-              if (i != tableOrder[tableName][i]){
-                tableChanged = true;
-                if (!tableOrderChanges.hasOwnProperty(tableName)){
-                  tableOrderChanges[tableName] = [];
-                }
-                tableOrderChanges[tableName].push([tableOrder[tableName][i], i])
-              }
-            }
-          }
-        }
-        if (tableChanged){
-          $('<input>').attr({
-            type: 'hidden',
-            name: '_order_changes',
-            value: JSON.stringify(tableOrderChanges)
-          }).appendTo($(form));
-        }
-        var collectToDelete = [];
-        $(".dacollectunremove:visible").each(function(){
-          collectToDelete.push(parseInt($(this).parent().parent().data('collectnum')));
-        });
-        var lastOk = parseInt($(".dacollectremove:visible, .dacollectremoveexisting:visible").last().parent().parent().data('collectnum'));
-        $(".dacollectremove, .dacollectremoveexisting").each(function(){
-          if (parseInt($(this).parent().parent().data('collectnum')) > lastOk){
-            collectToDelete.push(parseInt($(this).parent().parent().data('collectnum')));
-          }
-        });
-        if (collectToDelete.length > 0){
-          $('<input>').attr({
-            type: 'hidden',
-            name: '_collect_delete',
-            value: JSON.stringify(collectToDelete)
-          }).appendTo($(form));
-        }
-        $("select.damultiselect:not(:disabled)").each(function(){
-          var showifParents = $(this).parents(".dajsshowif,.dashowif");
-          if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
-            $(this).find('option').each(function(){
-              $('<input>').attr({
-                type: 'hidden',
-                name: $(this).val(),
-                value: $(this).prop('selected') ? 'True' : 'False'
-              }).appendTo($(form));
-            });
-          }
-          $(this).prop('disabled', true);
-        });
-        daWhichButton = null;
-        if (daSubmitter != null && daSubmitter.name && $('input[name="' + daSubmitter.name + '"]').length == 0){
-          $('<input>').attr({
-            type: 'hidden',
-            name: daSubmitter.name,
-            value: daSubmitter.value
-          }).appendTo($(form));
-        }
-        if (daInformedChanged){
-          $("<input>").attr({
-            type: 'hidden',
-            name: 'informed',
-            value: Object.keys(daInformed).join(',')
-          }).appendTo($(form));
-        }
-        $('<input>').attr({
-          type: 'hidden',
-          name: 'ajax',
-          value: '1'
-        }).appendTo($(form));
-        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        var do_iframe_upload = false;
-        inline_succeeded = false;
-        if ($('input[name="_files"]').length){
-          var filesToRead = 0;
-          var filesRead = 0;
-          var newFileList = Array();
-          var nullFileList = Array();
-          var fileArray = {keys: Array(), values: Object()};
-          var file_list = JSON.parse(atou($('input[name="_files"]').val()));
-          var inline_file_list = Array();
-          var namesWithImages = Object();
-          for (var i = 0; i < file_list.length; i++){
-            var the_file_input = $('#' + file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
-            var the_max_size = $(the_file_input).data('maximagesize');
-            var the_image_type = $(the_file_input).data('imagetype');
-            var hasImages = false;
-            if (typeof the_max_size != 'undefined' || typeof the_image_type != 'undefined'){
-              for (var j = 0; j < the_file_input.files.length; j++){
-                var the_file = the_file_input.files[j];
-                if (the_file.type.match(/image.*/)){
-                  hasImages = true;
-                }
-              }
-            }
-            if (hasImages || (daJsEmbed && the_file_input.files.length > 0)){
-              for (var j = 0; j < the_file_input.files.length; j++){
-                var the_file = the_file_input.files[j];
-                filesToRead++;
-              }
-              inline_file_list.push(file_list[i]);
-            }
-            else if (the_file_input.files.length > 0){
-              newFileList.push(file_list[i]);
-            }
-            else{
-              nullFileList.push(file_list[i]);
-            }
-            namesWithImages[file_list[i]] = hasImages;
-          }
-          if (inline_file_list.length > 0){
-            var originalFileList = atou($('input[name="_files"]').val())
-            if (newFileList.length == 0 && nullFileList.length == 0){
-              $('input[name="_files"]').remove();
-            }
-            else{
-              $('input[name="_files"]').val(utoa(JSON_stringify(newFileList.concat(nullFileList))));
-            }
-            for (var i = 0; i < inline_file_list.length; i++){
-              fileArray.keys.push(inline_file_list[i])
-              fileArray.values[inline_file_list[i]] = Array()
-              var fileInfoList = fileArray.values[inline_file_list[i]];
-              var file_input = $('#' + inline_file_list[i].replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1'))[0];
-              var max_size;
-              var image_type;
-              var image_mime_type;
-              var this_has_images = false;
-              if (namesWithImages[inline_file_list[i]]){
-                this_has_images = true;
-                max_size = parseInt($(file_input).data('maximagesize'));
-                image_type = $(file_input).data('imagetype');
-                image_mime_type = null;
-                if (image_type){
-                  if (image_type == 'png'){
-                    image_mime_type = 'image/png';
-                  }
-                  else if (image_type == 'bmp'){
-                    image_mime_type = 'image/bmp';
-                  }
-                  else {
-                    image_mime_type = 'image/jpeg';
-                    image_type = 'jpg';
-                  }
-                }
-              }
-              for (var j = 0; j < file_input.files.length; j++){
-                var a_file = file_input.files[j];
-                var tempFunc = function(the_file, max_size, has_images){
-                  var reader = new FileReader();
-                  var thisFileInfo = {name: the_file.name, size: the_file.size, type: the_file.type};
-                  fileInfoList.push(thisFileInfo);
-                  reader.onload = function(readerEvent){
-                    if (has_images && the_file.type.match(/image.*/) && !(the_file.type.indexOf('image/svg') == 0)){
-                      var convertedName = the_file.name;
-                      var convertedType = the_file.type;
-                      if (image_type){
-                        var pos = the_file.name.lastIndexOf(".");
-                        convertedName = the_file.name.substr(0, pos < 0 ? the_file.name.length : pos) + "." + image_type;
-                        convertedType = image_mime_type;
-                        thisFileInfo.name = convertedName;
-                        thisFileInfo.type = convertedType;
-                      }
-                      var image = new Image();
-                      image.onload = function(imageEvent) {
-                        var canvas = document.createElement('canvas'),
-                          width = image.width,
-                          height = image.height;
-                        if (width > height) {
-                          if (width > max_size) {
-                              height *= max_size / width;
-                              width = max_size;
-                          }
-                        }
-                        else {
-                          if (height > max_size) {
-                            width *= max_size / height;
-                            height = max_size;
-                          }
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        canvas.getContext('2d').drawImage(image, 0, 0, width, height);
-                        thisFileInfo['content'] = canvas.toDataURL(convertedType);
-                        filesRead++;
-                        if (filesRead >= filesToRead){
-                          daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
-                        }
-                      };
-                      image.src = reader.result;
-                    }
-                    else{
-                      thisFileInfo['content'] = reader.result;
-                      filesRead++;
-                      if (filesRead >= filesToRead){
-                        daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList);
-                      }
-                    }
-                  };
-                  reader.readAsDataURL(the_file);
-                };
-                tempFunc(a_file, max_size, this_has_images);
-                inline_succeeded = true;
-              }
-            }
-          }
-          if (newFileList.length == 0){
-            //$('input[name="_files"]').remove();
-          }
-          else{
-            do_iframe_upload = true;
-          }
-        }
-        if (inline_succeeded){
-          return(false);
-        }
-        if (do_iframe_upload){
-          $("#dauploadiframe").remove();
-          var iframe = $('<iframe name="dauploadiframe" id="dauploadiframe" style="display: none"><\/iframe>');
-          $(daTargetDiv).append(iframe);
-          $(form).attr("target", "dauploadiframe");
-          iframe.bind('load', function(){
-            setTimeout(function(){
-              try {
-                daProcessAjax($.parseJSON(daUnfakeHtmlResponse($("#dauploadiframe").contents().text())), form, 1);
-              }
-              catch (e){
-                try {
-                  daProcessAjax($.parseJSON($("#dauploadiframe").contents().text()), form, 1);
-                }
-                catch (f){
-                  daShowErrorScreen(document.getElementById('dauploadiframe').contentWindow.document.body.innerHTML, f);
-                }
-              }
-            }, 0);
-          });
-          form.submit();
-        }
-        else{
-          daRequestPending = true;
-          $.ajax({
-            type: "POST",
-            url: daInterviewUrl,
-            data: $(form).serialize(),
-            beforeSend: addCsrfHeader,
-            xhrFields: {
-              withCredentials: true
-            },
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, form, 1);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
-        }
-        return(false);
-      }
-      function daSignatureSubmit(event){
-        $(this).find("input[name='ajax']").val(1);
-        daRequestPending = true;
-        $.ajax({
-          type: "POST",
-          url: daInterviewUrl,
-          data: $(this).serialize(),
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, $(this), 1);
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          }
-        });
-        event.preventDefault();
-        event.stopPropagation();
-        return(false);
-      }
-      function JSON_stringify(s){
-         var json = JSON.stringify(s);
-         return json.replace(/[\\u007f-\\uffff]/g,
-            function(c) {
-              return '\\\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
-            }
-         );
-      }
-      function daResumeUploadSubmission(form, fileArray, inline_file_list, newFileList){
-        $('<input>').attr({
-          type: 'hidden',
-          name: '_files_inline',
-          value: utoa(JSON_stringify(fileArray))
-        }).appendTo($(form));
-        for (var i = 0; i < inline_file_list.length; ++i){
-          document.getElementById(inline_file_list[i]).disabled = true;
-        }
-        if (newFileList.length > 0){
-          $("#dauploadiframe").remove();
-          var iframe = $('<iframe name="dauploadiframe" id="dauploadiframe" style="display: none"><\/iframe>');
-          $(daTargetDiv).append(iframe);
-          $(form).attr("target", "dauploadiframe");
-          iframe.bind('load', function(){
-            setTimeout(function(){
-              daProcessAjax($.parseJSON($("#dauploadiframe").contents().text()), form, 1);
-            }, 0);
-          });
-          form.submit();
-        }
-        else{
-          daRequestPending = true;
-          $.ajax({
-            type: "POST",
-            url: daInterviewUrl,
-            data: $(form).serialize(),
-            beforeSend: addCsrfHeader,
-            xhrFields: {
-              withCredentials: true
-            },
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, form, 1);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
-        }
-      }
-      function daOnChange(){
-        if (daCheckinSeconds == 0 || daShowIfInProcess){
-          return true;
-        }
-        if (daCheckinInterval != null){
-          clearInterval(daCheckinInterval);
-        }
-        var oThis = this;
-        daCheckin(oThis);
-        daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
-        return true;
-      }
-      function daPushChanges(){
-        //console.log("daPushChanges");
-        if (daCheckinSeconds == 0 || daShowIfInProcess){
-          return true;
-        }
-        if (daCheckinInterval != null){
-          clearInterval(daCheckinInterval);
-        }
-        daCheckin(null);
-        daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
-        return true;
-      }
-      function daProcessAjaxError(xhr, status, error){
-        daRequestPending = false;
-        if (xhr.responseType == undefined || xhr.responseType == '' || xhr.responseType == 'text'){
-          var theHtml = xhr.responseText;
-          if (theHtml == undefined){
-            $(daTargetDiv).html("error");
-          }
-          else{
-            $(daTargetDiv).html(theHtml);
-          }
-          if (daJsEmbed){
-            $(daTargetDiv)[0].scrollTo(0, 1);
-          }
-          else{
-            window.scrollTo(0, 1);
-          }
-        }
-        else {
-          console.log("daProcessAjaxError: response was not text");
-        }
-      }
-      function daAddScriptToHead(src){
-        var head = document.getElementsByTagName("head")[0];
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = src;
-        script.async = true;
-        script.defer = true;
-        head.appendChild(script);
-      }
-      $(document).on('keydown', function(e){
-        if (e.which == 13){
-          if (daShowingHelp == 0){
-            var tag = $( document.activeElement ).prop("tagName");
-            if (tag != "INPUT" && tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON"){
-              e.preventDefault();
-              e.stopPropagation();
-              if ($("#daform .da-field-buttons button").not('.danonsubmit').length == 1){
-                $("#daform .da-field-buttons button").not('.danonsubmit').click();
-              }
-              return false;
-            }
-          }
-          if ($(document.activeElement).hasClass("btn-file")){
-            e.preventDefault();
-            e.stopPropagation();
-            $(document.activeElement).find('input').click();
-            return false;
-          }
-        }
-      });
-      function daShowErrorScreen(data, error){
-        console.log('daShowErrorScreen: ' + error);
-        if ("activeElement" in document){
-          document.activeElement.blur();
-        }
-        $(daTargetDiv).html(data);
-      }
-      function daProcessAjax(data, form, doScroll, actionURL){
-        daRequestPending = false;
-        daInformedChanged = false;
-        if (daDisable != null){
-          clearTimeout(daDisable);
-        }
-        daCsrf = data.csrf_token;
-        if (data.question_data){
-          daQuestionData = data.question_data;
-        }
-        if (data.action == 'body'){""" + forceFullScreen + """
-          if ("activeElement" in document){
-            document.activeElement.blur();
-          }
-          $(daTargetDiv).html("");
-          if (daJsEmbed){
-            $(daTargetDiv)[0].scrollTo(0, 1);
-          }
-          else{
-            window.scrollTo(0, 1);
-          }
-          $(daTargetDiv).html(data.body);
-          $(daTargetDiv).parent().removeClass();
-          $(daTargetDiv).parent().addClass(data.bodyclass);
-          $("meta[name=viewport]").attr('content', "width=device-width, initial-scale=1");
-          daDoAction = data.do_action;
-          //daNextAction = data.next_action;
-          daChatAvailable = data.livehelp.availability;
-          daChatMode = data.livehelp.mode;
-          daChatRoles = data.livehelp.roles;
-          daChatPartnerRoles = data.livehelp.partner_roles;
-          daSteps = data.steps;
-          //console.log("daProcessAjax: pushing " + daSteps);
-          if (!daJsEmbed && !daIframeEmbed){
-            if (history.state != null && daSteps > history.state.steps){
-              history.pushState({steps: daSteps}, data.browser_title + " - page " + daSteps, daLocationBar + """ + json.dumps(page_sep) + """ + daSteps);
-            }
-            else{
-              history.replaceState({steps: daSteps}, "", daLocationBar + """ + json.dumps(page_sep) + """ + daSteps);
-            }
-          }
-          daAllowGoingBack = data.allow_going_back;
-          daQuestionID = data.id_dict;
-          daMessageLog = data.message_log;
-          daInitialize(doScroll);
-          var tempDiv = document.createElement('div');
-          tempDiv.innerHTML = data.extra_scripts;
-          var scripts = tempDiv.getElementsByTagName('script');
-          for (var i = 0; i < scripts.length; i++){
-            //console.log("Found one script");
-            if (scripts[i].src != ""){
-              //console.log("Added script to head");
-              daAddScriptToHead(scripts[i].src);
-            }
-            else{
-              daGlobalEval(scripts[i].innerHTML);
-            }
-          }
-          $(".da-group-has-error").each(function(){
-            if ($(this).is(":visible")){
-              if (daJsEmbed){
-                var scrollToTarget = $(this).position().top - 60;
-                setTimeout(function(){
-                  $(daTargetDiv).animate({scrollTop: scrollToTarget}, 1000);
-                }, 100);
-              }
-              else{
-                var scrollToTarget = $(this).offset().top - 60;
-                setTimeout(function(){
-                  $(daTargetDiv).parent().parent().animate({scrollTop: scrollToTarget}, 1000);
-                }, 100);
-              }
-              return false;
-            }
-          });
-          for (var i = 0; i < data.extra_css.length; i++){
-            $("head").append(data.extra_css[i]);
-          }
-          document.title = data.browser_title;
-          if ($("html").attr("lang") != data.lang){
-            $("html").attr("lang", data.lang);
-          }
-          $(document).trigger('daPageLoad');
-          if (daReloader != null){
-            clearTimeout(daReloader);
-          }
-          if (data.reload_after != null && data.reload_after > 0){
-            //daReloader = setTimeout(function(){location.reload();}, data.reload_after);
-            daReloader = setTimeout(function(){daRefreshSubmit();}, data.reload_after);
-          }
-          daUpdateHeight();
-        }
-        else if (data.action == 'redirect'){
-          if (daSpinnerTimeout != null){
-            clearTimeout(daSpinnerTimeout);
-            daSpinnerTimeout = null;
-          }
-          if (daShowingSpinner){
-            daHideSpinner();
-          }
-          window.location = data.url;
-        }
-        else if (data.action == 'refresh'){
-          daRefreshSubmit();
-        }
-        else if (data.action == 'reload'){
-          location.reload(true);
-        }
-        else if (data.action == 'resubmit'){
-          if (form == null){
-            window.location = actionURL;
-          }
-          $("input[name='ajax']").remove();
-          if (daSubmitter != null && daSubmitter.name && $('input[name="' + daSubmitter.name + '"]').length == 0){
-            var input = $("<input>")
-              .attr("type", "hidden")
-              .attr("name", daSubmitter.name).val(daSubmitter.value);
-            $(form).append($(input));
-          }
-          form.submit();
-        }
-      }
-      function daEmbeddedJs(e){
-        //console.log("using embedded js");
-        var data = decodeURIComponent($(this).data('js'));
-        daGlobalEval(data);
-        e.preventDefault();
-        return false;
-      }
-      function daEmbeddedAction(e){
-        if (daRequestPending){
-          e.preventDefault();
-          $(this).blur();
-          return false;
-        }
-        if ($(this).hasClass("daremovebutton")){
-          if (confirm(""" + json.dumps(word("Are you sure you want to delete this item?")) + """)){
-            return true;
-          }
-          e.preventDefault();
-          $(this).blur();
-          return false;
-        }
-        var actionData = decodeURIComponent($(this).data('embaction'));
-        var theURL = $(this).attr("href");
-        daRequestPending = true;
-        $.ajax({
-          type: "POST",
-          url: daInterviewUrl,
-          data: $.param({_action: actionData, csrf_token: daCsrf, ajax: 1}),
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, null, 1, theURL);
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          },
-          dataType: 'json'
-        });
-        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        e.preventDefault();
-        return false;
-      }
-      function daReviewAction(e){
-        if (daRequestPending){
-          e.preventDefault();
-          $(this).blur();
-          return false;
-        }
-        //action_perform_with_next($(this).data('action'), null, daNextAction);
-        var info = $.parseJSON(atou($(this).data('action')));
-        da_action_perform(info['action'], info['arguments']);
-        e.preventDefault();
-        return false;
-      }
-      function daRingChat(){
-        daChatStatus = 'ringing';
-        daPushChanges();
-      }
-      function daTurnOnChat(){
-        //console.log("Publishing from daTurnOnChat");
-        $("#daChatOnButton").addClass("dainvisible");
-        $("#daChatBox").removeClass("dainvisible");
-        $("#daCorrespondence").html('');
-        for(var i = 0; i < daChatHistory.length; i++){
-          daPublishMessage(daChatHistory[i]);
-        }
-        daScrollChatFast();
-        $("#daMessage").prop('disabled', false);
-        if (daShowingHelp){
-          $("#daMessage").focus();
-        }
-      }
-      function daCloseChat(){
-        //console.log('daCloseChat');
-        daChatStatus = 'hangup';
-        daPushChanges();
-        if (daSocket != null && daSocket.connected){
-          daSocket.disconnect();
-        }
-      }
-      // function daTurnOffChat(){
-      //   $("#daChatOnButton").removeClass("dainvisible");
-      //   $("#daChatBox").addClass("dainvisible");
-      //   //daCloseSocket();
-      //   $("#daMessage").prop('disabled', true);
-      //   $("#daSend").unbind();
-      //   //daStartCheckingIn();
-      // }
-      function daDisplayChat(){
-        if (daChatStatus == 'off' || daChatStatus == 'observeonly'){
-          $("#daChatBox").addClass("dainvisible");
-          $("#daChatAvailable").addClass("dainvisible");
-          $("#daChatOnButton").addClass("dainvisible");
-        }
-        else{
-          if (daChatStatus == 'waiting'){
-            if (daChatPartnersAvailable > 0){
-              $("#daChatBox").removeClass("dainvisible");
-            }
-          }
-          else {
-            $("#daChatBox").removeClass("dainvisible");
-          }
-        }
-        if (daChatStatus == 'waiting'){
-          //console.log("I see waiting")
-          if (daChatHistory.length > 0){
-            $("#daChatAvailable a i").removeClass("da-chat-active");
-            $("#daChatAvailable a i").addClass("da-chat-inactive");
-            $("#daChatAvailable").removeClass("dainvisible");
-          }
-          else{
-            $("#daChatAvailable a i").removeClass("da-chat-active");
-            $("#daChatAvailable a i").removeClass("da-chat-inactive");
-            $("#daChatAvailable").addClass("dainvisible");
-          }
-          $("#daChatOnButton").addClass("dainvisible");
-          $("#daChatOffButton").addClass("dainvisible");
-          $("#daMessage").prop('disabled', true);
-          $("#daSend").prop('disabled', true);
-        }
-        if (daChatStatus == 'standby' || daChatStatus == 'ready'){
-          //console.log("I see standby")
-          $("#daChatAvailable").removeClass("dainvisible");
-          $("#daChatAvailable a i").removeClass("da-chat-inactive");
-          $("#daChatAvailable a i").addClass("da-chat-active");
-          $("#daChatOnButton").removeClass("dainvisible");
-          $("#daChatOffButton").addClass("dainvisible");
-          $("#daMessage").prop('disabled', true);
-          $("#daSend").prop('disabled', true);
-          daInformAbout('chat');
-        }
-        if (daChatStatus == 'on'){
-          $("#daChatAvailable").removeClass("dainvisible");
-          $("#daChatAvailable a i").removeClass("da-chat-inactive");
-          $("#daChatAvailable a i").addClass("da-chat-active");
-          $("#daChatOnButton").addClass("dainvisible");
-          $("#daChatOffButton").removeClass("dainvisible");
-          $("#daMessage").prop('disabled', false);
-          if (daShowingHelp){
-            $("#daMessage").focus();
-          }
-          $("#daSend").prop('disabled', false);
-          daInformAbout('chat');
-        }
-        hideTablist();
-      }
-      function daChatLogCallback(data){
-        if (data.action && data.action == 'reload'){
-          location.reload(true);
-        }
-        //console.log("daChatLogCallback: success is " + data.success);
-        if (data.success){
-          $("#daCorrespondence").html('');
-          daChatHistory = [];
-          var messages = data.messages;
-          for (var i = 0; i < messages.length; ++i){
-            daChatHistory.push(messages[i]);
-            daPublishMessage(messages[i]);
-          }
-          daDisplayChat();
-          daScrollChatFast();
-        }
-      }
-      function daRefreshSubmit(){
-        daRequestPending = true;
-        $.ajax({
-          type: "POST",
-          url: daInterviewUrl,
-          data: 'csrf_token=' + daCsrf + '&ajax=1',
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, $("#daform"), 0);
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          }
-        });
-      }
-      function daResetCheckinCode(){
-        daCheckinCode = Math.random();
-      }
-      function daCheckinCallback(data){
-        if (data.action && data.action == 'reload'){
-          location.reload(true);
-        }
-        daCheckingIn = 0;
-        //console.log("daCheckinCallback: success is " + data.success);
-        if (data.checkin_code != daCheckinCode){
-          console.log("Ignoring checkincallback because code is wrong");
-          return;
-        }
-        if (data.success){
-          if (data.commands.length > 0){
-            for (var i = 0; i < data.commands.length; ++i){
-              var command = data.commands[i];
-              if (command.extra == 'flash'){
-                if (!$("#daflash").length){
-                  $(daTargetDiv).append(daSprintf(daNotificationContainer, ""));
-                }
-                $("#daflash").append(daSprintf(daNotificationMessage, "info", command.value));
-                //console.log("command is " + command.value);
-              }
-              else if (command.extra == 'refresh'){
-                daRefreshSubmit();
-              }
-              else if (command.extra == 'javascript'){
-                //console.log("I should eval" + command.value);
-                daGlobalEval(command.value);
-              }
-              else if (command.extra == 'fields'){
-                for (var key in command.value){
-                  if (command.value.hasOwnProperty(key)){
-                    if (typeof command.value[key] === 'object' && command.value[key] !== null){
-                      if (command.value[key].hasOwnProperty('choices')){
-                        daSetChoices(key, command.value[key]['choices']);
-                      }
-                      if (command.value[key].hasOwnProperty('value')){
-                        daSetField(key, command.value[key]['value']);
-                      }
-                    }
-                    else{
-                      daSetField(key, command.value[key]);
-                    }
-                  }
-                }
-              }
-              else if (command.extra == 'backgroundresponse'){
-                var assignments = Array();
-                if (command.value.hasOwnProperty('target') && command.value.hasOwnProperty('content')){
-                  assignments.push({target: command.value.target, content: command.value.content});
-                }
-                if (Array.isArray(command.value)){
-                  for (i = 0; i < command.value.length; ++i){
-                    var possible_assignment = command.value[i];
-                    if (possible_assignment.hasOwnProperty('target') && possible_assignment.hasOwnProperty('content')){
-                      assignments.push({target: possible_assignment.target, content: possible_assignment.content});
-                    }
-                  }
-                }
-                for (i = 0; i < assignments.length; ++i){
-                  var assignment = assignments[i];
-                  $('.datarget' + assignment.target.replace(/[^A-Za-z0-9\_]/g)).prop('innerHTML', assignment.content);
-                }
-                //console.log("Triggering daCheckIn");
-                $(document).trigger('daCheckIn', [command.action, command.value]);
-              }
-            }
-            // setTimeout(function(){
-            //   $("#daflash .daalert-interlocutory").hide(300, function(){
-            //     $(self).remove();
-            //   });
-            // }, 5000);
-          }
-          oldDaChatStatus = daChatStatus;
-          //console.log("daCheckinCallback: from " + daChatStatus + " to " + data.chat_status);
-          if (data.phone == null){
-            $("#daPhoneMessage").addClass("dainvisible");
-            $("#daPhoneMessage p").html('');
-            $("#daPhoneAvailable").addClass("dainvisible");
-            daPhoneAvailable = false;
-          }
-          else{
-            $("#daPhoneMessage").removeClass("dainvisible");
-            $("#daPhoneMessage p").html(data.phone);
-            $("#daPhoneAvailable").removeClass("dainvisible");
-            daPhoneAvailable = true;
-            daInformAbout('phone');
-          }
-          var statusChanged;
-          if (daChatStatus == data.chat_status){
-            statusChanged = false;
-          }
-          else{
-            statusChanged = true;
-          }
-          if (statusChanged){
-            daChatStatus = data.chat_status;
-            daDisplayChat();
-            if (daChatStatus == 'ready'){
-              //console.log("calling initialize socket because ready");
-              daInitializeSocket();
-            }
-          }
-          daChatPartnersAvailable = 0;
-          if (daChatMode == 'peer' || daChatMode == 'peerhelp'){
-            daChatPartnersAvailable += data.num_peers;
-            if (data.num_peers == 1){
-              $("#dapeerMessage").html('<span class="badge bg-info">' + data.num_peers + ' ' + """ + json.dumps(word("other user")) + """ + '<\/span>');
-            }
-            else{
-              $("#dapeerMessage").html('<span class="badge bg-info">' + data.num_peers + ' ' + """ + json.dumps(word("other users")) + """ + '<\/span>');
-            }
-            $("#dapeerMessage").removeClass("dainvisible");
-          }
-          else{
-            $("#dapeerMessage").addClass("dainvisible");
-          }
-          if (daChatMode == 'peerhelp' || daChatMode == 'help'){
-            if (data.help_available == 1){
-              $("#dapeerHelpMessage").html('<span class="badge bg-primary">' + data.help_available + ' ' + """ + json.dumps(word("operator")) + """ + '<\/span>');
-            }
-            else{
-              $("#dapeerHelpMessage").html('<span class="badge bg-primary">' + data.help_available + ' ' + """ + json.dumps(word("operators")) + """ + '<\/span>');
-            }
-            $("#dapeerHelpMessage").removeClass("dainvisible");
-          }
-          else{
-            $("#dapeerHelpMessage").addClass("dainvisible");
-          }
-          if (daBeingControlled){
-            if (!data.observerControl){
-              daBeingControlled = false;
-              //console.log("Hiding control 1");
-              daHideControl();
-              if (daChatStatus != 'on'){
-                if (daSocket != null && daSocket.connected){
-                  //console.log('Terminating interview socket because control is over');
-                  daSocket.emit('terminate');
-                }
-              }
-            }
-          }
-          else{
-            if (data.observerControl){
-              daBeingControlled = true;
-              daInitializeSocket();
-            }
-          }
-        }
-        hideTablist();
-      }
-      function daCheckoutCallback(data){
-      }
-      function daInitialCheckin(){
-        daCheckin('initial');
-      }
-      function daCheckin(elem){
-        //console.log("daCheckin");
-        var elem = (typeof elem === 'undefined') ? null : elem;
-        daCheckingIn += 1;
-        //if (daCheckingIn > 1 && !(daCheckingIn % 3)){
-        if (elem === null && daCheckingIn > 1){
-          //console.log("daCheckin: request already pending, not re-sending");
-          return;
-        }
-        var datastring;
-        if ((daChatStatus != 'off') && $("#daform").length > 0 && !daBeingControlled){
-          if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(elem), raw_parameters: JSON.stringify($("#daform").serializeArray()), do_action: daDoAction, ajax: '1'});
-          }
-          else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, parameters: daFormAsJSON(elem), raw_parameters: JSON.stringify($("#daform").serializeArray()), ajax: '1'});
-          }
-        }
-        else{
-          if (daDoAction != null){
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, do_action: daDoAction, parameters: daFormAsJSON(elem), ajax: '1'});
-          }
-          else{
-            datastring = $.param({action: 'checkin', chatstatus: daChatStatus, chatmode: daChatMode, csrf_token: daCsrf, checkinCode: daCheckinCode, ajax: '1'});
-          }
-        }
-        //console.log("Doing checkin with " + daChatStatus);
-        $.ajax({
-          type: 'POST',
-          url: """ + "'" + url_for('checkin', i=yaml_filename) + "'" + """,
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          data: datastring,
-          success: daCheckinCallback,
-          dataType: 'json'
-        });
-        return true;
-      }
-      function daCheckout(){
-        $.ajax({
-          type: 'POST',
-          url: """ + "'" + url_for('checkout', i=yaml_filename) + "'" + """,
-          beforeSend: addCsrfHeader,
-          xhrFields: {
-            withCredentials: true
-          },
-          data: 'csrf_token=' + daCsrf + '&ajax=1&action=checkout',
-          success: daCheckoutCallback,
-          dataType: 'json'
-        });
-        return true;
-      }
-      function daStopCheckingIn(){
-        daCheckout();
-        if (daCheckinInterval != null){
-          clearInterval(daCheckinInterval);
-        }
-      }
-      function daShowSpinner(){
-        if ($("#daquestion").length > 0){
-          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner"><i class="fa-solid fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
-        }
-        else{
-          var newSpan = document.createElement('span');
-          var newI = document.createElement('i');
-          $(newI).addClass("fa-solid fa-spinner fa-spin");
-          $(newI).appendTo(newSpan);
-          $(newSpan).attr("id", "daSpinner");
-          $(newSpan).addClass("da-sig-spinner da-top-for-navbar");
-          $(newSpan).appendTo("#dasigtoppart");
-        }
-        daShowingSpinner = true;
-      }
-      function daHideSpinner(){
-        $("#daSpinner").remove();
-        daShowingSpinner = false;
-        daSpinnerTimeout = null;
-      }
-      function daAdjustInputWidth(e){
-        var contents = $(this).val();
-        var leftBracket = new RegExp('<', 'g');
-        var rightBracket = new RegExp('>', 'g');
-        contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
-        $('<span class="dainput-embedded" id="dawidth">').html( contents ).appendTo('#daquestion');
-        $("#dawidth").css('min-width', $(this).css('min-width'));
-        $("#dawidth").css('background-color', $(daTargetDiv).css('background-color'));
-        $("#dawidth").css('color', $(daTargetDiv).css('background-color'));
-        $(this).width($('#dawidth').width() + 16);
-        setTimeout(function(){
-          $("#dawidth").remove();
-        }, 0);
-      }
-      function daShowNotifications(){
-        var n = daMessageLog.length;
-        for (var i = 0; i < n; i++){
-          var message = daMessageLog[i];
-          if (message.priority == 'console'){
-            console.log(message.message);
-          }
-          else if (message.priority == 'javascript'){
-            daGlobalEval(message.message);
-          }
-          else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'tertiary' || message.priority == 'info' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
-            da_flash(message.message, message.priority);
-          }
-          else{
-            da_flash(message.message, 'info');
-          }
-        }
-      }
-      function daIgnoreAllButTab(event){
-        event = event || window.event;
-        var code = event.keyCode;
-        if (code != 9){
-          if (code == 13){
-            $(event.target).parents(".file-caption-main").find("input.dafile").click();
-          }
-          event.preventDefault();
-          return false;
-        }
-      }
-      function daDisableIfNotHidden(query, value){
-        $(query).each(function(){
-          var showIfParent = $(this).parents('.dashowif, .dajsshowif');
-          if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
-            if ($(this).prop('tagName') == 'INPUT' && $(this).hasClass('combobox')){
-              if (value){
-                daComboBoxes[$(this).attr('id')].disable();
-              }
-              else {
-                daComboBoxes[$(this).attr('id')].enable();
-              }
-            }
-            else if ($(this).hasClass('dafile')){
-              if (value){
-                $(this).data("fileinput").disable();
-              }
-              else{
-                $(this).data("fileinput").enable();
-              }
-            }
-            else if ($(this).hasClass('daslider')){
-              if (value){
-                $(this).slider('disable');
-              }
-              else{
-                $(this).slider('enable');
-              }
-            }
-            else {
-              $(this).prop("disabled", value);
-            }
-            if (value){
-              $(this).parents(".da-form-group").addClass("dagreyedout");
-            }
-            else {
-              $(this).parents(".da-form-group").removeClass("dagreyedout");
-            }
-          }
-        });
-      }
-      function daShowIfCompare(theVal, showIfVal){
-        if (typeof theVal == 'string' && theVal.match(/^-?\d+\.\d+$/)){
-          theVal = parseFloat(theVal);
-        }
-        else if (typeof theVal == 'string' && theVal.match(/^-?\d+$/)){
-          theVal = parseInt(theVal);
-        }
-        if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+\.\d+$/)){
-          showIfVal = parseFloat(showIfVal);
-        }
-        else if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+$/)){
-          showIfVal = parseInt(showIfVal);
-        }
-        if (typeof theVal == 'string' || typeof showIfVal == 'string'){
-          if (String(showIfVal) == 'None' && (String(theVal) == '' || theVal === null)){
-            return true;
-          }
-          return (String(theVal) == String(showIfVal));
-        }
-        return (theVal == showIfVal);
-      }
-      function rationalizeListCollect(){
-        var finalNum = $(".dacollectextraheader").last().data('collectnum');
-        var num = $(".dacollectextraheader:visible").last().data('collectnum');
-        if (parseInt(num) < parseInt(finalNum)){
-          if ($('div.dacollectextraheader[data-collectnum="' + num + '"]').find(".dacollectadd").hasClass('dainvisible')){
-            $('div.dacollectextraheader[data-collectnum="' + (num + 1) + '"]').show('fast');
-          }
-        }
-        var n = parseInt(finalNum);
-        var firstNum = parseInt($(".dacollectextraheader").first().data('collectnum'));
-        while (n-- > firstNum){
-          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
-            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible') && $('div.dacollectextraheader[data-collectnum="' + n + '"]').find(".dacollectremove").hasClass('dainvisible')){
-              $('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').hide();
-            }
-          }
-        }
-        var n = parseInt(finalNum);
-        var seenAddAnother = false;
-        while (n-- > firstNum){
-          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
-            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible')){
-              seenAddAnother = true;
-            }
-            var current = $('div.dacollectextraheader[data-collectnum="' + n + '"]');
-            if (seenAddAnother && !$(current).find(".dacollectadd").hasClass('dainvisible')){
-              $(current).find(".dacollectadd").addClass('dainvisible');
-              $(current).find(".dacollectunremove").removeClass('dainvisible');
-            }
-          }
-        }
-      }
-      function daFetchAjax(elem, cb, doShow){
-        var wordStart = $(elem).val();
-        if (wordStart.length < parseInt(cb.$source.data('trig'))){
-          if (cb.shown){
-            cb.hide();
-          }
-          return;
-        }
-        if (daFetchAjaxTimeout != null && daFetchAjaxTimeoutRunning){
-          daFetchAjaxTimeoutFetchAfter = true;
-          return;
-        }
-        if (doShow){
-          daFetchAjaxTimeout = setTimeout(function(){
-            daFetchAjaxTimeoutRunning = false;
-            if (daFetchAjaxTimeoutFetchAfter){
-              daFetchAjax(elem, cb, doShow);
-              daFetchAjaxTimeoutFetchAfter = false;
-            }
-          }, 2000);
-          daFetchAjaxTimeoutRunning = true;
-          daFetchAjaxTimeoutFetchAfter = false;
-        }
-        da_action_call(cb.$source.data('action'), {wordstart: wordStart}, function(data){
-          wordStart = $(elem).val();
-          if (typeof data == "object"){
-            var upperWordStart = wordStart.toUpperCase()
-            cb.$source.empty();
-            var emptyItem = $("<option>");
-            emptyItem.val("");
-            emptyItem.text("");
-            cb.$source.append(emptyItem);
-            var notYetSelected = true;
-            var selectedValue = null;
-            if (Array.isArray(data)){
-              for (var i = 0; i < data.length; ++i){
-                if (Array.isArray(data[i])){
-                  if (data[i].length >= 2){
-                    var item = $("<option>");
-                    if (notYetSelected && ((doShow && data[i][1].toString() == wordStart) || data[i][0].toString() == wordStart)){
-                      item.prop('selected', true);
-                      notYetSelected = false;
-                      selectedValue = data[i][1]
-                    }
-                    item.text(data[i][1]);
-                    item.val(data[i][0]);
-                    cb.$source.append(item);
-                  }
-                  else if (data[i].length == 1){
-                    var item = $("<option>");
-                    if (notYetSelected && ((doShow && data[i][0].toString() == wordStart) || data[i][0].toString() == wordStart)){
-                      item.prop('selected', true);
-                      notYetSelected = false;
-                      selectedValue = data[i][0]
-                    }
-                    item.text(data[i][0]);
-                    item.val(data[i][0]);
-                    cb.$source.append(item);
-                  }
-                }
-                else if (typeof data[i] == "object"){
-                  for (var key in data[i]){
-                    if (data[i].hasOwnProperty(key)){
-                      var item = $("<option>");
-                      if (notYetSelected && ((doShow && key.toString() == wordStart) || key.toString() == wordStart)){
-                        item.prop('selected', true);
-                        notYetSelected = false;
-                        selectedValue = data[i][key];
-                      }
-                      item.text(data[i][key]);
-                      item.val(key);
-                      cb.$source.append(item);
-                    }
-                  }
-                }
-                else{
-                  var item = $("<option>");
-                  if (notYetSelected && ((doShow && data[i].toString().toUpperCase() == upperWordStart) || data[i].toString() == wordStart)){
-                    item.prop('selected', true);
-                    notYetSelected = false;
-                    selectedValue = data[i];
-                  }
-                  item.text(data[i]);
-                  item.val(data[i]);
-                  cb.$source.append(item);
-                }
-              }
-            }
-            else if (typeof data == "object"){
-              var keyList = Array();
-              for (var key in data){
-                if (data.hasOwnProperty(key)){
-                  keyList.push(key);
-                }
-              }
-              keyList = keyList.sort();
-              for (var i = 0; i < keyList.length; ++i){
-                var item = $("<option>");
-                if (notYetSelected && ((doShow && keyList[i].toString().toUpperCase() == upperWordStart) || keyList[i].toString() == wordStart)){
-                  item.prop('selected', true);
-                  notYetSelected = false;
-                  selectedValue = data[keyList[i]];
-                }
-                item.text(data[keyList[i]]);
-                item.val(keyList[i]);
-                cb.$source.append(item);
-              }
-            }
-            if (doShow){
-              cb.refresh();
-              cb.clearTarget();
-              cb.$target.val(cb.$element.val());
-              cb.lookup();
-            }
-            else{
-              if (!notYetSelected){
-                cb.$element.val(selectedValue);
-              }
-            }
-          }
-        });
-      }
-      function daInitialize(doScroll){
-        daResetCheckinCode();
-        daComboBoxes = Object();
-        daVarLookupSelect = Object();
-        daVarLookupCheckbox = Object();
-        if (daSpinnerTimeout != null){
-          clearTimeout(daSpinnerTimeout);
-          daSpinnerTimeout = null;
-        }
-        if (daShowingSpinner){
-          daHideSpinner();
-        }
-        daNotYetScrolled = true;
-        // $(".dahelptrigger").click(function(e) {
-        //   e.preventDefault();
-        //   $(this).tab('show');
-        // });
-        $("input.dafile").fileinput({theme: "fas", language: document.documentElement.lang, allowedPreviewTypes: ['image']});
-        $(".datableup,.databledown").click(function(e){
-          e.preventDefault();
-          $(this).blur();
-          var row = $(this).parents("tr").first();
-          if ($(this).is(".datableup")) {
-            var prev = row.prev();
-            if (prev.length == 0){
-              return false;
-            }
-            row.addClass("datablehighlighted");
-            setTimeout(function(){
-              row.insertBefore(prev);
-            }, 200);
-          }
-          else {
-            var next = row.next();
-            if (next.length == 0){
-              return false;
-            }
-            row.addClass("datablehighlighted");
-            setTimeout(function(){
-              row.insertAfter(row.next());
-            }, 200);
-          }
-          setTimeout(function(){
-            row.removeClass("datablehighlighted");
-          }, 1000);
-          return false;
-        });
-        $(".dacollectextra").find('input, textarea, select').prop("disabled", true);
-        $(".dacollectextra").find('input.combobox').each(function(){
-          daComboBoxes[$(this).attr('id')].disable();
-        });
-        $(".dacollectextra").find('input.daslider').each(function(){
-          $(this).slider('disable');
-        });
-        $(".dacollectextra").find('input.dafile').each(function(){
-          $(this).data("fileinput").disable();
-        });
-        $("#da-extra-collect").on('click', function(){
-          $("<input>").attr({
-            type: 'hidden',
-            name: '_collect',
-            value: $(this).val()
-          }).appendTo($("#daform"));
-          $("#daform").submit();
-          event.preventDefault();
-          return false;
-        });
-        $(".dacollectadd").on('click', function(e){
-          e.preventDefault();
-          if ($("#daform").valid()){
-            var num = $(this).parent().parent().data('collectnum');
-            $('[data-collectnum="' + num + '"]').show('fast');
-            $('[data-collectnum="' + num + '"]').find('input, textarea, select').each(function(){
-              var showifParents = $(this).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
-                $(this).prop("disabled", false);
-              }
-            });
-            $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
-              var showifParents = $(this).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
-                daComboBoxes[$(this).attr('id')].enable();
-              }
-            });
-            $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
-              var showifParents = $(this).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
-                $(this).slider('enable');
-              }
-            });
-            $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
-              var showifParents = $(this).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).is(":visible")){
-                $(this).data("fileinput").enable();
-              }
-            });
-            $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
-            $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
-            $(this).addClass("dainvisible");
-            $(".da-first-delete").removeClass("dainvisible");
-            rationalizeListCollect();
-            var elem = $('[data-collectnum="' + num + '"]').find('input, textarea, select').first();
-            if ($(elem).visible()){
-              $(elem).focus();
-            }
-          }
-          return false;
-        });
-        $("#dasigform").on('submit', daSignatureSubmit);
-        $(".dacollectremove").on('click', function(e){
-          e.preventDefault();
-          var num = $(this).parent().parent().data('collectnum');
-          $('[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
-          $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
-          $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
-            daComboBoxes[$(this).attr('id')].disable();
-          });
-          $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
-            $(this).slider('disable');
-          });
-          $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
-            $(this).data("fileinput").disable();
-          });
-          $(this).parent().find("button.dacollectadd").removeClass("dainvisible");
-          $(this).parent().find("span.dacollectnum").addClass("dainvisible");
-          $(this).addClass("dainvisible");
-          rationalizeListCollect();
-          return false;
-        });
-        $(".dacollectremoveexisting").on('click', function(e){
-          e.preventDefault();
-          var num = $(this).parent().parent().data('collectnum');
-          $('[data-collectnum="' + num + '"]:not(.dacollectextraheader, .dacollectheader, .dacollectfirstheader)').hide('fast');
-          $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", true);
-          $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
-            daComboBoxes[$(this).attr('id')].disable();
-          });
-          $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
-            $(this).slider('disable');
-          });
-          $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
-            $(this).data("fileinput").disable();
-          });
-          $(this).parent().find("button.dacollectunremove").removeClass("dainvisible");
-          $(this).parent().find("span.dacollectremoved").removeClass("dainvisible");
-          $(this).addClass("dainvisible");
-          rationalizeListCollect();
-          return false;
-        });
-        $(".dacollectunremove").on('click', function(e){
-          e.preventDefault();
-          var num = $(this).parent().parent().data('collectnum');
-          $('[data-collectnum="' + num + '"]').show('fast');
-          $('[data-collectnum="' + num + '"]').find('input, textarea, select').prop("disabled", false);
-          $('[data-collectnum="' + num + '"]').find('input.combobox').each(function(){
-            daComboBoxes[$(this).attr('id')].enable();
-          });
-          $('[data-collectnum="' + num + '"]').find('input.daslider').each(function(){
-            $(this).slider('enable');
-          });
-          $('[data-collectnum="' + num + '"]').find('input.dafile').each(function(){
-            $(this).data("fileinput").enable();
-          });
-          $(this).parent().find("button.dacollectremoveexisting").removeClass("dainvisible");
-          $(this).parent().find("button.dacollectremove").removeClass("dainvisible");
-          $(this).parent().find("span.dacollectnum").removeClass("dainvisible");
-          $(this).parent().find("span.dacollectremoved").addClass("dainvisible");
-          $(this).addClass("dainvisible");
-          rationalizeListCollect();
-          return false;
-        });
-        //$('#daquestionlabel').click(function(e) {
-        //  e.preventDefault();
-        //  $(this).tab('show');
-        //});
-        //$('#dapagetitle').click(function(e) {
-        //  if ($(this).prop('href') == '#'){
-        //    e.preventDefault();
-        //    //$('#daquestionlabel').tab('show');
-        //  }
-        //});
-        $('select.damultiselect').each(function(){
-          var isObject = $(this).hasClass('daobject');
-          var varname = atou($(this).data('varname'));
-          var theSelect = this;
-          $(this).find('option').each(function(){
-            var theVal = atou($(this).data('valname'));
-            if (isObject){
-              theVal = atou(theVal);
-            }
-            var key = varname + '["' + theVal + '"]';
-            if (!daVarLookupSelect[key]){
-              daVarLookupSelect[key] = [];
-            }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
-            key = varname + "['" + theVal + "']"
-            if (!daVarLookupSelect[key]){
-              daVarLookupSelect[key] = [];
-            }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
-          });
-        })
-        $('div.da-field-group.da-field-checkboxes').each(function(){
-          var isObject = $(this).hasClass('daobject');
-          var varname = atou($(this).data('varname'));
-          var cbList = [];
-          if (!daVarLookupCheckbox[varname]){
-            daVarLookupCheckbox[varname] = [];
-          }
-          $(this).find('input').each(function(){
-            if ($(this).attr('name').substr(0,7) === '_ignore'){
-              return;
-            }
-            var theVal = atou($(this).data('cbvalue'));
-            var theType = $(this).data('cbtype');
-            var key;
-            if (theType == 'R'){
-              key = varname + '[' + theVal + ']';
-            }
-            else {
-              key = varname + '["' + theVal + '"]';
-            }
-            cbList.push({'variable': key, 'value': theVal, 'type': theType, 'elem': this})
-          });
-          daVarLookupCheckbox[varname].push({'elem': this, 'checkboxes': cbList, 'isObject': isObject});
-          $(this).find('input.danota-checkbox').each(function(){
-            if (!daVarLookupCheckbox[varname + '[nota]']){
-              daVarLookupCheckbox[varname + '[nota]'] = [];
-            }
-            daVarLookupCheckbox[varname + '[nota]'].push({'elem': this, 'checkboxes': [{'variable': varname + '[nota]', 'type': 'X', 'elem': this}], 'isObject': isObject});
-          });
-          $(this).find('input.daaota-checkbox').each(function(){
-            if (!daVarLookupCheckbox[varname + '[aota]']){
-              daVarLookupCheckbox[varname + '[aota]'] = [];
-            }
-            daVarLookupCheckbox[varname + '[aota]'].push({'elem': this, 'checkboxes': [{'variable': varname + '[aota]', 'type': 'X', 'elem': this}], 'isObject': isObject});
-          });
-        });
-        $('.dacurrency').each(function(){
-          var theVal = $(this).val().toString();
-          if (theVal.indexOf('.') >= 0){
-            theVal = theVal.replace(',', '');
-            var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """).toString();
-            if (cleanNum != 'NaN') {
-              $(this).val(cleanNum);
-            }
-          }
-        });
-        $('.dacurrency').on('change', function(){
-          var theVal = $(this).val().toString();
-          if (theVal.indexOf('.') >= 0){
-            theVal = theVal.replaceAll(/[\$,\(\)]/g, '');
-            var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """).toString();
-            if (cleanNum != 'NaN') {
-              $(this).val(cleanNum);
-            }
-            else {
-              $(this).val(theVal);
-            }
-          }
-          else {
-            $(this).val(theVal.replaceAll(/[^0-9\.\-]/g, ''));
-          }
-        });
-        $('.danumeric').on('change', function(){
-          var theVal = $(this).val().toString();
-          $(this).val(theVal.replaceAll(/[\$,\(\)]/g, ''));
-        });
-        // iOS will truncate text in `select` options. Adding an empty optgroup fixes that
-        if (navigator.userAgent.match(/(iPad|iPhone|iPod touch);/i)) {
-          var selects = document.querySelectorAll("select");
-          for (var i = 0; i < selects.length; i++){
-            selects[i].appendChild(document.createElement("optgroup"));
-          }
-        }
-        $(".da-to-labelauty").labelauty({ class: "labelauty da-active-invisible dafullwidth" });
-        $(".da-to-labelauty-icon").labelauty({ label: false });
-        $("input[type=radio].da-to-labelauty:checked").trigger('change');
-        $("input[type=radio].da-to-labelauty-icon:checked").trigger('change');
-        $("button").on('click', function(){
-          daWhichButton = this;
-          return true;
-        });
-        $('#dasource').on('shown.bs.collapse', function (e) {
-          if (daJsEmbed){
-            var scrollTarget = $("#dasource").first().position().top - 60;
-            $(daTargetDiv).animate({
-              scrollTop: scrollTarget
-            }, 1000);
-          }
-          else{
-            var scrollTarget = $("#dasource").first().offset().top - 60;
-            $("html, body").animate({
-              scrollTop: scrollTarget
-            }, 1000);
-          }
-        });
-        $('button[data-bs-target="#dahelp"]').on('shown.bs.tab', function (e) {
-          daShowingHelp = 1;
-          if (daNotYetScrolled){
-            daScrollChatFast();
-            daNotYetScrolled = false;
-          }""" + debug_readability_help + """
-        });
-        $('button[data-bs-target="#daquestion"]').on('shown.bs.tab', function (e) {
-          daShowingHelp = 0;""" + debug_readability_question + """
-        });
-        $("input.daaota-checkbox").click(function(){
-          var anyChanged = false;
-          var firstEncountered = null;
-          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
-            if (firstEncountered === null){
-              firstEncountered = this;
-            }
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', true);
-            if (existing_val != true){
-              $(this).trigger('change');
-              anyChanged = true;
-            }
-          });
-          if (firstEncountered !== null && anyChanged === false){
-            $(firstEncountered).trigger('change');
-          }
-          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-            }
-          });
-        });
-        $("input.danota-checkbox").click(function(){
-          var anyChanged = false;
-          var firstEncountered = null;
-          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
-            if (firstEncountered === null){
-              firstEncountered = this;
-            }
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-              anyChanged = true;
-            }
-          });
-          if (firstEncountered !== null && anyChanged === false){
-            $(firstEncountered).trigger('change');
-          }
-          $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-            }
-          });
-        });
-        $("input.danon-nota-checkbox").click(function(){
-          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-            }
-          });
-          if (!$(this).prop('checked')){
-            $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
-              var existing_val = $(this).prop('checked');
-              $(this).prop('checked', false);
-              if (existing_val != false){
-                $(this).trigger('change');
-              }
-            });
-          }
-        });
-        $('select.combobox').combobox({buttonLabel: daComboboxButtonLabel});
-        $('select.da-ajax-combobox').combobox({clearIfNoMatch: true, buttonLabel: daComboboxButtonLabel});
-        $('input.da-ajax-combobox').each(function(){
-          var cb = daComboBoxes[$(this).attr("id")];
-          daFetchAjax(this, cb, false);
-          $(this).on('keyup', function(e){
-            switch(e.keyCode){
-              case 40:
-              case 39: // right arrow
-              case 38: // up arrow
-              case 37: // left arrow
-              case 36: // home
-              case 35: // end
-              case 16: // shift
-              case 17: // ctrl
-              case 9:  // tab
-              case 13: // enter
-              case 27: // escape
-              case 18: // alt
-                return;
-            }
-            daFetchAjax(this, cb, true);
-            daFetchAcceptIncoming = true;
-            e.preventDefault();
-            return false;
-          });
-        });
-        $("#daemailform").validate({'submitHandler': daValidationHandler, 'rules': {'_attachment_email_address': {'minlength': 1, 'required': true, 'email': true}}, 'messages': {'_attachment_email_address': {'required': """ + json.dumps(word("An e-mail address is required.")) + """, 'email': """ + json.dumps(word("You need to enter a complete e-mail address.")) + """}}, 'errorClass': 'da-has-error invalid-feedback'});
-        $("a[data-embaction]").click(daEmbeddedAction);
-        $("a[data-js]").click(daEmbeddedJs);
-        $("a.da-review-action").click(daReviewAction);
-        $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
-        $("input.dainput-embedded").each(daAdjustInputWidth);
-        var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-        var daPopoverTrigger = """ + json.dumps(interview.options.get('popover trigger', 'focus')) + """;
-        var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
-          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: daPopoverTrigger, html: true});
-        });
-        if (daPopoverTrigger == "focus"){
-          $('label a[data-bs-toggle="popover"], legend a[data-bs-toggle="popover"]').on('click', function(event){
-            event.preventDefault();
-            event.stopPropagation();
-            $(this).focus();
-            return false;
-          });
-        }
-        if (daPhoneAvailable){
-          $("#daPhoneAvailable").removeClass("dainvisible");
-        }
-        $(".daquestionbackbutton").on('click', function(event){
-          event.preventDefault();
-          $("#dabackbutton").submit();
-          return false;
-        });
-        $("#dabackbutton").on('submit', function(event){
-          if (daShowingHelp){
-            event.preventDefault();
-            $('#daquestionlabel').tab('show');
-            return false;
-          }
-          $("#dabackbutton").addClass("dabackiconpressed");
-          var informed = '';
-          if (daInformedChanged){
-            informed = '&informed=' + Object.keys(daInformed).join(',');
-          }
-          var url;
-          if (daJsEmbed){
-            url = daPostURL;
-          }
-          else{
-            url = $("#dabackbutton").attr('action');
-          }
-          daRequestPending = true;
-          $.ajax({
-            type: "POST",
-            url: url,
-            beforeSend: addCsrfHeader,
-            xhrFields: {
-              withCredentials: true
-            },
-            data: $("#dabackbutton").serialize() + '&ajax=1' + informed,
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, document.getElementById('backbutton'), 1);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
-          daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-          event.preventDefault();
-        });
-        $("#daChatOnButton").click(daRingChat);
-        $("#daChatOffButton").click(daCloseChat);
-        $('#daMessage').bind('keypress keydown keyup', function(e){
-          var theCode = e.which || e.keyCode;
-          if(theCode == 13) { daSender(); e.preventDefault(); }
-        });
-        $('#daform button[type="submit"]').click(function(){
-          daSubmitter = this;
-          document.activeElement.blur();
-          return true;
-        });
-        $('#daform input[type="submit"]').click(function(){
-          daSubmitter = this;
-          document.activeElement.blur();
-          return true;
-        });
-        $('#daemailform button[type="submit"]').click(function(){
-          daSubmitter = this;
-          return true;
-        });
-        $('#dadownloadform button[type="submit"]').click(function(){
-          daSubmitter = this;
-          return true;
-        });
-        $(".danavlinks a.daclickable").click(function(e){
-          if (daRequestPending){
-            e.preventDefault();
-            $(this).blur();
-            return false;
-          }
-          var the_key = $(this).data('key');
-          da_action_perform("_da_priority_action", {_action: the_key});
-          e.preventDefault();
-          return false;
-        });
-        $(".danav-vertical .danavnested").each(function(){
-          var box = this;
-          var prev = $(this).prev();
-          if (prev && !prev.hasClass('active')){
-            var toggler;
-            if ($(box).hasClass('danotshowing')){
-              toggler = $('<a href="#" class="toggler" role="button" aria-pressed="false">');
-              $('<i class="fa-solid fa-caret-right">').appendTo(toggler);
-              $('<span class="visually-hidden">""" + word("Toggle") + """</span>').appendTo(toggler);
-            }
-            else{
-              toggler = $('<a href="#" class="toggler" role="button" aria-pressed="true">');
-              $('<i class="fa-solid fa-caret-down">').appendTo(toggler);
-              $('<span class="visually-hidden">""" + word("Toggle") + """</span>').appendTo(toggler);
-            }
-            toggler.appendTo(prev);
-            toggler.on('click', function(e){
-              var oThis = this;
-              $(this).find("svg").each(function(){
-                if ($(this).attr('data-icon') == 'caret-down'){
-                  $(this).removeClass('fa-caret-down');
-                  $(this).addClass('fa-caret-right');
-                  $(this).attr('data-icon', 'caret-right');
-                  $(box).hide();
-                  $(oThis).attr('aria-pressed', 'false');
-                  $(box).toggleClass('danotshowing');
-                }
-                else if ($(this).attr('data-icon') == 'caret-right'){
-                  $(this).removeClass('fa-caret-right');
-                  $(this).addClass('fa-caret-down');
-                  $(this).attr('data-icon', 'caret-down');
-                  $(box).show();
-                  $(oThis).attr('aria-pressed', 'true');
-                  $(box).toggleClass('danotshowing');
-                }
-              });
-              e.stopPropagation();
-              e.preventDefault();
-              return false;
-            });
-          }
-        });
-        $("body").focus();
-        if (!daJsEmbed && !isAndroid){
-          setTimeout(function(){
-            var firstInput = $("#daform .da-field-container").not(".da-field-container-note").first().find("input, textarea, select").filter(":visible").first();
-            if (firstInput.length > 0 && $(firstInput).visible()){
-              $(firstInput).focus();
-              var inputType = $(firstInput).attr('type');
-              if ($(firstInput).prop('tagName') != 'SELECT' && inputType != "checkbox" && inputType != "radio" && inputType != "hidden" && inputType != "submit" && inputType != "file" && inputType != "range" && inputType != "number" && inputType != "date" && inputType != "time"){
-                var strLength = $(firstInput).val().length * 2;
-                if (strLength > 0){
-                  try {
-                    $(firstInput)[0].setSelectionRange(strLength, strLength);
-                  }
-                  catch(err) {
-                    console.log(err.message);
-                  }
-                }
-              }
-            }
-            else {
-              var firstButton = $("#danavbar-collapse .nav-link").filter(':visible').first();
-              if (firstButton.length > 0 && $(firstButton).visible()){
-                setTimeout(function(){
-                  $(firstButton).focus();
-                  $(firstButton).blur();
-                }, 0);
-              }
-            }
-          }, 15);
-        }
-        $("input.dauncheckspecificothers").on('change', function(){
-          if ($(this).is(":checked")){
-            var theIds = $.parseJSON(atou($(this).data('unchecklist')));
-            var n = theIds.length;
-            for (var i = 0; i < n; ++i){
-              var elem = document.getElementById(theIds[i]);
-              $(elem).prop("checked", false);
-              $(elem).trigger('change');
-            }
-          }
-        });
-        $("input.dauncheckspecificothers").each(function(){
-          var theIds = $.parseJSON(atou($(this).data('unchecklist')));
-          var n = theIds.length;
-          var oThis = this;
-          for (var i = 0; i < n; ++i){
-            var elem = document.getElementById(theIds[i]);
-            $(elem).on('change', function(){
-              if ($(this).is(":checked")){
-                $(oThis).prop("checked", false);
-                $(oThis).trigger('change');
-              }
-            });
-          }
-        });
-        $("input.dauncheckothers").on('change', function(){
-          if ($(this).is(":checked")){
-            $("input.dauncheckable,input.dacheckothers").each(function(){
-              if ($(this).is(":checked")){
-                $(this).prop("checked", false);
-                $(this).trigger('change');
-              }
-            });
-          }
-        });
-        $("input.dacheckspecificothers").on('change', function(){
-          if ($(this).is(":checked")){
-            var theIds = $.parseJSON(atou($(this).data('checklist')));
-            var n = theIds.length;
-            for (var i = 0; i < n; ++i){
-              var elem = document.getElementById(theIds[i]);
-              $(elem).prop("checked", true);
-              $(elem).trigger('change');
-            }
-          }
-        });
-        $("input.dacheckspecificothers").each(function(){
-          var theIds = $.parseJSON(atou($(this).data('checklist')));
-          var n = theIds.length;
-          var oThis = this;
-          for (var i = 0; i < n; ++i){
-            var elem = document.getElementById(theIds[i]);
-            $(elem).on('change', function(){
-              if (!$(this).is(":checked")){
-                $(oThis).prop("checked", false);
-                $(oThis).trigger('change');
-              }
-            });
-          }
-        });
-        $("input.dacheckothers").on('change', function(){
-          if ($(this).is(":checked")){
-            $("input.dauncheckable").each(function(){
-              if (!$(this).is(":checked")){
-                $(this).prop("checked", true);
-                $(this).trigger('change');
-              }
-            });
-            $("input.dauncheckothers").each(function(){
-              if (!$(this).is(":checked")){
-                $(this).prop("checked", false);
-                $(this).trigger('change');
-              }
-            });
-          }
-        });
-        $("input.dauncheckable").on('change', function(){
-          if ($(this).is(":checked")){
-            $("input.dauncheckothers").each(function(){
-              if ($(this).is(":checked")){
-                $(this).prop("checked", false);
-                $(this).trigger('change');
-              }
-            });
-          }
-          else{
-            $("input.dacheckothers").each(function(){
-              if ($(this).is(":checked")){
-                $(this).prop("checked", false);
-                $(this).trigger('change');
-              }
-            });
-          }
-        });
-        var navMain = $("#danavbar-collapse");
-        navMain.on("click", "a", null, function () {
-          if (!($(this).hasClass("dropdown-toggle"))){
-            navMain.collapse('hide');
-          }
-        });
-        $("button[data-bs-target='#dahelp']").on("shown.bs.tab", function(){
-          if (daJsEmbed){
-            $(daTargetDiv)[0].scrollTo(0, 1);
-          }
-          else{
-            window.scrollTo(0, 1);
-          }
-          $("#dahelptoggle").removeClass('daactivetext');
-          $("#dahelptoggle").blur();
-        });
-        $("#dasourcetoggle").on("click", function(){
-          $(this).parent().toggleClass("active");
-          $(this).blur();
-        });
-        $('#dabackToQuestion').click(function(event){
-          $('#daquestionlabel').tab('show');
-        });
-        daVarLookup = Object();
-        daVarLookupRev = Object();
-        daVarLookupMulti = Object();
-        daVarLookupRevMulti = Object();
-        daVarLookupOption = Object();
-        if ($("input[name='_varnames']").length){
-          the_hash = $.parseJSON(atou($("input[name='_varnames']").val()));
-          for (var key in the_hash){
-            if (the_hash.hasOwnProperty(key)){
-              daVarLookup[the_hash[key]] = key;
-              daVarLookupRev[key] = the_hash[key];
-              if (!daVarLookupMulti.hasOwnProperty(the_hash[key])){
-                daVarLookupMulti[the_hash[key]] = [];
-              }
-              daVarLookupMulti[the_hash[key]].push(key);
-              if (!daVarLookupRevMulti.hasOwnProperty(key)){
-                daVarLookupRevMulti[key] = [];
-              }
-              daVarLookupRevMulti[key].push(the_hash[key]);
-            }
-          }
-        }
-        if ($("input[name='_checkboxes']").length){
-          var patt = new RegExp(/\[B['"][^\]]*['"]\]$/);
-          var pattObj = new RegExp(/\[O['"][^\]]*['"]\]$/);
-          var pattRaw = new RegExp(/\[R['"][^\]]*['"]\]$/);
-          the_hash = $.parseJSON(atou($("input[name='_checkboxes']").val()));
-          for (var key in the_hash){
-            if (the_hash.hasOwnProperty(key)){
-              var checkboxName = atou(key);
-              var baseName = checkboxName;
-              if (patt.test(baseName)){
-                bracketPart = checkboxName.replace(/^.*(\[B?['"][^\]]*['"]\])$/, "$1");
-                checkboxName = checkboxName.replace(/^.*\[B?['"]([^\]]*)['"]\]$/, "$1");
-                baseName = baseName.replace(/^(.*)\[.*/, "$1");
-                var transBaseName = baseName;
-                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
-                  transBaseName = atou(daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')]);
-                }
-                var convertedName;
-                try {
-                  convertedName = atou(checkboxName);
-                }
-                catch (e) {
-                  continue;
-                }
-                var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
-                var daNameTwo = utoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
-                var daNameThree = utoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '');
-                var daNameBase = utoa(baseName).replace(/[\\n=]/g, '');
-                daVarLookupRev[daNameOne] = daNameTwo;
-                daVarLookup[daNameTwo] = daNameOne;
-                daVarLookup[daNameThree] = daNameOne;
-                daVarLookupOption[key] = convertedName;
-                if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
-                  daVarLookupRevMulti[daNameOne] = [];
-                }
-                daVarLookupRevMulti[daNameOne].push(daNameTwo);
-                if (!daVarLookupMulti.hasOwnProperty(daNameTwo)){
-                  daVarLookupMulti[daNameTwo] = [];
-                }
-                daVarLookupMulti[daNameTwo].push(daNameOne);
-                if (!daVarLookupMulti.hasOwnProperty(daNameThree)){
-                  daVarLookupMulti[daNameThree] = [];
-                }
-                daVarLookupMulti[daNameThree].push(daNameOne);
-                if (!daVarLookupMulti.hasOwnProperty(daNameBase)){
-                  daVarLookupMulti[daNameBase] = [];
-                }
-                daVarLookupMulti[daNameBase].push(daNameOne);
-              }
-              else if (pattObj.test(baseName)){
-                bracketPart = checkboxName.replace(/^.*(\[O?['"][^\]]*['"]\])$/, "$1");
-                checkboxName = checkboxName.replace(/^.*\[O?['"]([^\]]*)['"]\]$/, "$1");
-                baseName = baseName.replace(/^(.*)\[.*/, "$1");
-                var transBaseName = baseName;
-                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
-                  transBaseName = atou(daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')]);
-                }
-                var convertedName;
-                try {
-                  convertedName = atou(atou(checkboxName));
-                }
-                catch (e) {
-                  continue;
-                }
-                var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
-                var daNameTwo = utoa(baseName + "['" + convertedName + "']").replace(/[\\n=]/g, '');
-                var daNameThree = utoa(baseName + '["' + convertedName + '"]').replace(/[\\n=]/g, '');
-                var daNameBase = utoa(baseName).replace(/[\\n=]/g, '');
-                daVarLookupRev[daNameOne] = daNameTwo;
-                daVarLookup[daNameTwo] = daNameOne;
-                daVarLookup[daNameThree] = daNameOne;
-                daVarLookupOption[key] = convertedName;
-                if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
-                  daVarLookupRevMulti[daNameOne] = [];
-                }
-                daVarLookupRevMulti[daNameOne].push(daNameTwo);
-                if (!daVarLookupMulti.hasOwnProperty(daNameTwo)){
-                  daVarLookupMulti[daNameTwo] = [];
-                }
-                daVarLookupMulti[daNameTwo].push(daNameOne);
-                if (!daVarLookupMulti.hasOwnProperty(daNameThree)){
-                  daVarLookupMulti[daNameThree] = [];
-                }
-                daVarLookupMulti[daNameThree].push(daNameOne);
-                if (!daVarLookupMulti.hasOwnProperty(daNameBase)){
-                  daVarLookupMulti[daNameBase] = [];
-                }
-                daVarLookupMulti[daNameBase].push(daNameOne);
-              }
-              else if (pattRaw.test(baseName)){
-                bracketPart = checkboxName.replace(/^.*(\[R?['"][^\]]*['"]\])$/, "$1");
-                checkboxName = checkboxName.replace(/^.*\[R?['"]([^\]]*)['"]\]$/, "$1");
-                baseName = baseName.replace(/^(.*)\[.*/, "$1");
-                var transBaseName = baseName;
-                if (($("[name='" + key + "']").length == 0) && (typeof daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')] != "undefined")){
-                  transBaseName = atou(daVarLookup[utoa(transBaseName).replace(/[\\n=]/g, '')]);
-                }
-                var convertedName;
-                try {
-                  convertedName = atou(checkboxName);
-                }
-                catch (e) {
-                  continue;
-                }
-                var daNameOne = utoa(transBaseName + bracketPart).replace(/[\\n=]/g, '');
-                var daNameTwo = utoa(baseName + "[" + convertedName + "]").replace(/[\\n=]/g, '')
-                var daNameBase = utoa(baseName).replace(/[\\n=]/g, '');
-                daVarLookupRev[daNameOne] = daNameTwo;
-                daVarLookup[daNameTwo] = daNameOne;
-                daVarLookupOption[key] = convertedName;
-                if (!daVarLookupRevMulti.hasOwnProperty(daNameOne)){
-                  daVarLookupRevMulti[daNameOne] = [];
-                }
-                daVarLookupRevMulti[daNameOne].push(daNameTwo);
-                if (!daVarLookupMulti.hasOwnProperty(daNameTwo)){
-                  daVarLookupMulti[daNameTwo] = [];
-                }
-                daVarLookupMulti[daNameTwo].push(daNameOne);
-                if (!daVarLookupMulti.hasOwnProperty(daNameBase)){
-                  daVarLookupMulti[daNameBase] = [];
-                }
-                daVarLookupMulti[daNameBase].push(daNameOne);
-              }
-            }
-          }
-        }
-        daShowIfInProcess = true;
-        var daTriggerQueries = [];
-        var daInputsSeen = {};
-        function daOnlyUnique(value, index, self){
-          return self.indexOf(value) === index;
-        }
-        $(".dajsshowif").each(function(){
-          var showIfDiv = this;
-          var jsInfo = JSON.parse(atou($(this).data('jsshowif')));
-          var showIfSign = jsInfo['sign'];
-          var showIfMode = jsInfo['mode'];
-          var jsExpression = jsInfo['expression'];
-          jsInfo['vars'].forEach(function(infoItem, i){
-            var showIfVars = [];
-            var initShowIfVar = utoa(infoItem).replace(/[\\n=]/g, '');
-            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            var elem = $("[name='" + initShowIfVarEscaped + "']");
-            if (elem.length > 0){
-              showIfVars.push(initShowIfVar);
-            }
-            if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
-              for (var j = 0; j < daVarLookupMulti[initShowIfVar].length; j++){
-                var altShowIfVar = daVarLookupMulti[initShowIfVar][j];
-                var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-                var altElem = $("[name='" + altShowIfVarEscaped + "']");
-                if (altElem.length > 0 && !$.contains(this, altElem[0])){
-                  showIfVars.push(altShowIfVar);
-                }
-              }
-            }
-            if (showIfVars.length == 0){
-              console.log("ERROR: reference to non-existent field " + infoItem);
-            }
-            showIfVars.forEach(function(showIfVar){
-              var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-              var varToUse = infoItem;
-              var showHideDiv = function(speed){
-                var elem = daGetField(varToUse);
-                if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
-                  return;
-                }
-                var resultt = eval(jsExpression);
-                if(resultt){
-                  if (showIfSign){
-                    if ($(showIfDiv).data('isVisible') != '1'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).show(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '1');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                  else{
-                    if ($(showIfDiv).data('isVisible') != '0'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).hide(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '0');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].disable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('disable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").disable();
-                    });
-                  }
-                }
-                else{
-                  if (showIfSign){
-                    if ($(showIfDiv).data('isVisible') != '0'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).hide(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '0');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].disable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('disable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").disable();
-                    });
-                  }
-                  else{
-                    if ($(showIfDiv).data('isVisible') != '1'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).show(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '1');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                }
-                var leader = false;
-                if (!daShowIfInProcess){
-                  daShowIfInProcess = true;
-                  daInputsSeen = {};
-                  leader = true;
-                }
-                $(showIfDiv).find(":input").not("[type='file']").each(function(){
-                  if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
-                    $(this).trigger('change');
-                  }
-                  daInputsSeen[$(this).attr('id')] = true;
-                });
-                if (leader){
-                  daShowIfInProcess = false;
-                }
-              };
-              var showHideDivImmediate = function(){
-                showHideDiv.apply(this, [null]);
-              }
-              var showHideDivFast = function(){
-                showHideDiv.apply(this, ['fast']);
-              }
-              daTriggerQueries.push("#" + showIfVarEscaped);
-              daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
-              daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
-              $("#" + showIfVarEscaped).change(showHideDivFast);
-              $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-              $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
-              $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
-              $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            });
-          });
-        });
-        $(".dashowif").each(function(){
-          var showIfVars = [];
-          var showIfSign = $(this).data('showif-sign');
-          var showIfMode = parseInt($(this).data('showif-mode'));
-          var initShowIfVar = $(this).data('showif-var');
-          var varName = atou(initShowIfVar);
-          var elem = [];
-          if (varName.endsWith('[nota]') || varName.endsWith('[aota]')){
-            var signifier = varName.endsWith('[nota]') ? 'nota' : 'aota';
-            var cbVarName = varName.replace(/\[[na]ota\]$/, '');
-            $('div.da-field-group.da-field-checkboxes').each(function(){
-              var thisVarName = atou($(this).data('varname'));
-              if (thisVarName == cbVarName){
-                elem = $(this).find('input.da' + signifier + '-checkbox');
-                initShowIfVar = $(elem).attr('name');
-              }
-            });
-          }
-          else {
-            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            elem = $("[name='" + initShowIfVarEscaped + "']");
-          }
-          if (elem.length > 0){
-            showIfVars.push(initShowIfVar);
-          }
-          if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
-            var n = daVarLookupMulti[initShowIfVar].length;
-            for (var i = 0; i < n; i++){
-              var altShowIfVar = daVarLookupMulti[initShowIfVar][i];
-              var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-              var altElem = $("[name='" + altShowIfVarEscaped + "']");
-              if (altElem.length > 0 && !$.contains(this, altElem[0])){
-                showIfVars.push(altShowIfVar);
-              }
-            }
-          }
-          var showIfVal = $(this).data('showif-val');
-          var saveAs = $(this).data('saveas');
-          var showIfDiv = this;
-          showIfVars.forEach(function(showIfVar){
-            var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            var showHideDiv = function(speed){
-              var elem = daGetField(varName, showIfDiv);
-              if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
-                return;
-              }
-              var theVal;
-              var showifParents = $(this).parents(".dashowif");
-              if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
-                theVal = '';
-                //console.log("Setting theVal to blank.");
-              }
-              else if ($(this).attr('type') == "checkbox"){
-                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-                if (typeof(theVal) == 'undefined'){
-                  //console.log('manually setting checkbox value to False');
-                  theVal = 'False';
-                }
-              }
-              else if ($(this).attr('type') == "radio"){
-                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-                if (typeof(theVal) == 'undefined'){
-                  theVal = '';
-                }
-                else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
-                  try{
-                    theVal = atou(theVal);
-                  }
-                  catch(e){
-                  }
-                }
-              }
-              else{
-                theVal = $(this).val();
-                if (theVal != '' && $(this).hasClass("daobject")){
-                  try{
-                    theVal = atou(theVal);
-                  }
-                  catch(e){
-                  }
-                }
-              }
-              // console.log("There was a trigger on " + $(this).attr('id') + ". This handler was installed based on varName " + varName + ", showIfVar " + atou(showIfVar) + ". This handler was installed for the benefit of the .dashowif div encompassing the field for " + atou(saveAs) + ". The comparison value is " + String(showIfVal) + " and the current value of the element on the screen is " + String(theVal) + ".");
-              if(daShowIfCompare(theVal, showIfVal)){
-                if (showIfSign){
-                  if ($(showIfDiv).data('isVisible') != '1'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).show(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '1');
-                  var firstChild = $(showIfDiv).children()[0];
-                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                }
-                else{
-                  if ($(showIfDiv).data('isVisible') != '0'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).hide(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '0');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].disable();
-                  });
-                  $(showIfDiv).find('input.daslider').each(function(){
-                    $(this).slider('disable');
-                  });
-                  $(showIfDiv).find('input.dafile').each(function(){
-                    $(this).data("fileinput").disable();
-                  });
-                }
-              }
-              else{
-                if (showIfSign){
-                  if ($(showIfDiv).data('isVisible') != '0'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).hide(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '0');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].disable();
-                  });
-                  $(showIfDiv).find('input.daslider').each(function(){
-                    $(this).slider('disable');
-                  });
-                  $(showIfDiv).find('input.dafile').each(function(){
-                    $(this).data("fileinput").disable();
-                  });
-                }
-                else{
-                  if ($(showIfDiv).data('isVisible') != '1'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).show(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '1');
-                  var firstChild = $(showIfDiv).children()[0];
-                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                }
-              }
-              var leader = false;
-              if (!daShowIfInProcess){
-                daShowIfInProcess = true;
-                daInputsSeen = {};
-                leader = true;
-              }
-              $(showIfDiv).find(":input").not("[type='file']").each(function(){
-                if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
-                  $(this).trigger('change');
-                }
-                daInputsSeen[$(this).attr('id')] = true;
-              });
-              if (leader){
-                daShowIfInProcess = false;
-              }
-            };
-            var showHideDivImmediate = function(){
-              showHideDiv.apply(this, [null]);
-            }
-            var showHideDivFast = function(){
-              showHideDiv.apply(this, ['fast']);
-            }
-            daTriggerQueries.push("#" + showIfVarEscaped);
-            daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
-            daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
-            $("#" + showIfVarEscaped).change(showHideDivFast);
-            $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
-            $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-            $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
-          });
-        });
-        function daTriggerAllShowHides(){
-          var daUniqueTriggerQueries = daTriggerQueries.filter(daOnlyUnique);
-          var daFirstTime = true;
-          var daTries = 0;
-          while ((daFirstTime || daShowHideHappened) && ++daTries < 100){
-            daShowHideHappened = false;
-            daFirstTime = false;
-            var n = daUniqueTriggerQueries.length;
-            for (var i = 0; i < n; ++i){
-              $(daUniqueTriggerQueries[i]).trigger('daManualTrigger');
-            }
-          }
-          if (daTries >= 100){
-            console.log("Too many contradictory 'show if' conditions");
-          }
-        }
-        if (daTriggerQueries.length > 0){
-          daTriggerAllShowHides();
-        }
-        $(".danavlink").last().addClass('thelast');
-        $(".danavlink").each(function(){
-          if ($(this).hasClass('btn') && !$(this).hasClass('danotavailableyet')){
-            var the_a = $(this);
-            var the_delay = 1000 + 250 * parseInt($(this).data('index'));
-            setTimeout(function(){
-              $(the_a).removeClass('""" + app.config['BUTTON_STYLE'] + """secondary');
-              if ($(the_a).hasClass('active')){
-                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """success');
-              }
-              else{
-                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """warning');
-              }
-            }, the_delay);
-          }
-        });
-        daShowIfInProcess = false;
-        $("#daSend").click(daSender);
-        if (daChatAvailable == 'unavailable'){
-          daChatStatus = 'off';
-        }
-        if (daChatAvailable == 'observeonly'){
-          daChatStatus = 'observeonly';
-        }
-        if ((daChatStatus == 'off' || daChatStatus == 'observeonly') && daChatAvailable == 'available'){
-          daChatStatus = 'waiting';
-        }
-        daDisplayChat();
-        if (daBeingControlled){
-          daShowControl('fast');
-        }
-        if (daChatStatus == 'ready' || daBeingControlled){
-          daInitializeSocket();
-        }
-        if (daInitialized == false && daCheckinSeconds > 0){ // why was this set to always retrieve the chat log?
-          setTimeout(function(){
-            //console.log("daInitialize call to chat_log in checkin");
-            $.ajax({
-              type: 'POST',
-              url: """ + "'" + url_for('checkin', i=yaml_filename) + "'" + """,
-              beforeSend: addCsrfHeader,
-              xhrFields: {
-                withCredentials: true
-              },
-              data: $.param({action: 'chat_log', ajax: '1', csrf_token: daCsrf}),
-              success: daChatLogCallback,
-              dataType: 'json'
-            });
-          }, 200);
-        }
-        if (daInitialized == true){
-          //console.log("Publishing from memory");
-          $("#daCorrespondence").html('');
-          for(var i = 0; i < daChatHistory.length; i++){
-            daPublishMessage(daChatHistory[i]);
-          }
-        }
-        if (daChatStatus != 'off'){
-          daSendChanges = true;
-        }
-        else{
-          if (daDoAction == null){
-            daSendChanges = false;
-          }
-          else{
-            daSendChanges = true;
-          }
-        }
-        if (daSendChanges){
-          $("#daform").each(function(){
-            $(this).find(':input').change(daOnChange);
-          });
-        }
-        daInitialized = true;
-        daShowingHelp = 0;
-        daSubmitter = null;
-        $("#daflash .alert-success").each(function(){
-          var oThis = this;
-          setTimeout(function(){
-            $(oThis).hide(300, function(){
-              $(self).remove();
-            });
-          }, 3000);
-        });
-        if (doScroll){
-          setTimeout(function () {
-            if (daJsEmbed){
-              $(daTargetDiv)[0].scrollTo(0, 1);
-              if (daSteps > 1){
-                $(daTargetDiv)[0].scrollIntoView();
-              }
-            }
-            else{
-              window.scrollTo(0, 1);
-            }
-          }, 20);
-        }
-        if (daShowingSpinner){
-          daHideSpinner();
-        }
-        if (daCheckinInterval != null){
-          clearInterval(daCheckinInterval);
-        }
-        if (daCheckinSeconds > 0){
-          setTimeout(daInitialCheckin, 100);
-          daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
-        }
-        daShowNotifications();
-        if (daUsingGA){
-          daPageview();
-        }
-        if (daUsingSegment){
-          daSegmentEvent();
-        }
-        hideTablist();
-      }
-      $(document).ready(function(){
-        daInitialize(1);
-        //console.log("ready: replaceState " + daSteps);
-        if (!daJsEmbed && !daIframeEmbed){
-          history.replaceState({steps: daSteps}, "", daLocationBar + """ + json.dumps(page_sep) + """ + daSteps);
-        }
-        var daReloadAfter = """ + str(int(reload_after)) + """;
-        if (daReloadAfter > 0){
-          daReloader = setTimeout(function(){daRefreshSubmit();}, daReloadAfter);
-        }
-        window.onpopstate = function(event) {
-          if (event.state != null && event.state.steps < daSteps && daAllowGoingBack){
-            $("#dabackbutton").submit();
-          }
-        };
-        $( window ).bind('unload', function() {
-          daStopCheckingIn();
-          if (daSocket != null && daSocket.connected){
-            //console.log('Terminating interview socket because window unloaded');
-            daSocket.emit('terminate');
-          }
-        });
-        var daDefaultAllowList = bootstrap.Tooltip.Default.allowList;
-        daDefaultAllowList['*'].push('style');
-        daDefaultAllowList['a'].push('style');
-        daDefaultAllowList['img'].push('style');
-        if (daJsEmbed){
-          $.ajax({
-            type: "POST",
-            url: daPostURL,
-            beforeSend: addCsrfHeader,
-            xhrFields: {
-              withCredentials: true
-            },
-            data: 'csrf_token=' + daCsrf + '&ajax=1',
-            success: function(data){
-              setTimeout(function(){
-                daProcessAjax(data, $("#daform"), 0);
-              }, 0);
-            },
-            error: function(xhr, status, error){
-              setTimeout(function(){
-                daProcessAjaxError(xhr, status, error);
-              }, 0);
-            }
-          });
-        }
-        $(document).trigger('daPageLoad');
-      });
-      $(window).ready(daUpdateHeight);
-      $(window).resize(daUpdateHeight);
-      function daUpdateHeight(){
-        $(".dagoogleMap").each(function(){
-          var size = $( this ).width();
-          $( this ).css('height', size);
-        });
-      }
-      $.validator.setDefaults({
-        highlight: function(element) {
-            $(element).closest('.da-form-group').addClass('da-group-has-error');
-            $(element).addClass('is-invalid');
-        },
-        unhighlight: function(element) {
-            $(element).closest('.da-form-group').removeClass('da-group-has-error');
-            $(element).removeClass('is-invalid');
-        },
-        errorElement: 'span',
-        errorClass: 'da-has-error invalid-feedback',
-        errorPlacement: function(error, element) {
-            $(error).addClass('invalid-feedback');
-            var elementName = $(element).attr("name");
-            var idOfErrorSpan = $(element).attr("id") + "-error";
-            $("#" + idOfErrorSpan).remove();
-            $(error).attr("id", idOfErrorSpan);
-            $(element).attr("aria-invalid", "true");
-            $(element).attr("aria-errormessage", idOfErrorSpan);
-            var lastInGroup = $.map(daValidationRules['groups'], function(thefields, thename){
-              var fieldsArr;
-              if (thefields.indexOf(elementName) >= 0) {
-                fieldsArr = thefields.split(" ");
-                return fieldsArr[fieldsArr.length - 1];
-              }
-              else {
-                return null;
-              }
-            })[0];
-            if (element.hasClass('dainput-embedded')){
-              error.insertAfter(element);
-            }
-            else if (element.hasClass('dafile-embedded')){
-              error.insertAfter(element);
-            }
-            else if (element.hasClass('daradio-embedded')){
-              element.parent().append(error);
-            }
-            else if (element.hasClass('dacheckbox-embedded')){
-              element.parent().append(error);
-            }
-            else if (element.hasClass('dauncheckable') && lastInGroup){
-              $("input[name='" + lastInGroup + "']").parent().append(error);
-            }
-            else if (element.parent().hasClass('combobox-container')){
-              error.insertAfter(element.parent());
-            }
-            else if (element.hasClass('dafile')){
-              var fileContainer = $(element).parents(".file-input").first();
-              if (fileContainer.length > 0){
-                $(fileContainer).append(error);
-              }
-              else{
-                error.insertAfter(element.parent());
-              }
-            }
-            else if (element.parent('.input-group').length) {
-              error.insertAfter(element.parent());
-            }
-            else if (element.hasClass('da-active-invisible')){
-              var choice_with_help = $(element).parents(".dachoicewithhelp").first();
-              if (choice_with_help.length > 0){
-                $(choice_with_help).parent().append(error);
-              }
-              else{
-                element.parent().append(error);
-              }
-            }
-            else if (element.hasClass('danon-nota-checkbox')){
-              element.parents('div.da-field-group').append(error);
-            }
-            else {
-              error.insertAfter(element);
-            }
-        }
-      });
-      $.validator.addMethod("datetime", function(a, b){
-        return true;
-      });
-      $.validator.addMethod("ajaxrequired", function(value, element, params){
-        var realElement = $("#" + $(element).attr('name') + "combobox");
-        var realValue = $(realElement).val();
-        if (!$(realElement).parent().is(":visible")){
-          return true;
-        }
-        if (realValue == null || realValue.replace(/\s/g, '') == ''){
-          return false;
-        }
-        return true;
-      });
-      $.validator.addMethod('checkone', function(value, element, params){
-        var number_needed = params[0];
-        var css_query = params[1];
-        if ($(css_query).length >= number_needed){
-          return true;
-        }
-        else{
-          return false;
-        }
-      });
-      $.validator.addMethod('checkatleast', function(value, element, params){
-        if ($(element).attr('name') != '_ignore' + params[0]){
-          return true;
-        }
-        if ($('.dafield' + params[0] + ':checked').length >= params[1]){
-          return true;
-        }
-        else{
-          return false;
-        }
-      });
-      $.validator.addMethod('checkatmost', function(value, element, params){
-        if ($(element).attr('name') != '_ignore' + params[0]){
-          return true;
-        }
-        if ($('.dafield' + params[0] + ':checked').length > params[1]){
-          return false;
-        }
-        else{
-          return true;
-        }
-      });
-      $.validator.addMethod('checkexactly', function(value, element, params){
-        if ($(element).attr('name') != '_ignore' + params[0]){
-          return true;
-        }
-        if ($('.dafield' + params[0] + ':checked').length != params[1]){
-          return false;
-        }
-        else{
-          return true;
-        }
-      });
-      $.validator.addMethod('selectexactly', function(value, element, params){
-        if ($(element).find('option:selected').length == params[0]){
-          return true;
-        }
-        else {
-          return false;
-        }
-      });
-      $.validator.addMethod('mindate', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var date = new Date(value);
-          var comparator = new Date(params);
-          if (date >= comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('maxdate', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var date = new Date(value);
-          var comparator = new Date(params);
-          if (date <= comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('minmaxdate', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var date = new Date(value);
-          var before_comparator = new Date(params[0]);
-          var after_comparator = new Date(params[1]);
-          if (date >= before_comparator && date <= after_comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('mintime', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var time = new Date('1970-01-01T' + value + 'Z');
-          var comparator = new Date('1970-01-01T' + params + 'Z');
-          if (time >= comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('maxtime', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var time = new Date('1970-01-01T' + value + 'Z');
-          var comparator = new Date('1970-01-01T' + params + 'Z');
-          if (time <= comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('minmaxtime', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var time = new Date('1970-01-01T' + value + 'Z');
-          var before_comparator = new Date('1970-01-01T' + params[0] + 'Z');
-          var after_comparator = new Date('1970-01-01T' + params[1] + 'Z');
-          if (time >= before_comparator && time <= after_comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('mindatetime', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var datetime = new Date(value + 'Z');
-          var comparator = new Date(params + 'Z');
-          if (datetime >= comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('maxdatetime', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var datetime = new Date(value + 'Z');
-          var comparator = new Date(params + 'Z');
-          if (datetime <= comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('minmaxdatetime', function(value, element, params){
-        if (value == null || value == ''){
-          return true;
-        }
-        try {
-          var datetime = new Date(value + 'Z');
-          var before_comparator = new Date(params[0] + 'Z');
-          var after_comparator = new Date(params[1] + 'Z');
-          if (datetime >= before_comparator && datetime <= after_comparator) {
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });
-      $.validator.addMethod('maxuploadsize', function(value, element, param){
-        try {
-          var limit = parseInt(param) - 2000;
-          if (limit <= 0){
-            return true;
-          }
-          var maxImageSize;
-          if ($(element).data('maximagesize')){
-             maxImageSize = (parseInt($(element).data('maximagesize')) * parseInt($(element).data('maximagesize'))) * 2;
-          }
-          else {
-             maxImageSize = 0;
-          }
-          if ($(element).attr("type") === "file"){
-            if (element.files && element.files.length) {
-              var totalSize = 0;
-              for ( i = 0; i < element.files.length; i++ ) {
-                if (maxImageSize > 0 && element.files[i].size > (0.20 * maxImageSize) && element.files[i].type.match(/image.*/) && !(element.files[i].type.indexOf('image/svg') == 0)){
-                  totalSize += maxImageSize;
-                }
-                else {
-                  totalSize += element.files[i].size;
-                }
-              }
-              if (totalSize > limit){
-                return false;
-              }
-            }
-            return true;
-          }
-        } catch (e) {}
-        return false;
-      });"""  # noqa: W605
-        for custom_type in interview.custom_data_types:
-            info = docassemble.base.functions.custom_types[custom_type]
-            if isinstance(info['javascript'], str):
-                the_js += "\n      try {\n" + indent_by(info['javascript'].strip(), 8).rstrip() + "\n      }\n      catch {\n        console.log('Error with JavaScript code of CustomDataType " + info['class'].__name__ + "');\n      }"
-        if interview.options.get('send question data', False):
-            the_js += "\n      daQuestionData = " + json.dumps(interview_status.as_data(user_dict))
-        scripts += """
-    <script type="text/javascript">
-""" + the_js + """
-    </script>"""
     if interview_status.question.language != '*':
         interview_language = interview_status.question.language
     else:
         interview_language = current_language
     validation_rules = {'rules': {}, 'messages': {}, 'errorClass': 'da-has-error invalid-feedback', 'debug': False}
     interview_status.exit_url = title_info.get('exit url', None)
-    interview_status.exit_link = title_info.get('exit link', 'exit')
+    interview_status.exit_link = title_info.get('exit link', 'leave')
     interview_status.exit_label = title_info.get('exit label', word('Exit'))
     interview_status.title = title_info.get('full', default_title)
     interview_status.display_title = title_info.get('logo', interview_status.title)
@@ -13092,17 +8988,7 @@ def index(action_argument=None, refer=None):
     interview_status.back = title_info.get('back button label', the_main_page_parts['main page back button label'] or interview_status.question.back())
     interview_status.cornerback = title_info.get('corner back button label', the_main_page_parts['main page corner back button label'] or interview_status.question.back())
     bootstrap_theme = interview.get_bootstrap_theme()
-    if not is_ajax:
-        social = copy.deepcopy(daconfig['social'])
-        if 'social' in interview.consolidated_metadata and isinstance(interview.consolidated_metadata['social'], dict):
-            populate_social(social, interview.consolidated_metadata['social'])
-        standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme, page_title=interview_status.title, social=social, yaml_filename=yaml_filename)
     if interview_status.question.question_type == "signature":
-        if 'pen color' in interview_status.extras and 0 in interview_status.extras['pen color']:
-            pen_color = interview_status.extras['pen color'][0].strip()
-        else:
-            pen_color = '#000'
-        interview_status.extra_scripts.append('<script>$( document ).ready(function() {daInitializeSignature(' + json.dumps(pen_color) + ');});</script>')
         if interview.options.get('hide navbar', False):
             bodyclass = "dasignature navbarhidden"
         else:
@@ -13118,6 +9004,11 @@ def index(action_argument=None, refer=None):
         bodyclass += ' question-' + re.sub(r'[^A-Za-z0-9]+', '-', interview_status.question.id.lower())
     if interview_status.footer:
         bodyclass += ' da-pad-for-footer'
+    if not is_ajax:
+        social = copy.deepcopy(daconfig['social'])
+        if 'social' in interview.consolidated_metadata and isinstance(interview.consolidated_metadata['social'], dict):
+            populate_social(social, interview.consolidated_metadata['social'])
+        standard_header_start = standard_html_start(interview_language=interview_language, debug=debug_mode, bootstrap_theme=bootstrap_theme, page_title=interview_status.title, social=social, yaml_filename=yaml_filename)
     if debug_mode:
         interview_status.screen_reader_text = {}
     if 'speak_text' in interview_status.extras and interview_status.extras['speak_text']:
@@ -13303,16 +9194,18 @@ def index(action_argument=None, refer=None):
         if 'css' in interview.external_files:
             for packageref, fileref in interview.external_files['css']:
                 the_url = get_url_from_file_reference(fileref, _package=packageref)
-                if is_js:
-                    append_css_urls.append(the_url)
                 if the_url is not None:
-                    start_output += "\n" + '    <link href="' + the_url + '" rel="stylesheet">'
+                    if is_js:
+                        append_css_urls.append(the_url)
+                    else:
+                        start_output += "\n" + '    <link href="' + the_url + '" rel="stylesheet">'
                 else:
                     logmessage("index: could not find css file " + str(fileref))
-        start_output += global_css + additional_css(interview_status)
         if is_js:
-            append_javascript += additional_css(interview_status, js_only=True)
-        start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
+            scripts += additional_css(interview_status, js_only=True)
+        else:
+            start_output += global_css + additional_css(interview_status)
+            start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
     if interview.options.get('hide navbar', False):
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params, extra_class='dainvisible')
     else:
@@ -13399,10 +9292,77 @@ def index(action_argument=None, refer=None):
     </footer>
 """
     if not is_ajax:
-        end_output = scripts + global_js + "\n" + indent_by("".join(interview_status.extra_scripts).strip(), 4).rstrip() + "\n  </div>\n  </body>\n</html>"
+        custom_items = []
+        if len(interview.custom_data_types) > 0:
+            for custom_type in interview.custom_data_types:
+                info = docassemble.base.functions.custom_types[custom_type]
+                if isinstance(info['javascript'], str):
+                    custom_items.append({"js": info['javascript'], "datatype": info['class'].__name__})
+        error_page_extra_js = get_part('error page extra javascript')
+        if not isinstance(error_page_extra_js, Markup):
+            error_page_extra_js = None
+        initial_values = standard_app_values()
+        initial_values.update({
+            "daCheckinSeconds": the_checkin_interval,
+            "daUserId": None if current_user.is_anonymous else current_user.id,
+            "daJsEmbed": js_target if is_js else False,
+            "daAllowGoingBack": bool(allow_going_back),
+            "daSteps": steps,
+            "daIsUser": is_user,
+            "daChatStatus": chat_status,
+            "daChatAvailable": chat_available,
+            "daChatMode": chat_mode,
+            "daSendChanges": send_changes,
+            "daBeingControlled": being_controlled,
+            "daInformed": user_dict['_internal']['informed'].get(user_id_string, {}),
+            "daUsingGA": bool(ga_ids is not None),
+            "daUsingSegment": bool(segment_id is not None),
+            "daGaIds": ga_ids,
+            "daDoAction": do_action,
+            "daInterviewPackage": re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename)),
+            "daInterviewFilename": re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE),
+            "daQuestionID": question_id_dict,
+            "daInterviewUrl": url_for('index', **index_params),
+            "daLocationBar": location_bar,
+            "daPostURL": url_for('index', **index_params_external),
+            "daYamlFilename": yaml_filename,
+            "daMessageLog": docassemble.base.functions.get_message_log(),
+            "daGetVariablesUrl": url_for('get_variables', i=yaml_filename),
+            "daChatRoles": user_dict['_internal']['livehelp']['roles'],
+            "daChatPartnerRoles": user_dict['_internal']['livehelp']['partner_roles'],
+            "daShouldForceFullScreen": forceFullScreen,
+            "daPageSep": page_sep,
+            "daCheckinUrl": url_for('checkin', i=yaml_filename),
+            "daCheckoutUrl": url_for('checkout', i=yaml_filename),
+            "daShouldDebugReadabilityHelp": debug_readability_help,
+            "daShouldDebugReadabilityQuestion": debug_readability_question,
+            "daDefaultPopoverTrigger": interview.options.get('popover trigger', 'focus'),
+            "daCheckinUrlWithInterview": url_for('checkin', i=yaml_filename),
+            "daReloadAfterSeconds": int(reload_after),
+            "daCustomItems": custom_items,
+            "daTrackingEnabled": bool('track_location' in interview_status.extras and interview_status.extras['track_location']),
+            "daInitialExtraScripts": interview_status.extra_scripts,
+            "daQuestionData": interview_status.as_data(user_dict) if interview.options.get('send question data', False) else None,
+            "daObserverMode": False,
+            "daErrorScript": error_page_extra_js,
+        })
+        if session.get('color_scheme', 0) < 2 and daconfig.get("auto color scheme", True) and not is_js:
+            initial_values.update({"daAutoColorScheme": True,
+                                   "daCurrentColorScheme": session.get('color_scheme', 0),
+                                   "daUrlChangeColorScheme": url_for('change_color_scheme')})
+        else:
+            initial_values.update({"daAutoColorScheme": False})
+        end_output = f"""
+  </div>{scripts}
+  {redis_script(initial_values)}
+  {global_js}
+  </body>
+</html>"""
+    else:
+        end_output = ""
     key = 'da:html:uid:' + str(user_code) + ':i:' + str(yaml_filename) + ':userid:' + str(the_user_id)
     pipe = r.pipeline()
-    pipe.set(key, json.dumps({'body': output, 'extra_scripts': interview_status.extra_scripts, 'global_css': global_css, 'extra_css': interview_status.extra_css, 'browser_title': interview_status.tabtitle, 'lang': interview_language, 'bodyclass': bodyclass, 'bootstrap_theme': bootstrap_theme}))
+    pipe.set(key, json.dumps({'body': output, 'extra_scripts': interview_status.extra_scripts, 'extra_css': interview_status.extra_css, 'browser_title': interview_status.tabtitle, 'lang': interview_language, 'bodyclass': bodyclass, 'bootstrap_theme': bootstrap_theme, 'steps': steps, 'question_id': question_id, 'external_files': interview.external_files}))
     pipe.expire(key, 60)
     pipe.execute()
     if user_dict['_internal']['livehelp']['availability'] != 'unavailable':
@@ -13432,7 +9392,7 @@ def index(action_argument=None, refer=None):
         if return_fake_html:
             fake_up(response, interview_language)
     elif is_js:
-        output = the_js + "\n" + append_javascript
+        output = f"Object.assign(window, {json.dumps(initial_values)});\n{scripts}"
         if 'global css' in daconfig:
             for fileref in daconfig['global css']:
                 append_css_urls.append(get_url_from_file_reference(fileref))
@@ -13742,7 +9702,7 @@ def speak_file():
     if not os.path.isfile(the_path):
         logmessage("speak_file: could not serve speak file because file (" + the_path + ") not found")
         return ('File not found', 404)
-    response = send_file(the_path, mimetype=audio_mimetype_table[file_format])
+    response = custom_send_file(the_path, mimetype=audio_mimetype_table[file_format])
     return response
 
 
@@ -13967,7 +9927,7 @@ def do_serve_stored_file(uid, number, filename, extension, download=False):
         return ('File not found', 404)
     if not os.path.isfile(file_info['path']):
         return ('File not found', 404)
-    response = send_file(file_info['path'], mimetype=file_info['mimetype'], download_name=filename + '.' + extension)
+    response = custom_send_file(file_info['path'], mimetype=file_info['mimetype'], download_name=filename + '.' + extension)
     if download:
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename + '.' + extension))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -13995,7 +9955,7 @@ def do_serve_temporary_file(code, filename, extension, download=False):
     if not os.path.isfile(the_path):
         return ('File not found', 404)
     (extension, mimetype) = get_ext_and_mimetype(filename + '.' + extension)
-    response = send_file(the_path, mimetype=mimetype, download_name=filename + '.' + extension)
+    response = custom_send_file(the_path, mimetype=mimetype, download_name=filename + '.' + extension)
     if download:
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename + '.' + extension))
     return response
@@ -14021,7 +9981,7 @@ def download_zip_package():
     except:
         return ('File not found', 404)
     filename = re.sub(r'\.', '-', package_name) + '.zip'
-    response = send_file(file_info['path'] + '.zip', mimetype='application/zip', download_name=filename)
+    response = custom_send_file(file_info['path'] + '.zip', mimetype='application/zip', download_name=filename)
     response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -14059,7 +10019,7 @@ def do_serve_uploaded_file_with_filename_and_extension(number, filename, extensi
     if os.path.isfile(file_info['path'] + '.' + extension):
         # logmessage("Using " + file_info['path'] + '.' + extension)
         extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
-        response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype, download_name=filename + '.' + extension)
+        response = custom_send_file(file_info['path'] + '.' + extension, mimetype=mimetype, download_name=filename + '.' + extension)
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename + '.' + extension))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -14067,7 +10027,7 @@ def do_serve_uploaded_file_with_filename_and_extension(number, filename, extensi
     if os.path.isfile(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension)):
         # logmessage("Using " + os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension))
         extension, mimetype = get_ext_and_mimetype(filename + '.' + extension)
-        response = send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype, download_name=filename + '.' + extension)
+        response = custom_send_file(os.path.join(os.path.dirname(file_info['path']), filename + '.' + extension), mimetype=mimetype, download_name=filename + '.' + extension)
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename + '.' + extension))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -14104,7 +10064,7 @@ def do_serve_uploaded_file_with_extension(number, extension, download=False):
         return ('File not found', 404)
     if os.path.isfile(file_info['path'] + '.' + extension):
         extension, mimetype = get_ext_and_mimetype(file_info['path'] + '.' + extension)
-        response = send_file(file_info['path'] + '.' + extension, mimetype=mimetype, download_name=str(number) + '.' + extension)
+        response = custom_send_file(file_info['path'] + '.' + extension, mimetype=mimetype, download_name=str(number) + '.' + extension)
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(str(number) + '.' + extension))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -14128,7 +10088,7 @@ def do_serve_uploaded_file(number, download=False):
         return ('File not found', 404)
     if not os.path.isfile(file_info['path']):
         return ('File not found', 404)
-    response = send_file(file_info['path'], mimetype=file_info['mimetype'], download_name=os.path.basename(file_info['path']))
+    response = custom_send_file(file_info['path'], mimetype=file_info['mimetype'], download_name=os.path.basename(file_info['path']))
     if download:
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(os.path.basename(file_info['path'])))
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -14177,11 +10137,11 @@ def do_serve_uploaded_page(number, page, download=False, size='page'):
     if filename is None:
         logmessage("do_serve_uploaded_page: sending blank image")
         the_file = docassemble.base.functions.package_data_filename('docassemble.base:data/static/blank_page.png')
-        response = send_file(the_file, mimetype='image/png', download_name='blank_page.png')
+        response = custom_send_file(the_file, mimetype='image/png', download_name='blank_page.png')
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     if os.path.isfile(filename):
-        response = send_file(filename, mimetype='image/png', download_name=os.path.basename(filename))
+        response = custom_send_file(filename, mimetype='image/png', download_name=os.path.basename(filename))
         if download:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(os.path.basename(filename)))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -14224,1716 +10184,6 @@ def observer():
     i = request.args.get('i', None)
     uid = request.args.get('uid', None)
     userid = request.args.get('userid', None)
-    observation_script = """
-    <script>
-      var isAndroid = /android/i.test(navigator.userAgent.toLowerCase());
-      var daMapInfo = null;
-      var daWhichButton = null;
-      var daSendChanges = false;
-      var daNoConnectionCount = 0;
-      var daConnected = false;
-      var daConfirmed = false;
-      var daObserverChangesInterval = null;
-      var daInitialized = false;
-      var daShowingSpinner = false;
-      var daSpinnerTimeout = null;
-      var daShowingHelp = false;
-      var daInformedChanged = false;
-      var daDisable = null;
-      var daCsrf = """ + json.dumps(generate_csrf()) + """;
-      var daShowIfInProcess = false;
-      var daFieldsToSkip = ['_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_list_collect_list', '_null_question'];
-      var daVarLookup = Object();
-      var daVarLookupRev = Object();
-      var daVarLookupMulti = Object();
-      var daVarLookupRevMulti = Object();
-      var daVarLookupSelect = Object();
-      var daVarLookupCheckbox = Object();
-      var daVarLookupOption = Object();
-      var daTargetDiv = "#dabody";
-      var daComboBoxes = Object();
-      var daLocationBar = """ + json.dumps(url_for('index', i=i)) + """;
-      var daPostURL = """ + json.dumps(url_for('index', i=i, _external=True)) + """;
-      var daYamlFilename = """ + json.dumps(i) + """;
-      var daGlobalEval = eval;
-      var daShowHideHappened = false;
-      function daShowSpinner(){
-        if ($("#daquestion").length > 0){
-          $('<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner"><i class="fa-solid fa-spinner fa-spin"><\/i><\/span><\/div><\/div><\/div><\/div>').appendTo(daTargetDiv);
-        }
-        else{
-          var newSpan = document.createElement('span');
-          var newI = document.createElement('i');
-          $(newI).addClass("fa-solid fa-spinner fa-spin");
-          $(newI).appendTo(newSpan);
-          $(newSpan).attr("id", "daSpinner");
-          $(newSpan).addClass("da-sig-spinner da-top-for-navbar");
-          $(newSpan).appendTo("#dasigtoppart");
-        }
-        daShowingSpinner = true;
-      }
-      function daHideSpinner(){
-        $("#daSpinner").remove();
-        daShowingSpinner = false;
-        daSpinnerTimeout = null;
-      }
-      function daDisableIfNotHidden(query, value){
-        $(query).each(function(){
-          var showIfParent = $(this).parents('.dashowif, .dajsshowif');
-          if (!(showIfParent.length && ($(showIfParent[0]).data('isVisible') == '0' || !$(showIfParent[0]).is(":visible")))){
-            if ($(this).prop('tagName') == 'INPUT' && $(this).hasClass('combobox')){
-              if (value){
-                daComboBoxes[$(this).attr('id')].disable();
-              }
-              else {
-                daComboBoxes[$(this).attr('id')].enable();
-              }
-            }
-            else if ($(this).hasClass('dafile')){
-              if (value){
-                $(this).data("fileinput").disable();
-              }
-              else{
-                $(this).data("fileinput").enable();
-              }
-            }
-            else if ($(this).hasClass('daslider')){
-              if (value){
-                $(this).slider('disable');
-              }
-              else{
-                $(this).slider('enable');
-              }
-            }
-            else {
-              $(this).prop("disabled", value);
-            }
-            if (value){
-              $(this).parents(".da-form-group").addClass("dagreyedout");
-            }
-            else {
-              $(this).parents(".da-form-group").removeClass("dagreyedout");
-            }
-          }
-        });
-      }
-      function daShowIfCompare(theVal, showIfVal){
-        if (typeof theVal == 'string' && theVal.match(/^-?\d+\.\d+$/)){
-          theVal = parseFloat(theVal);
-        }
-        else if (typeof theVal == 'string' && theVal.match(/^-?\d+$/)){
-          theVal = parseInt(theVal);
-        }
-        if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+\.\d+$/)){
-          showIfVal = parseFloat(showIfVal);
-        }
-        else if (typeof showIfVal == 'string' && showIfVal.match(/^-?\d+$/)){
-          showIfVal = parseInt(showIfVal);
-        }
-        if (typeof theVal == 'string' || typeof showIfVal == 'string'){
-          if (String(showIfVal) == 'None' && (String(theVal) == '' || theVal === null)){
-            return true;
-          }
-          return (String(theVal) == String(showIfVal));
-        }
-        return (theVal == showIfVal);
-      }
-      function rationalizeListCollect(){
-        var finalNum = $(".dacollectextraheader").last().data('collectnum');
-        var num = $(".dacollectextraheader:visible").last().data('collectnum');
-        if (parseInt(num) < parseInt(finalNum)){
-          if ($('div.dacollectextraheader[data-collectnum="' + num + '"]').find(".dacollectadd").hasClass('dainvisible')){
-            $('div.dacollectextraheader[data-collectnum="' + (num + 1) + '"]').show('fast');
-          }
-        }
-        var n = parseInt(finalNum);
-        var firstNum = parseInt($(".dacollectextraheader").first().data('collectnum'));
-        while (n-- > firstNum){
-          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
-            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible') && $('div.dacollectextraheader[data-collectnum="' + n + '"]').find(".dacollectremove").hasClass('dainvisible')){
-              $('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').hide();
-            }
-          }
-        }
-        var n = parseInt(finalNum);
-        var seenAddAnother = false;
-        while (n-- > firstNum){
-          if ($('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]:visible').length > 0){
-            if (!$('div.dacollectextraheader[data-collectnum="' + (n + 1) + '"]').find(".dacollectadd").hasClass('dainvisible')){
-              seenAddAnother = true;
-            }
-            var current = $('div.dacollectextraheader[data-collectnum="' + n + '"]');
-            if (seenAddAnother && !$(current).find(".dacollectadd").hasClass('dainvisible')){
-              $(current).find(".dacollectadd").addClass('dainvisible');
-              $(current).find(".dacollectunremove").removeClass('dainvisible');
-            }
-          }
-        }
-      }
-      var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
-      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
-      Object.defineProperty(String.prototype, "daSprintf", {
-        value: function () {
-          var args = Array.from(arguments),
-            i = 0;
-          function defaultNumber(iValue) {
-            return iValue != undefined && !isNaN(iValue) ? iValue : "0";
-          }
-          function defaultString(iValue) {
-            return iValue == undefined ? "" : "" + iValue;
-          }
-          return this.replace(
-            /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
-            function (match, sign, filler, scale, precision, type) {
-              var strOut, space, value;
-              var asNumber = false;
-              if (match == "%%") return "%";
-              if (i >= args.length) return match;
-              value = args[i];
-              while (Array.isArray(value)) {
-                args.splice(i, 1);
-                for (var j = i; value.length > 0; j++)
-                  args.splice(j, 0, value.shift());
-                value = args[i];
-              }
-              i++;
-              if (filler == undefined) filler = " "; // default
-              if (scale == undefined && !isNaN(filler)) {
-                scale = filler;
-                filler = " ";
-              }
-              if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
-              if (scale == undefined) scale = 0; // default
-              if (precision == undefined) precision = ".0"; // default
-              scale = parseInt(scale);
-              precision = parseInt(precision.substr(1));
-              switch (type) {
-                case "d":
-                case "i":
-                  // decimal integer
-                  asNumber = true;
-                  strOut = parseInt(defaultNumber(value));
-                  if (precision > 0) strOut += "." + "0".repeat(precision);
-                  break;
-                case "e":
-                case "E":
-                  // float in exponential notation
-                  asNumber = true;
-                  strOut = parseFloat(defaultNumber(value));
-                  if (precision == 0) strOut = strOut.toExponential();
-                  else strOut = strOut.toExponential(precision);
-                  if (type == "E") strOut = strOut.replace("e", "E");
-                  break;
-                case "f":
-                  // decimal float
-                  asNumber = true;
-                  strOut = parseFloat(defaultNumber(value));
-                  if (precision != 0) strOut = strOut.toFixed(precision);
-                  break;
-                case "o":
-                case "h":
-                case "H":
-                  // Octal or Hexagesimal integer notation
-                  strOut =
-                    "\\\\" +
-                    (type == "o" ? "0" : type) +
-                    parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
-                  break;
-                case "q":
-                  // single quoted string
-                  strOut = "'" + defaultString(value) + "'";
-                  break;
-                case "Q":
-                  // double quoted string
-                  strOut = '"' + defaultString(value) + '"';
-                  break;
-                default:
-                  // string
-                  strOut = defaultString(value);
-                  break;
-              }
-              if (typeof strOut != "string") strOut = "" + strOut;
-              if ((space = strOut.length) < scale) {
-                if (asNumber) {
-                  if (sign == "-") {
-                    if (strOut.indexOf("-") < 0)
-                      strOut = filler.repeat(scale - space) + strOut;
-                    else
-                      strOut =
-                        "-" +
-                        filler.repeat(scale - space) +
-                        strOut.replace("-", "");
-                  } else {
-                    if (strOut.indexOf("-") < 0)
-                      strOut = "+" + filler.repeat(scale - space - 1) + strOut;
-                    else
-                      strOut =
-                        "-" +
-                        filler.repeat(scale - space) +
-                        strOut.replace("-", "");
-                  }
-                } else {
-                  if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
-                  else strOut = strOut + filler.repeat(scale - space);
-                }
-              } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
-                strOut = "+" + strOut;
-              return strOut;
-            }
-          );
-        },
-      });
-      Object.defineProperty(window, "daSprintf", {
-        value: function (str, ...rest) {
-          if (typeof str == "string")
-            return String.prototype.daSprintf.apply(str, rest);
-          return "";
-        },
-      });
-      function daGoToAnchor(target){
-        scrollTarget = $(target).first().offset().top - 60;
-        if (scrollTarget != null){
-          $("html, body").animate({
-            scrollTop: scrollTarget
-          }, 500);
-        }
-      }
-      function atou(b64) {
-        return decodeURIComponent(escape(atob(b64)));
-      }
-      function utoa(data) {
-        return btoa(unescape(encodeURIComponent(data)));
-      }
-      function dabtoa(str) {
-        return utoa(str).replace(/[\\n=]/g, '');
-      }
-      function daatob(str) {
-        return atou(str);
-      }
-      function getFields(){
-        var allFields = [];
-        for (var rawFieldName in daVarLookup){
-          if (daVarLookup.hasOwnProperty(rawFieldName)){
-            var fieldName = atou(rawFieldName);
-            if (allFields.indexOf(fieldName) == -1){
-              allFields.push(fieldName);
-            }
-          }
-        }
-        return allFields;
-      }
-      var daGetFields = getFields;
-      function daAppendIfExists(fieldName, theArray){
-        var elem = $("[name='" + fieldName + "']");
-        if (elem.length > 0){
-          for (var i = 0; i < theArray.length; ++i){
-            if (theArray[i] == elem[0]){
-              return;
-            }
-          }
-          theArray.push(elem[0]);
-        }
-      }
-      function getField(fieldName, notInDiv){
-        if (daVarLookupCheckbox[fieldName]){
-          var n = daVarLookupCheckbox[fieldName].length;
-          for (var i = 0; i < n; ++i){
-            var elem = daVarLookupCheckbox[fieldName][i].checkboxes[0].elem;
-            if (!$(elem).prop('disabled')){
-              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
-                if (notInDiv && $.contains(notInDiv, elem)){
-                  continue;
-                }
-                return daVarLookupCheckbox[fieldName][i].elem;
-              }
-            }
-          }
-        }
-        if (daVarLookupSelect[fieldName]){
-          var n = daVarLookupSelect[fieldName].length;
-          for (var i = 0; i < n; ++i){
-            var elem = daVarLookupSelect[fieldName][i].select;
-            if (!$(elem).prop('disabled')){
-              var showifParents = $(elem).parents(".dajsshowif,.dashowif");
-              if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
-                if (notInDiv && $.contains(notInDiv, elem)){
-                  continue;
-                }
-                return elem;
-              }
-            }
-          }
-        }
-        var fieldNameEscaped = dabtoa(fieldName);
-        var possibleElements = [];
-        daAppendIfExists(fieldNameEscaped, possibleElements);
-        if (daVarLookupMulti.hasOwnProperty(fieldNameEscaped)){
-          for (var i = 0; i < daVarLookupMulti[fieldNameEscaped].length; ++i){
-            daAppendIfExists(daVarLookupMulti[fieldNameEscaped][i], possibleElements);
-          }
-        }
-        var returnVal = null;
-        for (var i = 0; i < possibleElements.length; ++i){
-          if (!$(possibleElements[i]).prop('disabled') || $(possibleElements[i]).parents(".file-input.is-locked").length > 0 ){
-            var showifParents = $(possibleElements[i]).parents(".dajsshowif,.dashowif");
-            if (showifParents.length == 0 || $(showifParents[0]).data("isVisible") == '1'){
-              if (notInDiv && $.contains(notInDiv, possibleElements[i])){
-                continue;
-              }
-              returnVal = possibleElements[i];
-            }
-          }
-        }
-        if ($(returnVal).hasClass('da-to-labelauty') && $(returnVal).parents('div.da-field-group').length > 0){
-          var fieldSet = $(returnVal).parents('div.da-field-group')[0];
-          if (!$(fieldSet).hasClass('da-field-checkbox') && !$(fieldSet).hasClass('da-field-checkboxes')){
-            return fieldSet;
-          }
-        }
-        return returnVal;
-      }
-      var daGetField = getField;
-      function setChoices(fieldName, choices){
-        var elem = daGetField(fieldName);
-        if (elem == null){
-          console.log("setChoices: reference to non-existent field " + fieldName);
-          return;
-        }
-        var isCombobox = ($(elem).attr('type') == "hidden" && $(elem).parents('.combobox-container').length > 0);
-        if (isCombobox){
-          var comboInput = $(elem).parents('.combobox-container').first().find('input.combobox').first();
-          var comboObject = daComboBoxes[$(comboInput).attr('id')];
-          var oldComboVal = comboObject.$target.val();
-          elem = comboObject.$source;
-        }
-        if ($(elem).prop('tagName') != "SELECT"){
-          console.log("setField: field " + fieldName + " is not a dropdown field");
-          return;
-        }
-        var oldVal = $(elem).val();
-        $(elem).find("option[value!='']").each(function(){
-          $(this).remove();
-        });
-        var n = choices.length;
-        for (var i = 0; i < n; i++){
-          var opt = $("<option>");
-          opt.val(choices[i][0]);
-          opt.text(choices[i][1]);
-          if (oldVal == choices[i][0]){
-            opt.attr("selected", "selected")
-          }
-          $(elem).append(opt);
-        }
-        if (isCombobox){
-          comboObject.refresh();
-          comboObject.clearTarget();
-          if (oldComboVal != ""){
-            daSetField(fieldName, oldComboVal);
-          }
-        }
-      }
-      var daSetChoices = setChoices;
-      function setField(fieldName, theValue){
-        var elem = daGetField(fieldName);
-        if (elem == null){
-          console.log('setField: reference to non-existent field ' + fieldName);
-          return;
-        }
-        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
-          elem = $(elem).find('input')[0];
-        }
-        if ($(elem).attr('type') == "checkbox"){
-          if (theValue){
-            if ($(elem).prop('checked') != true){
-              $(elem).click();
-            }
-          }
-          else{
-            if ($(elem).prop('checked') != false){
-              $(elem).click();
-            }
-          }
-        }
-        else if ($(elem).attr('type') == "radio"){
-          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          var wasSet = false;
-          if (theValue === true){
-            theValue = 'True';
-          }
-          if (theValue === false){
-            theValue = 'False';
-          }
-          $("input[name='" + fieldNameEscaped + "']").each(function(){
-            if ($(this).val() == theValue){
-              if ($(this).prop('checked') != true){
-                $(this).prop('checked', true);
-                $(this).trigger('change');
-              }
-              wasSet = true;
-              return false;
-            }
-          });
-          if (!wasSet){
-            console.log('setField: could not set radio button ' + fieldName + ' to ' + theValue);
-          }
-        }
-        else if ($(elem).attr('type') == "hidden"){
-          if ($(elem).val() != theValue){
-            if ($(elem).parents('.combobox-container').length > 0){
-              var comboInput = $(elem).parents('.combobox-container').first().find('input.combobox').first();
-              daComboBoxes[$(comboInput).attr('id')].manualSelect(theValue);
-            }
-            else{
-              $(elem).val(theValue);
-              $(elem).trigger('change');
-            }
-          }
-        }
-        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
-          if (!Array.isArray(theValue)){
-            throw new Error('setField: value must be an array');
-          }
-          var n = theValue.length;
-          $(elem).find('input').each(function(){
-            if ($(this).hasClass('danota-checkbox')){
-              $(this).prop('checked', n == 0);
-              $(this).trigger('change');
-              return;
-            }
-            if ($(this).hasClass('daaota-checkbox')){
-              $(this).prop('checked', false);
-              $(this).trigger('change');
-              return;
-            }
-            if ($(this).attr('name').substr(0, 7) === '_ignore'){
-              return;
-            }
-            var theVal = atou($(this).data('cbvalue'));
-            if ($(elem).hasClass("daobject")){
-              theVal = atou(theVal);
-            }
-            var oldVal = $(this).prop('checked') == true;
-            var newVal = false;
-            for (var i = 0; i < n; ++i){
-              if (theValue[i] == theVal){
-                newVal = true;
-              }
-            }
-            if (oldVal != newVal){
-              $(this).click();
-            }
-          });
-        }
-        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
-          if (daVarLookupSelect[fieldName]){
-            var n = daVarLookupSelect[fieldName].length;
-            for (var i = 0; i < n; ++i){
-              if (daVarLookupSelect[fieldName][i].select === elem){
-                var oldValue = $(daVarLookupSelect[fieldName][i].option).prop('selected') == true;
-                if (oldValue != theValue){
-                  $(daVarLookupSelect[fieldName][i].option).prop('selected', theValue);
-                  $(elem).trigger('change');
-                }
-              }
-            }
-          }
-          else{
-            if (!Array.isArray(theValue)){
-              throw new Error('setField: value must be an array');
-            }
-            var n = theValue.length;
-            var changed = false;
-            $(elem).find('option').each(function(){
-              var thisVal = daVarLookupOption[$(this).val()];
-              var oldVal = $(this).prop('selected') == true;
-              var newVal = false;
-              for (var i = 0; i < n; ++i){
-                if (thisVal == theValue[i]){
-                  newVal = true;
-                }
-              }
-              if (newVal !== oldVal){
-                changed = true;
-                $(this).prop('selected', newVal);
-              }
-            });
-            if (changed){
-              $(elem).trigger('change');
-            }
-          }
-        }
-        else{
-          if ($(elem).val() != theValue){
-            $(elem).val(theValue);
-            $(elem).trigger('change');
-          }
-        }
-      }
-      var daSetField = setField;
-      function val(fieldName){
-        var elem = daGetField(fieldName);
-        if (elem == null){
-          return null;
-        }
-        if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-radio")){
-          elem = $(elem).find('input')[0];
-        }
-        if ($(elem).attr('type') == "checkbox"){
-          if ($(elem).prop('checked')){
-            theVal = true;
-          }
-          else{
-            theVal = false;
-          }
-        }
-        else if ($(elem).attr('type') == "radio"){
-          var fieldNameEscaped = $(elem).attr('name').replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-          theVal = $("input[name='" + fieldNameEscaped + "']:checked").val();
-          if (typeof(theVal) == 'undefined'){
-            theVal = null;
-          }
-          else{
-            if ($(elem).hasClass("daobject")){
-              theVal = atou(theVal);
-            }
-            else if (theVal == 'True'){
-              theVal = true;
-            }
-            else if (theVal == 'False'){
-              theVal = false;
-            }
-          }
-        }
-        else if ($(elem).prop('tagName') == "DIV" && $(elem).hasClass("da-field-group") && $(elem).hasClass("da-field-checkboxes")){
-          var cbSelected = [];
-          $(elem).find('input').each(function(){
-            if ($(this).attr('name').substr(0,7) === '_ignore'){
-              return;
-            }
-            var theVal = atou($(this).data('cbvalue'));
-            if ($(elem).hasClass("daobject")){
-              theVal = atou(theVal);
-            }
-            if ($(this).prop('checked')){
-              cbSelected.push(theVal);
-            }
-          });
-          return cbSelected;
-        }
-        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('damultiselect')){
-          if (daVarLookupSelect[fieldName]){
-            var n = daVarLookupSelect[fieldName].length;
-            for (var i = 0; i < n; ++i){
-              if (daVarLookupSelect[fieldName][i].select === elem){
-                return $(daVarLookupSelect[fieldName][i].option).prop('selected');
-              }
-            }
-          }
-          else{
-            var selectedVals = [];
-            $(elem).find('option').each(function(){
-              if ($(this).prop('selected')){
-                if (daVarLookupOption[$(this).val()]){
-                  selectedVals.push(daVarLookupOption[$(this).val()]);
-                }
-              }
-            });
-            return selectedVals;
-          }
-        }
-        else if ($(elem).prop('tagName') == "SELECT" && $(elem).hasClass('daobject')){
-          theVal = atou($(elem).val());
-        }
-        else{
-          theVal = $(elem).val();
-        }
-        return theVal;
-      }
-      var da_val = val;
-      window.daTurnOnControl = function(){
-        //console.log("Turning on control");
-        daSendChanges = true;
-        daNoConnectionCount = 0;
-        daResetPushChanges();
-        daSocket.emit('observerStartControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
-      }
-      window.daTurnOffControl = function(){
-        //console.log("Turning off control");
-        if (!daSendChanges){
-          //console.log("Already turned off");
-          return;
-        }
-        daSendChanges = false;
-        daConfirmed = false;
-        daStopPushChanges();
-        daSocket.emit('observerStopControl', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """});
-        return;
-      }
-      function daInjectTrim(handler){
-        return function (element, event) {
-          if (element.tagName === "TEXTAREA" || (element.tagName === "INPUT" && element.type !== "password" && element.type !== "date" && element.type !== "datetime" && element.type !== "file")) {
-            setTimeout(function(){
-              element.value = $.trim(element.value);
-            }, 10);
-          }
-          return handler.call(this, element, event);
-        };
-      }
-      function daInvalidHandler(form, validator){
-        var errors = validator.numberOfInvalids();
-        var scrollTarget = null;
-        if (errors && $(validator.errorList[0].element).parents('.da-form-group').length > 0) {
-          if (daJsEmbed){
-            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().position().top - 60;
-          }
-          else{
-            scrollTarget = $(validator.errorList[0].element).parents('.da-form-group').first().offset().top - 60;
-          }
-        }
-        if (scrollTarget != null){
-          if (daJsEmbed){
-            $(daTargetDiv).animate({
-              scrollTop: scrollTarget
-            }, 1000);
-          }
-          else{
-            $("html, body").animate({
-              scrollTop: scrollTarget
-            }, 1000);
-          }
-        }
-      }
-      function daValidationHandler(form){
-        //console.log("observer: daValidationHandler");
-        return(false);
-      }
-      function daStopPushChanges(){
-        if (daObserverChangesInterval != null){
-          clearInterval(daObserverChangesInterval);
-        }
-      }
-      function daResetPushChanges(){
-        if (daObserverChangesInterval != null){
-          clearInterval(daObserverChangesInterval);
-        }
-        daObserverChangesInterval = setInterval(daPushChanges, """ + str(CHECKIN_INTERVAL) + """);
-      }
-      function daOnChange(){
-      }
-      function daPushChanges(){
-        //console.log("Pushing changes");
-        if (daObserverChangesInterval != null){
-          clearInterval(daObserverChangesInterval);
-        }
-        if (!daSendChanges || !daConnected){
-          return;
-        }
-        daObserverChangesInterval = setInterval(daPushChanges, """ + str(CHECKIN_INTERVAL) + """);
-        daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, parameters: JSON.stringify($("#daform").serializeArray())});
-      }
-      function daProcessAjaxError(xhr, status, error){
-        if (xhr.responseType == undefined || xhr.responseType == '' || xhr.responseType == 'text'){
-          var theHtml = xhr.responseText;
-          if (theHtml == undefined){
-            $(daTargetDiv).html("error");
-          }
-          else{
-            $(daTargetDiv).html(theHtml);
-          }
-          if (daJsEmbed){
-            $(daTargetDiv)[0].scrollTo(0, 1);
-          }
-          else{
-            window.scrollTo(0, 1);
-          }
-        }
-        else {
-          console.log("daProcessAjaxError: response was not text");
-        }
-      }
-      function daAddScriptToHead(src){
-        var head = document.getElementsByTagName("head")[0];
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = src;
-        script.async = true;
-        script.defer = true;
-        head.appendChild(script);
-      }
-      function daSubmitter(event){
-        if (!daSendChanges || !daConnected){
-          event.preventDefault();
-          return false;
-        }
-        var theAction = null;
-        if ($(this).hasClass('da-review-action')){
-          theAction = $(this).data('action');
-        }
-        var embeddedJs = $(this).data('js');
-        var embeddedAction = $(this).data('embaction');
-        var linkNum = $(this).data('linknum');
-        var theId = $(this).attr('id');
-        if (theId == 'dapagetitle'){
-          theId = 'daquestionlabel';
-        }
-        var theName = $(this).attr('name');
-        var theValue = $(this).val();
-        var skey;
-        if (linkNum){
-          skey = 'a[data-linknum="' + linkNum + '"]';
-        }
-        else if (embeddedAction){
-          skey = 'a[data-embaction="' + embeddedAction.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1') + '"]';
-        }
-        else if (theAction){
-          skey = 'a[data-action="' + theAction.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1') + '"]';
-        }
-        else if (theId){
-          skey = '#' + theId.replace(/(:|\.|\[|\]|,|=|\/|\")/g, '\\\\$1');
-        }
-        else if (theName){
-          skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[name="' + theName.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1') + '"]';
-          if (typeof theValue !== 'undefined'){
-            skey += '[value="' + theValue + '"]'
-          }
-        }
-        else{
-          skey = '#' + $(this).parents("form").attr('id') + ' ' + $(this).prop('tagName').toLowerCase() + '[type="submit"]';
-        }
-        //console.log("Need to click on " + skey);
-        if (daObserverChangesInterval != null && embeddedJs == null && theId != "dabackToQuestion" && theId != "dahelptoggle" && theId != "daquestionlabel"){
-          clearInterval(daObserverChangesInterval);
-        }
-        daSocket.emit('observerChanges', {uid: """ + json.dumps(uid) + """, i: """ + json.dumps(i) + """, userid: """ + json.dumps(str(userid)) + """, clicked: skey, parameters: JSON.stringify($("#daform").serializeArray())});
-        if (embeddedJs != null){
-          //console.log("Running the embedded js");
-          daGlobalEval(decodeURIComponent(embeddedJs));
-        }
-        if (theId != "dabackToQuestion" && theId != "dahelptoggle" && theId != "daquestionlabel"){
-          event.preventDefault();
-          return false;
-        }
-      }
-      function daAdjustInputWidth(e){
-        var contents = $(this).val();
-        var leftBracket = new RegExp('<', 'g');
-        var rightBracket = new RegExp('>', 'g');
-        contents = contents.replace(/&/g,'&amp;').replace(leftBracket,'&lt;').replace(rightBracket,'&gt;').replace(/ /g, '&nbsp;');
-        $('<span class="dainput-embedded" id="dawidth">').html( contents ).appendTo('#daquestion');
-        $("#dawidth").css('min-width', $(this).css('min-width'));
-        $("#dawidth").css('background-color', $(daTargetDiv).css('background-color'));
-        $("#dawidth").css('color', $(daTargetDiv).css('background-color'));
-        $(this).width($('#dawidth').width() + 16);
-        setTimeout(function(){
-          $("#dawidth").remove();
-        }, 0);
-      }
-      function daShowHelpTab(){
-          //$('#dahelptoggle').tab('show');
-      }
-      function flash(message, priority, clear){
-        if (priority == null){
-          priority = 'info'
-        }
-        if (!$("#daflash").length){
-          $(daTargetDiv).append(daSprintf(daNotificationContainer, ""));
-        }
-        if (clear){
-          $("#daflash").empty();
-        }
-        if (message != null){
-          var newElement = daSprintf(daNotificationMessage, priority, message);
-          $("#daflash").append(newElement);
-          if (priority == 'success'){
-            setTimeout(function(){
-              $(newElement).hide(300, function(){
-                $(this).remove();
-              });
-            }, 3000);
-          }
-        }
-      }
-      var da_flash = flash;
-      function JSON_stringify(s){
-         var json = JSON.stringify(s);
-         return json.replace(/[\\u007f-\\uffff]/g,
-            function(c) {
-              return '\\\\u'+('0000'+c.charCodeAt(0).toString(16)).slice(-4);
-            }
-         );
-      }
-      function url_action(action, args){
-        //redo?
-        if (args == null){
-            args = {};
-        }
-        data = {action: action, arguments: args};
-        var url;
-        if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-        }
-        else{
-          url = daLocationBar + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-        }
-        return url;
-      }
-      var da_url_action = url_action;
-      function action_call(action, args, callback, forgetPrior=false){
-        //redo?
-        if (args == null){
-            args = {};
-        }
-        if (forgetPrior){
-          args = {_action: action, _arguments: args};
-          action = '_da_priority_action';
-        }
-        if (callback == null){
-            callback = function(){};
-        }
-        var data = {action: action, arguments: args};
-        var url;
-        if (daJsEmbed){
-          url = daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-        }
-        else{
-          url = daLocationBar + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)))
-        }
-        return $.ajax({
-          type: "GET",
-          url: url,
-          success: callback,
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          }
-        });
-      }
-      var da_action_call = action_call;
-      var url_action_call = action_call;
-      function action_perform(action, args, forgetPrior=false){
-        //redo
-        if (args == null){
-            args = {};
-        }
-        if (forgetPrior){
-          args = {_action: action, _arguments: args};
-          action = '_da_priority_action';
-        }
-        var data = {action: action, arguments: args};
-        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        return $.ajax({
-          type: "POST",
-          url: daLocationBar,
-          data: $.param({_action: utoa(JSON_stringify(data)), csrf_token: daCsrf, ajax: 1}),
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, $("#daform"), 1);
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          },
-          dataType: 'json'
-        });
-      }
-      var da_action_perform = action_perform;
-      var url_action_perform = action_perform;
-      function action_perform_with_next(action, args, next_data, forgetPrior=false){
-        //redo
-        //console.log("action_perform_with_next: " + action + " | " + next_data)
-        if (args == null){
-            args = {};
-        }
-        if (forgetPrior){
-          args = {_action: action, _arguments: args};
-          action = '_da_priority_action';
-        }
-        var data = {action: action, arguments: args};
-        daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
-        return $.ajax({
-          type: "POST",
-          url: daLocationBar,
-          data: $.param({_action: utoa(JSON_stringify(data)), _next_action_to_set: utoa(JSON_stringify(next_data)), csrf_token: daCsrf, ajax: 1}),
-          success: function(data){
-            setTimeout(function(){
-              daProcessAjax(data, $("#daform"), 1);
-            }, 0);
-          },
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          },
-          dataType: 'json'
-        });
-      }
-      var da_action_perform_with_next = action_perform_with_next;
-      var url_action_perform_with_next = action_perform_with_next;
-      function get_interview_variables(callback){
-        if (callback == null){
-          callback = function(){};
-        }
-        return $.ajax({
-          type: "GET",
-          url: """ + '"' + url_for('get_variables', i=i) + '"' + """,
-          success: callback,
-          error: function(xhr, status, error){
-            setTimeout(function(){
-              daProcessAjaxError(xhr, status, error);
-            }, 0);
-          }
-        });
-      }
-      var da_get_interview_variables = get_interview_variables;
-      function daInitialize(doScroll){
-        daComboBoxes = Object();
-        daVarLookupSelect = Object();
-        daVarLookupCheckbox = Object();
-        if (daSpinnerTimeout != null){
-          clearTimeout(daSpinnerTimeout);
-          daSpinnerTimeout = null;
-        }
-        if (daShowingSpinner){
-          daHideSpinner();
-        }
-        $('button[type="submit"], input[type="submit"], a.da-review-action, #dabackToQuestion, #daquestionlabel, #dapagetitle, #dahelptoggle, a[data-linknum], a[data-embaction], #dabackbutton').click(daSubmitter);
-        $(".da-to-labelauty").labelauty({ class: "labelauty da-active-invisible dafullwidth" });
-        //$(".da-to-labelauty-icon").labelauty({ label: false });
-        var navMain = $("#danavbar-collapse");
-        navMain.on("click", "a", null, function () {
-          if (!($(this).hasClass("dropdown-toggle"))){
-            navMain.collapse('hide');
-          }
-        });
-        var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-        var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
-          return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
-        });
-        $("input.daaota-checkbox").click(function(){
-          var anyChanged = false;
-          var firstEncountered = null;
-          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
-            if (firstEncountered === null){
-              firstEncountered = this;
-            }
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', true);
-            if (existing_val != true){
-              $(this).trigger('change');
-              anyChanged = true;
-            }
-          });
-          if (firstEncountered !== null && anyChanged === false){
-            $(firstEncountered).trigger('change');
-          }
-          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-            }
-          });
-        });
-        $("input.danota-checkbox").click(function(){
-          var anyChanged = false;
-          var firstEncountered = null;
-          $(this).parents('div.da-field-group').find('input.danon-nota-checkbox').each(function(){
-            if (firstEncountered === null){
-              firstEncountered = this;
-            }
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-              anyChanged = true;
-            }
-          });
-          if (firstEncountered !== null && anyChanged === false){
-            $(firstEncountered).trigger('change');
-          }
-          $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-            }
-          });
-        });
-        $("input.danon-nota-checkbox").click(function(){
-          $(this).parents('div.da-field-group').find('input.danota-checkbox').each(function(){
-            var existing_val = $(this).prop('checked');
-            $(this).prop('checked', false);
-            if (existing_val != false){
-              $(this).trigger('change');
-            }
-          });
-          if (!$(this).prop('checked')){
-            $(this).parents('div.da-field-group').find('input.daaota-checkbox').each(function(){
-              var existing_val = $(this).prop('checked');
-              $(this).prop('checked', false);
-              if (existing_val != false){
-                $(this).trigger('change');
-              }
-            });
-          }
-        });
-        $("input.dainput-embedded").on('keyup', daAdjustInputWidth);
-        $("input.dainput-embedded").each(daAdjustInputWidth);
-        // $(".dahelptrigger").click(function(e) {
-        //   e.preventDefault();
-        //   $(this).tab('show');
-        // });
-        //$("#daquestionlabel").click(function(e) {
-        //  e.preventDefault();
-        //  $(this).tab('show');
-        //});
-        $('#dapagetitle').click(function(e) {
-          if ($(this).prop('href') == '#'){
-            e.preventDefault();
-            //$('#daquestionlabel').tab('show');
-          }
-        });
-        $('select.damultiselect').each(function(){
-          var isObject = $(this).hasClass('daobject');
-          var varname = atou($(this).data('varname'));
-          var theSelect = this;
-          $(this).find('option').each(function(){
-            var theVal = atou($(this).data('valname'));
-            if (isObject){
-              theVal = atou(theVal);
-            }
-            var key = varname + '["' + theVal + '"]';
-            if (!daVarLookupSelect[key]){
-              daVarLookupSelect[key] = [];
-            }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
-            key = varname + "['" + theVal + "']"
-            if (!daVarLookupSelect[key]){
-              daVarLookupSelect[key] = [];
-            }
-            daVarLookupSelect[key].push({'select': theSelect, 'option': this, 'value': theVal});
-          });
-        })
-        $('div.da-field-group.da-field-checkboxes').each(function(){
-          var isObject = $(this).hasClass('daobject');
-          var varname = atou($(this).data('varname'));
-          var cbList = [];
-          if (!daVarLookupCheckbox[varname]){
-            daVarLookupCheckbox[varname] = [];
-          }
-          $(this).find('input').each(function(){
-            if ($(this).attr('name').substr(0,7) === '_ignore'){
-              return;
-            }
-            var theVal = atou($(this).data('cbvalue'));
-            var theType = $(this).data('cbtype');
-            var key;
-            if (theType == 'R'){
-              key = varname + '[' + theVal + ']';
-            }
-            else {
-              key = varname + '["' + theVal + '"]';
-            }
-            cbList.push({'variable': key, 'value': theVal, 'type': theType, 'elem': this})
-          });
-          daVarLookupCheckbox[varname].push({'elem': this, 'checkboxes': cbList, 'isObject': isObject});
-        });
-        $('.dacurrency').each(function(){
-          var theVal = $(this).val().toString();
-          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
-            var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """);
-            $(this).val(cleanNum);
-          }
-        });
-        $('.dacurrency').on('blur', function(){
-          var theVal = $(this).val().toString();
-          if (theVal.indexOf('.') >= 0 || theVal.indexOf(',') >= 0){
-            var num = parseFloat(theVal);
-            var cleanNum = num.toFixed(""" + str(daconfig.get('currency decimal places', 2)) + """);
-            if (cleanNum != 'NaN') {
-              $(this).val(cleanNum);
-            }
-          }
-        });
-        $("#dahelp").on("shown.bs.tab", function(){
-          window.scrollTo(0, 1);
-          $("#dahelptoggle").removeClass('daactivetext')
-          $("#dahelptoggle").blur();
-        });
-        $("#dasourcetoggle").on("click", function(){
-          $(this).parent().toggleClass("active");
-          $(this).blur();
-        });
-        $('#dabackToQuestion').click(function(event){
-          $('#daquestionlabel').tab('show');
-        });
-        daShowIfInProcess = true;
-        var daTriggerQueries = [];
-        var daInputsSeen = {};
-        function daOnlyUnique(value, index, self){
-          return self.indexOf(value) === index;
-        }
-        $(".dajsshowif").each(function(){
-          var showIfDiv = this;
-          var jsInfo = JSON.parse(atou($(this).data('jsshowif')));
-          var showIfSign = jsInfo['sign'];
-          var showIfMode = jsInfo['mode'];
-          var jsExpression = jsInfo['expression'];
-          jsInfo['vars'].forEach(function(infoItem, i){
-            var showIfVars = [];
-            var initShowIfVar = utoa(infoItem).replace(/[\\n=]/g, '');
-            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            var elem = $("[name='" + initShowIfVarEscaped + "']");
-            if (elem.length > 0){
-              showIfVars.push(initShowIfVar);
-            }
-            if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
-              for (var j = 0; j < daVarLookupMulti[initShowIfVar].length; j++){
-                var altShowIfVar = daVarLookupMulti[initShowIfVar][j];
-                var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-                var altElem = $("[name='" + altShowIfVarEscaped + "']");
-                if (altElem.length > 0 && !$.contains(this, altElem[0])){
-                  showIfVars.push(altShowIfVar);
-                }
-              }
-            }
-            if (showIfVars.length == 0){
-              console.log("ERROR: reference to non-existent field " + infoItem);
-            }
-            showIfVars.forEach(function(showIfVar){
-              var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-              var varToUse = infoItem;
-              var showHideDiv = function(speed){
-                var elem = daGetField(varToUse);
-                if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
-                  return;
-                }
-                var resultt = eval(jsExpression);
-                if(resultt){
-                  if (showIfSign){
-                    if ($(showIfDiv).data('isVisible') != '1'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).show(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '1');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                  else{
-                    if ($(showIfDiv).data('isVisible') != '0'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).hide(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '0');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].disable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('disable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").disable();
-                    });
-                  }
-                }
-                else{
-                  if (showIfSign){
-                    if ($(showIfDiv).data('isVisible') != '0'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).hide(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '0');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].disable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('disable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").disable();
-                    });
-                  }
-                  else{
-                    if ($(showIfDiv).data('isVisible') != '1'){
-                      daShowHideHappened = true;
-                    }
-                    if (showIfMode == 0){
-                      $(showIfDiv).show(speed);
-                    }
-                    $(showIfDiv).data('isVisible', '1');
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                }
-                var leader = false;
-                if (!daShowIfInProcess){
-                  daShowIfInProcess = true;
-                  daInputsSeen = {};
-                  leader = true;
-                }
-                $(showIfDiv).find(":input").not("[type='file']").each(function(){
-                  if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
-                    $(this).trigger('change');
-                  }
-                  daInputsSeen[$(this).attr('id')] = true;
-                });
-                if (leader){
-                  daShowIfInProcess = false;
-                }
-              };
-              var showHideDivImmediate = function(){
-                showHideDiv.apply(this, [null]);
-              }
-              var showHideDivFast = function(){
-                showHideDiv.apply(this, ['fast']);
-              }
-              daTriggerQueries.push("#" + showIfVarEscaped);
-              daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
-              daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
-              $("#" + showIfVarEscaped).change(showHideDivFast);
-              $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-              $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
-              $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
-              $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-              $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            });
-          });
-        });
-        $(".dashowif").each(function(){
-          var showIfVars = [];
-          var showIfSign = $(this).data('showif-sign');
-          var showIfMode = parseInt($(this).data('showif-mode'));
-          var initShowIfVar = $(this).data('showif-var');
-          var varName = atou(initShowIfVar);
-          var elem = [];
-          if (varName.endsWith('[nota]') || varName.endsWith('[aota]')){
-            var signifier = varName.endsWith('[nota]') ? 'nota' : 'aota';
-            var cbVarName = varName.replace(/\[[na]ota\]$/, '');
-            $('div.da-field-group.da-field-checkboxes').each(function(){
-              var thisVarName = atou($(this).data('varname'));
-              if (thisVarName == cbVarName){
-                elem = $(this).find('input.da' + signifier + '-checkbox');
-                initShowIfVar = $(elem).attr('name');
-              }
-            });
-          }
-          else {
-            var initShowIfVarEscaped = initShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            elem = $("[name='" + initShowIfVarEscaped + "']");
-          }
-          if (elem.length > 0){
-            showIfVars.push(initShowIfVar);
-          }
-          if (daVarLookupMulti.hasOwnProperty(initShowIfVar)){
-            var n = daVarLookupMulti[initShowIfVar].length;
-            for (var i = 0; i < n; i++){
-              var altShowIfVar = daVarLookupMulti[initShowIfVar][i];
-              var altShowIfVarEscaped = altShowIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-              var altElem = $("[name='" + altShowIfVarEscaped + "']");
-              if (altElem.length > 0 && !$.contains(this, altElem[0])){
-                showIfVars.push(altShowIfVar);
-              }
-            }
-          }
-          var showIfVal = $(this).data('showif-val');
-          var saveAs = $(this).data('saveas');
-          var showIfDiv = this;
-          showIfVars.forEach(function(showIfVar){
-            var showIfVarEscaped = showIfVar.replace(/(:|\.|\[|\]|,|=)/g, "\\\\$1");
-            var showHideDiv = function(speed){
-              var elem = daGetField(varName, showIfDiv);
-              if (elem != null && !$(elem).parents('.da-form-group').first().is($(this).parents('.da-form-group').first())){
-                return;
-              }
-              var theVal;
-              var showifParents = $(this).parents(".dashowif");
-              if (showifParents.length !== 0 && !($(showifParents[0]).data("isVisible") == '1')){
-                theVal = '';
-                //console.log("Setting theVal to blank.");
-              }
-              else if ($(this).attr('type') == "checkbox"){
-                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-                if (typeof(theVal) == 'undefined'){
-                  //console.log('manually setting checkbox value to False');
-                  theVal = 'False';
-                }
-              }
-              else if ($(this).attr('type') == "radio"){
-                theVal = $("input[name='" + showIfVarEscaped + "']:checked").val();
-                if (typeof(theVal) == 'undefined'){
-                  theVal = '';
-                }
-                else if (theVal != '' && $("input[name='" + showIfVarEscaped + "']:checked").hasClass("daobject")){
-                  try{
-                    theVal = atou(theVal);
-                  }
-                  catch(e){
-                  }
-                }
-              }
-              else{
-                theVal = $(this).val();
-                if (theVal != '' && $(this).hasClass("daobject")){
-                  try{
-                    theVal = atou(theVal);
-                  }
-                  catch(e){
-                  }
-                }
-              }
-              //console.log("this is " + $(this).attr('id') + " and saveAs is " + atou(saveAs) + " and showIfVar is " + atou(showIfVar) + " and val is " + String(theVal) + " and showIfVal is " + String(showIfVal));
-              if(daShowIfCompare(theVal, showIfVal)){
-                if (showIfSign){
-                  if ($(showIfDiv).data('isVisible') != '1'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).show(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '1');
-                  var firstChild = $(showIfDiv).children()[0];
-                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                }
-                else{
-                  if ($(showIfDiv).data('isVisible') != '0'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).hide(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '0');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].disable();
-                  });
-                  $(showIfDiv).find('input.daslider').each(function(){
-                    $(this).slider('disable');
-                  });
-                  $(showIfDiv).find('input.dafile').each(function(){
-                    $(this).data("fileinput").disable();
-                  });
-                }
-              }
-              else{
-                if (showIfSign){
-                  if ($(showIfDiv).data('isVisible') != '0'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).hide(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '0');
-                  $(showIfDiv).find('input, textarea, select').prop("disabled", true);
-                  $(showIfDiv).find('input.combobox').each(function(){
-                    daComboBoxes[$(this).attr('id')].disable();
-                  });
-                  $(showIfDiv).find('input.daslider').each(function(){
-                    $(this).slider('disable');
-                  });
-                  $(showIfDiv).find('input.dafile').each(function(){
-                    $(this).data("fileinput").disable();
-                  });
-                }
-                else{
-                  if ($(showIfDiv).data('isVisible') != '1'){
-                    daShowHideHappened = true;
-                  }
-                  if (showIfMode == 0){
-                    $(showIfDiv).show(speed);
-                  }
-                  $(showIfDiv).data('isVisible', '1');
-                  var firstChild = $(showIfDiv).children()[0];
-                  if (!$(firstChild).hasClass('dacollectextra') || $(firstChild).is(":visible")){
-                    $(showIfDiv).find('input, textarea, select').prop("disabled", false);
-                    $(showIfDiv).find('input.combobox').each(function(){
-                      daComboBoxes[$(this).attr('id')].enable();
-                    });
-                    $(showIfDiv).find('input.daslider').each(function(){
-                      $(this).slider('enable');
-                    });
-                    $(showIfDiv).find('input.dafile').each(function(){
-                      $(this).data("fileinput").enable();
-                    });
-                  }
-                }
-              }
-              var leader = false;
-              if (!daShowIfInProcess){
-                daShowIfInProcess = true;
-                daInputsSeen = {};
-                leader = true;
-              }
-              $(showIfDiv).find(":input").not("[type='file']").each(function(){
-                if (!daInputsSeen.hasOwnProperty($(this).attr('id'))){
-                  $(this).trigger('change');
-                }
-                daInputsSeen[$(this).attr('id')] = true;
-              });
-              if (leader){
-                daShowIfInProcess = false;
-              }
-            };
-            var showHideDivImmediate = function(){
-              showHideDiv.apply(this, [null]);
-            }
-            var showHideDivFast = function(){
-              showHideDiv.apply(this, ['fast']);
-            }
-            daTriggerQueries.push("#" + showIfVarEscaped);
-            daTriggerQueries.push("input[type='radio'][name='" + showIfVarEscaped + "']");
-            daTriggerQueries.push("input[type='checkbox'][name='" + showIfVarEscaped + "']");
-            $("#" + showIfVarEscaped).change(showHideDivFast);
-            $("#" + showIfVarEscaped).on('daManualTrigger', showHideDivImmediate);
-            $("input[type='radio'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-            $("input[type='radio'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").change(showHideDivFast);
-            $("input[type='checkbox'][name='" + showIfVarEscaped + "']").on('daManualTrigger', showHideDivImmediate);
-            $("input.dafile[name='" + showIfVarEscaped + "']").on('filecleared', showHideDivFast);
-          });
-        });
-        function daTriggerAllShowHides(){
-          var daUniqueTriggerQueries = daTriggerQueries.filter(daOnlyUnique);
-          var daFirstTime = true;
-          var daTries = 0;
-          while ((daFirstTime || daShowHideHappened) && ++daTries < 100){
-            daShowHideHappened = false;
-            daFirstTime = false;
-            var n = daUniqueTriggerQueries.length;
-            for (var i = 0; i < n; ++i){
-              $(daUniqueTriggerQueries[i]).trigger('daManualTrigger');
-            }
-          }
-          if (daTries >= 100){
-            console.log("Too many contradictory 'show if' conditions");
-          }
-        }
-        if (daTriggerQueries.length > 0){
-          daTriggerAllShowHides();
-        }
-        $(".danavlink").last().addClass('thelast');
-        $(".danavlink").each(function(){
-          if ($(this).hasClass('btn') && !$(this).hasClass('danotavailableyet')){
-            var the_a = $(this);
-            var the_delay = 1000 + 250 * parseInt($(this).data('index'));
-            setTimeout(function(){
-              $(the_a).removeClass('""" + app.config['BUTTON_STYLE'] + """secondary');
-              if ($(the_a).hasClass('active')){
-                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """success');
-              }
-              else{
-                $(the_a).addClass('""" + app.config['BUTTON_STYLE'] + """warning');
-              }
-            }, the_delay);
-          }
-        });
-        daShowIfInProcess = false;
-        // daDisable = setTimeout(function(){
-        //   $("#daform").find('button[type="submit"]').prop("disabled", true);
-        //   //$("#daform").find(':input').prop("disabled", true);
-        // }, 1);
-        $("#daform").each(function(){
-          $(this).find(':input').on('change', daOnChange);
-        });
-        daInitialized = true;
-        daShowingHelp = 0;
-        $("#daflash .alert-success").each(function(){
-          var oThis = this;
-          setTimeout(function(){
-            $(oThis).hide(300, function(){
-              $(self).remove();
-            });
-          }, 3000);
-        });
-      }
-      $( document ).ready(function(){
-        daInitialize(1);
-        var daDefaultAllowList = bootstrap.Tooltip.Default.allowList;
-        daDefaultAllowList['*'].push('style');
-        daDefaultAllowList['a'].push('style');
-        daDefaultAllowList['img'].push('style');
-        $( window ).bind('unload', function() {
-          if (daSocket != null && daSocket.connected){
-            daSocket.emit('terminate');
-          }
-        });
-        if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-            daSocket = io.connect('http://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
-        }
-        if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-            daSocket = io.connect('https://' + document.domain + '/observer', {path: '""" + ROOT + """ws/socket.io', query: "i=" + daYamlFilename});
-        }
-        if (typeof daSocket !== 'undefined') {
-            daSocket.on('connect', function() {
-                //console.log("Connected!");
-                daSocket.emit('observe', {uid: """ + json.dumps(uid) + """, i: daYamlFilename, userid: """ + json.dumps(str(userid)) + """});
-                daConnected = true;
-            });
-            daSocket.on('terminate', function() {
-                //console.log("Terminating socket");
-                daSocket.disconnect();
-            });
-            daSocket.on('disconnect', function() {
-                //console.log("Disconnected socket");
-                //daSocket = null;
-            });
-            daSocket.on('stopcontrolling', function(data) {
-                window.parent.daStopControlling(data.key);
-            });
-            daSocket.on('start_being_controlled', function(data) {
-                //console.log("Got start_being_controlled");
-                daConfirmed = true;
-                daPushChanges();
-                window.parent.daGotConfirmation(data.key);
-            });
-            daSocket.on('abortcontrolling', function(data) {
-                //console.log("Got abortcontrolling");
-                //daSendChanges = false;
-                //daConfirmed = false;
-                //daStopPushChanges();
-                window.parent.daAbortControlling(data.key);
-            });
-            daSocket.on('noconnection', function(data) {
-                //console.log("warning: no connection");
-                if (daNoConnectionCount++ > 2){
-                    //console.log("error: no connection");
-                    window.parent.daStopControlling(data.key);
-                }
-            });
-            daSocket.on('newpage', function(incoming) {
-                //console.log("Got newpage")
-                var data = incoming.obj;
-                $(daTargetDiv).html(data.body);
-                $(daTargetDiv).parent().removeClass();
-                $(daTargetDiv).parent().addClass(data.bodyclass);
-                daInitialize(1);
-                var tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.extra_scripts;
-                var scripts = tempDiv.getElementsByTagName('script');
-                for (var i = 0; i < scripts.length; i++){
-                  if (scripts[i].src != ""){
-                    daAddScriptToHead(scripts[i].src);
-                  }
-                  else{
-                    daGlobalEval(scripts[i].innerHTML);
-                  }
-                }
-                for (var i = 0; i < data.extra_css.length; i++){
-                  $("head").append(data.extra_css[i]);
-                }
-                document.title = data.browser_title;
-                if ($("html").attr("lang") != data.lang){
-                  $("html").attr("lang", data.lang);
-                }
-                daPushChanges();
-            });
-            daSocket.on('pushchanges', function(data) {
-                //console.log("Got pushchanges: " + JSON.stringify(data));
-                var valArray = Object();
-                var values = data.parameters;
-                for (var i = 0; i < values.length; i++) {
-                    valArray[values[i].name] = values[i].value;
-                }
-                $("#daform").each(function(){
-                    $(this).find(':input').each(function(){
-                        var type = $(this).attr('type');
-                        var id = $(this).attr('id');
-                        var name = $(this).attr('name');
-                        if (type == 'checkbox'){
-                            if (name in valArray){
-                                if (valArray[name] == 'True'){
-                                    if ($(this).prop('checked') != true){
-                                        $(this).prop('checked', true);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                                else{
-                                    if ($(this).prop('checked') != false){
-                                        $(this).prop('checked', false);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                            }
-                            else{
-                                if ($(this).prop('checked') != false){
-                                    $(this).prop('checked', false);
-                                    $(this).trigger('change');
-                                }
-                            }
-                        }
-                        else if (type == 'radio'){
-                            if (name in valArray){
-                                if (valArray[name] == $(this).val()){
-                                    if ($(this).prop('checked') != true){
-                                        $(this).prop('checked', true);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                                else{
-                                    if ($(this).prop('checked') != false){
-                                        $(this).prop('checked', false);
-                                        $(this).trigger('change');
-                                    }
-                                }
-                            }
-                        }
-                        else if ($(this).data().hasOwnProperty('sliderMax')){
-                            $(this).slider('setValue', parseInt(valArray[name]));
-                        }
-                        else{
-                            if (name in valArray){
-                                $(this).val(valArray[name]);
-                            }
-                        }
-                    });
-                });
-            });
-        }
-        daObserverChangesInterval = setInterval(daPushChanges, """ + str(CHECKIN_INTERVAL) + """);
-        $(document).trigger('daPageLoad');
-    });
-    </script>
-"""  # noqa: W605
     the_key = 'da:html:uid:' + str(uid) + ':i:' + str(i) + ':userid:' + str(userid)
     html = r.get(the_key)
     if html is not None:
@@ -15941,12 +10191,75 @@ def observer():
     else:
         logmessage("observer: failed to load JSON from key " + the_key)
         obj = {}
+    initial_values = standard_app_values()
+    initial_values.update({
+        "daUid": uid,
+        "daUserObserved": str(userid),
+        "daCheckinSeconds": CHECKIN_INTERVAL,
+        "daUserId": current_user.id,
+        "daJsEmbed": False,
+        "daAllowGoingBack": False,
+        "daSteps": obj['steps'],
+        "daIsUser": False,
+        "daChatStatus": 'off',
+        "daChatAvailable": 'unavailable',
+        "daChatMode": 'other',
+        "daSendChanges": False,
+        "daBeingControlled": False,
+        "daInformed": {},
+        "daUsingGA": False,
+        "daUsingSegment": False,
+        "daGaIds": None,
+        "daDoAction": None,
+        "daInterviewPackage": re.sub(r'^docassemble\.', '', re.sub(r':.*', '', i)),
+        "daInterviewFilename": re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', i), re.IGNORECASE),
+        "daQuestionID": {'id': obj['question_id']},
+        "daInterviewUrl": url_for('index', i=i),
+        "daLocationBar": url_for('index', i=i),
+        "daPostURL": url_for('index', i=i),
+        "daYamlFilename": i,
+        "daMessageLog": [],
+        "daGetVariablesUrl": url_for('get_variables', i=i),
+        "daChatRoles": None,
+        "daChatPartnerRoles": None,
+        "daShouldForceFullScreen": False,
+        "daPageSep": "#page",
+        "daCheckinUrl": url_for('checkin', i=i),
+        "daCheckoutUrl": url_for('checkout', i=i),
+        "daShouldDebugReadabilityHelp": False,
+        "daShouldDebugReadabilityQuestion": False,
+        "daDefaultPopoverTrigger": 'focus',
+        "daCheckinUrlWithInterview": url_for('checkin', i=i),
+        "daReloadAfterSeconds": 0,
+        "daCustomItems": [],
+        "daTrackingEnabled": False,
+        "daInitialExtraScripts": obj['extra_scripts'],
+        "daQuestionData": None,
+        "daAutoColorScheme": False,
+        "daObserverMode": True
+    })
     page_title = word('Observation')
+    scripts = "\n    " + standard_scripts(interview_language=obj.get('lang', 'en'))
+    if 'javascript' in obj['external_files']:
+        for packageref, fileref in obj['external_files']:
+            the_url = get_url_from_file_reference(fileref, _package=packageref)
+            if the_url is not None:
+                scripts += "\n" + f'    <script{DEFER} src="{get_url_from_file_reference(fileref, _package=packageref)}"></script>'
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
-    output += obj.get('global_css', '') + "\n" + indent_by("".join(obj.get('extra_css', [])), 4)
+    if 'css' in obj['external_files']:
+        for packageref, fileref in obj['external_files']['css']:
+            the_url = get_url_from_file_reference(fileref, _package=packageref)
+            if the_url is not None:
+                output += "\n" + '    <link href="' + the_url + '" rel="stylesheet">'
+    output += global_css + "\n" + indent_by("".join(obj.get('extra_css', [])), 4)
     output += '\n    <title>' + page_title + '</title>\n  </head>\n  <body class="' + obj.get('bodyclass', 'dabody da-pad-for-navbar da-pad-for-footer') + '">\n  <div id="dabody">\n  '
     output += obj.get('body', '')
-    output += "    </div>\n    </div>" + standard_scripts(interview_language=obj.get('lang', 'en')) + observation_script + "\n    " + "".join(obj.get('extra_scripts', [])) + "\n  </body>\n</html>"
+    output += f"""    </div>
+    </div>{scripts}
+    {redis_script(initial_values)}
+    {global_js}
+  </body>
+</html>"""
     response = make_response(output.encode('utf-8'), '200 OK')
     response.headers['Content-type'] = 'text/html; charset=utf-8'
     return response
@@ -15993,1107 +10306,47 @@ def monitor():
         forwarding_phone_number = twilio_config['name']['default'].get('number', None)
         if forwarding_phone_number is not None:
             call_forwarding_on = 'true'
-    script = "\n" + '    <script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js', v=da_version) + '"></script>' + "\n" + """    <script type="text/javascript">
-      var daAudioContext = null;
-      var daSocket;
-      var daSoundBuffer = Object();
-      var daShowingNotif = false;
-      var daUpdatedSessions = Object();
-      var daUserid = """ + str(current_user.id) + """;
-      var daPhoneOnMessage = """ + json.dumps(word("The user can call you.  Click to cancel.")) + """;
-      var daPhoneOffMessage = """ + json.dumps(word("Click if you want the user to be able to call you.")) + """;
-      var daSessions = Object();
-      var daAvailRoles = Object();
-      var daChatPartners = Object();
-      var daPhonePartners = Object();
-      var daNewPhonePartners = Object();
-      var daTermPhonePartners = Object();
-      var daUsePhone = """ + call_forwarding_on + """;
-      var daSubscribedRoles = """ + json.dumps(subscribed_roles) + """;
-      var daAvailableForChat = """ + daAvailableForChat + """;
-      var daPhoneNumber = """ + json.dumps(default_phone_number) + """;
-      var daFirstTime = 1;
-      var daUpdateMonitorInterval = null;
-      var daNotificationsEnabled = false;
-      var daControlling = Object();
-      var daBrowserTitle = """ + json.dumps(word('Monitor')) + """;
-      window.daGotConfirmation = function(key){
-          //console.log("Got confirmation in parent for key " + key);
-          // daControlling[key] = 2;
-          // var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          // $("#listelement" + skey).find("a").each(function(){
-          //     if ($(this).data('name') == "stopcontrolling"){
-          //         $(this).removeClass('dainvisible');
-          //         console.log("Found it");
-          //     }
-          // });
+    initial_values = {
+        "daUserid": str(current_user.id),
+        "daPhoneOnMessage": word("The user can call you.  Click to cancel."),
+        "daPhoneOffMessage": word("Click if you want the user to be able to call you."),
+        "daUsePhone": call_forwarding_on,
+        "daSubscribedRoles": subscribed_roles,
+        "daAvailableForChat": daAvailableForChat,
+        "daPhoneNumber": default_phone_number,
+        "daBrowserTitle": word('Monitor'),
+        "daFaviconIcoUrl": url_for('favicon', nocache="1"),
+        "daChatIcoUrl": url_for('static', filename='app/chat.ico', v=da_version, nocache=1),
+        "daAlreadyControlled": word("That screen is already being controlled by another operator"),
+        "daNewMessageBelow": word("New message below"),
+        "daNewConversationBelow": word("New conversation below"),
+        "daNewMessageAbove": word("New message above"),
+        "daNewConversationAbove": word("New conversation above"),
+        "daCheckinInterval": str(CHECKIN_INTERVAL),
+        "daOfflineWord": word("offline"),
+        "daAnonymousVisitor": word("anonymous visitor"),
+        "daUnblockWord": word("Unblock"),
+        "daBlockWord": word("Block"),
+        "daJoinWord": word("Join"),
+        "daVisitInterviewUrl": url_for('visit_interview'),
+        "daObserverUrl": url_for('observer'),
+        "daObserveWord": word("Observe"),
+        "daStopObservingWord": word("Stop Observing"),
+        "daControlWord": word("Control"),
+        "daStopControllingWord": word("Stop Controlling"),
+        "daNotificationClickOnMp3": url_for('static', filename='sounds/notification-click-on.mp3', v=da_version),
+        "daNotificationClickOnOgg": url_for('static', filename='sounds/notification-click-on.ogg', v=da_version),
+        "daNotificationStaplerMp3": url_for('static', filename='sounds/notification-stapler.mp3', v=da_version),
+        "daNotificationStaplerOgg": url_for('static', filename='sounds/notification-stapler.ogg', v=da_version),
+        "daNotificationSnapMp3": url_for('static', filename='sounds/notification-snap.mp3', v=da_version),
+        "daNotificationSnapOgg": url_for('static', filename='sounds/notification-snap.ogg', v=da_version),
+        "daRootUrl": ROOT,
+        "daNewChatConnection": word("New chat connection from"),
+        "daSendWord": word("Send")
       }
-      function daFaviconRegular(){
-        var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
-        link.type = 'image/x-icon';
-        link.rel = 'shortcut icon';
-        link.href = '""" + url_for('favicon', nocache="1") + """';
-        document.getElementsByTagName('head')[0].appendChild(link);
-      }
-      function daFaviconAlert(){
-        var link = document.querySelector("link[rel*='shortcut icon'") || document.createElement('link');
-        link.type = 'image/x-icon';
-        link.rel = 'shortcut icon';
-        link.href = '""" + url_for('static', filename='app/chat.ico', v=da_version) + """?nocache=1';
-        document.getElementsByTagName('head')[0].appendChild(link);
-      }
-      function daTopMessage(message){
-          var newDiv = document.createElement('div');
-          $(newDiv).addClass("datop-alert col-xs-10 col-sm-7 col-md-6 col-lg-5 dacol-centered");
-          $(newDiv).html(message)
-          $(newDiv).css("display", "none");
-          $(newDiv).appendTo($(daTargetDiv));
-          $(newDiv).slideDown();
-          setTimeout(function(){
-            $(newDiv).slideUp(300, function(){
-              $(newDiv).remove();
-            });
-          }, 2000);
-      }
-      window.daAbortControlling = function(key){
-          daTopMessage(""" + json.dumps(word("That screen is already being controlled by another operator")) + """);
-          daStopControlling(key);
-      }
-      window.daStopControlling = function(key){
-          //console.log("Got daStopControlling in parent for key " + key);
-          // if (daControlling.hasOwnProperty(key)){
-          //   delete daControlling[key];
-          // }
-          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          $("#listelement" + skey).find("a").each(function(){
-              if ($(this).data('name') == "stopcontrolling"){
-                  $(this).click();
-                  //console.log("Found it");
-              }
-          });
-      }
-      function daOnError(){
-          console.log('daOnError');
-      }
-      function daLoadSoundBuffer(key, url_a, url_b){
-          //console.log("daLoadSoundBuffer");
-          var pos = 0;
-          if (daAudioContext == null){
-              return;
-          }
-          var request = new XMLHttpRequest();
-          request.open('GET', url_a, true);
-          request.responseType = 'arraybuffer';
-          request.onload = function(){
-              daAudioContext.decodeAudioData(request.response, function(buffer){
-                  if (!buffer){
-                      if (pos == 1){
-                          console.error('daLoadSoundBuffer: error decoding file data');
-                          return;
-                      }
-                      else {
-                          pos = 1;
-                          console.info('daLoadSoundBuffer: error decoding file data, trying next source');
-                          request.open("GET", url_b, true);
-                          return request.send();
-                      }
-                  }
-                  daSoundBuffer[key] = buffer;
-              },
-              function(error){
-                  if (pos == 1){
-                      console.error('daLoadSoundBuffer: decodeAudioData error');
-                      return;
-                  }
-                  else{
-                      pos = 1;
-                      console.info('daLoadSoundBuffer: decodeAudioData error, trying next source');
-                      request.open("GET", url_b, true);
-                      return request.send();
-                  }
-              });
-          }
-          request.send();
-      }
-      function daPlaySound(key) {
-          //console.log("daPlaySound");
-          var buffer = daSoundBuffer[key];
-          if (!daAudioContext || !buffer){
-              return;
-          }
-          var source = daAudioContext.createBufferSource();
-          source.buffer = buffer;
-          source.connect(daAudioContext.destination);
-          source.start(0);
-      }
-      function daCheckNotifications(){
-          //console.log("daCheckNotifications");
-          if (daNotificationsEnabled){
-              return;
-          }
-          if (!("Notification" in window)) {
-              daNotificationsEnabled = false;
-              return;
-          }
-          if (Notification.permission === "granted") {
-              daNotificationsEnabled = true;
-              return;
-          }
-          if (Notification.permission !== 'denied') {
-              Notification.requestPermission(function (permission) {
-                  if (permission === "granted") {
-                      daNotificationsEnabled = true;
-                  }
-              });
-          }
-      }
-      function daNotifyOperator(key, mode, message) {
-          //console.log("daNotifyOperator: " + key + " " + mode + " " + message);
-          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          if (mode == "chat"){
-            daPlaySound('newmessage');
-          }
-          else{
-            daPlaySound('newconversation');
-          }
-          if ($("#listelement" + skey).offset().top > $(window).scrollTop() + $(window).height()){
-            if (mode == "chat"){
-              $("#chat-message-below").html(""" + json.dumps(word("New message below")) + """);
-            }
-            else{
-              $("#chat-message-below").html(""" + json.dumps(word("New conversation below")) + """);
-            }
-            //$("#chat-message-below").data('key', key);
-            $("#chat-message-below").slideDown();
-            daShowingNotif = true;
-            daMarkAsUpdated(key);
-          }
-          else if ($("#listelement" + skey).offset().top + $("#listelement" + skey).height() < $(window).scrollTop() + 32){
-            if (mode == "chat"){
-              $("#chat-message-above").html(""" + json.dumps(word("New message above")) + """);
-            }
-            else{
-              $("#chat-message-above").html(""" + json.dumps(word("New conversation above")) + """);
-            }
-            //$("#chat-message-above").data('key', key);
-            $("#chat-message-above").slideDown();
-            daShowingNotif = true;
-            daMarkAsUpdated(key);
-          }
-          else{
-            //console.log("It is visible");
-          }
-          if (!daNotificationsEnabled){
-              //console.log("Browser will not enable notifications")
-              return;
-          }
-          if (!("Notification" in window)) {
-              return;
-          }
-          if (Notification.permission === "granted") {
-              var notification = new Notification(message);
-          }
-          else if (Notification.permission !== 'denied') {
-              Notification.requestPermission(function (permission) {
-                  if (permission === "granted") {
-                      var notification = new Notification(message);
-                      daNotificationsEnabled = true;
-                  }
-              });
-          }
-      }
-      function daPhoneNumberOk(){
-          //console.log("daPhoneNumberOk");
-          var phoneNumber = $("#daPhoneNumber").val();
-          if (phoneNumber == '' || phoneNumber.match(/^\+?[1-9]\d{1,14}$/)){
-              return true;
-          }
-          else{
-              return false;
-          }
-      }
-      function daCheckPhone(){
-          //console.log("daCheckPhone");
-          $("#daPhoneNumber").val($("#daPhoneNumber").val().replace(/ \-/g, ''));
-          var the_number = $("#daPhoneNumber").val();
-          if (the_number != '' && the_number[0] != '+'){
-              $("#daPhoneNumber").val('+' + the_number);
-          }
-          if (daPhoneNumberOk()){
-              $("#daPhoneNumber").removeClass("is-invalid");
-              $("#daPhoneError").addClass("dainvisible");
-              daPhoneNumber = $("#daPhoneNumber").val();
-              if (daPhoneNumber == ''){
-                  daPhoneNumber = null;
-              }
-              else{
-                  $(".phone").removeClass("dainvisible");
-              }
-              $("#daPhoneSaved").removeClass("dainvisible");
-              setTimeout(function(){
-                  $("#daPhoneSaved").addClass("dainvisible");
-              }, 2000);
-          }
-          else{
-              $("#daPhoneNumber").addClass("is-invalid");
-              $("#daPhoneError").removeClass("dainvisible");
-              daPhoneNumber = null;
-              $(".phone").addClass("dainvisible");
-          }
-      }
-      function daAllSessions(uid, yaml_filename){
-          //console.log("daAllSessions");
-          var prefix = 'da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:';
-          var output = Array();
-          for (var key in daSessions){
-              if (daSessions.hasOwnProperty(key) && key.indexOf(prefix) == 0){
-                  output.push(key);
-              }
-          }
-          return(output);
-      }
-      function daScrollChat(key){
-          var chatScroller = $(key).find('ul').first();
-          if (chatScroller.length){
-              var height = chatScroller[0].scrollHeight;
-              chatScroller.animate({scrollTop: height}, 800);
-          }
-          else{
-              console.log("daScrollChat: error")
-          }
-      }
-      function daScrollChatFast(key){
-          var chatScroller = $(key).find('ul').first();
-          if (chatScroller.length){
-            var height = chatScroller[0].scrollHeight;
-              //console.log("Scrolling to " + height + " where there are " + chatScroller[0].childElementCount + " children");
-              chatScroller.scrollTop(height);
-            }
-          else{
-              console.log("daScrollChatFast: error")
-          }
-      }
-      function daDoUpdateMonitor(){
-          //console.log("daDoUpdateMonitor with " + daAvailableForChat);
-          if (daPhoneNumberOk()){
-            daPhoneNumber = $("#daPhoneNumber").val();
-            if (daPhoneNumber == ''){
-              daPhoneNumber = null;
-            }
-          }
-          else{
-            daPhoneNumber = null;
-          }
-          daSocket.emit('updatemonitor', {available_for_chat: daAvailableForChat, phone_number: daPhoneNumber, subscribed_roles: daSubscribedRoles, phone_partners_to_add: daNewPhonePartners, phone_partners_to_terminate: daTermPhonePartners});
-      }
-      function daUpdateMonitor(){
-          //console.log("daUpdateMonitor with " + daAvailableForChat);
-          if (daUpdateMonitorInterval != null){
-              clearInterval(daUpdateMonitorInterval);
-          }
-          daDoUpdateMonitor();
-          daUpdateMonitorInterval = setInterval(daDoUpdateMonitor, """ + str(CHECKIN_INTERVAL) + """);
-          //console.log("daUpdateMonitor");
-      }
-      function daIsHidden(ref){
-          if ($(ref).length){
-              if (($(ref).offset().top + $(ref).height() < $(window).scrollTop() + 32)){
-                  return -1;
-              }
-              else if ($(ref).offset().top > $(window).scrollTop() + $(window).height()){
-                  return 1;
-              }
-              else{
-                  return 0;
-              }
-          }
-          else{
-              return 0;
-          }
-      }
-      function daMarkAsUpdated(key){
-          //console.log("daMarkAsUpdated with " + key);
-          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          if (daIsHidden("#listelement" + skey)){
-              daUpdatedSessions["#listelement" + skey] = 1;
-          }
-      }
-      function daActivateChatArea(key){
-          //console.log("daActivateChatArea with " + key);
-          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          if (!$("#chatarea" + skey).find('input').first().is(':focus')){
-            $("#listelement" + skey).addClass("da-new-message");
-            if (daBrowserTitle == document.title){
-              document.title = '* ' + daBrowserTitle;
-              daFaviconAlert();
-            }
-          }
-          daMarkAsUpdated(key);
-          $("#chatarea" + skey).removeClass('dainvisible');
-          $("#chatarea" + skey).find('input, button').prop("disabled", false);
-          $("#chatarea" + skey).find('ul').html('');
-          daSocket.emit('chat_log', {key: key});
-      }
-      function daDeActivateChatArea(key){
-          //console.log("daActivateChatArea with " + key);
-          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          $("#chatarea" + skey).find('input, button').prop("disabled", true);
-          $("#listelement" + skey).removeClass("da-new-message");
-          if (document.title != daBrowserTitle){
-              document.title = daBrowserTitle;
-              daFaviconRegular();
-          }
-      }
-      function daUndrawSession(key){
-          //console.log("Undrawing...");
-          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          var xButton = document.createElement('a');
-          var xButtonIcon = document.createElement('i');
-          $(xButton).addClass("dacorner-remove");
-          $(xButtonIcon).addClass("fa-solid fa-times-circle");
-          $(xButtonIcon).appendTo($(xButton));
-          $("#listelement" + skey).addClass("list-group-item-danger");
-          $("#session" + skey).find("a").remove();
-          $("#session" + skey).find("span").first().html(""" + json.dumps(word("offline")) + """);
-          $("#session" + skey).find("span").first().removeClass('""" + app.config['BUTTON_STYLE'] + """info');
-          $("#session" + skey).find("span").first().addClass('""" + app.config['BUTTON_STYLE'] + """danger');
-          $(xButton).click(function(){
-              $("#listelement" + skey).slideUp(300, function(){
-                  $("#listelement" + skey).remove();
-                  daCheckIfEmpty();
-              });
-          });
-          $(xButton).appendTo($("#session" + skey));
-          $("#chatarea" + skey).find('input, button').prop("disabled", true);
-          var theIframe = $("#iframe" + skey).find('iframe')[0];
-          if (theIframe){
-              $(theIframe).contents().find('body').addClass("dainactive");
-              if (theIframe.contentWindow && theIframe.contentWindow.daTurnOffControl){
-                  theIframe.contentWindow.daTurnOffControl();
-              }
-          }
-          if (daControlling.hasOwnProperty(key)){
-              delete daControlling[key];
-          }
-          delete daSessions[key];
-      }
-      function daPublishChatLog(uid, yaml_filename, userid, mode, messages, scroll){
-          //console.log("daPublishChatLog with " + uid + " " + yaml_filename + " " + userid + " " + mode + " " + messages);
-          //console.log("daPublishChatLog: scroll is " + scroll);
-          var keys;
-          //if (mode == 'peer' || mode == 'peerhelp'){
-          //    keys = daAllSessions(uid, yaml_filename);
-          //}
-          //else{
-              keys = ['da:session:uid:' + uid + ':i:' + yaml_filename + ':userid:' + userid];
-          //}
-          for (var i = 0; i < keys.length; ++i){
-              key = keys[i];
-              var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-              var chatArea = $("#chatarea" + skey).find('ul').first();
-              if (messages.length > 0){
-                $(chatArea).removeClass('dainvisible');
-              }
-              for (var i = 0; i < messages.length; ++i){
-                  var message = messages[i];
-                  var newLi = document.createElement('li');
-                  $(newLi).addClass("list-group-item");
-                  if (message.is_self){
-                      $(newLi).addClass("list-group-item-primary dalistright");
-                  }
-                  else{
-                      $(newLi).addClass("list-group-item-secondary dalistleft");
-                  }
-                  $(newLi).html(message.message);
-                  $(newLi).appendTo(chatArea);
-              }
-              if (messages.length > 0 && scroll){
-                  daScrollChatFast("#chatarea" + skey);
-              }
-          }
-      }
-      function daCheckIfEmpty(){
-          if ($("#monitorsessions").find("li").length > 0){
-              $("#emptylist").addClass("dainvisible");
-          }
-          else{
-              $("#emptylist").removeClass("dainvisible");
-          }
-      }
-      function daDrawSession(key, obj){
-          //console.log("daDrawSession with " + key);
-          var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-          var the_html;
-          var wants_to_chat;
-          if (obj.chatstatus != 'off'){
-              wants_to_chat = true;
-          }
-          if (wants_to_chat){
-              the_html = obj.browser_title + ' &mdash; '
-              if (obj.hasOwnProperty('first_name')){
-                the_html += obj.first_name + ' ' + obj.last_name;
-              }
-              else{
-                the_html += """ + json.dumps(word("anonymous visitor") + ' ') + """ + obj.temp_user_id;
-              }
-          }
-          var theListElement;
-          var sessionDiv;
-          var theIframeContainer;
-          var theChatArea;
-          if ($("#session" + skey).length && !(key in daSessions)){
-              $("#listelement" + skey).removeClass("list-group-item-danger");
-              $("#iframe" + skey).find('iframe').first().contents().find('body').removeClass("dainactive");
-          }
-          daSessions[key] = 1;
-          if ($("#session" + skey).length){
-              theListElement = $("#listelement" + skey).first();
-              sessionDiv = $("#session" + skey).first();
-              //controlDiv = $("#control" + skey).first();
-              theIframeContainer = $("#iframe" + skey).first();
-              theChatArea = $("#chatarea" + skey).first();
-              $(sessionDiv).empty();
-              if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).find('button').first().prop("disabled") == true){
-                  daActivateChatArea(key);
-              }
-          }
-          else{
-              var theListElement = document.createElement('li');
-              $(theListElement).addClass('list-group-item');
-              $(theListElement).attr('id', "listelement" + key);
-              var sessionDiv = document.createElement('div');
-              $(sessionDiv).attr('id', "session" + key);
-              $(sessionDiv).addClass('da-chat-session');
-              $(sessionDiv).addClass('p-1');
-              $(sessionDiv).appendTo($(theListElement));
-              $(theListElement).appendTo("#monitorsessions");
-              // controlDiv = document.createElement('div');
-              // $(controlDiv).attr('id', "control" + key);
-              // $(controlDiv).addClass("dachatcontrol dainvisible da-chat-session");
-              // $(controlDiv).appendTo($(theListElement));
-              theIframeContainer = document.createElement('div');
-              $(theIframeContainer).addClass("daobserver-container dainvisible");
-              $(theIframeContainer).attr('id', 'iframe' + key);
-              var theIframe = document.createElement('iframe');
-              $(theIframe).addClass("daobserver");
-              $(theIframe).attr('name', 'iframe' + key);
-              $(theIframe).appendTo($(theIframeContainer));
-              $(theIframeContainer).appendTo($(theListElement));
-              var theChatArea = document.createElement('div');
-              $(theChatArea).addClass('monitor-chat-area dainvisible');
-              $(theChatArea).html('<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"><\/ul><\/div><\/div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><button role="button" class="btn """ + app.config['BUTTON_STYLE'] + """secondary daChatButton" type="button" disabled="">""" + word("Send") + """<\/button><\/div><\/div><\/div><\/form>');
-              $(theChatArea).attr('id', 'chatarea' + key);
-              var submitter = function(){
-                  //console.log("I am the submitter and I am submitting " + key);
-                  var input = $(theChatArea).find("input").first();
-                  var message = input.val().trim();
-                  if (message == null || message == ""){
-                      //console.log("Message was blank");
-                      return false;
-                  }
-                  daSocket.emit('chatmessage', {key: key, data: input.val()});
-                  input.val('');
-                  return false;
-              };
-              $(theChatArea).find("button").click(submitter);
-              $(theChatArea).find("input").bind('keypress keydown keyup', function(e){
-                  var theCode = e.which || e.keyCode;
-                  if(theCode == 13) { submitter(); e.preventDefault(); }
-              });
-              $(theChatArea).find("input").focus(function(){
-                  $(theListElement).removeClass("da-new-message");
-                  if (document.title != daBrowserTitle){
-                      document.title = daBrowserTitle;
-                      daFaviconRegular();
-                  }
-              });
-              $(theChatArea).appendTo($(theListElement));
-              if (obj.chatstatus == 'on' && key in daChatPartners){
-                  daActivateChatArea(key);
-              }
-          }
-          var theText = document.createElement('span');
-          $(theText).addClass('da-chat-title-label');
-          theText.innerHTML = the_html;
-          var statusLabel = document.createElement('span');
-          $(statusLabel).addClass("badge bg-info da-chat-status-label");
-          $(statusLabel).html(obj.chatstatus == 'observeonly' ? 'off' : obj.chatstatus);
-          $(statusLabel).appendTo($(sessionDiv));
-          if (daUsePhone){
-            var phoneButton = document.createElement('a');
-            var phoneIcon = document.createElement('i');
-            $(phoneIcon).addClass("fa-solid fa-phone");
-            $(phoneIcon).appendTo($(phoneButton));
-            $(phoneButton).addClass("btn phone");
-            $(phoneButton).data('name', 'phone');
-            if (key in daPhonePartners){
-              $(phoneButton).addClass("phone-on """ + app.config['BUTTON_STYLE'] + """success");
-              $(phoneButton).attr('title', daPhoneOnMessage);
-            }
-            else{
-              $(phoneButton).addClass("phone-off """ + app.config['BUTTON_STYLE'] + """secondary");
-              $(phoneButton).attr('title', daPhoneOffMessage);
-            }
-            $(phoneButton).attr('tabindex', 0);
-            $(phoneButton).addClass('daobservebutton')
-            $(phoneButton).appendTo($(sessionDiv));
-            $(phoneButton).attr('href', '#');
-            if (daPhoneNumber == null){
-              $(phoneButton).addClass("dainvisible");
-            }
-            $(phoneButton).click(function(e){
-              e.preventDefault();
-              if ($(this).hasClass("phone-off") && daPhoneNumber != null){
-                $(this).removeClass("phone-off");
-                $(this).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """secondary");
-                $(this).addClass("phone-on");
-                $(this).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """success");
-                $(this).attr('title', daPhoneOnMessage);
-                daPhonePartners[key] = 1;
-                daNewPhonePartners[key] = 1;
-                if (key in daTermPhonePartners){
-                  delete daTermPhonePartners[key];
-                }
-              }
-              else{
-                $(this).removeClass("phone-on");
-                $(this).removeClass(""" + '"' + app.config['BUTTON_STYLE'] + """success");
-                $(this).addClass("phone-off");
-                $(this).addClass(""" + '"' + app.config['BUTTON_STYLE'] + """secondary");
-                $(this).attr('title', daPhoneOffMessage);
-                if (key in daPhonePartners){
-                  delete daPhonePartners[key];
-                }
-                if (key in daNewPhonePartners){
-                  delete daNewPhonePartners[key];
-                }
-                daTermPhonePartners[key] = 1;
-              }
-              daUpdateMonitor();
-              return false;
-            });
-          }
-          var unblockButton = document.createElement('a');
-          $(unblockButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """info daobservebutton");
-          $(unblockButton).data('name', 'unblock');
-          if (!obj.blocked){
-              $(unblockButton).addClass("dainvisible");
-          }
-          $(unblockButton).html(""" + json.dumps(word("Unblock")) + """);
-          $(unblockButton).attr('href', '#');
-          $(unblockButton).appendTo($(sessionDiv));
-          var blockButton = document.createElement('a');
-          $(blockButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """danger daobservebutton");
-          if (obj.blocked){
-              $(blockButton).addClass("dainvisible");
-          }
-          $(blockButton).html(""" + json.dumps(word("Block")) + """);
-          $(blockButton).attr('href', '#');
-          $(blockButton).data('name', 'block');
-          $(blockButton).appendTo($(sessionDiv));
-          $(blockButton).click(function(e){
-              $(unblockButton).removeClass("dainvisible");
-              $(this).addClass("dainvisible");
-              daDeActivateChatArea(key);
-              daSocket.emit('block', {key: key});
-              e.preventDefault();
-              return false;
-          });
-          $(unblockButton).click(function(e){
-              $(blockButton).removeClass("dainvisible");
-              $(this).addClass("dainvisible");
-              daSocket.emit('unblock', {key: key});
-              e.preventDefault();
-              return false;
-          });
-          var joinButton = document.createElement('a');
-          $(joinButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """warning daobservebutton");
-          $(joinButton).html(""" + json.dumps(word("Join")) + """);
-          $(joinButton).attr('href', """ + json.dumps(url_for('visit_interview') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
-          $(joinButton).data('name', 'join');
-          $(joinButton).attr('target', '_blank');
-          $(joinButton).appendTo($(sessionDiv));
-          if (wants_to_chat){
-              var openButton = document.createElement('a');
-              $(openButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """primary daobservebutton");
-              $(openButton).attr('href', """ + json.dumps(url_for('observer') + '?') + """ + $.param({i: obj.i, uid: obj.uid, userid: obj.userid}));
-              //$(openButton).attr('href', 'about:blank');
-              $(openButton).attr('id', 'observe' + key);
-              $(openButton).attr('target', 'iframe' + key);
-              $(openButton).html(""" + json.dumps(word("Observe")) + """);
-              $(openButton).data('name', 'open');
-              $(openButton).appendTo($(sessionDiv));
-              var stopObservingButton = document.createElement('a');
-              $(stopObservingButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """secondary daobservebutton dainvisible");
-              $(stopObservingButton).html(""" + json.dumps(word("Stop Observing")) + """);
-              $(stopObservingButton).attr('href', '#');
-              $(stopObservingButton).data('name', 'stopObserving');
-              $(stopObservingButton).appendTo($(sessionDiv));
-              var controlButton = document.createElement('a');
-              $(controlButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """info daobservebutton");
-              $(controlButton).html(""" + json.dumps(word("Control")) + """);
-              $(controlButton).attr('href', '#');
-              $(controlButton).data('name', 'control');
-              $(controlButton).appendTo($(sessionDiv));
-              var stopControllingButton = document.createElement('a');
-              $(stopControllingButton).addClass("btn """ + app.config['BUTTON_STYLE'] + """secondary daobservebutton dainvisible");
-              $(stopControllingButton).html(""" + json.dumps(word("Stop Controlling")) + """);
-              $(stopControllingButton).attr('href', '#');
-              $(stopControllingButton).data('name', 'stopcontrolling');
-              $(stopControllingButton).appendTo($(sessionDiv));
-              $(controlButton).click(function(event){
-                  event.preventDefault();
-                  //console.log("Controlling...");
-                  $(this).addClass("dainvisible");
-                  $(stopControllingButton).removeClass("dainvisible");
-                  $(stopObservingButton).addClass("dainvisible");
-                  var theIframe = $("#iframe" + skey).find('iframe')[0];
-                  if (theIframe != null && theIframe.contentWindow){
-                      theIframe.contentWindow.daTurnOnControl();
-                  }
-                  else{
-                      console.log("Cannot turn on control");
-                  }
-                  daControlling[key] = 1;
-                  return false;
-              });
-              $(stopControllingButton).click(function(event){
-                  //console.log("Got click on stopControllingButton");
-                  event.preventDefault();
-                  var theIframe = $("#iframe" + skey).find('iframe')[0];
-                  if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.daTurnOffControl){
-                      theIframe.contentWindow.daTurnOffControl();
-                  }
-                  else{
-                      console.log("Cannot turn off control");
-                      return false;
-                  }
-                  //console.log("Stop controlling...");
-                  $(this).addClass("dainvisible");
-                  $(controlButton).removeClass("dainvisible");
-                  $(stopObservingButton).removeClass("dainvisible");
-                  if (daControlling.hasOwnProperty(key)){
-                      delete daControlling[key];
-                  }
-                  return false;
-              });
-              $(openButton).click(function(event){
-                  //console.log("Observing..");
-                  $(this).addClass("dainvisible");
-                  $(stopObservingButton).removeClass("dainvisible");
-                  $("#iframe" + skey).removeClass("dainvisible");
-                  $(controlButton).removeClass("dainvisible");
-                  return true;
-              });
-              $(stopObservingButton).click(function(e){
-                  //console.log("Unobserving...");
-                  $(this).addClass("dainvisible");
-                  $(openButton).removeClass("dainvisible");
-                  $(controlButton).addClass("dainvisible");
-                  $(stopObservingButton).addClass("dainvisible");
-                  $(stopControllingButton).addClass("dainvisible");
-                  var theIframe = $("#iframe" + skey).find('iframe')[0];
-                  if (daControlling.hasOwnProperty(key)){
-                      delete daControlling[key];
-                      if (theIframe != null && theIframe.contentWindow && theIframe.contentWindow.daTurnOffControl){
-                          //console.log("Calling daTurnOffControl in iframe");
-                          theIframe.contentWindow.daTurnOffControl();
-                      }
-                  }
-                  if (theIframe != null && theIframe.contentWindow){
-                      //console.log("Deleting the iframe");
-                      theIframe.contentWindow.document.open();
-                      theIframe.contentWindow.document.write("");
-                      theIframe.contentWindow.document.close();
-                  }
-                  $("#iframe" + skey).slideUp(400, function(){
-                      $(this).css("display", "").addClass("dainvisible");
-                  });
-                  e.preventDefault();
-                  return false;
-              });
-              if ($(theIframeContainer).hasClass("dainvisible")){
-                  $(openButton).removeClass("dainvisible");
-                  $(stopObservingButton).addClass("dainvisible");
-                  $(controlButton).addClass("dainvisible");
-                  $(stopControllingButton).addClass("dainvisible");
-                  if (daControlling.hasOwnProperty(key)){
-                      delete daControlling[key];
-                  }
-              }
-              else{
-                  $(openButton).addClass("dainvisible");
-                  if (daControlling.hasOwnProperty(key)){
-                      $(stopObservingButton).addClass("dainvisible");
-                      $(controlButton).addClass("dainvisible");
-                      $(stopControllingButton).removeClass("dainvisible");
-                  }
-                  else{
-                      $(stopObservingButton).removeClass("dainvisible");
-                      $(controlButton).removeClass("dainvisible");
-                      $(stopControllingButton).addClass("dainvisible");
-                  }
-              }
-          }
-          $(theText).appendTo($(sessionDiv));
-          if (obj.chatstatus == 'on' && key in daChatPartners && $("#chatarea" + skey).hasClass('dainvisible')){
-              daActivateChatArea(key);
-          }
-          if ((obj.chatstatus != 'on' || !(key in daChatPartners)) && $("#chatarea" + skey).find('button').first().prop("disabled") == false){
-              daDeActivateChatArea(key);
-          }
-          else if (obj.blocked){
-              daDeActivateChatArea(key);
-          }
-      }
-      function daOnScrollResize(){
-          if (document.title != daBrowserTitle){
-              document.title = daBrowserTitle;
-              daFaviconRegular();
-          }
-          if (!daShowingNotif){
-              return true;
-          }
-          var obj = Array();
-          for (var key in daUpdatedSessions){
-              if (daUpdatedSessions.hasOwnProperty(key)){
-                  obj.push(key);
-              }
-          }
-          var somethingAbove = false;
-          var somethingBelow = false;
-          var firstElement = -1;
-          var lastElement = -1;
-          for (var i = 0; i < obj.length; ++i){
-              var result = daIsHidden(obj[i]);
-              if (result == 0){
-                  delete daUpdatedSessions[obj[i]];
-              }
-              else if (result < 0){
-                  var top = $(obj[i]).offset().top;
-                  somethingAbove = true;
-                  if (firstElement == -1 || top < firstElement){
-                      firstElement = top;
-                  }
-              }
-              else if (result > 0){
-                  var top = $(obj[i]).offset().top;
-                  somethingBelow = true;
-                  if (lastElement == -1 || top > lastElement){
-                      lastElement = top;
-                  }
-              }
-          }
-          if (($("#chat-message-above").is(":visible")) && !somethingAbove){
-              $("#chat-message-above").hide();
-          }
-          if (($("#chat-message-below").is(":visible")) && !somethingBelow){
-              $("#chat-message-below").hide();
-          }
-          if (!(somethingAbove || somethingBelow)){
-              daShowingNotif = false;
-          }
-          return true;
-      }
-      $(document).ready(function(){
-          //console.log("document ready");
-          try {
-              window.AudioContext = window.AudioContext || window.webkitAudioContext;
-              daAudioContext = new AudioContext();
-          }
-          catch(e) {
-              console.log('Web Audio API is not supported in this browser');
-          }
-          daLoadSoundBuffer('newmessage', '""" + url_for('static', filename='sounds/notification-click-on.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-click-on.ogg', v=da_version) + """');
-          daLoadSoundBuffer('newconversation', '""" + url_for('static', filename='sounds/notification-stapler.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-stapler.ogg', v=da_version) + """');
-          daLoadSoundBuffer('signinout', '""" + url_for('static', filename='sounds/notification-snap.mp3', v=da_version) + """', '""" + url_for('static', filename='sounds/notification-snap.ogg', v=da_version) + """');
-          if (location.protocol === 'http:' || document.location.protocol === 'http:'){
-              daSocket = io.connect('http://' + document.domain + '/monitor', {path: '""" + ROOT + """ws/socket.io'});
-          }
-          if (location.protocol === 'https:' || document.location.protocol === 'https:'){
-              daSocket = io.connect('https://' + document.domain + '/monitor', {path: '""" + ROOT + """ws/socket.io'});
-          }
-          //console.log("socket is " + daSocket)
-          if (typeof daSocket !== 'undefined') {
-              daSocket.on('connect', function() {
-                  //console.log("Connected!");
-                  daUpdateMonitor();
-              });
-              daSocket.on('terminate', function() {
-                  console.log("monitor: terminating socket");
-                  daSocket.disconnect();
-              });
-              daSocket.on('disconnect', function() {
-                  //console.log("monitor: disconnected socket");
-                  //daSocket = null;
-              });
-              daSocket.on('refreshsessions', function(data) {
-                  daUpdateMonitor();
-              });
-              // daSocket.on('abortcontroller', function(data) {
-              //     console.log("Got abortcontroller message for " + data.key);
-              // });
-              daSocket.on('chatready', function(data) {
-                  var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                  //console.log('chatready: ' + key);
-                  daActivateChatArea(key);
-                  daNotifyOperator(key, "chatready", """ + json.dumps(word("New chat connection from")) + """ + ' ' + data.name)
-              });
-              daSocket.on('chatstop', function(data) {
-                  var key = 'da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid
-                  //console.log('chatstop: ' + key);
-                  if (key in daChatPartners){
-                      delete daChatPartners[key];
-                  }
-                  daDeActivateChatArea(key);
-              });
-              daSocket.on('chat_log', function(arg) {
-                  //console.log('chat_log: ' + arg.userid);
-                  daPublishChatLog(arg.uid, arg.i, arg.userid, arg.mode, arg.data, arg.scroll);
-              });
-              daSocket.on('block', function(arg) {
-                  //console.log("back from blocking " + arg.key);
-                  daUpdateMonitor();
-              });
-              daSocket.on('unblock', function(arg) {
-                  //console.log("back from unblocking " + arg.key);
-                  daUpdateMonitor();
-              });
-              daSocket.on('chatmessage', function(data) {
-                  //console.log("chatmessage");
-                  var keys;
-                  if (data.data.mode == 'peer' || data.data.mode == 'peerhelp'){
-                    keys = daAllSessions(data.uid, data.i);
-                  }
-                  else{
-                    keys = ['da:session:uid:' + data.uid + ':i:' + data.i + ':userid:' + data.userid];
-                  }
-                  for (var i = 0; i < keys.length; ++i){
-                    key = keys[i];
-                    var skey = key.replace(/(:|\.|\[|\]|,|=|\/)/g, '\\\\$1');
-                    //console.log("Received chat message for #chatarea" + skey);
-                    var chatArea = $("#chatarea" + skey).find('ul').first();
-                    var newLi = document.createElement('li');
-                    $(newLi).addClass("list-group-item");
-                    if (data.data.is_self){
-                      $(newLi).addClass("list-group-item-primary dalistright");
-                    }
-                    else{
-                      $(newLi).addClass("list-group-item-secondary dalistleft");
-                    }
-                    $(newLi).html(data.data.message);
-                    $(newLi).appendTo(chatArea);
-                    daScrollChat("#chatarea" + skey);
-                    if (data.data.is_self){
-                      $("#listelement" + skey).removeClass("da-new-message");
-                      if (document.title != daBrowserTitle){
-                        document.title = daBrowserTitle;
-                        daFaviconRegular();
-                      }
-                    }
-                    else{
-                      if (!$("#chatarea" + skey).find('input').first().is(':focus')){
-                        $("#listelement" + skey).addClass("da-new-message");
-                        if (daBrowserTitle == document.title){
-                          document.title = '* ' + daBrowserTitle;
-                          daFaviconAlert();
-                        }
-                      }
-                      if (data.data.hasOwnProperty('temp_user_id')){
-                        daNotifyOperator(key, "chat", """ + json.dumps(word("anonymous visitor")) + """ + ' ' + data.data.temp_user_id + ': ' + data.data.message);
-                      }
-                      else{
-                        if (data.data.first_name && data.data.first_name != ''){
-                          daNotifyOperator(key, "chat", data.data.first_name + ' ' + data.data.last_name + ': ' + data.data.message);
-                        }
-                        else{
-                          daNotifyOperator(key, "chat", data.data.email + ': ' + data.data.message);
-                        }
-                      }
-                    }
-                  }
-              });
-              daSocket.on('sessionupdate', function(data) {
-                  //console.log("Got session update: " + data.session.chatstatus);
-                  daDrawSession(data.key, data.session);
-                  daCheckIfEmpty();
-              });
-              daSocket.on('updatemonitor', function(data) {
-                  //console.log("Got update monitor response");
-                  //console.log("updatemonitor: chat partners are: " + data.chatPartners);
-                  daChatPartners = data.chatPartners;
-                  daNewPhonePartners = Object();
-                  daTermPhonePartners = Object();
-                  daPhonePartners = data.phonePartners;
-                  var newSubscribedRoles = Object();
-                  for (var key in data.subscribedRoles){
-                      if (data.subscribedRoles.hasOwnProperty(key)){
-                          newSubscribedRoles[key] = 1;
-                      }
-                  }
-                  for (var i = 0; i < data.availRoles.length; ++i){
-                      var key = data.availRoles[i];
-                      var skey = key.replace(/(:|\.|\[|\]|,|=|\/| )/g, '\\\\$1');
-                      if ($("#role" + skey).length == 0){
-                          var div = document.createElement('div');
-                          $(div).addClass("form-check form-check-inline");
-                          var label = document.createElement('label');
-                          $(label).addClass('form-check-label');
-                          $(label).attr('for', "role" + key);
-                          var input = document.createElement('input');
-                          $(input).addClass('form-check-input');
-                          var text = document.createTextNode(key);
-                          $(input).attr('type', 'checkbox');
-                          $(input).attr('id', "role" + key);
-                          if (key in newSubscribedRoles){
-                              $(input).prop('checked', true);
-                          }
-                          else{
-                              $(input).prop('checked', false);
-                          }
-                          $(input).val(key);
-                          $(text).appendTo($(label));
-                          $(input).appendTo($(div));
-                          $(label).appendTo($(div));
-                          $(div).appendTo($("#monitorroles"));
-                          $(input).change(function(){
-                              var key = $(this).val();
-                              //console.log("change to " + key);
-                              if ($(this).is(":checked")) {
-                                  //console.log("it is checked");
-                                  daSubscribedRoles[key] = 1;
-                              }
-                              else{
-                                  //console.log("it is not checked");
-                                  if (key in daSubscribedRoles){
-                                      delete daSubscribedRoles[key];
-                                  }
-                              }
-                              daUpdateMonitor();
-                          });
-                      }
-                      else{
-                          var input = $("#role" + skey).first();
-                          if (key in newSubscribedRoles){
-                              $(input).prop('checked', true);
-                          }
-                          else{
-                              $(input).prop('checked', false);
-                          }
-                      }
-                  }
-                  daSubscribedRoles = newSubscribedRoles;
-                  newDaSessions = Object();
-                  for (var key in data.sessions){
-                      if (data.sessions.hasOwnProperty(key)){
-                          var user_id = key.replace(/^.*:userid:/, '');
-                          if (true || user_id != daUserid){
-                              var obj = data.sessions[key];
-                              newDaSessions[key] = obj;
-                              daDrawSession(key, obj);
-                          }
-                      }
-                  }
-                  var toDelete = Array();
-                  var numSessions = 0;
-                  for (var key in daSessions){
-                      if (daSessions.hasOwnProperty(key)){
-                          numSessions++;
-                          if (!(key in newDaSessions)){
-                              toDelete.push(key);
-                          }
-                      }
-                  }
-                  for (var i = 0; i < toDelete.length; ++i){
-                      var key = toDelete[i];
-                      daUndrawSession(key);
-                  }
-                  if ($("#monitorsessions").find("li").length > 0){
-                      $("#emptylist").addClass("dainvisible");
-                  }
-                  else{
-                      $("#emptylist").removeClass("dainvisible");
-                  }
-              });
-          }
-          if (daAvailableForChat){
-              $("#daNotAvailable").addClass("dainvisible");
-              daCheckNotifications();
-          }
-          else{
-              $("#daAvailable").addClass("dainvisible");
-          }
-          $("#daAvailable").click(function(event){
-              $("#daAvailable").addClass("dainvisible");
-              $("#daNotAvailable").removeClass("dainvisible");
-              daAvailableForChat = false;
-              //console.log("daAvailableForChat: " + daAvailableForChat);
-              daUpdateMonitor();
-              daPlaySound('signinout');
-          });
-          $("#daNotAvailable").click(function(event){
-              daCheckNotifications();
-              $("#daNotAvailable").addClass("dainvisible");
-              $("#daAvailable").removeClass("dainvisible");
-              daAvailableForChat = true;
-              //console.log("daAvailableForChat: " + daAvailableForChat);
-              daUpdateMonitor();
-              daPlaySound('signinout');
-          });
-          $( window ).bind('unload', function() {
-            if (typeof daSocket !== 'undefined'){
-              daSocket.emit('terminate');
-            }
-          });
-          if (daUsePhone){
-            $("#daPhoneInfo").removeClass("dainvisible");
-            $("#daPhoneNumber").val(daPhoneNumber);
-            $("#daPhoneNumber").change(daCheckPhone);
-            $("#daPhoneNumber").bind('keypress keydown keyup', function(e){
-              var theCode = e.which || e.keyCode;
-              if(theCode == 13) { $(this).blur(); e.preventDefault(); }
-            });
-          }
-          $(window).on('scroll', daOnScrollResize);
-          $(window).on('resize', daOnScrollResize);
-          $(".da-chat-notifier").click(function(e){
-              //var key = $(this).data('key');
-              var direction = 0;
-              if ($(this).attr('id') == "chat-message-above"){
-                  direction = -1;
-              }
-              else{
-                  direction = 1;
-              }
-              var target = -1;
-              var targetElement = null;
-              for (var key in daUpdatedSessions){
-                  if (daUpdatedSessions.hasOwnProperty(key)){
-                      var top = $(key).offset().top;
-                      if (direction == -1){
-                          if (target == -1 || top < target){
-                              target = top;
-                              targetElement = key;
-                          }
-                      }
-                      else{
-                          if (target == -1 || top > target){
-                              target = top;
-                              targetElement = key;
-                          }
-                      }
-                  }
-              }
-              if (target >= 0){
-                  $("html, body").animate({scrollTop: target - 60}, 500, function(){
-                      $(targetElement).find("input").first().focus();
-                  });
-              }
-              e.preventDefault();
-              return false;
-          });
-      });
-    </script>"""  # noqa: W605
+    script = f"""
+    <script{DEFER} src="{url_for('static', filename='app/monitorbundle.min.js', v=da_version)}"></script>
+    {redis_script(initial_values)}"""
     response = make_response(render_template('pages/monitor.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Monitor'), page_title=word('Monitor')), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -17108,118 +10361,19 @@ def update_package_wait():
         return ('File not found', 404)
     next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('update_package')))
     my_csrf = generate_csrf()
-    script = """
-    <script>
-      var daCheckinInterval = null;
-      var resultsAreIn = false;
-      var pollDelay = 0;
-      var pollFail = 0;
-      var pollPending = false;
-      function daRestartCallback(data){
-        //console.log("Restart result: " + data.success);
-      }
-      function daRestart(){
-        $.ajax({
-          type: 'POST',
-          url: """ + json.dumps(url_for('restart_ajax')) + """,
-          data: 'csrf_token=""" + my_csrf + """&action=restart',
-          success: daRestartCallback,
-          dataType: 'json'
-        });
-        return true;
-      }
-      function daBadCallback(data){
-        pollPending = false;
-        pollFail += 1;
-      }
-      function daUpdateCallback(data){
-        pollPending = false;
-        if (data.success){
-          if (data.status == 'finished'){
-            resultsAreIn = true;
-            if (data.ok){
-              $("#notification").html(""" + json.dumps(word("The package update did not report an error.  The logs are below.")) + """);
-              $("#notification").removeClass("alert-info");
-              $("#notification").removeClass("alert-danger");
-              $("#notification").addClass("alert-success");
-            }
-            else{
-              $("#notification").html(""" + json.dumps(word("The package update reported an error.  The logs are below.")) + """);
-              $("#notification").removeClass("alert-info");
-              $("#notification").removeClass("alert-success");
-              $("#notification").addClass("alert-danger");
-            }
-            $("#resultsContainer").show();
-            $("#resultsArea").html(data.summary);
-            if (daCheckinInterval != null){
-              clearInterval(daCheckinInterval);
-            }
-            //daRestart();
-          }
-          else if (data.status == 'failed' && !resultsAreIn){
-            resultsAreIn = true;
-            $("#notification").html(""" + json.dumps(word("There was an error updating the packages.")) + """);
-            $("#notification").removeClass("alert-info");
-            $("#notification").removeClass("alert-success");
-            $("#notification").addClass("alert-danger");
-            $("#resultsContainer").show();
-            if (data.error_message){
-              $("#resultsArea").html(data.error_message);
-            }
-            else if (data.summary){
-              $("#resultsArea").html(data.summary);
-            }
-            if (daCheckinInterval != null){
-              clearInterval(daCheckinInterval);
-            }
-          }
-        }
-        else if (!resultsAreIn){
-          $("#notification").html(""" + json.dumps(word("There was an error.")) + """);
-          $("#notification").removeClass("alert-info");
-          $("#notification").removeClass("alert-success");
-          $("#notification").addClass("alert-danger");
-          if (daCheckinInterval != null){
-            clearInterval(daCheckinInterval);
-          }
-        }
-      }
-      function daUpdate(){
-        if (pollDelay > 25 || pollFail > 8){
-          $("#notification").html(""" + json.dumps(word("Server did not respond to request for update.")) + """);
-          $("#notification").removeClass("alert-info");
-          $("#notification").removeClass("alert-success");
-          $("#notification").addClass("alert-danger");
-          if (daCheckinInterval != null){
-            clearInterval(daCheckinInterval);
-          }
-          return;
-        }
-        if (pollPending){
-          pollDelay += 1;
-          return;
-        }
-        if (resultsAreIn){
-          return;
-        }
-        pollDelay = 0;
-        pollPending = true;
-        $.ajax({
-          type: 'POST',
-          url: """ + json.dumps(url_for('update_package_ajax')) + """,
-          data: 'csrf_token=""" + my_csrf + """',
-          success: daUpdateCallback,
-          error: daBadCallback,
-          timeout: 2000,
-          dataType: 'json'
-        });
-        return true;
-      }
-      $( document ).ready(function() {
-        //console.log("page loaded");
-        daCheckinInterval = setInterval(daUpdate, 6000);
-      });
-    </script>"""
+    initial_values = {
+        "daRestartAjax": url_for('restart_ajax'),
+        "daCsrf": my_csrf,
+        "daNoError": word("The package update did not report an error.  The logs are below."),
+        "daErrorWithLog": word("The package update reported an error.  The logs are below."),
+        "daUpdateError": word("There was an error updating the packages."),
+        "daGeneralError": word("There was an error."),
+        "daServerDidNotRespond": word("Server did not respond to request for update."),
+        "daUrlUpdatePackageAjax": url_for('update_package_ajax')
+    }
+    script = f"""
+    <script{DEFER} src="{url_for('static', filename="app/updatingpackages.min.js")}"></script>
+    {redis_script(initial_values)}"""
     response = make_response(render_template('pages/update_package_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -17261,45 +10415,57 @@ def get_package_name_from_zip(zippath):
     with zipfile.ZipFile(zippath, mode='r') as zf:
         min_level = 999999
         setup_py = None
+        pyproject_toml = None
         for zinfo in zf.infolist():
             parts = splitall(zinfo.filename)
-            if parts[-1] == 'setup.py':
+            if parts[-1] in ('setup.py', 'pyproject.toml'):
                 if len(parts) < min_level:
-                    setup_py = zinfo
+                    if parts[-1] == 'setup.py':
+                        setup_py = zinfo
+                    else:
+                        pyproject_toml = zinfo
                     min_level = len(parts)
-        if setup_py is None:
-            raise DAException("Not a Python package zip file")
-        with zf.open(setup_py) as f:
-            the_file = TextIOWrapper(f, encoding='utf8')
-            contents = the_file.read()
-    extracted = {}
-    for line in contents.splitlines():
-        m = re.search(r"^NAME *= *\(?'(.*)'", line)
-        if m:
-            extracted['name'] = m.group(1)
-        m = re.search(r'^NAME *= *\(?"(.*)"', line)
-        if m:
-            extracted['name'] = m.group(1)
-        m = re.search(r'^NAME *= *\[(.*)\]', line)
-        if m:
-            extracted['name'] = m.group(1)
-    if 'name' in extracted:
-        return extracted['name']
-    contents = re.sub(r'.*setup\(', '', contents, flags=re.DOTALL)
-    extracted = {}
-    for line in contents.splitlines():
-        m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
-        if m:
-            extracted[m.group(1)] = m.group(2)
-        m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
-        if m:
-            extracted[m.group(1)] = m.group(2)
-        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
-        if m:
-            extracted[m.group(1)] = m.group(2)
-    if 'name' not in extracted:
-        raise DAException("Could not find name of Python package")
-    return extracted['name']
+        if setup_py:
+            with zf.open(setup_py) as f:
+                the_file = TextIOWrapper(f, encoding='utf8')
+                contents = the_file.read()
+                extracted = {}
+                for line in contents.splitlines():
+                    m = re.search(r"^NAME *= *\(?'(.*)'", line)
+                    if m:
+                        extracted['name'] = m.group(1)
+                    m = re.search(r'^NAME *= *\(?"(.*)"', line)
+                    if m:
+                        extracted['name'] = m.group(1)
+                    m = re.search(r'^NAME *= *\[(.*)\]', line)
+                    if m:
+                        extracted['name'] = m.group(1)
+                if 'name' in extracted:
+                    return extracted['name']
+                contents = re.sub(r'.*setup\(', '', contents, flags=re.DOTALL)
+                extracted = {}
+                for line in contents.splitlines():
+                    m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
+                    if m:
+                        extracted[m.group(1)] = m.group(2)
+                    m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
+                    if m:
+                        extracted[m.group(1)] = m.group(2)
+                    m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+                    if m:
+                        extracted[m.group(1)] = m.group(2)
+                if 'name' not in extracted:
+                    raise DAException("Could not find name of Python package")
+                return extracted['name']
+        if pyproject_toml:
+            with zf.open(pyproject_toml) as f:
+                the_file = TextIOWrapper(f, encoding='utf8')
+                contents = the_file.read()
+                data = tomli.loads(contents)
+                if 'project' in data and 'name' in data['project']:
+                    return data['project']['name']
+                raise DAException("Could not find name of Python package")
+    raise DAException("Not a Python package zip file")
 
 
 @app.route('/updatepackage', methods=['GET', 'POST'])
@@ -17437,60 +10603,14 @@ def update_package():
     package_list, package_auth = get_package_info()
     form.pippackage.data = None
     form.giturl.data = None
-    extra_js = """
-    <script>
-      var default_branch = """ + json.dumps(branch if branch else 'null') + """;
-      function get_branches(){
-        var elem = $("#gitbranch");
-        elem.empty();
-        var opt = $("<option><\/option>");
-        opt.attr("value", "").text("Not applicable");
-        elem.append(opt);
-        var github_url = $("#giturl").val();
-        if (!github_url){
-          return;
-        }
-        $.get(""" + json.dumps(url_for('get_git_branches')) + """, { url: github_url }, "json")
-        .done(function(data){
-          //console.log(data);
-          if (data.success){
-            var n = data.result.length;
-            if (n > 0){
-              var default_to_use = default_branch;
-              var to_try = [default_branch, """ + json.dumps(GITHUB_BRANCH) + """, 'master', 'main'];
-            outer:
-              for (var j = 0; j < 4; j++){
-                for (var i = 0; i < n; i++){
-                  if (data.result[i].name == to_try[j]){
-                    default_to_use = to_try[j];
-                    break outer;
-                  }
-                }
-              }
-              elem.empty();
-              for (var i = 0; i < n; i++){
-                opt = $("<option></option>");
-                opt.attr("value", data.result[i].name).text(data.result[i].name);
-                if (data.result[i].name == default_to_use){
-                  opt.prop('selected', true);
-                }
-                $(elem).append(opt);
-              }
-            }
-          }
-        });
-      }
-      $( document ).ready(function() {
-        get_branches();
-        $("#giturl").on('change', get_branches);
-      });
-      $('#zipfile').on('change', function(){
-        var fileName = $(this).val();
-        fileName = fileName.replace(/.*\\\\/, '');
-        fileName = fileName.replace(/.*\\//, '');
-        $(this).next('.custom-file-label').html(fileName);
-      });
-    </script>"""  # noqa: W605
+    initial_values = {
+        "daDefaultBranch": branch if branch else 'null',
+        "daGetGitBranches": url_for('get_git_branches'),
+        "daGithubBranch": GITHUB_BRANCH
+    }
+    extra_js = f"""
+    <script{DEFER} src="{url_for('static', filename="app/update_package.min.js")}"></script>
+    {redis_script(initial_values)}"""
     python_version = daconfig.get('python version', word('Unknown'))
     version = word("Current") + ': <span class="badge bg-primary">' + str(python_version) + '</span>'
     dw_status = pypi_status('docassemble.webapp')
@@ -17532,7 +10652,7 @@ def get_master_branch(giturl):
 
 # @app.route('/testws', methods=['GET', 'POST'])
 # def test_websocket():
-#     script = '<script type="text/javascript" src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script type="text/javascript">
+#     script = '<script src="' + url_for('static', filename='app/socket.io.min.js') + '"></script>' + """<script>
 #     var daSocket;
 #     $(document).ready(function(){
 #         if (location.protocol === 'http:' || document.location.protocol === 'http:'){
@@ -17766,7 +10886,7 @@ def create_playground_package():
                     first_time = True
                     is_empty = False
                     headers = {'Content-Type': 'application/json'}
-                    the_license = 'mit' if re.search(r'MIT License', info.get('license', '')) else None
+                    the_license = 'mit' if re.search(r'MIT', info.get('license', '')) else None
                     body = json.dumps({'name': github_package_name, 'description': info.get('description', None), 'homepage': info.get('url', None), 'license_template': the_license})
                     resp, content = http.request("https://api.github.com/user/repos", "POST", headers=headers, body=body)
                     if int(resp['status']) != 201:
@@ -18024,7 +11144,7 @@ def create_playground_package():
                 session['serverstarttime'] = START_TIME
                 return redirect(url_for('update_package_wait', next=url_for('playground_packages', project=current_project, file=current_package)))
                 # return redirect(url_for('playground_packages', file=current_package))
-            response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, download_name=nice_name)
+            response = custom_send_file(saved_file.path, mimetype='application/zip', as_attachment=True, download_name=nice_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return response
     response = make_response(render_template('pages/create_playground_package.html', current_project=current_project, version_warning=version_warning, bodyclass='daadminbody', form=form, current_package=current_package, package_names=file_list['playgroundpackages'], tab_title=word('Playground Packages'), page_title=word('Playground Packages')), 200)
@@ -18068,13 +11188,25 @@ SOFTWARE.
 """
         gitignore = daconfig.get('default gitignore', DEFAULT_GITIGNORE)
         readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
-        pyprojecttoml = """\
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-"""
-        manifestin = """\
+        pyprojecttoml = tomli_w.dumps({'build-system': {'requires': ['setuptools>=80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': '0.0.1', 'description': 'A docassemble extension.', 'readme': 'README.md', 'authors': [{'name': str(name_of_user(current_user)), 'email': str(current_user.email)}], 'license': 'MIT', 'license-files': ['LICENSE'], 'urls': {'Homepage': 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}})
+        manifestin = f"""\
 include README.md
+graft docassemble/{pkgname}/data
+recursive-exclude * *.egg-info
+recursive-exclude .git *
+recursive-exclude venv *
+recursive-exclude .github *
+recursive-exclude .pytest_cache *
+recursive-exclude .vscode *
+recursive-exclude build *
+recursive-exclude dist *
+recursive-exclude * __pycache__
+recursive-exclude * *.pyc
+recursive-exclude * *.pyo
+recursive-exclude * *.orig
+recursive-exclude * *~
+recursive-exclude * *.bak
+recursive-exclude * *.swp
 """
         setupcfg = """\
 [metadata]
@@ -18271,7 +11403,7 @@ class Fruit(DAObject):
             for the_file in files:
                 thefilename = os.path.join(root, the_file)
                 info = zipfile.ZipInfo(thefilename[trimlength:])
-                info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(thefilename)).replace(tzinfo=datetime.timezone.utc).astimezone(the_timezone).timetuple()
+                info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(thefilename), datetime.UTC).astimezone(the_timezone).timetuple()
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o644 << 16
                 with open(thefilename, 'rb') as fp:
@@ -18281,7 +11413,7 @@ class Fruit(DAObject):
         saved_file.save()
         saved_file.finalize()
         shutil.rmtree(directory)
-        response = send_file(saved_file.path, mimetype='application/zip', as_attachment=True, download_name=nice_name)
+        response = custom_send_file(saved_file.path, mimetype='application/zip', as_attachment=True, download_name=nice_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         flash(word("Package created"), 'success')
         return response
@@ -18297,25 +11429,27 @@ def restart_page():
     setup_translation()
     if not app.config['ALLOW_RESTARTING']:
         return ('File not found', 404)
-    script = """
-    <script>
-      function daRestartCallback(data){
+    script = f"""
+    <script{DEFER}>
+      function daRestartCallback(data){{
         //console.log("Restart result: " + data.success);
-      }
-      function daRestart(){
-        $.ajax({
+      }}
+      function daRestart(){{
+        $.ajax({{
           type: 'POST',
-          url: """ + json.dumps(url_for('restart_ajax')) + """,
-          data: 'csrf_token=""" + generate_csrf() + """&action=restart',
+          url: {json.dumps(url_for('restart_ajax'))},
+          data: 'csrf_token={generate_csrf()}&action=restart',
           success: daRestartCallback,
           dataType: 'json'
-        });
+        }});
         return true;
-      }
-      $( document ).ready(function() {
-        //console.log("restarting");
-        setTimeout(daRestart, 100);
-      });
+      }}
+      document.addEventListener("DOMContentLoaded", function () {{
+        $( document ).ready(function() {{
+          //console.log("restarting");
+          setTimeout(daRestart, 100);
+        }});
+      }});
     </script>"""
     next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('interview_list', post_restart=1)))
     extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
@@ -18331,26 +11465,28 @@ def playground_poll():
     setup_translation()
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
-    script = """
-    <script>
-      function daPollCallback(data){
-        if (data.success){
+    script = f"""
+    <script{DEFER}>
+      function daPollCallback(data){{
+        if (data.success){{
           window.location.replace(data.url);
-        }
-      }
-      function daPoll(){
-        $.ajax({
+        }}
+      }}
+      function daPoll(){{
+        $.ajax({{
           type: 'GET',
-          url: """ + json.dumps(url_for('playground_redirect_poll')) + """,
+          url: {json.dumps(url_for('playground_redirect_poll'))},
           success: daPollCallback,
           dataType: 'json'
-        });
+        }});
         return true;
-      }
-      $( document ).ready(function() {
-        //console.log("polling");
-        setInterval(daPoll, 4000);
-      });
+      }}
+      document.addEventListener("DOMContentLoaded", function () {{
+        $( document ).ready(function() {{
+          //console.log("polling");
+          setInterval(daPoll, 4000);
+        }});
+      }});
     </script>"""
     response = make_response(render_template('pages/playground_poll.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Waiting'), page_title=word('Waiting')), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -18695,97 +11831,99 @@ def gd_sync_wait():
     next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('playground_page', project=current_project)))
     auto_next_url = request.args.get('auto_next', None)
     my_csrf = generate_csrf()
-    script = """
-    <script>
+    script = f"""
+    <script{DEFER}>
       var daCheckinInterval = null;
-      var autoNext = """ + json.dumps(auto_next_url) + """;
+      var autoNext = {json.dumps(auto_next_url)};
       var resultsAreIn = false;
-      function daRestartCallback(data){
+      function daRestartCallback(data){{
         //console.log("Restart result: " + data.success);
-      }
-      function daRestart(){
-        $.ajax({
+      }}
+      function daRestart(){{
+        $.ajax({{
           type: 'POST',
-          url: """ + json.dumps(url_for('restart_ajax')) + """,
-          data: 'csrf_token=""" + my_csrf + """&action=restart',
+          url: {json.dumps(url_for('restart_ajax'))},
+          data: 'csrf_token={my_csrf}&action=restart',
           success: daRestartCallback,
           dataType: 'json'
-        });
+        }});
         return true;
-      }
-      function daSyncCallback(data){
-        if (data.success){
-          if (data.status == 'finished'){
+      }}
+      function daSyncCallback(data){{
+        if (data.success){{
+          if (data.status == 'finished'){{
             resultsAreIn = true;
-            if (data.ok){
-              if (autoNext != null){
+            if (data.ok){{
+              if (autoNext != null){{
                 window.location.replace(autoNext);
-              }
-              $("#notification").html(""" + json.dumps(word("The synchronization was successful.")) + """);
+              }}
+              $("#notification").html({json.dumps(word("The synchronization was successful."))});
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
               $("#notification").addClass("alert-success");
-            }
-            else{
-              $("#notification").html(""" + json.dumps(word("The synchronization was not successful.")) + """);
+            }}
+            else{{
+              $("#notification").html({json.dumps(word("The synchronization was not successful."))});
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-success");
               $("#notification").addClass("alert-danger");
-            }
+            }}
             $("#resultsContainer").show();
             $("#resultsArea").html(data.summary);
-            if (daCheckinInterval != null){
+            if (daCheckinInterval != null){{
               clearInterval(daCheckinInterval);
-            }
-            if (data.restart){
+            }}
+            if (data.restart){{
               daRestart();
-            }
-          }
-          else if (data.status == 'failed' && !resultsAreIn){
+            }}
+          }}
+          else if (data.status == 'failed' && !resultsAreIn){{
             resultsAreIn = true;
-            $("#notification").html(""" + json.dumps(word("There was an error with the synchronization.")) + """);
+            $("#notification").html({json.dumps(word("There was an error with the synchronization."))});
             $("#notification").removeClass("alert-info");
             $("#notification").removeClass("alert-success");
             $("#notification").addClass("alert-danger");
             $("#resultsContainer").show();
-            if (data.error_message){
+            if (data.error_message){{
               $("#resultsArea").html(data.error_message);
-            }
-            else if (data.summary){
+            }}
+            else if (data.summary){{
               $("#resultsArea").html(data.summary);
-            }
-            if (daCheckinInterval != null){
+            }}
+            if (daCheckinInterval != null){{
               clearInterval(daCheckinInterval);
-            }
-          }
-        }
-        else if (!resultsAreIn){
-          $("#notification").html(""" + json.dumps(word("There was an error.")) + """);
+            }}
+          }}
+        }}
+        else if (!resultsAreIn){{
+          $("#notification").html({json.dumps(word("There was an error."))});
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
-          if (daCheckinInterval != null){
+          if (daCheckinInterval != null){{
             clearInterval(daCheckinInterval);
-          }
-        }
-      }
-      function daSync(){
-        if (resultsAreIn){
+          }}
+        }}
+      }}
+      function daSync(){{
+        if (resultsAreIn){{
           return;
-        }
-        $.ajax({
+        }}
+        $.ajax({{
           type: 'POST',
-          url: """ + json.dumps(url_for('checkin_sync_with_google_drive')) + """,
-          data: 'csrf_token=""" + my_csrf + """',
+          url: {json.dumps(url_for('checkin_sync_with_google_drive'))},
+          data: 'csrf_token={my_csrf}',
           success: daSyncCallback,
           dataType: 'json'
-        });
+        }});
         return true;
-      }
-      $( document ).ready(function() {
-        //console.log("page loaded");
-        daCheckinInterval = setInterval(daSync, 2000);
-      });
+      }}
+      document.addEventListener("DOMContentLoaded", function () {{
+        $( document ).ready(function() {{
+          //console.log("page loaded");
+          daCheckinInterval = setInterval(daSync, 2000);
+        }});
+      }});
     </script>"""
     response = make_response(render_template('pages/gd_sync_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -19106,104 +12244,106 @@ def od_sync_wait():
     if auto_next_url is not None:
         auto_next_url = app.user_manager.make_safe_url_function(auto_next_url)
     my_csrf = generate_csrf()
-    script = """
-    <script>
+    script = f"""
+    <script{DEFER}>
       var daCheckinInterval = null;
-      var autoNext = """ + json.dumps(auto_next_url) + """;
+      var autoNext = {json.dumps(auto_next_url)};
       var resultsAreIn = false;
-      function daRestartCallback(data){
-        if (autoNext != null){
-          setTimeout(function(){
+      function daRestartCallback(data){{
+        if (autoNext != null){{
+          setTimeout(function(){{
             window.location.replace(autoNext);
-          }, 1000);
-        }
+          }}, 1000);
+        }}
         //console.log("Restart result: " + data.success);
-      }
-      function daRestart(){
-        $.ajax({
+      }}
+      function daRestart(){{
+        $.ajax({{
           type: 'POST',
-          url: """ + json.dumps(url_for('restart_ajax')) + """,
-          data: 'csrf_token=""" + my_csrf + """&action=restart',
+          url: {json.dumps(url_for('restart_ajax'))},
+          data: 'csrf_token={my_csrf}&action=restart',
           success: daRestartCallback,
           dataType: 'json'
-        });
+        }});
         return true;
-      }
-      function daSyncCallback(data){
-        if (data.success){
-          if (data.status == 'finished'){
+      }}
+      function daSyncCallback(data){{
+        if (data.success){{
+          if (data.status == 'finished'){{
             resultsAreIn = true;
-            if (data.ok){
-              $("#notification").html(""" + json.dumps(word("The synchronization was successful.")) + """);
+            if (data.ok){{
+              $("#notification").html({json.dumps(word("The synchronization was successful."))});
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-danger");
               $("#notification").addClass("alert-success");
-            }
-            else{
-              $("#notification").html(""" + json.dumps(word("The synchronization was not successful.")) + """);
+            }}
+            else{{
+              $("#notification").html({json.dumps(word("The synchronization was not successful."))});
               $("#notification").removeClass("alert-info");
               $("#notification").removeClass("alert-success");
               $("#notification").addClass("alert-danger");
-            }
+            }}
             $("#resultsContainer").show();
             $("#resultsArea").html(data.summary);
-            if (daCheckinInterval != null){
+            if (daCheckinInterval != null){{
               clearInterval(daCheckinInterval);
-            }
-            if (data.restart){
+            }}
+            if (data.restart){{
               daRestart();
-            }
-            else{
-              if (autoNext != null){
+            }}
+            else{{
+              if (autoNext != null){{
                 window.location.replace(autoNext);
-              }
-            }
-          }
-          else if (data.status == 'failed' && !resultsAreIn){
+              }}
+            }}
+          }}
+          else if (data.status == 'failed' && !resultsAreIn){{
             resultsAreIn = true;
-            $("#notification").html(""" + json.dumps(word("There was an error with the synchronization.")) + """);
+            $("#notification").html({json.dumps(word("There was an error with the synchronization."))});
             $("#notification").removeClass("alert-info");
             $("#notification").removeClass("alert-success");
             $("#notification").addClass("alert-danger");
             $("#resultsContainer").show();
-            if (data.error_message){
+            if (data.error_message){{
               $("#resultsArea").html(data.error_message);
-            }
-            else if (data.summary){
+            }}
+            else if (data.summary){{
               $("#resultsArea").html(data.summary);
-            }
-            if (daCheckinInterval != null){
+            }}
+            if (daCheckinInterval != null){{
               clearInterval(daCheckinInterval);
-            }
-          }
-        }
-        else if (!resultsAreIn){
-          $("#notification").html(""" + json.dumps(word("There was an error.")) + """);
+            }}
+          }}
+        }}
+        else if (!resultsAreIn){{
+          $("#notification").html({json.dumps(word("There was an error."))});
           $("#notification").removeClass("alert-info");
           $("#notification").removeClass("alert-success");
           $("#notification").addClass("alert-danger");
-          if (daCheckinInterval != null){
+          if (daCheckinInterval != null){{
             clearInterval(daCheckinInterval);
-          }
-        }
-      }
-      function daSync(){
-        if (resultsAreIn){
+          }}
+        }}
+      }}
+      function daSync(){{
+        if (resultsAreIn){{
           return;
-        }
-        $.ajax({
+        }}
+        $.ajax({{
           type: 'POST',
-          url: """ + json.dumps(url_for('checkin_sync_with_onedrive')) + """,
-          data: 'csrf_token=""" + my_csrf + """',
+          url: {json.dumps(url_for('checkin_sync_with_onedrive'))},
+          data: 'csrf_token={my_csrf}',
           success: daSyncCallback,
           dataType: 'json'
-        });
+        }});
         return true;
-      }
-      $( document ).ready(function() {
-        //console.log("page loaded");
-        daCheckinInterval = setInterval(daSync, 2000);
-      });
+      }}
+      document.addEventListener("DOMContentLoaded", function () {{
+        $( document ).ready(function() {{
+          //console.log("page loaded");
+          daCheckinInterval = setInterval(daSync, 2000);
+        }});
+      }});
     </script>"""
     response = make_response(render_template('pages/od_sync_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Synchronizing'), page_title=word('Synchronizing'), next_page=next_url), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -19610,7 +12750,15 @@ def config_page():
         version = word("Version") + " " + str(python_version)
     else:
         version = word("Version") + " " + str(python_version) + ' (Python); ' + str(system_version) + ' (' + word('system') + ')'
-    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>\n    <script>\n      var daAutoComp = [];\n      var daCm = daNewEditor($("#config_container")[0], JSON.parse(atob("' + safeid(json.dumps(content)) + '")), "yml", ' + json.dumps(keymap) + ', false);\n        $("#config_form").bind("submit", function(){\n        $("#config_content").val(daCm.state.doc.toString());\n        return true;\n      });\n    </script>'), form=form), 200)
+    initial_values = {
+        "daContent": content,
+        "daKeymap": keymap
+    }
+    extra_js = f"""
+    <script{DEFER} src="{url_for('static', filename="app/cm6.min.js", v=da_version)}"></script>
+    <script{DEFER} src="{url_for('static', filename="app/config.min.js", v=da_version)}"></script>
+    {redis_script(initial_values)}"""
+    response = make_response(render_template('pages/config.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_errors=docassemble.base.config.errors, config_messages=docassemble.base.config.env_messages, version_warning=version_warning, version=version, bodyclass='daadminbody', tab_title=word('Configuration'), page_title=word('Configuration'), extra_js=Markup(extra_js), form=form), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -19661,7 +12809,7 @@ def playground_static(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)  # pylint: disable=unused-variable
-        response = send_file(path, mimetype=str(mimetype), download_name=filename)
+        response = custom_send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename))
         return response
@@ -19689,7 +12837,7 @@ def playground_modules(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)  # pylint: disable=unused-variable
-        response = send_file(path, mimetype=str(mimetype), download_name=filename)
+        response = custom_send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -19719,7 +12867,7 @@ def playground_sources(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)  # pylint: disable=unused-variable
-        response = send_file(path, mimetype=str(mimetype), download_name=filename)
+        response = custom_send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -19748,7 +12896,7 @@ def playground_template(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(filename)  # pylint: disable=unused-variable
-        response = send_file(path, mimetype=str(mimetype), download_name=filename)
+        response = custom_send_file(path, mimetype=str(mimetype), download_name=filename)
         if attach:
             response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -19773,7 +12921,7 @@ def playground_download(current_project, userid, filename):
     if os.path.isfile(path):
         filename = os.path.basename(filename)
         extension, mimetype = get_ext_and_mimetype(path)  # pylint: disable=unused-variable
-        response = send_file(path, mimetype=str(mimetype))
+        response = custom_send_file(path, mimetype=str(mimetype))
         response.headers['Content-type'] = 'text/plain; charset=utf-8'
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename))
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -19802,7 +12950,7 @@ def playground_office_taskpane():
     if not app.config['ENABLE_PLAYGROUND']:
         return ('File not found', 404)
     defaultDaServer = url_for('rootindex', _external=True)
-    response = make_response(render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup("\n        <script>" + indent_by(variables_js(office_mode=True), 9) + "        </script>")), 200)
+    response = make_response(render_template('pages/officeouter.html', page_title=word("Docassemble Playground"), tab_title=word("Playground"), defaultDaServer=defaultDaServer, extra_js=Markup(f"\n        <script{DEFER}>{indent_by(variables_js(office_mode=True), 9)}        </script>")), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -19871,7 +13019,7 @@ def playground_office_addin():
         docassemble.base.functions.this_thread.current_info = the_current_info
         interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
         if use_html:
-            variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=project_to_use)
+            variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, show_messages=False, show_jinja_help=True, current_project=project_to_use)  # pylint: disable=unused-variable
             return jsonify({'success': True, 'current_project': project_to_use, 'variables_html': variables_html, 'vocab_list': list(vocab_list), 'vocab_dict': vocab_dict})
         variables_json, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=False, return_json=True, current_project=project_to_use)
         return jsonify({'success': True, 'variables_json': variables_json, 'vocab_list': list(vocab_list)})
@@ -20168,7 +13316,7 @@ def playground_files():
         list_header = word("Existing source files")
         edit_header = word('Edit source files')
         after_text = None
-    elif section == "modules":
+    else:  # section == "modules":
         header = word("Modules")
         upload_header = word("Upload a Python module")
         list_header = word("Existing module files")
@@ -20176,271 +13324,28 @@ def playground_files():
         description = 'You can use this page to add Python module files (.py files) that you want to include in your interviews using <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> or <a target="_blank" href="https://docassemble.org/docs/initial.html#imports"><code>imports</code></a>.'
         lowerdescription = Markup("""<p>To use this in an interview, write a <a target="_blank" href="https://docassemble.org/docs/initial.html#modules"><code>modules</code></a> block that refers to this module using Python's syntax for specifying a "relative import" of a module (i.e., prefix the module name with a period).</p>""" + highlight('---\nmodules:\n  - .' + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight')) + """<p>If you wish to refer to this module from another package, you can use a fully qualified reference.</p>""" + highlight('---\nmodules:\n  - ' + "docassemble.playground" + str(playground_user.id) + project_name(current_project) + "." + re.sub(r'\.py$', '', the_file) + '\n---', YamlLexer(), HtmlFormatter(cssclass='highlight dahighlight')))
         after_text = None
-    if scroll:
-        extra_command = """
-        if ($("#file_name").val().length > 0){
-          daCm.focus();
-        }
-        else{
-          $("#file_name").focus()
-        }
-        scrollBottom();"""
-    else:
-        extra_command = ""
-    extra_js = """
-    <script src=""" + json.dumps(url_for('static', filename="app/cm6.js", v=da_version)) + """></script>
-    <script>
-      var daAutoComp = [];
-      var daCm;
-      var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
-      var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
-      Object.defineProperty(String.prototype, "daSprintf", {
-        value: function () {
-          var args = Array.from(arguments),
-            i = 0;
-          function defaultNumber(iValue) {
-            return iValue != undefined && !isNaN(iValue) ? iValue : "0";
-          }
-          function defaultString(iValue) {
-            return iValue == undefined ? "" : "" + iValue;
-          }
-          return this.replace(
-            /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
-            function (match, sign, filler, scale, precision, type) {
-              var strOut, space, value;
-              var asNumber = false;
-              if (match == "%%") return "%";
-              if (i >= args.length) return match;
-              value = args[i];
-              while (Array.isArray(value)) {
-                args.splice(i, 1);
-                for (var j = i; value.length > 0; j++)
-                  args.splice(j, 0, value.shift());
-                value = args[i];
-              }
-              i++;
-              if (filler == undefined) filler = " "; // default
-              if (scale == undefined && !isNaN(filler)) {
-                scale = filler;
-                filler = " ";
-              }
-              if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
-              if (scale == undefined) scale = 0; // default
-              if (precision == undefined) precision = ".0"; // default
-              scale = parseInt(scale);
-              precision = parseInt(precision.substr(1));
-              switch (type) {
-                case "d":
-                case "i":
-                  // decimal integer
-                  asNumber = true;
-                  strOut = parseInt(defaultNumber(value));
-                  if (precision > 0) strOut += "." + "0".repeat(precision);
-                  break;
-                case "e":
-                case "E":
-                  // float in exponential notation
-                  asNumber = true;
-                  strOut = parseFloat(defaultNumber(value));
-                  if (precision == 0) strOut = strOut.toExponential();
-                  else strOut = strOut.toExponential(precision);
-                  if (type == "E") strOut = strOut.replace("e", "E");
-                  break;
-                case "f":
-                  // decimal float
-                  asNumber = true;
-                  strOut = parseFloat(defaultNumber(value));
-                  if (precision != 0) strOut = strOut.toFixed(precision);
-                  break;
-                case "o":
-                case "h":
-                case "H":
-                  // Octal or Hexagesimal integer notation
-                  strOut =
-                    "\\\\" +
-                    (type == "o" ? "0" : type) +
-                    parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
-                  break;
-                case "q":
-                  // single quoted string
-                  strOut = "'" + defaultString(value) + "'";
-                  break;
-                case "Q":
-                  // double quoted string
-                  strOut = '"' + defaultString(value) + '"';
-                  break;
-                default:
-                  // string
-                  strOut = defaultString(value);
-                  break;
-              }
-              if (typeof strOut != "string") strOut = "" + strOut;
-              if ((space = strOut.length) < scale) {
-                if (asNumber) {
-                  if (sign == "-") {
-                    if (strOut.indexOf("-") < 0)
-                      strOut = filler.repeat(scale - space) + strOut;
-                    else
-                      strOut =
-                        "-" +
-                        filler.repeat(scale - space) +
-                        strOut.replace("-", "");
-                  } else {
-                    if (strOut.indexOf("-") < 0)
-                      strOut = "+" + filler.repeat(scale - space - 1) + strOut;
-                    else
-                      strOut =
-                        "-" +
-                        filler.repeat(scale - space) +
-                        strOut.replace("-", "");
-                  }
-                } else {
-                  if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
-                  else strOut = strOut + filler.repeat(scale - space);
-                }
-              } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
-                strOut = "+" + strOut;
-              return strOut;
-            }
-          );
-        },
-      });
-      Object.defineProperty(window, "daSprintf", {
-        value: function (str, ...rest) {
-          if (typeof str == "string")
-            return String.prototype.daSprintf.apply(str, rest);
-          return "";
-        },
-      });
-      var vocab = [];
-      var currentFile = """ + json.dumps(the_file) + """;
-      var daIsNew = """ + ('true' if is_new else 'false') + """;
-      var existingFiles = """ + json.dumps(files) + """;
-      var daSection = """ + '"' + section + '";' + """
-      var attrs_showing = Object();
-      var currentProject = """ + json.dumps(current_project) + """;
-""" + indent_by(variables_js(form='formtwo', current_project=current_project), 6) + """
-      var daExpireSession = null;
-      function resetExpireSession(){
-        if (daExpireSession != null){
-          window.clearTimeout(daExpireSession);
-        }
-        daExpireSession = setTimeout(function(){
-          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
-        }, """ + str(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
-      }
-      function saveCallback(data){
-        if (!data.success){
-          var n = data.errors.length;
-          for (var i = 0; i < n; ++i){
-            $('input[name="' + data.errors[i].fieldName + '"]').parents('.input-group').addClass("da-group-has-error").after('<div class="da-has-error invalid-feedback">' + data.errors[i].err + '</div>');
-          }
-          return;
-        }
-        $('.da-has-error').remove();
-        $('.da-group-has-error').removeClass('da-group-has-error');
-        fetchVars(true);
-        if ($("#daflash").length){
-          $("#daflash").html(data.flash_message);
-        }
-        else{
-          $("#damain").prepend(daSprintf(daNotificationContainer, data.flash_message));
-        }
-      }
-      function scrollBottom(){
-        $("html, body").animate({
-          scrollTop: $("#editnav").offset().top - 53
-        }, "slow");
-      }
-      $( document ).ready(function() {
-        resetExpireSession();
-        $("#file_name").on('change', function(){
-          var newFileName = $(this).val();
-          if ((!daIsNew) && newFileName == currentFile){
-            return;
-          }
-          for (var i = 0; i < existingFiles.length; i++){
-            if (newFileName == existingFiles[i]){
-              alert(""" + json.dumps(word("Warning: a file by that name already exists.  If you save, you will overwrite it.")) + """);
-              return;
-            }
-          }
-          return;
-        });
-        $("#dauploadbutton").click(function(event){
-          if ($("#uploadfile").val() == ""){
-            event.preventDefault();
-            return false;
-          }
-        });
-        daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob(""" + json.dumps(safeid(json.dumps(content))) + """)), """ + json.dumps(mode) + """, """ + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """);
-        $(daCm.dom).attr("tabindex", 580);
-        $(daCm.dom).on('focus', function(){
-          daCm.focus();
-        });
-        $("#file_content").val(daCm.state.doc.toString());
-        $(window).bind("beforeunload", function(){
-          $("#file_content").val(daCm.state.doc.toString());
-          $("#formtwo").trigger("checkform.areYouSure");
-        });
-        $("#daDelete").click(function(event){
-          if (!confirm(""" + json.dumps(word("Are you sure that you want to delete this file?")) + """)){
-            event.preventDefault();
-          }
-        });
-        $("#formtwo").areYouSure(""" + json.dumps(json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")})) + """);
-        $("#formtwo").bind("submit", function(e){
-          $("#file_content").val(daCm.state.doc.toString());
-          $("#formtwo").trigger("reinitialize.areYouSure");
-          if (daSection != 'modules' && !daIsNew){
-            var extraVariable = ''
-            if ($("#daVariables").length){
-              extraVariable = '&active_file=' + encodeURIComponent($("#daVariables").val());
-            }
-            $.ajax({
-              type: "POST",
-              url: """ + '"' + url_for('playground_files', project=current_project) + '"' + """,
-              data: $("#formtwo").serialize() + extraVariable + '&submit=Save&ajax=1',
-              success: function(data){
-                if (data.action && data.action == 'reload'){
-                  location.reload(true);
-                }
-                resetExpireSession();
-                saveCallback(data);
-                $("#daflash .alert-success").each(function(){
-                  var oThis = this;
-                  setTimeout(function(){
-                    $(oThis).hide(300, function(){
-                      $(self).remove();
-                    });
-                  }, 3000);
-                });
-              },
-              dataType: 'json'
-            });
-            e.preventDefault();
-            return false;
-          }
-          return true;
-        });
-        variablesReady();
-        fetchVars(false);""" + extra_command + """
-      });
-      $('#uploadfile').on('change', function(){
-        var fileName = $(this).val();
-        fileName = fileName.replace(/.*\\\\/, '');
-        fileName = fileName.replace(/.*\\//, '');
-        $(this).next('.custom-file-label').html(fileName);
-      });
-      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport($("#daVariables").val()); })
-    </script>"""
+    initial_values = playground_values(current_project, the_file, playground_user)
+    initial_values.update({
+        "daPage": 'files',
+        "daScroll": bool(scroll),
+        "isNew": bool(is_new),
+        "existingFiles": files,
+        "daSection": section,
+        "daUrlPlaygroundFiles": url_for('playground_files', project=current_project),
+        "daContent": content,
+        "daMode": mode
+    })
+    extra_js = f"""
+    <script{DEFER} src="{url_for('static', filename="app/playgroundbundle.min.js", v=da_version)}"></script>
+    {redis_script(initial_values)}
+"""
     any_files = bool(len(editable_files) > 0)
     back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fa-solid fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if current_user.id != playground_user.id:
         header += " / " + playground_user.email
     if current_project != 'default':
         header += " / " + current_project
-    response = make_response(render_template('pages/playgroundfiles.html', current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup('\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    ' + extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=playground_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(playground_user.id) + project_name(current_project), own_playground=bool(playground_user.id == current_user.id)), 200)
+    response = make_response(render_template('pages/playgroundfiles.html', current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=playground_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(playground_user.id) + project_name(current_project), own_playground=bool(playground_user.id == current_user.id)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -20471,55 +13376,15 @@ def pull_playground_package():
     form.github_branch.choices = []
     description = word("Enter a URL of a GitHub repository containing an extension package.  When you press Pull, the contents of that repository will be copied into the Playground, overwriting any files with the same names.  Or, put in the name of a PyPI package and it will do the same with the package on PyPI.")
     branch = request.args.get('branch')
-    extra_js = """
-    <script>
-      var default_branch = """ + json.dumps(branch if branch else GITHUB_BRANCH) + """;
-      function get_branches(){
-        var elem = $("#github_branch");
-        elem.empty();
-        var opt = $("<option><\/option>");
-        opt.attr("value", "").text("Not applicable");
-        elem.append(opt);
-        var github_url = $("#github_url").val();
-        if (!github_url){
-          return;
-        }
-        $.get(""" + json.dumps(url_for('get_git_branches')) + """, { url: github_url }, "json")
-        .done(function(data){
-          //console.log(data);
-          if (data.success){
-            var n = data.result.length;
-            if (n > 0){
-              var default_to_use = default_branch;
-              var to_try = [default_branch, """ + json.dumps(GITHUB_BRANCH) + """, 'master', 'main'];
-            outer:
-              for (var j = 0; j < 4; j++){
-                for (var i = 0; i < n; i++){
-                  if (data.result[i].name == to_try[j]){
-                    default_to_use = to_try[j];
-                    break outer;
-                  }
-                }
-              }
-              elem.empty();
-              for (var i = 0; i < n; i++){
-                opt = $("<option><\/option>");
-                opt.attr("value", data.result[i].name).text(data.result[i].name);
-                if (data.result[i].name == default_to_use){
-                  opt.prop('selected', true);
-                }
-                $(elem).append(opt);
-              }
-            }
-          }
-        });
-      }
-      $( document ).ready(function() {
-        get_branches();
-        $("#github_url").on('change', get_branches);
-      });
-    </script>
-"""  # noqa: W605
+    initial_values = {
+        "daDefaultBranch": branch if branch else GITHUB_BRANCH,
+        "daGetGitBranches": url_for('get_git_branches'),
+        "daGithubBranch": GITHUB_BRANCH
+    }
+    extra_js = f"""
+    <script{DEFER} src="{url_for('static', filename='app/pullplaygroundpackage.min.js')}"></script>
+    <script{DEFER}>Object.assign(window, {json.dumps(initial_values)})</script>
+"""
     response = make_response(render_template('pages/pull_playground_package.html',
                                              current_project=current_project,
                                              form=form,
@@ -20733,6 +13598,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
     readme_text = ''
     gitignore_text = ''
     setup_py = ''
+    pyproject_toml = ''
     if branch in ('', 'None'):
         branch = None
     if branch:
@@ -20840,7 +13706,7 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
         package_file.close()
     initial_directories = len(splitall(directory)) + 1
     for root, dirs, files in os.walk(directory):
-        at_top_level = bool('setup.py' in files and 'docassemble' in dirs)
+        at_top_level = bool(('setup.py' in files or 'pyproject.toml' in files or 'setup.cfg' in files) and 'docassemble' in dirs)
         for a_file in files:
             orig_file = os.path.join(root, a_file)
             # output += "Original file is " + orig_file + "\n"
@@ -20867,6 +13733,9 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
             if filename == 'setup.py' and at_top_level:
                 with open(orig_file, 'r', encoding='utf-8') as fp:
                     setup_py = fp.read()
+            if filename == 'pyproject.toml' and at_top_level:
+                with open(orig_file, 'r', encoding='utf-8') as fp:
+                    pyproject_toml = fp.read()
             elif len(levels) >= 1 and not at_top_level and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                 data_files['modules'].append(filename)
                 target_filename = os.path.join(directory_for(area['playgroundmodules'], current_project), filename)
@@ -20875,24 +13744,41 @@ def do_playground_pull(area, current_project, github_url=None, branch=None, pypi
                     need_to_restart = True
                 copy_if_different(orig_file, target_filename)
     # output += "setup.py is " + str(len(setup_py)) + " characters long\n"
-    setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
-    for line in setup_py.splitlines():
-        m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
-        if m:
-            extracted[m.group(1)] = m.group(2)
-        m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
-        if m:
-            extracted[m.group(1)] = m.group(2)
-        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
-        if m:
-            the_list = []
-            for item in re.split(r', *', m.group(2)):
-                inner_item = re.sub(r"'$", '', item)
-                inner_item = re.sub(r"^'", '', inner_item)
-                inner_item = re.sub(r'"+$', '', inner_item)
-                inner_item = re.sub(r'^"+', '', inner_item)
-                the_list.append(inner_item)
-            extracted[m.group(1)] = the_list
+    if setup_py:
+        setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+        for line in setup_py.splitlines():
+            m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
+            if m:
+                extracted[m.group(1)] = m.group(2)
+            m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
+            if m:
+                extracted[m.group(1)] = m.group(2)
+            m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+            if m:
+                the_list = []
+                for item in re.split(r', *', m.group(2)):
+                    inner_item = re.sub(r"'$", '', item)
+                    inner_item = re.sub(r"^'", '', inner_item)
+                    inner_item = re.sub(r'"+$', '', inner_item)
+                    inner_item = re.sub(r'^"+', '', inner_item)
+                    the_list.append(inner_item)
+                extracted[m.group(1)] = the_list
+    if pyproject_toml:
+        data = tomli.loads(pyproject_toml)
+        if 'project' in data and isinstance(data['project'], dict):
+            extracted['description'] = data['project'].get('description', '')
+            extracted['name'] = data['project'].get('name', '')
+            extracted['version'] = data['project'].get('version', '')
+            extracted['license'] = data['project'].get('license', '')
+            if 'authors' in data['project'] and isinstance(data['project']['authors'], list) and len(data['project']['authors']) > 0 and isinstance(data['project']['authors'][0], dict):
+                extracted['author'] = data['project']['authors'][0].get('name', '')
+                extracted['author_email'] = data['project']['authors'][0].get('email', '')
+            if 'dependencies' in data['project'] and isinstance(data['project']['dependencies'], list):
+                extracted['install_requires'] = data['project']['dependencies']
+            if 'urls' in data['project'] and isinstance(data['project']['urls'], dict):
+                extracted['url'] = data['project']['urls'].get('Homepage', '')
+    if not extracted.get('name', None):
+        return {'action': 'error', 'message': "could not find name of PyPI package."}
     info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': extracted.get('install_requires', []), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', ''), 'github_url': github_url, 'github_branch': branch, 'pypi_package_name': pypi_package}
     info_dict['dependencies'] = [x.strip() for x in map(lambda y: re.sub(r'[\>\<\=@].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
     # output += "info_dict is set\n"
@@ -20962,6 +13848,7 @@ def playground_packages():
     pypi_password = current_user.pypi_password
     pypi_url = daconfig.get('pypi url', 'https://pypi.org/pypi')
     can_publish_to_pypi = bool(allow_pypi is True and pypi_username is not None and pypi_password is not None and pypi_username != '' and pypi_password != '')
+    github_auth_info = {}
     if app.config['USE_GITHUB']:
         github_auth = r.get('da:using_github:userid:' + str(current_user.id))
         if github_auth is not None:
@@ -21094,6 +13981,8 @@ def playground_packages():
                 content = fp.read()
                 old_info = standardyaml.load(content, Loader=standardyaml.FullLoader)
                 if isinstance(old_info, dict):
+                    if 'license' in old_info and isinstance(old_info['license'], str) and 'MIT License' in old_info['license']:
+                        old_info['license'] = 'MIT'
                     github_url_from_file = old_info.get('github_url', None)
                     pypi_package_from_file = old_info.get('pypi_package_name', None)
                     for field in ('license', 'description', 'author_name', 'author_email', 'version', 'url', 'readme'):
@@ -21160,7 +14049,7 @@ def playground_packages():
                 found = True
                 if github_url_from_file is None or github_url_from_file in [github_ssh, github_http]:
                     found_strong = True
-            if found_strong is False and github_auth_info['shared']:
+            if found_strong is False and github_auth_info.get('shared'):
                 repositories = get_user_repositories(http)
                 for repo_info in repositories:
                     if repo_info['name'] != github_package_name or (github_http is not None and github_http == repo_info['html_url']) or (github_ssh is not None and github_ssh == repo_info['ssh_url']):
@@ -21218,6 +14107,7 @@ def playground_packages():
                     readme_text = ''
                     gitignore_text = ''
                     setup_py = ''
+                    pyproject_toml = ''
                     extracted = {}
                     data_files = {'templates': [], 'static': [], 'sources': [], 'interviews': [], 'modules': [], 'questions': []}
                     has_docassemble_dir = set()
@@ -21228,10 +14118,10 @@ def playground_packages():
                                 has_docassemble_dir.add(re.sub(r'/docassemble/$', '', zinfo.filename))
                             if zinfo.filename == 'docassemble/':
                                 has_docassemble_dir.add('')
-                        elif zinfo.filename.endswith('/setup.py'):
+                        elif zinfo.filename.endswith('/setup.py') or zinfo.filename.endswith('/pyproject.toml') or zinfo.filename.endswith('/setup.cfg'):
                             (directory, filename) = os.path.split(zinfo.filename)
                             has_setup_file.add(directory)
-                        elif zinfo.filename == 'setup.py':
+                        elif zinfo.filename in ('setup.py', 'pyproject.toml', 'setup.cfg'):
                             has_setup_file.add('')
                     root_dir = None
                     for directory in has_docassemble_dir.union(has_setup_file):
@@ -21272,6 +14162,10 @@ def playground_packages():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 setup_py = the_file_obj.read()
+                        if filename == 'pyproject.toml' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                pyproject_toml = the_file_obj.read()
                         elif len(levels) >= 1 and directory != root_dir and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                             need_to_restart = True
                             data_files['modules'].append(filename)
@@ -21279,24 +14173,39 @@ def playground_packages():
                             with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                 shutil.copyfileobj(source_fp, target_fp)
                                 os.utime(target_filename, (the_time, the_time))
-                    setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
-                    for line in setup_py.splitlines():
-                        m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
-                        if m:
-                            extracted[m.group(1)] = m.group(2)
-                        m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
-                        if m:
-                            extracted[m.group(1)] = m.group(2)
-                        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
-                        if m:
-                            the_list = []
-                            for item in re.split(r', *', m.group(2)):
-                                inner_item = re.sub(r"'$", '', item)
-                                inner_item = re.sub(r"^'", '', inner_item)
-                                inner_item = re.sub(r'"+$', '', inner_item)
-                                inner_item = re.sub(r'^"+', '', inner_item)
-                                the_list.append(inner_item)
-                            extracted[m.group(1)] = the_list
+                    if setup_py:
+                        setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+                        for line in setup_py.splitlines():
+                            m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
+                            if m:
+                                extracted[m.group(1)] = m.group(2)
+                            m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
+                            if m:
+                                extracted[m.group(1)] = m.group(2)
+                            m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+                            if m:
+                                the_list = []
+                                for item in re.split(r', *', m.group(2)):
+                                    inner_item = re.sub(r"'$", '', item)
+                                    inner_item = re.sub(r"^'", '', inner_item)
+                                    inner_item = re.sub(r'"+$', '', inner_item)
+                                    inner_item = re.sub(r'^"+', '', inner_item)
+                                    the_list.append(inner_item)
+                                extracted[m.group(1)] = the_list
+                    if pyproject_toml:
+                        data = tomli.loads(pyproject_toml)
+                        if 'project' in data and isinstance(data['project'], dict):
+                            extracted['description'] = data['project'].get('description', '')
+                            extracted['name'] = data['project'].get('name', '')
+                            extracted['version'] = data['project'].get('version', '')
+                            extracted['license'] = data['project'].get('license', '')
+                            if 'authors' in data['project'] and isinstance(data['project']['authors'], list) and len(data['project']['authors']) > 0 and isinstance(data['project']['authors'][0], dict):
+                                extracted['author'] = data['project']['authors'][0].get('name', '')
+                                extracted['author_email'] = data['project']['authors'][0].get('email', '')
+                            if 'dependencies' in data['project'] and isinstance(data['project']['dependencies'], list):
+                                extracted['install_requires'] = data['project']['dependencies']
+                            if 'urls' in data['project'] and isinstance(data['project']['urls'], dict):
+                                extracted['url'] = data['project']['urls'].get('Homepage', '')
                     info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
 
                     info_dict['dependencies'] = [x.strip() for x in map(lambda y: re.sub(r'[\>\<\=@].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
@@ -21432,121 +14341,26 @@ def playground_packages():
     edit_header = None
     description = Markup("""Describe your package and choose the files from your Playground that will go into it.""")
     after_text = None
-    if scroll:
-        extra_command = "        scrollBottom();"
-    else:
-        extra_command = ""
-    extra_command += indent_by(upload_js(), 2) + """\
-        $("#daCancelPyPI").click(function(event){
-          var daWhichButton = this;
-          $("#pypi_message_div").hide();
-          $(".btn-da").each(function(){
-            if (this != daWhichButton && $(this).attr('id') != 'daCancelGitHub' && $(this).is(":hidden")){
-              $(this).show();
-            }
-          });
-          $("#daPyPI").html(""" + json.dumps(word("PyPI")) + """);
-          $(this).hide();
-          event.preventDefault();
-          return false;
-        });
-        $("#daCancelGitHub").click(function(event){
-          var daWhichButton = this;
-          $("#commit_message_div").hide();
-          $(".btn-da").each(function(){
-            if (this != daWhichButton && $(this).attr('id') != 'daCancelPyPI' && $(this).is(":hidden")){
-              $(this).show();
-            }
-          });
-          $("#daGitHub").html(""" + json.dumps(word("GitHub")) + """);
-          $(this).hide();
-          event.preventDefault();
-          return false;
-        });
-        if ($("#github_branch option").length == 0){
-          $("#github_branch_div").hide();
-        }
-        $("#github_branch").on('change', function(event){
-          if ($(this).val() == '<new>'){
-            $("#new_branch_div").show();
-          }
-          else{
-            $("#new_branch_div").hide();
-          }
-        });
-        $("#daPyPI").click(function(event){
-          if (existingPypiVersion != null && existingPypiVersion == $("#version").val()){
-            alert(""" + json.dumps(word("You need to increment the version before publishing to PyPI.")) + """);
-            $('html, body').animate({
-              scrollTop: $("#version").offset().top-90,
-              scrollLeft: 0
-            });
-            $("#version").focus();
-            var tmpStr = $("#version").val();
-            $("#version").val('');
-            $("#version").val(tmpStr);
-            event.preventDefault();
-            return false;
-          }
-          var daWhichButton = this;
-          if ($("#pypi_message_div").is(":hidden")){
-            $("#pypi_message_div").show();
-            $(".btn-da").each(function(){
-              if (this != daWhichButton && $(this).is(":visible")){
-                $(this).hide();
-              }
-            });
-            $(this).html(""" + json.dumps(word("Publish")) + """);
-            $("#daCancelPyPI").show();
-            window.scrollTo(0, document.body.scrollHeight);
-            event.preventDefault();
-            return false;
-          }
-        });
-        $("#daGitHub").click(function(event){
-          var daWhichButton = this;
-          if ($("#commit_message").val().length == 0 || $("#commit_message_div").is(":hidden")){
-            if ($("#commit_message_div").is(":visible")){
-              $("#commit_message").addClass("is-invalid");
-            }
-            else{
-              $("#commit_message_div").show();
-              $(".btn-da").each(function(){
-                if (this != daWhichButton && $(this).is(":visible")){
-                  $(this).hide();
-                }
-              });
-              $(this).html(""" + json.dumps(word("Commit")) + """);
-              $("#daCancelGitHub").show();
-            }
-            $("#commit_message").focus();
-            window.scrollTo(0, document.body.scrollHeight);
-            event.preventDefault();
-            return false;
-          }
-          if ($("#pypi_also").prop('checked') && existingPypiVersion != null && existingPypiVersion == $("#version").val()){
-            alert(""" + json.dumps(word("You need to increment the version before publishing to PyPI.")) + """);
-            $('html, body').animate({
-              scrollTop: $("#version").offset().top-90,
-              scrollLeft: 0
-            });
-            $("#version").focus();
-            var tmpStr = $("#version").val();
-            $("#version").val('');
-            $("#version").val(tmpStr);
-            event.preventDefault();
-            return false;
-          }
-        });
-        $(document).on('keydown', function(e){
-          if (e.which == 13){
-            var tag = $( document.activeElement ).prop("tagName");
-            if (tag != "TEXTAREA" && tag != "A" && tag != "LABEL" && tag != "BUTTON"){
-              e.preventDefault();
-              e.stopPropagation();
-            }
-          }
-        });"""
+    initial_values = playground_values(current_project, the_file)
+    initial_values.update({
+        "daPage": 'package',
+        "daScroll": bool(scroll),
+        "isNew": is_new,
+        "existingFiles": files,
+        "existingPypiVersion": pypi_version,
+        "currentFile": the_file,
+        "daContent": form.readme.data,
+    })
+    initial_values['daTranslations'].update({
+            "needToIncrement": word("You need to increment the version before publishing to PyPI."),
+            "commit": word("Commit"),
+            "publish": word("Publish"),
+            "github": word("GitHub"),
+            "pypi": word("PyPI"),
+            "unsavedChangesWarning": word("There are unsaved changes.  Are you sure you wish to leave this page?"),
+            "sureDeletePackage": word("Are you sure that you want to delete this package?"),
+            "packageExistsWarning": word("Warning: a package definition by that name already exists.  If you save, you will overwrite it."),
+        })
     any_files = len(editable_files) > 0
     back_button = Markup('<span class="navbar-brand navbar-nav dabackicon me-3"><a href="' + url_for('playground_page', project=current_project) + '" class="dabackbuttoncolor nav-link" title=' + json.dumps(word("Go back to the main Playground page")) + '><i class="fa-solid fa-chevron-left"></i><span class="daback">' + word('Back') + '</span></a></span>')
     if can_publish_to_pypi:
@@ -21554,66 +14368,10 @@ def playground_packages():
             pypi_message = Markup(pypi_message)
     else:
         pypi_message = None
-    extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    '
-    extra_js += '<script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>' + """
-    <script>
-      var daAutoComp = [];
-      var daCm;
-      var existingPypiVersion = """ + json.dumps(pypi_version) + """;
-      var isNew = """ + json.dumps(is_new) + """;
-      var existingFiles = """ + json.dumps(files) + """;
-      var currentFile = """ + json.dumps(the_file) + """;
-      var daExpireSession = null;
-      function resetExpireSession(){
-        if (daExpireSession != null){
-          window.clearTimeout(daExpireSession);
-        }
-        daExpireSession = setTimeout(function(){
-          alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
-        }, """ + str(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
-      }
-      function scrollBottom(){
-        $("html, body").animate({ scrollTop: $(document).height() }, "slow");
-      }
-      $( document ).ready(function() {
-        resetExpireSession();
-        $("#file_name").on('change', function(){
-          var newFileName = $(this).val();
-          if ((!isNew) && newFileName == currentFile){
-            return;
-          }
-          for (var i = 0; i < existingFiles.length; i++){
-            if (newFileName == existingFiles[i]){
-              alert(""" + json.dumps(word("Warning: a package definition by that name already exists.  If you save, you will overwrite it.")) + """);
-              return;
-            }
-          }
-          return;
-        });
-        $("#daDelete").click(function(event){
-          if (!confirm(""" + '"' + word("Are you sure that you want to delete this package?") + '"' + """)){
-            event.preventDefault();
-          }
-        });
-        daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob(""" + json.dumps(safeid(json.dumps(form.readme.data))) + """)), "md", """ + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + """);
-        $(daCm.dom).attr("tabindex", 70);
-        $(daCm.dom).on('focus', function(){
-          daCm.focus();
-        });
-        $("#readme").val(daCm.state.doc.toString());
-        $(daCm.dom).attr("id", "readme_content");
-        $(window).bind("beforeunload", function(){
-          $("#readme").val(daCm.state.doc.toString());
-          $("#form").trigger("checkform.areYouSure");
-        });
-        $("#form").areYouSure(""" + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + """);
-        $("#form").bind("submit", function(){
-          $("#readme").val(daCm.state.doc.toString());
-          $("#form").trigger("reinitialize.areYouSure");
-          return true;
-        });""" + extra_command + """
-      });
-    </script>"""
+    extra_js = f"""
+    <script{DEFER} src="{url_for('static', filename="app/playgroundbundle.min.js", v=da_version)}"></script>
+    {redis_script(initial_values)}
+"""
     if github_use_ssh:
         the_github_url = github_ssh
     else:
@@ -21637,7 +14395,9 @@ def playground_packages():
                 the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
             else:
                 the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
-            commit_code_date = datetime.datetime.utcfromtimestamp(os.path.getmtime(current_commit_file)).replace(tzinfo=datetime.timezone.utc).astimezone(the_timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
+            commit_code_date = datetime.datetime.fromtimestamp(os.path.getmtime(current_commit_file), datetime.UTC).astimezone(the_timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
+        else:
+            commit_code_date = ''
         if commit_code:
             github_message += '  ' + word('The current branch is %s and the current commit is %s.') % ('<a target="_blank" href="' + html_url + '/tree/' + old_info['github_branch'] + '">' + old_info['github_branch'] + '</a>', '<a target="_blank" href="' + html_url + '/commit/' + commit_code + '"><code>' + commit_code[0:7] + '</code></a>') + '  ' + word('The commit was saved locally at %s.') % commit_code_date
         else:
@@ -21772,7 +14532,7 @@ def variables_js(form=None, office_mode=False, current_project=None):
 function activatePopovers(){
   var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
   var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
-    return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
+    return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "click", html: true});
   });
 }
 
@@ -22402,6 +15162,43 @@ def get_pg_var_cache():
     return response
 
 
+def playground_values(current_project, the_file, playground_user=None):
+    values = {
+        "currentProject": current_project,
+        "currentFile": the_file,
+        "daNotificationContainer": NOTIFICATION_CONTAINER,
+        "daNotificationMessage": NOTIFICATION_MESSAGE,
+        "daSessionLifetimeSeconds": 999 * int(daconfig.get('session lifetime seconds', 43200)),
+        "daUrlPlaygroundPage": url_for('playground_page'),
+        "daUrlPlaygroundPageWithProject": url_for('playground_page', project=current_project),
+        "daGoogleDriveSyncUrl": url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)),
+        "daOneDriveSyncUrl": url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)),
+        "daWrapLines": bool(daconfig.get('wrap lines in playground', True)),
+        "daKeymap": keymap,
+        "daTranslations": {"in mako": word("in mako"),
+                           "mentioned in": word("mentioned in"),
+                           "defined by": word("defined by"),
+                           "from": word("from"),
+                           "loading": word("Loading . . ."),
+                           "failedToLoad": word("Failed to load report"),
+                           "sessionHasExpired": word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again."),
+                           "fileExistWarning": word("Warning: a file by that name already exists.  If you save, you will overwrite it."),
+                           "linkCopiedClipboard": word('Link copied to clipboard.'),
+                           "unsavedChangesWarning": word("There are unsaved changes.  Are you sure you wish to leave this page?"),
+                           "sureYouWantToDelete": word("Are you sure that you want to delete this playground file?"),
+                           "sureYouWantToDeleteFile": word("Are you sure that you want to delete this file?"),
+                           },
+    }
+    if (playground_user):
+        values.update({
+            "interviewBaseUrl": url_for('index', reset='1', cache='0', i='docassemble.playground' + str(playground_user.id) + ':.yml'),
+            "shareBaseUrl": url_for('index', i='docassemble.playground' + str(playground_user.id) + ':.yml', _external=True),
+            "daVariablesReportUrl": url_for('variables_report', project=current_project),
+            "daUrlPlaygroundVariables": url_for('playground_variables')
+        })
+    return values
+
+
 @app.route('/playground', methods=['GET', 'POST'])
 @login_required
 @roles_required(['developer', 'admin'])
@@ -22669,498 +15466,28 @@ def playground_page():
             pulldown_files.insert(0, new_active_file)
         if is_fictitious:
             active_file = new_active_file
-    ajax = """
-var exampleData;
-var originalFileName = """ + json.dumps(the_file) + """;
-var isNew = """ + json.dumps(is_new) + """;
-var validForm = """ + json.dumps(valid_form) + """;
-var vocab = """ + json.dumps(vocab_list) + """;
-var existingFiles = """ + json.dumps(file_listing) + """;
-var currentProject = """ + json.dumps(current_project) + """;
-var currentFile = """ + json.dumps(the_file) + """;
-var attrs_showing = Object();
-var daExpireSession = null;
-var daNotificationContainer = """ + json.dumps(NOTIFICATION_CONTAINER) + """;
-var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
-Object.defineProperty(String.prototype, "daSprintf", {
-  value: function () {
-    var args = Array.from(arguments),
-      i = 0;
-    function defaultNumber(iValue) {
-      return iValue != undefined && !isNaN(iValue) ? iValue : "0";
-    }
-    function defaultString(iValue) {
-      return iValue == undefined ? "" : "" + iValue;
-    }
-    return this.replace(
-      /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
-      function (match, sign, filler, scale, precision, type) {
-        var strOut, space, value;
-        var asNumber = false;
-        if (match == "%%") return "%";
-        if (i >= args.length) return match;
-        value = args[i];
-        while (Array.isArray(value)) {
-          args.splice(i, 1);
-          for (var j = i; value.length > 0; j++)
-            args.splice(j, 0, value.shift());
-          value = args[i];
-        }
-        i++;
-        if (filler == undefined) filler = " "; // default
-        if (scale == undefined && !isNaN(filler)) {
-          scale = filler;
-          filler = " ";
-        }
-        if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
-        if (scale == undefined) scale = 0; // default
-        if (precision == undefined) precision = ".0"; // default
-        scale = parseInt(scale);
-        precision = parseInt(precision.substr(1));
-        switch (type) {
-          case "d":
-          case "i":
-            // decimal integer
-            asNumber = true;
-            strOut = parseInt(defaultNumber(value));
-            if (precision > 0) strOut += "." + "0".repeat(precision);
-            break;
-          case "e":
-          case "E":
-            // float in exponential notation
-            asNumber = true;
-            strOut = parseFloat(defaultNumber(value));
-            if (precision == 0) strOut = strOut.toExponential();
-            else strOut = strOut.toExponential(precision);
-            if (type == "E") strOut = strOut.replace("e", "E");
-            break;
-          case "f":
-            // decimal float
-            asNumber = true;
-            strOut = parseFloat(defaultNumber(value));
-            if (precision != 0) strOut = strOut.toFixed(precision);
-            break;
-          case "o":
-          case "h":
-          case "H":
-            // Octal or Hexagesimal integer notation
-            strOut =
-              "\\\\" +
-              (type == "o" ? "0" : type) +
-              parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
-            break;
-          case "q":
-            // single quoted string
-            strOut = "'" + defaultString(value) + "'";
-            break;
-          case "Q":
-            // double quoted string
-            strOut = '"' + defaultString(value) + '"';
-            break;
-          default:
-            // string
-            strOut = defaultString(value);
-            break;
-        }
-        if (typeof strOut != "string") strOut = "" + strOut;
-        if ((space = strOut.length) < scale) {
-          if (asNumber) {
-            if (sign == "-") {
-              if (strOut.indexOf("-") < 0)
-                strOut = filler.repeat(scale - space) + strOut;
-              else
-                strOut =
-                  "-" +
-                  filler.repeat(scale - space) +
-                  strOut.replace("-", "");
-            } else {
-              if (strOut.indexOf("-") < 0)
-                strOut = "+" + filler.repeat(scale - space - 1) + strOut;
-              else
-                strOut =
-                  "-" +
-                  filler.repeat(scale - space) +
-                  strOut.replace("-", "");
-            }
-          } else {
-            if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
-            else strOut = strOut + filler.repeat(scale - space);
-          }
-        } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
-          strOut = "+" + strOut;
-        return strOut;
-      }
-    );
-  },
-});
-Object.defineProperty(window, "daSprintf", {
-  value: function (str, ...rest) {
-    if (typeof str == "string")
-      return String.prototype.daSprintf.apply(str, rest);
-    return "";
-  },
-});
-
-function resetExpireSession(){
-  if (daExpireSession != null){
-    window.clearTimeout(daExpireSession);
-  }
-  daExpireSession = setTimeout(function(){
-    alert(""" + json.dumps(word("Your browser session has expired and you have been signed out.  You will not be able to save your work.  Please log in again.")) + """);
-  }, """ + str(999 * int(daconfig.get('session lifetime seconds', 43200))) + """);
-}
-""" + variables_js(current_project=current_project) + """
-function activateExample(id, scroll){
-  var info = exampleData[id];
-  $("#da-example-source").html(info['html']);
-  $("#da-example-source-before").html(info['before_html']);
-  $("#da-example-source-after").html(info['after_html']);
-  $("#da-example-image-link").attr("href", info['interview']);
-  $("#da-example-image").attr("src", info['image']);
-  $("#da-example-image-dark").attr("srcset", info['image'].replace('/examples/', '/examplesdark/'));
-  if (info['documentation'] != null){
-    $("#da-example-documentation-link").attr("href", info['documentation']);
-    $("#da-example-documentation-link").removeClass("da-example-hidden");
-    //$("#da-example-documentation-link").slideUp();
-  }
-  else{
-    $("#da-example-documentation-link").addClass("da-example-hidden");
-    //$("#da-example-documentation-link").slideDown();
-  }
-  $(".da-example-list").addClass("da-example-hidden");
-  $(".da-example-link").removeClass("da-example-active");
-  $(".da-example-link").removeClass("active");
-  $(".da-example-link").each(function(){
-    if ($(this).data("example") == id){
-      $(this).addClass("da-example-active");
-      $(this).addClass("active");
-      $(this).parents(".da-example-list").removeClass("da-example-hidden");
-      if (scroll){
-        setTimeout(function(){
-          //console.log($(this).parents("li").last()[0].offsetTop);
-          //console.log($(this).parents("li").last().parent()[0].offsetTop);
-          $(".da-example-active").parents("ul").last().scrollTop($(".da-example-active").parents("li").last()[0].offsetTop);
-        }, 0);
-      }
-      //$(this).parents(".da-example-list").slideDown();
-    }
-  });
-  $("#da-hide-full-example").addClass("dainvisible");
-  if (info['has_context']){
-    $("#da-show-full-example").removeClass("dainvisible");
-  }
-  else{
-    $("#da-show-full-example").addClass("dainvisible");
-  }
-  $("#da-example-source-before").addClass("dainvisible");
-  $("#da-example-source-after").addClass("dainvisible");
-}
-
-function saveCallback(data){
-  if (data.action && data.action == 'reload'){
-    location.reload(true);
-  }
-  if ($("#daflash").length){
-    $("#daflash").html(data.flash_message);
-  }
-  else{
-    $("#damain").prepend(daSprintf(daNotificationContainer, data.flash_message));
-  }
-  if (data.vocab_list != null){
-    vocab = data.vocab_list;
-  }
-  if (data.current_project != null){
-    currentProject = data.current_project;
-  }
-  history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
-  $("#daVariables").val(data.active_file);
-  $("#share-link").attr('href', data.active_interview_url);
-  if (data.ac_list != null){
-    daAutoComp.length = 0;
-    let n = data.ac_list.length;
-    for(let i = 0; i < n; i++){
-      daAutoComp.push(data.ac_list[i]);
-    }
-  }
-  if (data.variables_html != null){
-    $("#daplaygroundtable").html(data.variables_html);
-    activateVariables();
-    $("#form").trigger("reinitialize.areYouSure");
-    var daPopoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    var daPopoverList = daPopoverTriggerList.map(function (daPopoverTriggerEl) {
-      return new bootstrap.Popover(daPopoverTriggerEl, {trigger: "focus", html: true});
-    });
-  }
-  daConsoleMessages = data.console_messages;
-  daShowConsoleMessages();
-}
-
-function daShowConsoleMessages(){
-  for (i=0; i < daConsoleMessages.length; ++i){
-    console.log(daConsoleMessages[i]);
-  }
-}
-
-function disableButtonsUntilCallback(){
-  $("button.dasubmitbutton").prop('disabled', true);
-  $("a.dasubmitbutton").addClass('dadisabled');
-}
-
-function enableButtons(){
-  $(".dasubmitbutton").prop('disabled', false);
-  $("a.dasubmitbutton").removeClass('dadisabled');
-}
-
-function flash(message, priority){
-  if (priority == null){
-    priority = 'info'
-  }
-  if (!$("#daflash").length){
-    $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
-  }
-  var newElement = $(daSprintf(daNotificationMessage, priority, message));
-  $("#daflash").append(newElement);
-  if (priority == 'success'){
-    setTimeout(function(){
-      $(newElement).hide(300, function(){
-        $(self).remove();
-      });
-    }, 3000);
-  }
-}
-
-$( document ).ready(function() {
-  variablesReady();
-  resetExpireSession();
-  $("#playground_name").on('change', function(){
-    var newFileName = $(this).val();
-    if ((!isNew) && newFileName == currentFile){
-      return;
-    }
-    for (var i = 0; i < existingFiles.length; i++){
-      if (newFileName == existingFiles[i] || newFileName + '.yml' == existingFiles[i]){
-        alert(""" + json.dumps(word("Warning: a file by that name already exists.  If you save, you will overwrite it.")) + """);
-        return;
-      }
-    }
-    return;
-  });
-  $("#share-link").click(function(event){
-    const shareLink = document.getElementById('share-link');
-    const url = shareLink.getAttribute('href');
-    const tempInput = document.createElement('input');
-    tempInput.value = url;
-    document.body.appendChild(tempInput);
-
-    tempInput.select();
-    tempInput.setSelectionRange(0, 99999);
-    document.execCommand('copy');
-    document.body.removeChild(tempInput);
-
-    flash(""" + json.dumps(word('Link copied to clipboard.')) + """, "success");
-    event.preventDefault();
-    return false;
-  });
-  $("#daRun").click(function(event){
-    if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == ''){
-      $("#form button[name='submit']").click();
-      event.preventDefault();
-      return false;
-    }
-    $("#playground_content").val(daCm.state.doc.toString());
-    disableButtonsUntilCallback();
-    $.ajax({
-      type: "POST",
-      url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
-      data: $("#form").serialize() + '&run=Save+and+Run&ajax=1',
-      success: function(data){
-        if (data.action && data.action == 'reload'){
-          location.reload(true);
-        }
-        enableButtons();
-        resetExpireSession();
-        saveCallback(data);
-      },
-      dataType: 'json'
-    });
-    //event.preventDefault();
-    return true;
-  });
-  var thisWindow = window;
-  $("#daRunSyncGD").click(function(event){
-    $("#playground_content").val(daCm.state.doc.toString());
-    $("#form").trigger("checkform.areYouSure");
-    if ($('#form').hasClass('dirty') && !confirm(""" + json.dumps(word("There are unsaved changes.  Are you sure you wish to leave this page?")) + """)){
-      event.preventDefault();
-      return false;
-    }
-    if ($("#playground_name").val() == ''){
-      $("#form button[name='submit']").click();
-      event.preventDefault();
-      return false;
-    }
-    setTimeout(function(){
-      thisWindow.location.replace('""" + url_for('sync_with_google_drive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
-    }, 100);
-    return true;
-  });
-  $("#daRunSyncOD").click(function(event){
-    $("#playground_content").val(daCm.state.doc.toString());
-    $("#form").trigger("checkform.areYouSure");
-    if ($('#form').hasClass('dirty') && !confirm(""" + json.dumps(word("There are unsaved changes.  Are you sure you wish to leave this page?")) + """)){
-      event.preventDefault();
-      return false;
-    }
-    if ($("#playground_name").val() == ''){
-      $("#form button[name='submit']").click();
-      event.preventDefault();
-      return false;
-    }
-    setTimeout(function(){
-      thisWindow.location.replace('""" + url_for('sync_with_onedrive', project=current_project, auto_next=url_for('playground_page_run', file=the_file, project=current_project)) + """');
-    }, 100);
-    return true;
-  });
-  $("#form button[name='submit']").click(function(event){
-    $("#playground_content").val(daCm.state.doc.toString());
-    if (validForm == false || isNew == true || originalFileName != $("#playground_name").val() || $("#playground_name").val().trim() == ""){
-      return true;
-    }
-    disableButtonsUntilCallback();
-    $.ajax({
-      type: "POST",
-      url: """ + '"' + url_for('playground_page', project=current_project) + '"' + """,
-      data: $("#form").serialize() + '&submit=Save&ajax=1',
-      success: function(data){
-        if (data.action && data.action == 'reload'){
-          location.reload(true);
-        }
-        enableButtons();
-        resetExpireSession();
-        saveCallback(data);
-        $("#daflash .alert-success").each(function(){
-          var oThis = this;
-          setTimeout(function(){
-            $(oThis).hide(300, function(){
-              $(self).remove();
-            });
-          }, 3000);
-        });
-      },
-      dataType: 'json'
-    });
-    event.preventDefault();
-    return false;
-  });
-
-  $(".da-example-link").on("click", function(){
-    var id = $(this).data("example");
-    activateExample(id, false);
-  });
-
-  $(".da-example-copy").on("click", function(event){
-    if (daCm.state.selection.ranges.some(r => !r.empty)){
-      daCm.dispatch(daCm.state.replaceSelection(""))
-    }
-    var id = $(".da-example-active").data("example");
-    var curPos = daCm.state.selection.main.head;
-    var notFound = 1;
-    var curLine = daCm.state.doc.lineAt(curPos).number;
-    let pos = 0;
-    for (let lines = daCm.state.doc.iterLines(from=curLine); !lines.next().done && notFound; pos++) {
-      let { value } = lines;
-      if (value.substring(0, 3) == "---" || value.substring(0, 3) == "..."){
-        notFound = 0;
-      }
-    }
-    let replacementText = "---\\n" + exampleData[id]['source'] + "\\n";
-    var newPos;
-    if (notFound){
-      newPos = daCm.state.doc.length;
-      replacementText = "\\n" + replacementText;
-    }
-    else{
-      if (pos > 0){
-        pos--;
-      }
-      newPos = daCm.state.doc.line(curLine + pos).from;
-    }
-    daCm.dispatch({selection: {anchor: newPos, head: newPos}});
-    daCm.dispatch(daCm.state.replaceSelection(replacementText, "around"))
-    daCm.focus();
-    event.preventDefault();
-    return false;
-  });
-
-  $(".da-example-heading").on("click", function(){
-    var list = $(this).parent().children("ul").first();
-    if (list != null){
-      if (!list.hasClass("da-example-hidden")){
-        return;
-      }
-      $(".da-example-list").addClass("da-example-hidden");
-      //$(".da-example-list").slideUp();
-      var new_link = $(this).parent().find("a.da-example-link").first();
-      if (new_link.length){
-        var id = new_link.data("example");
-        activateExample(id, true);
-      }
-    }
-  });
-
-  activatePopovers();
-
-  $("#da-show-full-example").on("click", function(){
-    var id = $(".da-example-active").data("example");
-    var info = exampleData[id];
-    $(this).addClass("dainvisible");
-    $("#da-hide-full-example").removeClass("dainvisible");
-    $("#da-example-source-before").removeClass("dainvisible");
-    $("#da-example-source-after").removeClass("dainvisible");
-  });
-
-  $("#da-hide-full-example").on("click", function(){
-    var id = $(".da-example-active").data("example");
-    var info = exampleData[id];
-    $(this).addClass("dainvisible");
-    $("#da-show-full-example").removeClass("dainvisible");
-    $("#da-example-source-before").addClass("dainvisible");
-    $("#da-example-source-after").addClass("dainvisible");
-  });
-  if ($("#playground_name").val().length > 0){
-    daCm.focus();
-    $("#form").trigger("reset");
-  }
-  else{
-    $("#playground_name").focus()
-  }
-  $("#daflash .alert-success").each(function(){
-    var oThis = this;
-    setTimeout(function(){
-      $(oThis).hide(300, function(){
-        $(self).remove();
-      });
-    }, 3000);
-  });
-
-  activateVariables();
-  updateRunLink();
-  daShowConsoleMessages();
-  if (currentFile != ''){
-    history.replaceState({}, "", """ + json.dumps(url_for('playground_page')) + """ + encodeURI('?project=' + currentProject + '&file=' + currentFile));
-  }
-});
-"""
+    initial_values = playground_values(current_project, the_file, playground_user)
+    initial_values.update({
+        "daPage": 'questions',
+        "isNew": is_new,
+        "existingFiles": file_listing,
+        "daConsoleMessages": console_messages,
+        "daAutoComp": ac_list,
+        "daContent": content,
+        "validForm": valid_form,
+        "vocab": vocab_list,
+        "originalFileName": the_file,
+        "daEncodedExampleData": [pg_ex['encoded_data_dict'], pg_ex['pg_first_id'][0]] if pg_ex['encoded_data_dict'] is not None else None
+    })
     any_files = len(files) > 0
     page_title = word("Playground")
     if current_user.id != playground_user.id:
         page_title += " / " + playground_user.email
     if current_project != 'default':
         page_title += " / " + current_project
-    extra_js = '\n    <script src="' + url_for('static', filename="app/playgroundbundle.js", v=da_version) + '"></script>\n    <script src="' + url_for('static', filename="app/cm6.js", v=da_version) + '"></script>\n    <script>' + upload_js() + '\n      var daConsoleMessages = ' + json.dumps(console_messages) + ';\n      $("#daDelete").click(function(event){if (originalFileName != $("#playground_name").val() || $("#playground_name").val() == \'\'){ $("#form button[name=\'submit\']").click(); event.preventDefault(); return false; } if(!confirm("' + word("Are you sure that you want to delete this playground file?") + '")){event.preventDefault();}});\n      var daAutoComp = JSON.parse(atob("' + safeid(json.dumps(ac_list)) + '"));\n      var daCm = daNewEditor($("#playground_content_container")[0], JSON.parse(atob("' + safeid(json.dumps(content)) + '")), "yml", ' + json.dumps(keymap) + ', ' + ('true' if daconfig.get('wrap lines in playground', True) else 'false') + ');\n      $("#playground_content").val(daCm.state.doc.toString());\n      $(daCm.dom).attr("tabindex", 70);\n      $(daCm.dom).on("focus", function(){\n        daCm.focus();\n      });\n      $(window).bind("beforeunload", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("checkform.areYouSure");\n      });\n      $("#form").areYouSure(' + json.dumps({'message': word("There are unsaved changes.  Are you sure you wish to leave this page?")}) + ');\n      $("#form").bind("submit", function(){\n        $("#playground_content").val(daCm.state.doc.toString());\n        $("#form").trigger("reinitialize.areYouSure");\n        return true;\n      });' + indent_by(ajax, 6) + '\n'
-    if pg_ex['encoded_data_dict'] is not None:
-        extra_js += '      exampleData = JSON.parse(atob("' + pg_ex['encoded_data_dict'] + '"));\n      activateExample("' + str(pg_ex['pg_first_id'][0]) + '", false);\n'
-    extra_js += '      $("#my-form").trigger("reinitialize.areYouSure");\n      $("#daVariablesReport").on("shown.bs.modal", function () { daFetchVariableReport(); })\n    </script>'
+    extra_js = f"""
+    <script{DEFER} src="{url_for('static', filename="app/playgroundbundle.min.js", v=da_version)}"></script>
+    {redis_script(initial_values)}"""
     response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(playground_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=playground_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form), own_playground=bool(playground_user.id == current_user.id), action=url_for('playground_page', project=current_project)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -23264,181 +15591,14 @@ def server_error(the_error):
         errmess = '<pre>' + errmess + '</pre>'
     else:
         errmess = '<blockquote class="blockquote">' + errmess + '</blockquote>'
-    script = """
-    <script>
-      if (daGlobalEval == undefined){
-        var daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
-        var daNotificationMessage = """ + json.dumps(NOTIFICATION_MESSAGE) + """;
-        var daGlobalEval = eval;
-        if (!String.prototype.daSprintf){
-          Object.defineProperty(String.prototype, "daSprintf", {
-            value: function () {
-              var args = Array.from(arguments),
-                i = 0;
-              function defaultNumber(iValue) {
-                return iValue != undefined && !isNaN(iValue) ? iValue : "0";
-              }
-              function defaultString(iValue) {
-                return iValue == undefined ? "" : "" + iValue;
-              }
-              return this.replace(
-                /%%|%([+\\-])?([^1-9])?(\\d+)?(\\.\\d+)?([deEfhHioQqs])/g,
-                function (match, sign, filler, scale, precision, type) {
-                  var strOut, space, value;
-                  var asNumber = false;
-                  if (match == "%%") return "%";
-                  if (i >= args.length) return match;
-                  value = args[i];
-                  while (Array.isArray(value)) {
-                    args.splice(i, 1);
-                    for (var j = i; value.length > 0; j++)
-                      args.splice(j, 0, value.shift());
-                    value = args[i];
-                  }
-                  i++;
-                  if (filler == undefined) filler = " "; // default
-                  if (scale == undefined && !isNaN(filler)) {
-                    scale = filler;
-                    filler = " ";
-                  }
-                  if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
-                  if (scale == undefined) scale = 0; // default
-                  if (precision == undefined) precision = ".0"; // default
-                  scale = parseInt(scale);
-                  precision = parseInt(precision.substr(1));
-                  switch (type) {
-                    case "d":
-                    case "i":
-                      // decimal integer
-                      asNumber = true;
-                      strOut = parseInt(defaultNumber(value));
-                      if (precision > 0) strOut += "." + "0".repeat(precision);
-                      break;
-                    case "e":
-                    case "E":
-                      // float in exponential notation
-                      asNumber = true;
-                      strOut = parseFloat(defaultNumber(value));
-                      if (precision == 0) strOut = strOut.toExponential();
-                      else strOut = strOut.toExponential(precision);
-                      if (type == "E") strOut = strOut.replace("e", "E");
-                      break;
-                    case "f":
-                      // decimal float
-                      asNumber = true;
-                      strOut = parseFloat(defaultNumber(value));
-                      if (precision != 0) strOut = strOut.toFixed(precision);
-                      break;
-                    case "o":
-                    case "h":
-                    case "H":
-                      // Octal or Hexagesimal integer notation
-                      strOut =
-                        "\\\\" +
-                        (type == "o" ? "0" : type) +
-                        parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
-                      break;
-                    case "q":
-                      // single quoted string
-                      strOut = "'" + defaultString(value) + "'";
-                      break;
-                    case "Q":
-                      // double quoted string
-                      strOut = '"' + defaultString(value) + '"';
-                      break;
-                    default:
-                      // string
-                      strOut = defaultString(value);
-                      break;
-                  }
-                  if (typeof strOut != "string") strOut = "" + strOut;
-                  if ((space = strOut.length) < scale) {
-                    if (asNumber) {
-                      if (sign == "-") {
-                        if (strOut.indexOf("-") < 0)
-                          strOut = filler.repeat(scale - space) + strOut;
-                        else
-                          strOut =
-                            "-" +
-                            filler.repeat(scale - space) +
-                            strOut.replace("-", "");
-                      } else {
-                        if (strOut.indexOf("-") < 0)
-                          strOut = "+" + filler.repeat(scale - space - 1) + strOut;
-                        else
-                          strOut =
-                            "-" +
-                            filler.repeat(scale - space) +
-                            strOut.replace("-", "");
-                      }
-                    } else {
-                      if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
-                      else strOut = strOut + filler.repeat(scale - space);
-                    }
-                  } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
-                    strOut = "+" + strOut;
-                  return strOut;
-                }
-              );
-            },
-          });
-          Object.defineProperty(window, "daSprintf", {
-            value: function (str, ...rest) {
-              if (typeof str == "string")
-                return String.prototype.daSprintf.apply(str, rest);
-              return "";
-            },
-          });
-        }
-        function flash(message, priority){
-          if (priority == null){
-            priority = 'info'
-          }
-          if (!$("#daflash").length){
-            $("body").append(""" + json.dumps(NOTIFICATION_CONTAINER % ('',)) + """);
-          }
-          var newElement = $(daSprintf(daNotificationMessage, priority, message));
-          $("#daflash").append(newElement);
-          if (priority == 'success'){
-            setTimeout(function(){
-              $(newElement).hide(300, function(){
-                $(self).remove();
-              });
-            }, 3000);
-          }
-        }
-        var da_flash = flash;
-        function daShowNotifications(){
-          var n = daMessageLog.length;
-          for (var i = 0; i < n; i++){
-            var message = daMessageLog[i];
-            if (message.priority == 'console'){
-              console.log(message.message);
-            }
-            else if (message.priority == 'javascript'){
-              daGlobalEval(message.message);
-            }
-            else if (message.priority == 'success' || message.priority == 'warning' || message.priority == 'danger' || message.priority == 'secondary' || message.priority == 'tertiary' || message.priority == 'info' || message.priority == 'dark' || message.priority == 'light' || message.priority == 'primary'){
-              da_flash(message.message, message.priority);
-            }
-            else{
-              da_flash(message.message, 'info');
-            }
-          }
-        }
-      }
-      else {
-        daMessageLog = JSON.parse(atob(""" + json.dumps(safeid(json.dumps(docassemble.base.functions.get_message_log()))) + """));
-      }
-      $( document ).ready(function() {
-        $("#da-retry").on('click', function(e){
-          location.reload();
-          e.preventDefault();
-          return false;
-        });
-        daShowNotifications();
-      });
-    </script>"""  # noqa: W605
+    initial_values = {
+        "daMessageLog": docassemble.base.functions.get_message_log(),
+        "daNotificationContainer": NOTIFICATION_CONTAINER % ('',),
+        "daNotificationMessage": NOTIFICATION_MESSAGE,
+    }
+    script = f"""
+    <script{DEFER} src="{url_for('static', filename="app/501.min.js")}"></script>
+    <script{DEFER}>Object.assign(window, {json.dumps(initial_values)});</script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
     if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and docassemble.base.functions.interview_path() is not None:
         try:
@@ -23478,7 +15638,7 @@ def server_error(the_error):
 def css_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['bootstrap-fileinput', 'css', 'fileinput.min.css'], ['labelauty', 'source', 'jquery-labelauty.min.css'], ['bootstrap-combobox', 'css', 'bootstrap-combobox.min.css'], ['bootstrap-slider', 'dist', 'css', 'bootstrap-slider.min.css'], ['app', 'app.min.css']]:
+    for parts in [['bootstrap-fileinput', 'css', 'fileinput.css'], ['labelauty', 'source', 'jquery-labelauty.css'], ['bootstrap-combobox', 'css', 'bootstrap-combobox.css'], ['bootstrap-slider', 'dist', 'css', 'bootstrap-slider.css'], ['app', 'app.css']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23489,7 +15649,7 @@ def css_bundle():
 def playground_css_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'pygments.min.css'], ['bootstrap-fileinput', 'css', 'fileinput.min.css']]:
+    for parts in [['app', 'pygments.css'], ['bootstrap-fileinput', 'css', 'fileinput.css']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23500,7 +15660,18 @@ def playground_css_bundle():
 def js_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'jquery.min.js'], ['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
+    for parts in [['app', 'jquery.js'], ['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'app.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js']]:
+        with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
+            output += fp.read()
+        output += "\n"
+    return Response(output, mimetype='application/javascript')
+
+
+@app.route('/monitorbundle.js', methods=['GET'])
+def monitor_bundle():
+    base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
+    output = ''
+    for parts in [['app', 'socket.io.js'], ['app', 'monitor.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23511,7 +15682,7 @@ def js_bundle():
 def playground_js_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['areyousure', 'jquery.are-you-sure.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js']]:
+    for parts in [['areyousure', 'jquery.are-you-sure.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'cm6.js'], ['app', 'playground.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23522,7 +15693,7 @@ def playground_js_bundle():
 def js_admin_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'jquery.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js']]:
+    for parts in [['app', 'jquery.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['app', 'admin.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23533,7 +15704,7 @@ def js_admin_bundle():
 def js_bundle_wrap():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = '(function($) {'
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
+    for parts in [['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'app.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23545,7 +15716,7 @@ def js_bundle_wrap():
 def js_bundle_no_query():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'jquery.validate.min.js'], ['app', 'additional-methods.min.js'], ['app', 'jquery.visible.min.js'], ['bootstrap', 'js', 'bootstrap.bundle.min.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.min.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.min.js'], ['bootstrap-fileinput', 'js', 'fileinput.min.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.min.js'], ['app', 'app.min.js'], ['labelauty', 'source', 'jquery-labelauty.min.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.min.js'], ['app', 'socket.io.min.js']]:
+    for parts in [['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'app.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -23574,7 +15745,7 @@ def package_static(package, filename):
     if not os.path.isfile(the_file):
         return ('File not found', 404)
     extension, mimetype = get_ext_and_mimetype(the_file)  # pylint: disable=unused-variable
-    response = send_file(the_file, mimetype=str(mimetype), download_name=filename)
+    response = custom_send_file(the_file, mimetype=str(mimetype), download_name=filename)
     if attach:
         filename = os.path.basename(filename)
         response.headers['Content-Disposition'] = 'attachment; filename=' + json.dumps(urllibquote(filename))
@@ -23596,7 +15767,7 @@ def logfile(filename):
             the_file, headers = urlretrieve("http://" + LOGSERVER + ':8082/' + urllibquote(filename))  # pylint: disable=unused-variable
         except:
             return ('File not found', 404)
-    response = send_file(the_file, as_attachment=True, mimetype='text/plain', download_name=filename, max_age=0)
+    response = custom_send_file(the_file, as_attachment=True, mimetype='text/plain', download_name=filename, max_age=0)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -23621,12 +15792,12 @@ def logs():
             info = zipfile.ZipInfo(f)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
-            info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(zip_path)).replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
+            info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(zip_path), datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
             with open(zip_path, 'rb') as fp:
                 zf.writestr(info, fp.read())
         zf.close()
         zip_file_name = re.sub(r'[^A-Za-z0-9_]+', '', app.config['APP_NAME']) + '_logs.zip'
-        response = send_file(zip_archive.name, mimetype='application/zip', as_attachment=True, download_name=zip_file_name)
+        response = custom_send_file(zip_archive.name, mimetype='application/zip', as_attachment=True, download_name=zip_file_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     the_file = request.args.get('file', None)
@@ -23658,6 +15829,8 @@ def logs():
                 the_file = files[0]
         if the_file is not None:
             filename = os.path.join(LOG_DIRECTORY, the_file)
+        else:
+            filename = ''
     else:
         h = httplib2.Http()
         resp, content = h.request("http://" + LOGSERVER + ':8082', "GET")
@@ -23669,6 +15842,8 @@ def logs():
             if the_file is None:
                 the_file = files[0]
             filename, headers = urlretrieve("http://" + LOGSERVER + ':8082/' + urllibquote(the_file))  # pylint: disable=unused-variable
+        else:
+            filename = ''
     if len(files) > 0 and not os.path.isfile(filename):
         flash(word("The file you requested does not exist."), 'error')
         if len(files) > 0:
@@ -23765,6 +15940,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
             fields_output += "---"
             return fields_output
         if input_format in ('docx', 'markdown'):
+            result = ''
             if input_format == 'docx':
                 result_file = word_to_markdown(filename, 'docx')
                 if result_file is None:
@@ -23853,6 +16029,7 @@ def utilities():
                     use_google_translate = False
             else:
                 use_google_translate = False
+                service = None
             words_to_translate = []
             for the_word in base_words:
                 if the_word in existing and existing[the_word] is not None:
@@ -23929,7 +16106,7 @@ def utilities():
                     worksheet.write_string(row, 3, val, wrapping)
                     row += 1
                 workbook.close()
-                response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=xlsx_filename)
+                response = custom_send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=xlsx_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
             elif form.systemfiletype.data == 'XLIFF 1.2':
@@ -23960,7 +16137,7 @@ def utilities():
                     indexno += 1
                 temp_file.write(ET.tostring(xliff))
                 temp_file.close()
-                response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, download_name=xliff_filename)
+                response = custom_send_file(temp_file.name, mimetype='application/xml', as_attachment=True, download_name=xliff_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
             elif form.systemfiletype.data == 'XLIFF 2.0':
@@ -23991,7 +16168,7 @@ def utilities():
                     indexno += 1
                 temp_file.write(ET.tostring(xliff))
                 temp_file.close()
-                response = send_file(temp_file.name, mimetype='application/xml', as_attachment=True, download_name=xliff_filename)
+                response = custom_send_file(temp_file.name, mimetype='application/xml', as_attachment=True, download_name=xliff_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
         if 'pdfdocxfile' in request.files and request.files['pdfdocxfile'].filename:
@@ -24023,20 +16200,11 @@ def utilities():
             resp.headers['Content-Disposition'] = 'attachment; filename="manifest.xml"'
             resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
             return resp
-    extra_js = """
-    <script>
-      $('#pdfdocxfile').on('change', function(){
-        var fileName = $(this).val();
-        fileName = fileName.replace(/.*\\\\/, '');
-        fileName = fileName.replace(/.*\\//, '');
-        $(this).next('.custom-file-label').html(fileName);
-      });
-    </script>"""
     form.systemfiletype.choices = [('YAML', 'YAML'), ('XLSX', 'XLSX'), ('XLIFF 1.2', 'XLIFF 1.2'), ('XLIFF 2.0', 'XLIFF 2.0')]
     form.systemfiletype.data = 'YAML'
     form.filetype.choices = [('XLSX', 'XLSX'), ('XLIFF 1.2', 'XLIFF 1.2'), ('XLIFF 2.0', 'XLIFF 2.0')]
     form.filetype.data = 'XLSX'
-    response = make_response(render_template('pages/utilities.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, interview_placeholder=word("E.g., docassemble.demo:data/questions/questions.yml"), language_placeholder=word("E.g., es, fr, it")), 200)
+    response = make_response(render_template('pages/utilities.html', version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Utilities"), page_title=word("Utilities"), form=form, fields=fields_output, word_box=word_box, uses_null=uses_null, file_type=file_type, interview_placeholder=word("E.g., docassemble.demo:data/questions/questions.yml"), language_placeholder=word("E.g., es, fr, it")), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -24114,7 +16282,7 @@ def ensure_training_loaded(interview):
                         try:
                             href = json.loads(content)
                             if isinstance(href, dict):
-                                nowtime = datetime.datetime.utcnow()
+                                nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
                                 for group_id, train_list in href.items():
                                     if isinstance(train_list, list):
                                         for entry in train_list:
@@ -24190,6 +16358,8 @@ def train():
     show_all = int(request.args.get('show_all', 0))
     form = TrainingForm(request.form)
     uploadform = TrainingUploadForm(request.form)
+    extra_js = f"""
+    <script src="{url_for('static', filename='app/train.min.js')}"></script>"""
     if request.method == 'POST' and the_package is not None and the_file is not None:
         if the_package == '_global':
             the_prefix = ''
@@ -24216,7 +16386,7 @@ def train():
             if not isinstance(href, dict):
                 flash(word("Error reading JSON file.  The JSON file needs to contain a dictionary at the root level."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
-            nowtime = datetime.datetime.utcnow()
+            nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
             for group_id, train_list in href.items():
                 if not isinstance(train_list, list):
                     logmessage("train: could not import part of JSON file.  Items in dictionary must be lists.")
@@ -24409,7 +16579,7 @@ def train():
                 the_json_file = tempfile.NamedTemporaryFile(mode='w', prefix="datemp", suffix=".json", delete=False, encoding='utf-8')
                 json.dump(output, the_json_file, sort_keys=True, indent=2)
                 the_json_file.close()
-                response = send_file(the_json_file.name, mimetype='application/json', as_attachment=True, download_name=json_filename)
+                response = custom_send_file(the_json_file.name, mimetype='application/json', as_attachment=True, download_name=json_filename)
                 response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
                 return response
             flash(word("No data existed in training set.  JSON file not created."), "error")
@@ -24456,35 +16626,6 @@ def train():
                         if the_saveas not in group_id_list:
                             group_id_list[the_saveas] = 0
         group_id_list = [(x, group_id_list[x]) for x in sorted(group_id_list)]
-        extra_js = """
-    <script>
-      $( document ).ready(function() {
-        $("#showimport").click(function(e){
-          $("#showimport").hide();
-          $("#hideimport").show();
-          $("#importcontrols").show('fast');
-          e.preventDefault();
-          return false;
-        });
-        $("#hideimport").click(function(e){
-          $("#showimport").show();
-          $("#hideimport").hide();
-          $("#importcontrols").hide('fast');
-          e.preventDefault();
-          return false;
-        });
-        $("input[type=radio][name=usepackage]").on('change', function(e) {
-          if ($(this).val() == 'no'){
-            $("#uploadinput").show();
-          }
-          else{
-            $("#uploadinput").hide();
-          }
-          e.preventDefault();
-          return false;
-        });
-      });
-    </script>"""
         response = make_response(render_template('pages/train.html', extra_js=Markup(extra_js), version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, package_list=package_list, file_list=file_list, group_id_list=group_id_list, entry_list=entry_list, show_all=show_all, show_group_id_list=True, package_file_available=package_file_available, the_package_location=the_prefix, uploadform=uploadform), 200)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
@@ -24558,36 +16699,6 @@ def train():
     else:
         # logmessage("There are no choices")
         choices = None
-    extra_js = """
-    <script>
-      $( document ).ready(function(){
-        $("button.prediction").click(function(){
-          if (!($("#dependent" + $(this).data("id-number")).prop('disabled'))){
-            $("#dependent" + $(this).data("id-number")).val($(this).data("prediction"));
-          }
-        });
-        $("select.trainer").change(function(){
-          var the_number = $(this).data("id-number");
-          if (the_number == "newdependent"){
-            $("#newdependent").val($(this).val());
-          }
-          else{
-            $("#dependent" + the_number).val($(this).val());
-          }
-        });
-        $("div.dadelete-observation input").change(function(){
-          var the_number = $(this).data("id-number");
-          if ($(this).is(':checked')){
-            $("#dependent" + the_number).prop('disabled', true);
-            $("#selector" + the_number).prop('disabled', true);
-          }
-          else{
-            $("#dependent" + the_number).prop('disabled', false);
-            $("#selector" + the_number).prop('disabled', false);
-          }
-        });
-      });
-    </script>"""
     response = make_response(render_template('pages/train.html', extra_js=Markup(extra_js), form=form, version_warning=version_warning, bodyclass='daadminbody', tab_title=word("Train"), page_title=word("Train machine learning models"), the_package=the_package, the_package_display=the_package_display, the_file=the_file, the_group_id=the_group_id, entry_list=entry_list, choices=choices, show_all=show_all, show_entry_list=True, is_data=is_data), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
@@ -25062,28 +17173,6 @@ def interview_list():
             if 'tags' in interview:
                 interview['tags'] = sorted(interview['tags'])
         return jsonify(action="interviews", interviews=interviews, next_id=next_id)
-    script = """
-    <script>
-      $(".dadeletebutton").on('click', function(event){
-        console.log("Doing click");
-        var yamlFilename = $("<input>")
-          .attr("type", "hidden")
-          .attr("name", "i").val($(this).data('i'));
-        $("#daform").append($(yamlFilename));
-        var session = $("<input>")
-          .attr("type", "hidden")
-          .attr("name", "session").val($(this).data('session'));
-        $("#daform").append($(session));
-        return true;
-      });
-      $("#delete_all").on('click', function(event){
-        if (confirm(""" + json.dumps(word("Are you sure you want to delete all saved interviews?")) + """)){
-          return true;
-        }
-        event.preventDefault();
-        return false;
-      });
-    </script>"""
     if re.search(r'user/register', str(request.referrer)) and len(interviews) == 1:
         return redirect(url_for('index', i=interviews[0]['filename'], session=interviews[0]['session'], from_list=1))
     tags_used = set()
@@ -25093,7 +17182,7 @@ def interview_list():
                 tags_used.add(the_tag)
     # interview_page_title = word(daconfig.get('interview page title', 'Interviews'))
     # title = word(daconfig.get('interview page heading', 'Resume an interview'))
-    argu = {'version_warning': version_warning, 'tags_used': sorted(tags_used) if len(tags_used) > 0 else None, 'numinterviews': len([y for y in interviews if not y['metadata'].get('hidden', False)]), 'interviews': sorted(interviews, key=valid_date_key), 'tag': tag, 'next_id': next_id, 'show_back': show_back, 'form': form, 'page_js': Markup(script)}
+    argu = {'version_warning': version_warning, 'tags_used': sorted(tags_used) if len(tags_used) > 0 else None, 'numinterviews': len([y for y in interviews if not y['metadata'].get('hidden', False)]), 'interviews': sorted(interviews, key=valid_date_key), 'tag': tag, 'next_id': next_id, 'show_back': show_back, 'form': form}
     if 'interview page template' in daconfig and daconfig['interview page template']:
         the_page = docassemble.base.functions.package_template_filename(daconfig['interview page template'])
         if the_page is None:
@@ -25156,7 +17245,7 @@ def login_or_register(sender, user, source, **extra):  # pylint: disable=unused-
 
 
 def update_last_login(user):
-    user.last_login = datetime.datetime.utcnow()
+    user.last_login = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
     db.session.commit()
 
 
@@ -25406,7 +17495,7 @@ def favicon_file(filename, alt=None):
         mimetype = 'application/manifest+json'
     else:
         extension, mimetype = get_ext_and_mimetype(the_file)  # pylint: disable=unused-variable
-    response = send_file(the_file, mimetype=mimetype, download_name=filename)
+    response = custom_send_file(the_file, mimetype=mimetype, download_name=filename)
     return response
 
 
@@ -25489,7 +17578,7 @@ def robots():
         return ('File not found', 404)
     if not os.path.isfile(the_file):
         return ('File not found', 404)
-    response = send_file(the_file, mimetype='text/plain', download_name='robots.txt')
+    response = custom_send_file(the_file, mimetype='text/plain', download_name='robots.txt')
     return response
 
 
@@ -26761,7 +18850,7 @@ def translation_file():
                 worksheet.set_row(row, 15*(num_lines + 1))
             row += 1
         workbook.close()
-        response = send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=xlsx_filename)
+        response = custom_send_file(temp_file.name, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name=xlsx_filename)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     if form.filetype.data.startswith('XLIFF'):
@@ -26938,7 +19027,7 @@ def translation_file():
             flash(word("Bad file format"), 'error')
             return redirect(url_for('utilities'))
         if len(xliff_files) == 1:
-            response = send_file(xliff_files[0][0].name, mimetype='application/xml', as_attachment=True, download_name=xliff_files[0][1])
+            response = custom_send_file(xliff_files[0][0].name, mimetype='application/xml', as_attachment=True, download_name=xliff_files[0][1])
         else:
             zip_file = tempfile.NamedTemporaryFile(suffix='.zip', delete=False)
             zip_file_name = docassemble.base.functions.space_to_underscore(os.path.splitext(os.path.basename(re.sub(r'.*:', '', yaml_filename)))[0]) + "_" + tr_lang + ".zip"
@@ -26948,7 +19037,7 @@ def translation_file():
                     with open(item[0].name, 'rb') as fp:
                         zf.writestr(info, fp.read())
                 zf.close()
-            response = send_file(zip_file.name, mimetype='application/xml', as_attachment=True, download_name=zip_file_name)
+            response = custom_send_file(zip_file.name, mimetype='application/xml', as_attachment=True, download_name=zip_file_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     flash(word("Bad file format"), 'error')
@@ -28064,7 +20153,7 @@ def api_file(file_number):
         mimetype = file_info['mimetype']
     if not os.path.isfile(the_path):
         return ('File not found', 404)
-    response = send_file(the_path, mimetype=mimetype)
+    response = custom_send_file(the_path, mimetype=mimetype)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -28549,7 +20638,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             return jsonify_with_status("Could not send file because the response was None", 404)
         if not os.path.isfile(the_path):
             return jsonify_with_status("Could not send file because " + str(the_path) + " not found", 404)
-        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+        response_to_send = custom_send_file(the_path, mimetype=interview_status.extras['content_type'])
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return {'questionType': 'response', 'response': response_to_send}
     if interview_status.question.language != '*':
@@ -28558,7 +20647,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         interview_language = DEFAULT_LANGUAGE
     title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     interview_status.exit_url = title_info.get('exit url', None)
-    interview_status.exit_link = title_info.get('exit link', 'exit')
+    interview_status.exit_link = title_info.get('exit link', 'leave')
     interview_status.exit_label = title_info.get('exit label', word('Exit'))
     interview_status.title = title_info.get('full', default_title)
     interview_status.display_title = title_info.get('logo', interview_status.title)
@@ -28826,7 +20915,7 @@ def run_action_in_session(**kwargs):
             restore_session(sbackup)
             docassemble.base.functions.restore_thread_variables(tbackup)
             return jsonify_with_status("Could not send file because " + str(the_path) + " not found", 404)
-        response_to_send = send_file(the_path, mimetype=interview_status.extras['content_type'])
+        response_to_send = custom_send_file(the_path, mimetype=interview_status.extras['content_type'])
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
@@ -29600,6 +21689,7 @@ def api_playground_install():
                     readme_text = ''
                     gitignore_text = ''
                     setup_py = ''
+                    pyproject_toml = ''
                     extracted = {}
                     data_files = {'templates': [], 'static': [], 'sources': [], 'interviews': [], 'modules': [], 'questions': []}
                     has_docassemble_dir = set()
@@ -29610,10 +21700,10 @@ def api_playground_install():
                                 has_docassemble_dir.add(re.sub(r'/docassemble/$', '', zinfo.filename))
                             if zinfo.filename == 'docassemble/':
                                 has_docassemble_dir.add('')
-                        elif zinfo.filename.endswith('/setup.py'):
+                        elif zinfo.filename.endswith('/setup.py') or zinfo.filename.endswith('/pyproject.toml') or zinfo.filename.endswith('/setup.cfg'):
                             (directory, filename) = os.path.split(zinfo.filename)
                             has_setup_file.add(directory)
-                        elif zinfo.filename == 'setup.py':
+                        elif zinfo.filename in ('setup.py', 'pyproject.toml', 'setup.cfg'):
                             has_setup_file.add('')
                     root_dir = None
                     for directory in has_docassemble_dir.union(has_setup_file):
@@ -29652,6 +21742,10 @@ def api_playground_install():
                             with zf.open(zinfo) as f:
                                 the_file_obj = TextIOWrapper(f, encoding='utf8')
                                 setup_py = the_file_obj.read()
+                        if filename == 'pyproject.toml' and directory == root_dir:
+                            with zf.open(zinfo) as f:
+                                the_file_obj = TextIOWrapper(f, encoding='utf8')
+                                pyproject_toml = the_file_obj.read()
                         elif len(levels) >= 1 and directory != root_dir and filename.endswith('.py') and filename != '__init__.py' and 'tests' not in dirparts and 'data' not in dirparts:
                             need_to_restart = True
                             data_files['modules'].append(filename)
@@ -29659,24 +21753,39 @@ def api_playground_install():
                             with zf.open(zinfo) as source_fp, open(target_filename, 'wb') as target_fp:
                                 shutil.copyfileobj(source_fp, target_fp)
                                 os.utime(target_filename, (the_time, the_time))
-                    setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
-                    for line in setup_py.splitlines():
-                        m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
-                        if m:
-                            extracted[m.group(1)] = m.group(2)
-                        m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
-                        if m:
-                            extracted[m.group(1)] = m.group(2)
-                        m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
-                        if m:
-                            the_list = []
-                            for item in re.split(r', *', m.group(2)):
-                                inner_item = re.sub(r"'$", '', item)
-                                inner_item = re.sub(r"^'", '', inner_item)
-                                inner_item = re.sub(r'"+$', '', inner_item)
-                                inner_item = re.sub(r'^"+', '', inner_item)
-                                the_list.append(inner_item)
-                            extracted[m.group(1)] = the_list
+                    if setup_py:
+                        setup_py = re.sub(r'.*setup\(', '', setup_py, flags=re.DOTALL)
+                        for line in setup_py.splitlines():
+                            m = re.search(r"^ *([a-z_]+) *= *\(?'(.*)'", line)
+                            if m:
+                                extracted[m.group(1)] = m.group(2)
+                            m = re.search(r'^ *([a-z_]+) *= *\(?"(.*)"', line)
+                            if m:
+                                extracted[m.group(1)] = m.group(2)
+                            m = re.search(r'^ *([a-z_]+) *= *\[(.*)\]', line)
+                            if m:
+                                the_list = []
+                                for item in re.split(r', *', m.group(2)):
+                                    inner_item = re.sub(r"'$", '', item)
+                                    inner_item = re.sub(r"^'", '', inner_item)
+                                    inner_item = re.sub(r'"+$', '', inner_item)
+                                    inner_item = re.sub(r'^"+', '', inner_item)
+                                    the_list.append(inner_item)
+                                extracted[m.group(1)] = the_list
+                    if pyproject_toml:
+                        data = tomli.loads(pyproject_toml)
+                        if 'project' in data and isinstance(data['project'], dict):
+                            extracted['description'] = data['project'].get('description', '')
+                            extracted['name'] = data['project'].get('name', '')
+                            extracted['version'] = data['project'].get('version', '')
+                            extracted['license'] = data['project'].get('license', '')
+                            if 'authors' in data['project'] and isinstance(data['project']['authors'], list) and len(data['project']['authors']) > 0 and isinstance(data['project']['authors'][0], dict):
+                                extracted['author'] = data['project']['authors'][0].get('name', '')
+                                extracted['author_email'] = data['project']['authors'][0].get('email', '')
+                            if 'dependencies' in data['project'] and isinstance(data['project']['dependencies'], list):
+                                extracted['install_requires'] = data['project']['dependencies']
+                            if 'urls' in data['project'] and isinstance(data['project']['urls'], dict):
+                                extracted['url'] = data['project']['urls'].get('Homepage', '')
                     info_dict = {'readme': readme_text, 'gitignore': gitignore_text, 'interview_files': data_files['questions'], 'sources_files': data_files['sources'], 'static_files': data_files['static'], 'module_files': data_files['modules'], 'template_files': data_files['templates'], 'dependencies': list(map(lambda y: re.sub(r'[\>\<\=].*', '', y), extracted.get('install_requires', []))), 'description': extracted.get('description', ''), 'author_name': extracted.get('author', ''), 'author_email': extracted.get('author_email', ''), 'license': extracted.get('license', ''), 'url': extracted.get('url', ''), 'version': extracted.get('version', '')}
 
                     info_dict['dependencies'] = [x.strip() for x in map(lambda y: re.sub(r'[\>\<\=@].*', '', y), info_dict['dependencies']) if x not in ('docassemble', 'docassemble.base', 'docassemble.webapp')]
@@ -29712,6 +21821,7 @@ def api_playground_projects():
         return ('File not found', 404)
     if not api_verify(roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
+    user_id = -1
     if request.method in ('GET', 'DELETE'):
         try:
             if app.config['ENABLE_SHARING_PLAYGROUNDS'] or current_user.has_role_or_permission('admin', permissions=['playground_control']):
@@ -29765,6 +21875,9 @@ def api_playground():
         return ('File not found', 404)
     if not api_verify(roles=['admin', 'developer'], permissions=['playground_control']):
         return jsonify_with_status("Access denied.", 403)
+    folder = ''
+    project = ''
+    user_id = -1
     if request.method in ('GET', 'DELETE'):
         folder = request.args.get('folder', 'static')
         project = request.args.get('project', 'default')
@@ -29845,7 +21958,7 @@ def api_playground():
             the_timezone = get_default_timezone()
         fix_ml_files(author_info['id'], project)
         zip_file = docassemble.webapp.files.make_package_zip(the_package, info, author_info, the_timezone, current_project=project)
-        response = send_file(zip_file.name, mimetype='application/zip', as_attachment=True, download_name=nice_name)
+        response = custom_send_file(zip_file.name, mimetype='application/zip', as_attachment=True, download_name=nice_name)
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response
     pg_section = PlaygroundSection(section=section, project=project)
@@ -29855,7 +21968,7 @@ def api_playground():
         the_filename = secure_filename_spaces_ok(request.args['filename'])
         if not pg_section.file_exists(the_filename):
             return jsonify_with_status("File not found", 404)
-        response_to_send = send_file(pg_section.get_file(the_filename), mimetype=pg_section.get_mimetype(the_filename))
+        response_to_send = custom_send_file(pg_section.get_file(the_filename), mimetype=pg_section.get_mimetype(the_filename))
         response_to_send.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
         return response_to_send
     if request.method == 'DELETE':
@@ -30362,85 +22475,15 @@ def manage_api():
     if action is None:
         action = 'list'
     argu['form'] = form
-    argu['extra_js'] = Markup("""
-<script>
-  function remove_constraint(elem){
-    $(elem).parents('.daconstraintlist div').remove();
-    fix_constraints();
-  }
-  function fix_constraints(){
-    var empty;
-    var filled_exist = 0;
-    var empty_exist = 0;
-    if ($("#method").val() == 'none'){
-      $(".daconstraintlist").hide();
-      return;
+    initial_values = {
+        "daIpPlaceholder": word('e.g., 56.33.114.49'),
+        "daHostnamePlaceholder": word('e.g., *example.com'),
+        "daApiKeyCopied": word('API key copied to clipboard.'),
+        "daNotificationContainer": NOTIFICATION_CONTAINER,
+        "daNotificationMessage": NOTIFICATION_MESSAGE,
     }
-    else{
-      $(".daconstraintlist").show();
-    }
-    $(".daconstraintlist input").each(function(){
-      if ($(this).val() == ''){
-        empty_exist = 1;
-      }
-      else{
-        filled_exist = 1;
-      }
-      if (!($(this).next().length)){
-        var new_button = $('<button>');
-        var new_i = $('<i>');
-        $(new_button).addClass('btn btn-outline-secondary');
-        $(new_i).addClass('fa-solid fa-times');
-        $(new_button).append(new_i);
-        $(new_button).on('click', function(){remove_constraint(this);});
-        $(this).parent().append(new_button);
-      }
-    });
-    if (empty_exist == 0){
-      var new_div = $('<div>');
-      var new_input = $('<input>');
-      $(new_div).append(new_input);
-      $(new_div).addClass('input-group');
-      $(new_input).addClass('form-control');
-      $(new_input).attr('type', 'text');
-      if ($("#method").val() == 'ip'){
-        $(new_input).attr('placeholder', """ + json.dumps(word('e.g., 56.33.114.49')) + """);
-      }
-      else{
-        $(new_input).attr('placeholder', """ + json.dumps(word('e.g., *example.com')) + """);
-      }
-      $(new_input).on('change', fix_constraints);
-      $(new_input).on('keyup', fix_constraints);
-      $(".daconstraintlist").append(new_div);
-      var new_button = $('<button>');
-      var new_i = $('<i>');
-      $(new_button).addClass('btn btn-outline-secondary');
-      $(new_i).addClass('fa-solid fa-times');
-      $(new_button).append(new_i);
-      $(new_button).on('click', function(){remove_constraint(this);});
-      $(new_div).append(new_button);
-    }
-  }
-  $( document ).ready(function(){
-    $(".daconstraintlist input").on('change', fix_constraints);
-    $("#method").on('change', function(){
-      $(".daconstraintlist div.input-group").remove();
-      fix_constraints();
-    });
-    $("#submit").on('click', function(){
-      var the_constraints = [];
-      $(".daconstraintlist input").each(function(){
-        if ($(this).val() != ''){
-          the_constraints.push($(this).val());
-        }
-      });
-      $("#security").val(JSON.stringify(the_constraints));
-    });
-    fix_constraints();
-  });
-</script>
-""")
-    form.method.choices = [('ip', 'IP Address'), ('referer', 'Referring URL'), ('none', 'No authentication')]
+    argu['extra_js'] = Markup(f"""\n    <script{DEFER} src="{url_for('static', filename="app/manage_api.min.js")}"></script>\n    {redis_script(initial_values)}""")
+    form.method.choices = [('ip', word('IP Address')), ('referer', word('Referring URL')), ('none', word('No authentication'))]
     if is_admin:
         form.permissions.choices = [(permission, permission) for permission in PERMISSIONS_LIST]
     else:
@@ -30931,14 +22974,8 @@ def api_interview():
     release_lock(session_id, yaml_filename)
     if send_initial:
         output['setup'] = {}
-        if 'google maps api key' in google_config:
-            api_key = google_config.get('google maps api key')
-        elif 'api key' in google_config:
-            api_key = google_config.get('api key')
-        else:
-            api_key = None
-        if api_key:
-            output['setup']['googleApiKey'] = api_key
+        if google_api_key:
+            output['setup']['googleApiKey'] = google_api_key
         if ga_configured and data['interview_options'].get('analytics on', True):
             interview_package = re.sub(r'^docassemble\.', '', re.sub(r':.*', '', yaml_filename))
             interview_filename = re.sub(r'\.ya?ml$', '', re.sub(r'.*[:\/]', '', yaml_filename), re.IGNORECASE)
@@ -31758,6 +23795,7 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          read_answer_json=read_answer_json,
                                          delete_answer_json=delete_answer_json,
                                          variables_snapshot_connection=variables_snapshot_connection,
+                                         variables_snapshot_connect=variables_snapshot_connect,
                                          get_referer=get_referer,
                                          stash_data=stash_data,
                                          retrieve_stashed_data=retrieve_stashed_data,
@@ -32106,7 +24144,7 @@ def initialize():
                     try:
                         global_js_url = get_url_from_file_reference(fileref)
                         assert isinstance(global_js_url, str)
-                        global_js += "\n" + '    <script src="' + global_js_url + '"></script>'
+                        global_js += "\n" + f'    <script{DEFER} src="{global_js_url}"></script>'
                     except:
                         logmessage("error loading global js: " + repr(fileref))
             if 'raw global css' in daconfig and daconfig['raw global css']:

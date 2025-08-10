@@ -5,7 +5,6 @@
 *.pyc
 en
 auto/
-bundle.sh
 foobar.pickle
 docassemble/build
 docassemble_base/build
@@ -56,6 +55,8 @@ cleanup.sh
 docassemble_webapp/docassemble/webapp/static/index.html
 docassemble_webapp/docassemble/webapp/static/css
 docassemble_webapp/docassemble/webapp/static/js
+docassemble_webapp/docassemble/webapp/static/app/app.scss
+docassemble_webapp/docassemble/webapp/static/app/pygments.scss
 .history/
 settings.json
 */.mypy_cache
@@ -63,3 +64,6 @@ settings.json
 .dir-locals.el
 .flake8
 mypy.ini
+stylelint.config.js
+.stylelintrc.json
+.sass-cache/

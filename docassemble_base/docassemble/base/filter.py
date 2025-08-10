@@ -15,7 +15,6 @@ import PIL
 from docassemble.base.logger import logmessage
 from docassemble.base.rtfng.object.picture import Image
 from docassemble.base.functions import server, word
-from docassemble.base.error import DAException
 import docassemble.base.functions
 from docassemble.base import pandoc
 from bs4 import BeautifulSoup
@@ -686,7 +685,7 @@ def map_string(encoded_text, status):
         return ''
     map_number = len(status.maps)
     status.maps.append(codecs.decode(bytearray(encoded_text, 'utf-8'), 'base64').decode())
-    return '<div id="map' + str(map_number) + '" class="dagoogleMap"></div>'
+    return '<div id="map' + str(map_number) + '" class="dagooglemap"></div>'
 
 
 def target_html(match):

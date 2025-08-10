@@ -26,4 +26,9 @@ server {
         proxy_set_header Connection "Upgrade";
         proxy_pass http://{{DAWEBSOCKETSIP}}:{{DAWEBSOCKETSPORT}}/socket.io;
     }
+
+    location /xaccel/ {
+        internal;
+        alias /;
+    }
 }

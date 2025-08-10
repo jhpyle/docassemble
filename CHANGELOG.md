@@ -1,5 +1,64 @@
 # Change Log
 
+## [1.8.0] - 2025-08-10
+
+### Added
+- The `javascript defer` Configuration directive. If set to `True`,
+  then the `<script>` tags that load JavaScript files will have the
+  `defer` tag set. This is recommended for speeding up the loading of
+  the page.
+- The `use nginx to serve files` Configuration directive. If set to
+  `True`, then file downloads will be served in a more efficient
+  manner, transferring the load from Python to NGINX to process the
+  contents of the file. Since this feature requires a change to the
+  NGINX configuration file template, a system upgrade is required if
+  you want to enable this feature. Alternatively, you can manually
+  edit the NGINX configuration file template.
+- Methods `_reorder_buttons()`, `_edit_button()`, `_delete_button()`,
+  and `_add_action_button()` of the `DAList` class, so that `DAList`
+  can be subclassed for customizing the appearance of these buttons.
+- The Configuration directive `use places api new` under `google` for
+  enabling use of the Google "Places API (New)."
+
+### Changed
+- Upgraded Python dependencies. Note that if you are using third-party
+  Python packages, you may encounter dependency conflicts. It is
+  possible that your interviews will need to be updated.
+- Upgraded Font Awesome, Bootstrap, and CodeMirror.
+- The default action for the menu/navigation bar `exit link` is now
+  `leave` (which leaves interview answers intact) instead of `exit`
+  (which deletes interview answers).
+- On the Playground Packages page, the License must now contain a
+  valid SPDX identifier for a license, like `MIT` or `GPL-3.0`.
+- Changed the behavior of the `.get()` method of `DADict` so that its
+  behavior does not differ from the `.get()` method of `dict`.
+- Packages created from the Playground will now have a
+  `pyproject.toml` file as well as a `setup.py` file.
+- When packages are imported, the `pyproject.toml` file will be
+  parsed, if it is present.
+- The Google "Places API (New)" is now supported for the `address
+  autocomplete` feature. For backwards compatibility, this is not
+  enabled by default. Set `use places api new: True` under the
+  `google` directive in the Configuration to enable use of the new
+  API. You will need to enable the API in your Google Cloud
+  Console first.
+- When `use places api new` is `True`, then when `address
+  autocomplete` is used and there is a field for the `zip` attribute
+  of the `Address`, it will be populated with the ZIP+4, if available.
+- When `datatype: ajax` is used, the button on the input element is
+  non-functional.
+- When the `script` modifier on a `question` is used, the contents
+  should no longer contain `<script>` and `</script>` tags; if present
+  they will be stripped out. Using `script` modifiers is discouraged;
+  it is better to use a JavaScript file and listen for the
+  `daPageLoad` event.
+- Replaced `variables_snapshot_connection()` with
+  `variables_snapshot_connect()`. For backwards compatibility,
+  `variables_snapshot_connection()` still works the same way.
+
+### Fixed
+- Adjusted for Sendgrid reversing order of attachments.
+
 ## [1.7.7] - 2025-06-10
 
 ### Added

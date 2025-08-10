@@ -50,7 +50,7 @@ class Connection:
             for recipient in list(sanitize_addresses(message.bcc)):
                 sgmessage.add_bcc(recipient)
         if message.attachments:
-            for flask_attachment in message.attachments:
+            for flask_attachment in reversed(message.attachments):
                 attachment = Attachment()
                 attachment.file_content = FileContent(base64.b64encode(flask_attachment.data).decode())
                 attachment.file_type = FileType(flask_attachment.content_type)

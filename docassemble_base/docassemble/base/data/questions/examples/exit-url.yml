@@ -6,6 +6,6 @@ question: |
   Congratulations, you found Nemo!
 buttons:
   - Try again: restart
-  - Learn More: logout
+  - Learn More: exit
     url: https://en.wikipedia.org/wiki/Amphiprioninae
 mandatory: True

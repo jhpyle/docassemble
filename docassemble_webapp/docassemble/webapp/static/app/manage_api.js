@@ -1,0 +1,224 @@
+Object.defineProperty(String.prototype, "daSprintf", {
+  value: function () {
+    var args = Array.from(arguments),
+      i = 0;
+    function defaultNumber(iValue) {
+      return iValue != undefined && !isNaN(iValue) ? iValue : "0";
+    }
+    function defaultString(iValue) {
+      return iValue == undefined ? "" : "" + iValue;
+    }
+    return this.replace(
+      /%%|%([+\-])?([^1-9])?(\d+)?(\.\d+)?([deEfhHioQqs])/g,
+      function (match, sign, filler, scale, precision, type) {
+        var strOut, space, value;
+        var asNumber = false;
+        if (match == "%%") return "%";
+        if (i >= args.length) return match;
+        value = args[i];
+        while (Array.isArray(value)) {
+          args.splice(i, 1);
+          for (var j = i; value.length > 0; j++)
+            args.splice(j, 0, value.shift());
+          value = args[i];
+        }
+        i++;
+        if (filler == undefined) filler = " "; // default
+        if (scale == undefined && !isNaN(filler)) {
+          scale = filler;
+          filler = " ";
+        }
+        if (sign == undefined) sign = "sqQ".indexOf(type) >= 0 ? "+" : "-"; // default
+        if (scale == undefined) scale = 0; // default
+        if (precision == undefined) precision = ".0"; // default
+        scale = parseInt(scale);
+        precision = parseInt(precision.substr(1));
+        switch (type) {
+          case "d":
+          case "i":
+            // decimal integer
+            asNumber = true;
+            strOut = parseInt(defaultNumber(value));
+            if (precision > 0) strOut += "." + "0".repeat(precision);
+            break;
+          case "e":
+          case "E":
+            // float in exponential notation
+            asNumber = true;
+            strOut = parseFloat(defaultNumber(value));
+            if (precision == 0) strOut = strOut.toExponential();
+            else strOut = strOut.toExponential(precision);
+            if (type == "E") strOut = strOut.replace("e", "E");
+            break;
+          case "f":
+            // decimal float
+            asNumber = true;
+            strOut = parseFloat(defaultNumber(value));
+            if (precision != 0) strOut = strOut.toFixed(precision);
+            break;
+          case "o":
+          case "h":
+          case "H":
+            // Octal or Hexagesimal integer notation
+            strOut =
+              "\\" +
+              (type == "o" ? "0" : type) +
+              parseInt(defaultNumber(value)).toString(type == "o" ? 8 : 16);
+            break;
+          case "q":
+            // single quoted string
+            strOut = "'" + defaultString(value) + "'";
+            break;
+          case "Q":
+            // double quoted string
+            strOut = '"' + defaultString(value) + '"';
+            break;
+          default:
+            // string
+            strOut = defaultString(value);
+            break;
+        }
+        if (typeof strOut != "string") strOut = "" + strOut;
+        if ((space = strOut.length) < scale) {
+          if (asNumber) {
+            if (sign == "-") {
+              if (strOut.indexOf("-") < 0)
+                strOut = filler.repeat(scale - space) + strOut;
+              else
+                strOut =
+                  "-" + filler.repeat(scale - space) + strOut.replace("-", "");
+            } else {
+              if (strOut.indexOf("-") < 0)
+                strOut = "+" + filler.repeat(scale - space - 1) + strOut;
+              else
+                strOut =
+                  "-" + filler.repeat(scale - space) + strOut.replace("-", "");
+            }
+          } else {
+            if (sign == "-") strOut = filler.repeat(scale - space) + strOut;
+            else strOut = strOut + filler.repeat(scale - space);
+          }
+        } else if (asNumber && sign == "+" && strOut.indexOf("-") < 0)
+          strOut = "+" + strOut;
+        return strOut;
+      },
+    );
+  },
+});
+Object.defineProperty(window, "daSprintf", {
+  value: function (str, ...rest) {
+    if (typeof str == "string")
+      return String.prototype.daSprintf.apply(str, rest);
+    return "";
+  },
+});
+function flash(message, priority, clear) {
+  if (priority == null) {
+    priority = "info";
+  }
+  if (!$("#daflash").length) {
+    $("body").append(daSprintf(daNotificationContainer, ""));
+  }
+  if (clear) {
+    $("#daflash").empty();
+  }
+  if (message != null) {
+    var newElement = $(daSprintf(daNotificationMessage, priority, message));
+    $("#daflash").append(newElement);
+    if (priority == "success") {
+      setTimeout(function () {
+        newElement.hide(300, function () {
+          $(this).remove();
+        });
+      }, 3000);
+    }
+  }
+}
+function daCopyToClipboard() {
+  const apiKeyElement = document.getElementById("daApiKey");
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(apiKeyElement);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  document.execCommand("copy");
+  selection.removeAllRanges();
+  flash(daApiKeyCopied, "success");
+}
+function remove_constraint(elem) {
+  $(elem).parents(".daconstraintlist div").remove();
+  fix_constraints();
+}
+function fix_constraints() {
+  var empty;
+  var filled_exist = 0;
+  var empty_exist = 0;
+  if ($("#method").val() == "none") {
+    $(".daconstraintlist").hide();
+    return;
+  } else {
+    $(".daconstraintlist").show();
+  }
+  $(".daconstraintlist input").each(function () {
+    if ($(this).val() == "") {
+      empty_exist = 1;
+    } else {
+      filled_exist = 1;
+    }
+    if (!$(this).next().length) {
+      var new_button = $("<button>");
+      var new_i = $("<i>");
+      $(new_button).addClass("btn btn-outline-secondary");
+      $(new_i).addClass("fa-solid fa-times");
+      $(new_button).append(new_i);
+      $(new_button).on("click", function () {
+        remove_constraint(this);
+      });
+      $(this).parent().append(new_button);
+    }
+  });
+  if (empty_exist == 0) {
+    var new_div = $("<div>");
+    var new_input = $("<input>");
+    $(new_div).append(new_input);
+    $(new_div).addClass("input-group");
+    $(new_input).addClass("form-control");
+    $(new_input).attr("type", "text");
+    if ($("#method").val() == "ip") {
+      $(new_input).attr("placeholder", daIpPlaceholder);
+    } else {
+      $(new_input).attr("placeholder", daHostnamePlaceholder);
+    }
+    $(new_input).on("change", fix_constraints);
+    $(new_input).on("keyup", fix_constraints);
+    $(".daconstraintlist").append(new_div);
+    var new_button = $("<button>");
+    var new_i = $("<i>");
+    $(new_button).addClass("btn btn-outline-secondary");
+    $(new_i).addClass("fa-solid fa-times");
+    $(new_button).append(new_i);
+    $(new_button).on("click", function () {
+      remove_constraint(this);
+    });
+    $(new_div).append(new_button);
+  }
+}
+document.addEventListener("DOMContentLoaded", function () {
+  $(document).ready(function () {
+    $(".daconstraintlist input").on("change", fix_constraints);
+    $("#method").on("change", function () {
+      $(".daconstraintlist div.input-group").remove();
+      fix_constraints();
+    });
+    $("#submit").on("click", function () {
+      var the_constraints = [];
+      $(".daconstraintlist input").each(function () {
+        if ($(this).val() != "") {
+          the_constraints.push($(this).val());
+        }
+      });
+      $("#security").val(JSON.stringify(the_constraints));
+    });
+    fix_constraints();
+  });
+});

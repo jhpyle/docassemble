@@ -73,7 +73,7 @@
         inputElement.detach();
         this.$label.detach();
         this.$float.append(inputElement, this.$label);
-        this.$float.insertBefore(combobox.find("div.input-group-append"));
+        this.$float.insertAfter(inputElement);
       } else {
         this.$float = null;
       }
@@ -82,22 +82,36 @@
 
     template: function () {
       //console.log('template');
-      if (this.options.bsVersion == "2") {
-        return (
-          '<div class="combobox-container"><input type="hidden" /> ' +
-          '<div class="input-append"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
-          '<span class="add-on dropdown-toggle"> <span class="caret"/> <i class="icon-remove"/> </span> </div> </div>'
-        );
+      if (this.options.showButton) {
+        if (this.options.functionalButton) {
+          return (
+            '<div class="combobox-container"> <input type="hidden" /> ' +
+            '<div class="input-group"> <input type="text" alt="' +
+            this.options.inputBox +
+            '" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
+            '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-label="' +
+            this.options.buttonLabel +
+            '" aria-expanded="false" aria-controls="id_controls">' +
+            '<span class="fa-solid fa-caret-down"></span><span class="fa-solid fa-xmark"></span>' +
+            "</button></div> </div>"
+          );
+        } else {
+          return (
+            '<div class="combobox-container"> <input type="hidden" /> ' +
+            '<div class="input-group"> <input type="text" alt="' +
+            this.options.inputBox +
+            '" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
+            '<button class="btn btn-outline-secondary" type="button" disabled tabindex="-1">' +
+            '<span class="fa-solid fa-caret-down"></span>' +
+            "</button></div> </div>"
+          );
+        }
       } else {
         return (
           '<div class="combobox-container"> <input type="hidden" /> ' +
-          '<div class="input-group"> <input type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /> ' +
-          '<div class="input-group-append"> ' +
-          '<button class="btn btn-outline-secondary dacomboboxtoggle" type="button" tabindex="-1" aria-label="' +
-          this.options.buttonLabel +
-          '" aria-expanded="false" aria-controls="id_controls">' +
-          '<span class="fa-solid fa-caret-down"></span><span class="fa-solid fa-xmark"></span>' +
-          "</button> </div> </div> </div>"
+          '<input type="text" alt="' +
+          this.options.inputBox +
+          '" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-activedescendant="" autocomplete="off" /></div>'
         );
       }
     },
@@ -217,6 +231,10 @@
       this.$element.attr("rel", this.$source.attr("rel"));
       this.$element.attr("title", this.$source.attr("title"));
       this.$element.attr("class", this.$source.attr("class"));
+      if (this.$element.hasClass("daspaceafter")) {
+        this.$element.removeClass("daspaceafter");
+        this.$container.addClass("daspaceafter");
+      }
       this.$element.attr("tabindex", this.$source.attr("tabindex"));
       this.$source.removeAttr("tabindex");
       if (!this.$target.val() && this.$source.data("default")) {
@@ -552,7 +570,9 @@
         .on("mouseleave", "li", $.proxy(this.mouseleave, this))
         .on("mousedown", "li", $.proxy(this.mousedown, this));
 
-      this.$button.on("click touchend", $.proxy(this.toggle, this));
+      if (this.options.showButton && this.options.functionalButton) {
+        this.$button.on("click touchend", $.proxy(this.toggle, this));
+      }
     },
 
     eventSupported: function (eventName) {
@@ -690,9 +710,13 @@
           break;
 
         default:
-          this.clearTarget();
-          this.$target.val(this.$element.val());
-          this.lookup();
+          if (this.options.lookupWhileTyping) {
+            this.clearTarget();
+            this.$target.val(this.$element.val());
+            this.lookup();
+          } else {
+            this.query = this.$element.val();
+          }
       }
 
       e.stopPropagation();
@@ -822,6 +846,10 @@
     appendId: "combobox",
     buttonLabel: "dropdown",
     clearIfNoMatch: false,
+    showButton: true,
+    functionalButton: true,
+    inputBox: "Input box",
+    lookupWhileTyping: true,
   };
 
   $.fn.combobox.Constructor = Combobox;

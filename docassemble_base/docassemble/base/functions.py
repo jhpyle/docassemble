@@ -1445,12 +1445,13 @@ def interview_url_action(action, **kwargs):
     if 'style' in args and args['style'] in ('short', 'short_package'):
         the_style = args['style']
         del args['style']
+        is_new = False
         try:
             if int(args['new_session']):
                 is_new = True
                 del args['new_session']
         except:
-            is_new = False
+            pass
         url = None
         if the_style == 'short':
             for k, v in server.daconfig.get('dispatch').items():
@@ -1913,12 +1914,12 @@ server.wait_for_task = null_func
 server.worker_convert = null_func
 server.write_answer_json = null_func
 server.write_record = null_func
-server.to_text = null_func
+server.to_text = null_func_str
 server.transform_json_variables = null_func
-server.get_login_url = null_func
-server.run_action_in_session = null_func
+server.get_login_url = null_func_dict
+server.run_action_in_session = null_func_dict
 server.invite_user = null_func
-server.get_url = null_func
+server.get_url = null_func_dict
 
 
 def write_record(key, data):
@@ -4139,7 +4140,7 @@ def force_ask(*pargs, **kwargs):
     force_ask_nameerror(the_pargs[0])
 
 
-def force_ask_nameerror(variable_name, priority=False):
+def force_ask_nameerror(variable_name, priority=False):  # pylint: disable=unused-argument
     if illegal_variable_name(variable_name):
         raise DAError("Illegal variable name")
     raise DANameError("name '" + str(variable_name) + "' is not defined")

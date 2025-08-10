@@ -1,5 +1,5 @@
 # mako/lexer.py
-# Copyright 2006-2024 the Mako authors and contributors <see AUTHORS file>
+# Copyright 2006-2025 the Mako authors and contributors <see AUTHORS file>
 #
 # This module is part of Mako and is released under
 # the MIT License: http://www.opensource.org/licenses/mit-license.php
@@ -369,9 +369,9 @@ class Lexer:
             r"""
                 (.*?)         # anything, followed by:
                 (
-                 (?<=\n)(?=[ \t]*(?=%))  # an eval or line-based
-                                         # comment, preceded by a
-                                         # consumed newline and whitespace
+                 (?<=\n)(?=[ \t]*(?=%))     # an eval or line-based
+                                            # comment, preceded by a
+                                            # consumed newline and whitespace
                  |
                  (?=\${)      # an expression
                  |

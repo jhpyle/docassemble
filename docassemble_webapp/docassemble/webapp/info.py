@@ -286,6 +286,7 @@ system_packages = [
     "titlecase",
     "toml",
     "tomli",
+    "tomli-w",
     "tqdm",
     "trio",
     "trio-websocket",

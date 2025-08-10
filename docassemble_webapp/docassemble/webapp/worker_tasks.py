@@ -363,11 +363,11 @@ def try_request(*pargs, **kwargs):
 
 
 def epoch_from_iso(datestring):
-    return (iso8601.parse_date(datestring) - datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)).total_seconds()
+    return (iso8601.parse_date(datestring) - datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC)).total_seconds()
 
 
 def iso_from_epoch(seconds):
-    return datetime.datetime.utcfromtimestamp(seconds).replace(tzinfo=datetime.timezone.utc).isoformat().replace('+00:00', 'Z')
+    return datetime.datetime.fromtimestamp(seconds, datetime.UTC).isoformat().replace('+00:00', 'Z')
 
 
 @workerapp.task

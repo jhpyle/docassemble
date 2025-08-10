@@ -1,8 +1,9 @@
 import re
 from flask_wtf import FlaskForm
 from docassemble.base.functions import LazyWord as word
-from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
 from docassemble.webapp.validators import html_validator
+from wtforms import validators, ValidationError, StringField, SubmitField, TextAreaField, SelectMultipleField, SelectField, FileField, HiddenField, RadioField, BooleanField
+import docassemble.webapp.spdx
 import packaging
 
 
@@ -10,6 +11,11 @@ class NonValidatingSelectField(SelectField):
 
     def pre_validate(self, form):
         pass
+
+
+def spdx_validator(form, field):  # pylint: disable=unused-argument
+    if field.data not in docassemble.webapp.spdx.LICENSES:
+        raise ValidationError(word("A valid SPDX identifier must be provided, e.g., MIT, GPL-3.0, Apache-2.0."))
 
 
 def validate_project_name(form, field):  # pylint: disable=unused-argument
@@ -146,7 +152,7 @@ class PlaygroundPackagesForm(FlaskForm):
     file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
                                                               validators.DataRequired(word('Package Name is required')),
                                                               validate_package_name, html_validator])
-    license = StringField(word('License'), default='The MIT License (MIT)', validators=[validators.Length(min=0, max=255), html_validator])
+    license = StringField(word('License'), default='MIT', validators=[validators.Length(min=0, max=255), html_validator, spdx_validator])
     author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255), html_validator])
     author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255), html_validator])
     description = StringField(word('Description'), validators=[validators.Length(min=0, max=255), html_validator], default="A docassemble extension.")

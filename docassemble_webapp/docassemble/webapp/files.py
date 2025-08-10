@@ -8,6 +8,7 @@ import subprocess
 # import sys
 import tempfile
 import zipfile
+import tomli_w
 import urllib.parse
 from packaging import version
 from flask import url_for
@@ -21,6 +22,7 @@ from docassemble.base.config import daconfig
 from docassemble.base.error import DAError
 from docassemble.base.generate_key import random_alphanumeric
 from docassemble.base.logger import logmessage
+import docassemble.webapp.spdx
 import docassemble.base.functions
 from docassemble.webapp.update import get_pip_info
 import docassemble.webapp.cloud
@@ -611,9 +613,10 @@ def make_package_dir(pkgname, info, author_info, directory=None, current_project
     area = {}
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
-    dependencies = ", ".join(y for y in map(lambda x: repr(get_package_identifier(x)), sorted(info['dependencies'])) if y != "''")
+    dependencies_list = [y for y in map(lambda x: repr(get_package_identifier(x)), sorted(info['dependencies'])) if y != "''"]
+    dependencies = ", ".join(dependencies_list)
     licensetext = str(info['license'])
-    if re.search(r'MIT License', licensetext):
+    if re.search(r'MIT', licensetext):
         licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(info.get('author_name', '')) + """
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -645,13 +648,34 @@ SOFTWARE.
     else:
         readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
         using_default['readme'] = True
-    pyprojecttoml = """\
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-"""
-    manifestin = """\
+    the_license = str(info.get('license', 'MIT'))
+    if not the_license:
+        the_license = 'MIT'
+    if the_license not in docassemble.webapp.spdx.LICENSES:
+        if re.search(r'MIT', the_license):
+            the_license = 'MIT'
+        else:
+            the_license = ''
+    pyprojecttoml = tomli_w.dumps({'build-system': {'requires': ['setuptools>=80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': info.get('version', '0.0.1'), 'description': info.get('description', 'A docassemble extension.'), 'readme': 'README.md', 'authors': [{'name': str(info.get('author_name', '')), 'email': str(info.get('author_email', ''))}], 'license': str(the_license), 'license-files': ['LICENSE'], 'dependencies': dependencies_list, 'urls': {'Homepage': info['url'] or 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}})
+
+    manifestin = f"""\
 include README.md
+graft docassemble/{pkgname}/data
+recursive-exclude * *.egg-info
+recursive-exclude .git *
+recursive-exclude venv *
+recursive-exclude .github *
+recursive-exclude .pytest_cache *
+recursive-exclude .vscode *
+recursive-exclude build *
+recursive-exclude dist *
+recursive-exclude * __pycache__
+recursive-exclude * *.pyc
+recursive-exclude * *.pyo
+recursive-exclude * *.orig
+recursive-exclude * *~
+recursive-exclude * *.bak
+recursive-exclude * *.swp
 """
     setupcfg = """\
 [metadata]

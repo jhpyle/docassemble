@@ -78,6 +78,7 @@ match_inside_and_outside_brackets = re.compile(r'(.*)\[([^\]]+)\]$')
 is_number = re.compile(r'^[0-9]+$')
 
 QPDF_PATH = 'qpdf'
+DEFAULT_BLUE_ICON = {'background': 'blue', 'borderColor': 'blue', 'glyph': None}
 
 __all__ = [
     'alpha',
@@ -2891,6 +2892,15 @@ class DAList(DAObject):
         if hasattr(self, 'gathered') and self.gathered:
             self.hook_after_gather()
 
+    def _reorder_buttons(self, classes, index):
+        return '<span class="text-nowrap"><a href="#" role="button" class="' + classes + '" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fa-solid fa-arrow-up"></i><span class="visually-hidden">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fa-solid fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="visually-hidden">' + word("Move down") + '</span></a></span> '
+
+    def _edit_button(self, url, classes):
+        return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-pencil-alt"></i> {word("Edit")}</span></a> '
+
+    def _delete_button(self, url, classes):
+        return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-trash"></i> {word("Delete")}</span></a>'
+
     def item_actions(self, *pargs, **kwargs):
         """Returns HTML for editing the items in a list"""
         the_args = list(pargs)
@@ -2898,7 +2908,7 @@ class DAList(DAObject):
         index = the_args.pop(0)
         output = ''
         if kwargs.get('reorder', False):
-            output += '<span class="text-nowrap"><a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit datableup" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fa-solid fa-arrow-up"></i><span class="visually-hidden">' + word("Move down") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fa-solid fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="visually-hidden">' + word("Move down") + '</span></a></span> '
+            output += self._reorder_buttons('btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit datableup', index)
         if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
             can_delete = False
         else:
@@ -2927,18 +2937,23 @@ class DAList(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_list_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><span class="text-nowrap"><i class="fa-solid fa-pencil-alt"></i> ' + word('Edit') + '</span></a> '
+            output += self._edit_button(docassemble.base.functions.url_action('_da_list_edit', items=items), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit')
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure + '"><span class="text-nowrap"><i class="fa-solid fa-trash"></i> ' + word('Delete') + '</span></a>'
+            output += self._delete_button(docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
             return docassemble.base.functions.url_action('_da_list_remove', dict=self.instanceName, item=repr(index))
         return output
+
+    def _add_action_button(self, url, classes, icon, the_message):
+        if icon != '':
+            icon = f'<i class="{icon}"></i> '
+        return f'<a href="{url}" class="{classes}">{icon}{the_message}</a>'
 
     def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color=None, size='sm', block=None, classname=None):  # pylint: disable=redefined-outer-name
         """Returns HTML for adding an item to a list"""
@@ -2963,7 +2978,6 @@ class DAList(DAObject):
             icon = re.sub(r'^fas ', 'fa-solid ', icon)
             icon = re.sub(r'^far ', 'fa-regular ', icon)
             icon = re.sub(r'^fab ', 'fa-brands ', icon)
-            icon = '<i class="' + icon + '"></i> '
         else:
             icon = ''
         if classname is None:
@@ -2983,7 +2997,7 @@ class DAList(DAObject):
             message = word(str(message))
         if url_only:
             return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_list_add', list=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + str(message) + '</a>'
+        return self._add_action_button(docassemble.base.functions.url_action('_da_list_add', list=self.instanceName), 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
 
     def hook_on_gather(self, *pargs, **kwargs):
         """Code that runs just before a list is marked as gathered."""
@@ -3860,11 +3874,9 @@ class DADict(DAObject):
         """Set a key to a default value if it does not already exist in the dictionary"""
         return self.elements.setdefault(*pargs)
 
-    def get(self, *pargs):
+    def get(self, *pargs, **kwargs):
         """Returns the value of a given key."""
-        if len(pargs) == 1:
-            return self[pargs[0]]
-        return self.elements.get(*pargs)
+        return self.elements.get(*pargs, **kwargs)
 
     def clear(self):
         """Removes all the items from the dictionary."""
@@ -6416,21 +6428,19 @@ class DALazyTemplate(DAObject):
         return docassemble.base.filter.markdown_to_html(self.content, **the_args)
 
     @property
-    def subject(self, **kwargs):
+    def subject(self):
         if not hasattr(self, 'source_subject'):
             raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
-        user_dict_copy.update(kwargs)
         return self.source_subject.text(user_dict_copy).rstrip()
 
     @property
-    def content(self, **kwargs):
+    def content(self):
         if not hasattr(self, 'source_content'):
             raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         user_dict_copy = copy.copy(self.userdict)
         user_dict_copy.update(self.tempvars)
-        user_dict_copy.update(kwargs)
         return self.source_content.text(user_dict_copy).rstrip()
 
     @property
@@ -6485,7 +6495,7 @@ class DALazyTableTemplate(DALazyTemplate):
         return text_of_table(self.table_info, self.userdict, self.tempvars, editable=False)
 
     @property
-    def content(self, **kwargs):
+    def content(self):
         if not hasattr(self, 'table_info'):
             raise LazyNameError("name '" + str(self.instanceName) + "' is not defined")
         return text_of_table(self.table_info, self.userdict, self.tempvars)
@@ -7357,7 +7367,7 @@ class DAWeb(DAObject):
                     params = data
                     data = None
                 r = requests.options(url, params=params, headers=headers, auth=auth, cookies=cookies, timeout=600)
-            elif method == 'HEAD':
+            else:  # method == 'HEAD'
                 if len(params) == 0:
                     params = data
                     data = None
@@ -7577,7 +7587,7 @@ def today(timezone=None, format=None):  # pylint: disable=redefined-builtin
     ensure_definition(timezone, format)
     if timezone is None:
         timezone = get_default_timezone()
-    val = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone))
+    val = datetime.datetime.now(datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone))
     if format is not None:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0)).format_date(format)
     return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
@@ -7824,7 +7834,7 @@ def current_datetime(timezone=None):
     ensure_definition(timezone)
     if timezone is None:
         timezone = get_default_timezone()
-    return dd(datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(datetime.datetime.now(datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)))
 
 
 def as_datetime(the_date, timezone=None):
@@ -8068,15 +8078,15 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
     if max_time is None:
         return None
     if timezone is not None:
-        return dd(max_time.replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
-    return dd(max_time.replace(tzinfo=datetime.timezone.utc))
+        return dd(max_time.replace(tzinfo=datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(max_time.replace(tzinfo=datetime.UTC))
 
 
 def start_time(timezone=None):
     """Returns the time the interview was started, as a DADateTime object."""
     if timezone is not None:
-        return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
-    return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc))
+        return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.UTC))
 
 
 class LatitudeLongitude(DAObject):
@@ -8743,7 +8753,7 @@ class Person(DAObject):
             if hasattr(self, 'icon'):
                 result['icon'] = self.icon
             elif self is this_thread.global_vars.user:
-                result['icon'] = {'path': 'CIRCLE', 'scale': 5, 'strokeColor': 'blue'}
+                result['icon'] = DEFAULT_BLUE_ICON
             return [result]
         return None
 
@@ -10177,7 +10187,7 @@ def zip_file(*pargs, **kwargs):
         info = zipfile.ZipInfo(zip_path)
         info.compress_type = zipfile.ZIP_DEFLATED
         info.external_attr = 0o644 << 16
-        info.date_time = datetime.datetime.utcfromtimestamp(os.path.getmtime(path)).replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
+        info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(path), datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
         with open(path, 'rb') as fp:
             zf.writestr(info, fp.read())
     zf.close()
@@ -10529,6 +10539,10 @@ def variables_snapshot_connection():
     return server.variables_snapshot_connection()
 
 
+def variables_snapshot_connect():
+    return server.variables_snapshot_connect()
+
+
 def get_persistent_task_store(persistent):
     if persistent is True:
         base = 'session'
@@ -10777,7 +10791,7 @@ class DAOAuth(DAObject):
                     revoke_uri = None
                 if 'expires_in' in token_dict:
                     delta = datetime.timedelta(seconds=int(token_dict['expires_in']))
-                    token_expiry = delta + datetime.datetime.utcnow()
+                    token_expiry = delta + datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
                 else:
                     token_expiry = None
                 extracted_id_token = None

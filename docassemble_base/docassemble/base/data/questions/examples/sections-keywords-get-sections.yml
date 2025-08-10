@@ -22,9 +22,11 @@ question: |
   Welcome to the interview
 subquestion: |
   The sections of this interview,
-  as a Python list, are:
+  as a JSON list, are:
 
-  `${ nav.get_sections() }`
+  ```
+  ${ json.dumps(nav.get_sections(), indent=2) }
+  ```
 field: sees_nav_bar
 ---
 mandatory: True
