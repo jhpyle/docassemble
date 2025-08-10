@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.8.2] - 2025-08-10
+
+### Fixed
+- Downgraded `numpy` for compatibility with Python 3.10.
+
 ## [1.8.1] - 2025-08-10
 
 ### Fixed
