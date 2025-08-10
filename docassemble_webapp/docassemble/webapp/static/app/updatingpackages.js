@@ -69,7 +69,7 @@ function daUpdateCallback(data) {
   }
 }
 function daUpdate() {
-  if (pollDelay > 25 || pollFail > 8) {
+  if (pollDelay > 50 || pollFail > 16) {
     $("#notification").html(daServerDidNotRespond);
     $("#notification").removeClass("alert-info");
     $("#notification").removeClass("alert-success");

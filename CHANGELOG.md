@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.8.1] - 2025-08-10
+
+### Fixed
+- Dependency problem with 1.8.0.
+
 ## [1.8.0] - 2025-08-10
 
 ### Added
