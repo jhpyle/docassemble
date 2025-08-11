@@ -642,7 +642,7 @@ The `DAList` uses the following attributes:
   whether any values should be gathered.  The expectation is that the
   interview will define a [question] or [code block] that defines this
   attribute.
-* `is_there_another`: a boolean value, initially undefined, indicating
+* `there_is_another`: a boolean value, initially undefined, indicating
   whether there are any additional values that should be gathered.
 * `auto_gather`: a boolean value, set to `True` by default, which
   indicates whether the interview should use the `.gather()` method to
