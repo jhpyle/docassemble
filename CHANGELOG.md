@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.8.3] - 2025-08-10
+
+### Fixed
+- Downgraded `scipy` and `contourpy` for compatibility with Python 3.10.
+
 ## [1.8.2] - 2025-08-10
 
 ### Fixed

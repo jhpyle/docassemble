@@ -2564,7 +2564,7 @@ def standard_scripts(interview_language=DEFAULT_LANGUAGE, external=False):
         fileinput_locale = f'\n  <script{DEFER} src="{url_for("static", filename="bootstrap-fileinput/js/locales/" + interview_language + ".js", v=da_version, _external=external)}"></script>'
     else:
         fileinput_locale = ''
-    return f'\n  <script{DEFER} src="{url_for('static', filename='app/bundle.min.js', v=da_version, _external=external)}"></script>{fileinput_locale}'
+    return f'\n  <script{DEFER} src="{url_for("static", filename="app/bundle.min.js", v=da_version, _external=external)}"></script>{fileinput_locale}'
 
 
 def additional_scripts(ga_ids, as_javascript=False):
@@ -10403,6 +10403,8 @@ def update_package_ajax():
                 logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
                 return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
             if hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
+                if len(the_result.logmessages) > 210000:
+                    the_result.logmessages = the_result.logmessages[0:100000] + "\n\nTRUNCATED\n\n" + the_result.logmessages[-100000:]
                 return jsonify(success=True, status='failed', summary=summarize_results(the_result.results, the_result.logmessages))
             return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)))
         logmessage("update_package_ajax: failed return value is a " + str(type(the_result)))
