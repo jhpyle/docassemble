@@ -962,7 +962,7 @@ def custom_register():
         if user_invite:
             if user_invite.email == register_form.email.data:
                 require_email_confirmation = False
-                db_adapter.update_object(user, confirmed_at=datetime.datetime.now(datetime.UTC).replace(tzinfo=None))
+                db_adapter.update_object(user, confirmed_at=datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None))
 
         db_adapter.commit()
 
@@ -2132,7 +2132,7 @@ def pad_to_16(the_string):
 
 def decrypt_session(secret, user_code=None, filename=None):
     # logmessage("decrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
-    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     if user_code is None or filename is None or secret is None:
         return
     for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=True).with_for_update()).scalars():
@@ -2155,7 +2155,7 @@ def decrypt_session(secret, user_code=None, filename=None):
 
 def encrypt_session(secret, user_code=None, filename=None):
     # logmessage("encrypt_session: user_code is " + str(user_code) + " and filename is " + str(filename))
-    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     if user_code is None or filename is None or secret is None:
         return
     for record in db.session.execute(select(SpeakList).filter_by(key=user_code, filename=filename, encrypted=False).with_for_update()).scalars():
@@ -2437,7 +2437,7 @@ def get_examples():
 
 
 def add_timestamps(the_dict, manual_user_id=None):
-    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     the_dict['_internal']['starttime'] = nowtime
     the_dict['_internal']['modtime'] = nowtime
     if manual_user_id is not None or (current_user and current_user.is_authenticated):
@@ -2923,7 +2923,7 @@ def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, e
         del user_dict['device_local']
     if 'user_local' in user_dict:
         del user_dict['user_local']
-    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     if steps is not None:
         user_dict['_internal']['steps'] = steps
     user_dict['_internal']['modtime'] = nowtime
@@ -3201,7 +3201,7 @@ def progress_bar(progress, interview):
 
 
 def get_unique_name(filename, secret):
-    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     while True:
         newname = random_alphanumeric(32)
         obtain_lock(newname, filename)
@@ -3612,6 +3612,8 @@ def summarize_results(results, logmessages, html=True):
         else:
             output = ''
         output += logmessages
+    if len(output) > 210000:
+        output = output[0:100000] + "\n\nTRUNCATED\n\n" + output[-100000:]
     return output
 
 
@@ -4731,7 +4733,7 @@ def formatted_current_time():
         the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
         the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
-    return datetime.datetime.now(datetime.UTC).replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime('%H:%M:%S %Z')
 
 
 def formatted_current_date():
@@ -4739,7 +4741,7 @@ def formatted_current_date():
         the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
     else:
         the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
-    return datetime.datetime.now(datetime.UTC).replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
+    return datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=tz.tzutc()).astimezone(the_timezone).strftime("%Y-%m-%d")
 
 
 class Object:
@@ -5160,7 +5162,8 @@ def load_user(the_id):
 @app.route('/rjs/<key>.js', methods=['GET'])
 def rjs(key):
     the_key = 'da:rjs:' + key
-    data = r.getdel(the_key)
+    data = r.get(the_key)
+    r.delete(the_key)
     if data is None:
         return ('File not found', 404)
     response = make_response(data, 200)
@@ -11405,7 +11408,7 @@ class Fruit(DAObject):
             for the_file in files:
                 thefilename = os.path.join(root, the_file)
                 info = zipfile.ZipInfo(thefilename[trimlength:])
-                info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(thefilename), datetime.UTC).astimezone(the_timezone).timetuple()
+                info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(thefilename), datetime.timezone.utc).astimezone(the_timezone).timetuple()
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = 0o644 << 16
                 with open(thefilename, 'rb') as fp:
@@ -14397,7 +14400,7 @@ def playground_packages():
                 the_timezone = zoneinfo.ZoneInfo(current_user.timezone)
             else:
                 the_timezone = zoneinfo.ZoneInfo(get_default_timezone())
-            commit_code_date = datetime.datetime.fromtimestamp(os.path.getmtime(current_commit_file), datetime.UTC).astimezone(the_timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
+            commit_code_date = datetime.datetime.fromtimestamp(os.path.getmtime(current_commit_file), datetime.timezone.utc).astimezone(the_timezone).strftime("%Y-%m-%d %H:%M:%S %Z")
         else:
             commit_code_date = ''
         if commit_code:
@@ -15794,7 +15797,7 @@ def logs():
             info = zipfile.ZipInfo(f)
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
-            info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(zip_path), datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
+            info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(zip_path), datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
             with open(zip_path, 'rb') as fp:
                 zf.writestr(info, fp.read())
         zf.close()
@@ -16284,7 +16287,7 @@ def ensure_training_loaded(interview):
                         try:
                             href = json.loads(content)
                             if isinstance(href, dict):
-                                nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+                                nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
                                 for group_id, train_list in href.items():
                                     if isinstance(train_list, list):
                                         for entry in train_list:
@@ -16388,7 +16391,7 @@ def train():
             if not isinstance(href, dict):
                 flash(word("Error reading JSON file.  The JSON file needs to contain a dictionary at the root level."), 'error')
                 return redirect(url_for('train', package=the_package, file=the_file, group_id=the_group_id, show_all=show_all))
-            nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+            nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
             for group_id, train_list in href.items():
                 if not isinstance(train_list, list):
                     logmessage("train: could not import part of JSON file.  Items in dictionary must be lists.")
@@ -17247,7 +17250,7 @@ def login_or_register(sender, user, source, **extra):  # pylint: disable=unused-
 
 
 def update_last_login(user):
-    user.last_login = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    user.last_login = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     db.session.commit()
 
 

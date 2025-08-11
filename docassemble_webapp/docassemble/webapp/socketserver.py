@@ -220,7 +220,7 @@ def terminate_interview_connection():
 
 @socketio.on('chatmessage', namespace='/wsinterview')
 def chat_message(data):
-    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     yaml_filename = data['i']
     session_info = get_session(yaml_filename)
     if session_info is not None:
@@ -819,7 +819,7 @@ def monitor_chat_message(data):
             return
         # release_lock(session_id, yaml_filename)
         docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
-        nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         if encrypted:
             message = encrypt_phrase(data['data'], secret)
         else:

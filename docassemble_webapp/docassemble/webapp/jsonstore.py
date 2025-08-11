@@ -68,10 +68,10 @@ def write_answer_json(user_code, filename, data, tags=None, persistent=False):
     existing_entry = JsonDb.execute(select(JsonStorage).filter_by(filename=filename, key=user_code, tags=tags).with_for_update()).scalar()
     if existing_entry:
         existing_entry.data = data
-        existing_entry.modtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        existing_entry.modtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         existing_entry.persistent = persistent
     else:
-        new_entry = JsonStorage(filename=filename, key=user_code, data=data, tags=tags, persistent=persistent, modtime=datetime.datetime.now(datetime.UTC).replace(tzinfo=None))
+        new_entry = JsonStorage(filename=filename, key=user_code, data=data, tags=tags, persistent=persistent, modtime=datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None))
         JsonDb.add(new_entry)
     JsonDb.commit()
 

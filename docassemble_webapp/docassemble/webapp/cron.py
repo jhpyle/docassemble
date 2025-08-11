@@ -94,7 +94,7 @@ def delete_inactive_users():
     filters = []
     for item in search_roles:
         filters.append(UserRoles.role_id == item)
-    cutoff_date = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - dateutil.relativedelta.relativedelta(days=cutoff_days)
+    cutoff_date = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None) - dateutil.relativedelta.relativedelta(days=cutoff_days)
     default_date = datetime.datetime(2020, 2, 24, 0, 0)
     candidates = []
     for item in db.session.execute(select(UserModel.id, UserModel.last_login).join(UserRoles, UserModel.id == UserRoles.user_id).where(or_(*filters))).all():
@@ -128,7 +128,7 @@ def clear_old_interviews():
                 days_by_filename[filename] = int(days)
         except:
             logmessage("Error in configuration for interview delete days by filename")
-    nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
     # logmessage("clear_old_interviews: days is " + str(interview_delete_days))
     for filename, days in days_by_filename.items():
         last_index = -1

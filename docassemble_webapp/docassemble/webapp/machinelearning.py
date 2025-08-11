@@ -154,7 +154,7 @@ class MachineLearner:
             if the_group_id in aref:
                 aref = aref[the_group_id]
         if isinstance(aref, list):
-            nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+            nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
             for entry in aref:
                 if 'independent' in entry:
                     depend = entry.get('dependent', None)
@@ -167,7 +167,7 @@ class MachineLearner:
 
     def add_to_training_set(self, independent, dependent, key=None, info=None):
         self._initialize()
-        nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         if dependent is not None:
             new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(independent), 'base64').decode(), dependent=codecs.encode(pickle.dumps(dependent), 'base64').decode(), info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None, create_time=nowtime, modtime=nowtime, active=True, key=key)
         else:
@@ -185,7 +185,7 @@ class MachineLearner:
         if existing_entry is not None:
             # logmessage("entry is already there")
             return existing_entry.id
-        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(indep), 'base64').decode(), create_time=datetime.datetime.now(datetime.UTC).replace(tzinfo=None), active=False, key=key, info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None)
+        new_entry = MachineLearning(group_id=self.group_id, independent=codecs.encode(pickle.dumps(indep), 'base64').decode(), create_time=datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None), active=False, key=key, info=codecs.encode(pickle.dumps(info), 'base64').decode() if info is not None else None)
         db.session.add(new_entry)
         db.session.commit()
         return new_entry.id
@@ -269,7 +269,7 @@ class MachineLearner:
             the_entry.key = kwargs['key']
         if 'info' in kwargs:
             the_entry.info = codecs.encode(pickle.dumps(kwargs['info']), 'base64').decode()
-        the_entry.modtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        the_entry.modtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         if not existing:
             db.session.add(the_entry)
         db.session.commit()
@@ -282,7 +282,7 @@ class MachineLearner:
         if existing_entry is None:
             db.session.commit()
             raise DAException("There was no entry in the database for id " + str(the_id) + " with group id " + str(self.group_id))
-        existing_entry.modtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        existing_entry.modtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         if the_dependent is None:
             existing_entry.dependent = None
             existing_entry.active = False
@@ -309,7 +309,7 @@ class MachineLearner:
     def _train_from_db(self):
         # logmessage("Doing train_from_db where group_id is " + self.group_id + " and lastmodtime is " + repr(ml_thread.lastmodtime[self.group_id]))
         self._initialize()
-        nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         success = False
         for record in db.session.execute(select(MachineLearning.independent, MachineLearning.dependent).where(and_(MachineLearning.group_id == self.group_id, MachineLearning.active == True, MachineLearning.modtime > ml_thread.lastmodtime[self.group_id]))).all():  # noqa: E712 # pylint: disable=singleton-comparison
             # logmessage("Training...")
@@ -484,7 +484,7 @@ class RandomForestMachineLearner(MachineLearner):
     def _train_from_db(self):
         # logmessage("Doing train_from_db")
         self._initialize()
-        nowtime = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         success = False
         data = []
         depend_data = []

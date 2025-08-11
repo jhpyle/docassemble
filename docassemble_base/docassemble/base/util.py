@@ -7587,7 +7587,7 @@ def today(timezone=None, format=None):  # pylint: disable=redefined-builtin
     ensure_definition(timezone, format)
     if timezone is None:
         timezone = get_default_timezone()
-    val = datetime.datetime.now(datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone))
+    val = datetime.datetime.now(datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone))
     if format is not None:
         return dd(val.replace(hour=0, minute=0, second=0, microsecond=0)).format_date(format)
     return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
@@ -7834,7 +7834,7 @@ def current_datetime(timezone=None):
     ensure_definition(timezone)
     if timezone is None:
         timezone = get_default_timezone()
-    return dd(datetime.datetime.now(datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(datetime.datetime.now(datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
 
 
 def as_datetime(the_date, timezone=None):
@@ -8078,15 +8078,15 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
     if max_time is None:
         return None
     if timezone is not None:
-        return dd(max_time.replace(tzinfo=datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)))
-    return dd(max_time.replace(tzinfo=datetime.UTC))
+        return dd(max_time.replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(max_time.replace(tzinfo=datetime.timezone.utc))
 
 
 def start_time(timezone=None):
     """Returns the time the interview was started, as a DADateTime object."""
     if timezone is not None:
-        return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)))
-    return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.UTC))
+        return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc))
 
 
 class LatitudeLongitude(DAObject):
@@ -10187,7 +10187,7 @@ def zip_file(*pargs, **kwargs):
         info = zipfile.ZipInfo(zip_path)
         info.compress_type = zipfile.ZIP_DEFLATED
         info.external_attr = 0o644 << 16
-        info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(path), datetime.UTC).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
+        info.date_time = datetime.datetime.fromtimestamp(os.path.getmtime(path), datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)).timetuple()
         with open(path, 'rb') as fp:
             zf.writestr(info, fp.read())
     zf.close()
@@ -10791,7 +10791,7 @@ class DAOAuth(DAObject):
                     revoke_uri = None
                 if 'expires_in' in token_dict:
                     delta = datetime.timedelta(seconds=int(token_dict['expires_in']))
-                    token_expiry = delta + datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+                    token_expiry = delta + datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
                 else:
                     token_expiry = None
                 extracted_id_token = None

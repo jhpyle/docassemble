@@ -153,7 +153,7 @@ class azurekey:
             snapshot=self.blob_client.snapshot,
             account_key=self.blob_client.credential.account_key,
             permission=BlobSasPermissions(read=True),
-            expiry=datetime.datetime.now(datetime.UTC).replace(tzinfo=None) + datetime.timedelta(seconds=seconds),
+            expiry=datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None) + datetime.timedelta(seconds=seconds),
             cache_control='no-cache',
             content_disposition=disposition,
             content_type=content_type

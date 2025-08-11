@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.8.4] - 2025-08-10
+
+### Fixed
+- Revised Redis code for compatibility with Redis servers.
+- Revised datetime code for compatibility with Python 3.10.
+
 ## [1.8.3] - 2025-08-10
 
 ### Fixed
