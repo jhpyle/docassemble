@@ -196,7 +196,8 @@ If you know how to write [JavaScript] and [CSS], you can add
 
 {% include side-by-side.html demo="script" %}
 
-This [JavaScript] will be executed when the screen loads. 
+This [JavaScript] will be executed when the screen loads, prior to the
+triggering of the `daPageLoad` event.
 
 To add [JavaScript] or [CSS] to all questions, you can use a
 [`features`] block to include [JavaScript] and [CSS] files on the web
@@ -215,6 +216,11 @@ Therefore, you should not use code in a `script` modifier to attach a
 be attached more than once. Therefore, only attach `daPageLoad`
 listeners from a [JavaScript] file that you include using the
 [`javascript`] feature.
+
+In general, use of the `script` modifier is discouraged. It is
+generally better to use a JavaScript file attached using [`features`],
+and to have code in that file that listens for the `daPageLoad`
+event.
 
 # <a name="css"></a>Adding [CSS]: `css`
 

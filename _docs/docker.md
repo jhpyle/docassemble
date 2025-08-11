@@ -1199,7 +1199,11 @@ indicated location, **docassemble** will create an initial
   non-[AWS]<span></span> [S3]-compatible object storage service, set
   `S3ENDPOINTURL` to the URL of the service, (e.g.,
   `https://region.mys3service.com`. Usually this URL does not contain
-  the bucket name (e.g., not `https://bucket.region.mys3service.com`).
+  the bucket name (e.g., not
+  `https://bucket.region.mys3service.com`). If you have trouble
+  connecting to a third-party S3 endpoint, you might want to try
+  setting `AWS_REQUEST_CHECKSUM_CALCULATION=WHEN_REQUIRED` in the
+  environment variables.
 * <a name="S3_SSE_ALGORITHM"></a>`S3_SSE_ALGORITHM`: the server-side
   encryption algorithm used (e.g., `AES256`, `aws:kms`). This should
   only be specified if the S3 bucket uses server-side encryption.
@@ -1525,6 +1529,11 @@ your container for the new configuration to take effect.
 * <a name="GOTENBERGURL"></a>`GOTENBERGURL`: This can be set to the
   URL of your [Gotenberg] server, if you have one. See the [`gotenberg
   url`] configuration directive.
+* <a name="USENGINXTOSERVEFILES"></a>`USENGINXTOSERVEFILES`: If
+  NGINX is not being used in the container (i.e. traffic is
+  connected directly to `uwsgi`) then this should be
+  `false`. Otherwise it should be `true`. The default is `true`. See
+  the [`use nginx to serve files`] configuration directive.
 * <a name="SUPERVISORLOGLEVEL"></a>`SUPERVISORLOGLEVEL`: This can be
   set to `debug` if you would like log messages to print to the output
   of `supervisord`, which is the output of the container itself. This
@@ -3459,6 +3468,41 @@ your local machine. If you want, you can edit the [Dockerfile] before
 building your custom `jhpyle/docassemble` version so that it
 references a different base image.
 
+# <a name="monitoring"></a>Monitoring the health of your container
+
+You will want to make sure that you don't run out of hard drive
+space. To receive notifications when your hard drive space runs low,
+you can use tools provided by your cloud provider.
+
+For example, DigitalOcean allows you to install the "DigitalOcean
+Metrics Agent" on the host operating system. This software sends
+information to Digital Ocean about memory and disk usage. You can
+configure notifications based on thresholds.
+
+If you are using an EC2 instance, you can configure CloudWatch, which
+is AWS's system for cloud infrastructure monitoring. How to do this is
+beyond the scope of **docassemble**'s documentation, but one way is to
+create an IAM Role that has the `AmazonSSMManagedInstanceCore` and
+`CloudWatchAgentServerPolicy` attached to it, and then give your EC2
+instance this IAM Role. Then, when your EC2 instance has started, go
+to the Monitoring tab and click the Configure CloudWatch Agent
+button. If you are using a popular AMI, the SSM Agent should be
+installed and running. If it says that the CloudWatch agent is not
+installed, press the "Install CloudWatch agent" button. Then you can
+select which metrics you want to track. Note that AWS may charge you a
+fee per metric, so you may not want to select all of them. In
+CloudWatch, you can set up an Alarm that will notify you if a metric
+exceeds a threshold. The metric for disk usage, if you enabled it, can
+be found under "CWAgent" in the subcategory of "InstanceId, device,
+fstype, path."  Select the metric of `disk_used_percent` for the Path
+`/`.
+
+On AWS, if you want to set up automated monitoring of whether
+**docassemble** is responding, you can set up a Canary in
+CloudWatch. See the section on [health check endpoints] for some
+endpoints that you can use.
+
+[health check endpoints]: {{ site.baseurl }}/docs/admin.html#endpoints
 [Redis]: https://redis.io/
 [Docker installation instructions for Windows]: https://docs.docker.com/engine/installation/windows/
 [Docker installation instructions for OS X]: https://docs.docker.com/engine/installation/mac/
@@ -3755,6 +3799,7 @@ references a different base image.
 [locale values]: {{ site.baseurl }}/img/locales.txt
 [`enable unoconv`]: {{ site.baseurl }}/docs/config.html#enable unoconv
 [`gotenberg url`]: {{ site.baseurl }}/docs/config.html#gotenberg url
+[`use nginx to serve files`]: {{ site.baseurl }}/docs/config.html#use nginx to serve files
 [Gotenberg]: https://gotenberg.dev/
 [deletes inactive sessions]: {{ site.baseurl }}/docs/config.html#interview delete days
 [receiving emails]: {{ site.baseurl }}/docs/functions.html#interview_email

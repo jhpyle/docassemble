@@ -1039,6 +1039,20 @@ If a `next` parameter is present on the login or register page, the
 user will be redirected to that location instead of the `page after
 login`.
 
+## <a name="javascript defer"></a>JavaScript loading
+
+The `javascript defer` setting should be set to `True` for faster
+JavaScript loading. This causes the `<script>` tags to have the
+`defer` attribute set.
+
+{% highlight yaml %}
+javascript defer: True
+{% endhighlight %}
+
+For backwards compatibility, it is set to `False` by default, in case
+you have `raw global javascript` that depends on jQuery and that will
+fail if scripts are loaded with `defer`.
+
 ## <a name="global css"></a><a name="global javascript"></a><a name="raw global css"></a><a name="raw global javascript"></a>CSS and Javascript customization
 
 You can use the [`javascript` features setting] and the
@@ -1085,7 +1099,7 @@ javascript` directives:
 raw global css: |
   <meta property="og:title" content="Child Custody Interview" />
 raw global javascript: |
-  <script>
+  <script defer>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
     m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -1101,6 +1115,12 @@ global css` content relate to [CSS], or that that the `raw global
 javascript` content relate to [JavaScript]; the names simply refer to
 the conventions about where [CSS] and [JavaScript] are typically
 placed in the [HTML] page.
+
+You should set the `defer` attribute in any `<script>` tags
+you include in `raw global javascript` if `javascript defer` (see the
+previous section) is set to `True`. If you don't set the `defer`
+attribute, your code may run in an unpredictable order relative to the
+loading of other files.
 
 ## <a name="bootstrap theme"></a>Bootstrap theme
 
@@ -3715,23 +3735,6 @@ client-side features, obtain two separate API keys from Google, and
 lock down the `api key` based on the IP address of your server, and
 lock down the `google maps api key` based on the URL of your site.
 
-When using the [address autocomplete] feature, Google
-[biases](https://developers.google.com/maps/documentation/javascript/localization#Region)
-the behavior of address autocompletion to the United States. You can
-tell Google to bias results to a different region by setting a
-`region`:
-
-{% highlight yaml %}
-google:
-  google maps api key: YyFeyuE-36grDgEE34jETRy3WDjGerye0y-wrRb
-  region: PA
-{% endhighlight %}
-
-This will bias results toward Panama. `region` values are two-letter
-[ISO_3166-1](https://en.wikipedia.org/wiki/ISO_3166-1) country codes
-like `PK` for Pakistan, with the exception that `region` should be set
-to `GB` instead of `UK` for the United Kingdom.
-
 If you use the [Google Cloud Translation API] for the feature in
 [Utilities] that [translates system phrases] into other languages, you
 can control how many phrases are translated in a single request to the
@@ -5718,6 +5721,33 @@ requires system version 0.5.0 or later.
 
 See also the [`DAWEBSERVER`] environment variable.
 
+## <a name="use nginx to serve files"></a>Using NGINX to serve files
+
+The `X-Accel-Redirect` feature of [NGINX] allows Python, running
+inside of `uwsgi`, to serve a file in response to an HTTP request by
+returning an empty response instead of a response with the content of
+the file in the body. Python tells [NGINX] the file to be served by
+setting the `X-Accel-Redirect` header of the empty response to the
+file system path. [NGINX] intercepts the response and serves the file to the
+user. This increases efficiency because Python code does not have to
+process the contents of the file.
+
+The value of `use nginx to serve files` is `False` unless set to
+`True` in the Configuration.
+
+{% highlight yaml %}
+use nginx to serve files: True
+{% endhighlight %}
+
+If you use [NGINX], the value of this should be `True` unless the
+`X-Accel-Redirect` feature causes problems for some reason. The
+default value is `False` only for backwards compatibility with system
+versions prior to 1.7.8; a change to the NGINX configuration is
+required to enable this feature to work. In the default Configuration
+for new systems, `use nginx to serve files` is `True`.
+
+See also the [`USENGINXTOSERVEFILES`] environment variable.
+
 ## <a name="use minio"></a>Use of MinIO
 
 If you are using [MinIO] in combination with an [S3](#s3)
@@ -6711,6 +6741,7 @@ and Facebook API keys.
 [`BEHINDHTTPSLOADBALANCER`]: {{ site.baseurl }}/docs/docker.html#BEHINDHTTPSLOADBALANCER
 [`DAHOSTNAME`]: {{ site.baseurl }}/docs/docker.html#DAHOSTNAME
 [`DAWEBSERVER`]: {{ site.baseurl }}/docs/docker.html#DAWEBSERVER
+[`USENGINXTOSERVEFILES`]: {{ site.baseurl }}/docs/docker.html#USENGINXTOSERVEFILES
 [Let's Encrypt]: https://letsencrypt.org/
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`USEHTTPS`]: {{ site.baseurl }}/docs/docker.html#USEHTTPS

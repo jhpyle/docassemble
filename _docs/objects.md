@@ -516,6 +516,22 @@ Other methods available on a `DAList` are:
   outputting HTML of buttons, the method will output a single URL that
   can be used in the web interface as the URL of an edit button or a
   delete button, respectively.
+* <a name="DAList._reorder_buttons"></a>`_reorder_buttons()` - This
+  internal method can be subclassed in order to customize how
+  reordering buttons appear in a table. See the source code for the
+  code you will need to duplicate.
+* <a name="DAList._edit_button"></a>`_edit_button()` - This internal
+  method can be subclassed in order to customize how the Edit button
+  appears in a table. See the source code for the code you will need
+  to duplicate.
+* <a name="DAList._delete_button"></a>`_delete_button()` - This
+  internal method can be subclassed in order to customize how the
+  Delete button appears in a table. See the source code for the code
+  you will need to duplicate.
+* <a name="DAList._add_action_button"></a>`_add_action_button()` -
+  This internal method can be subclassed in order to customize how the
+  `add_action()` button appears. See the source code for the code you
+  will need to duplicate.
 * <a name="DAList.hook_on_gather"></a><a
   name="DADict.hook_on_gather"></a>`hook_on_gather()` - this method is
   run automatically as part of the list gathering process.  It is run
@@ -4917,8 +4933,8 @@ front end of the page will be ignored.
 For this feature to work, your [`google maps api key`] will need to be
 associated with an app for which the following APIs are enabled:
 
-* Google Places API Web Service
-* Google Maps JavaScript API
+* Places API (New)
+* Maps JavaScript API
 
 Here is an example that illustrates how the address autocomplete
 feature works:
@@ -7514,8 +7530,8 @@ the `_uid` of the table rather than the `id`.
 [`PeriodicValue`]: #PeriodicValue
 [Modules folder]: {{ site.baseurl }}/docs/playground.html#modules
 [Playground]: {{ site.baseurl }}/docs/playground.html
-[Place Autocomplete]: https://developers.google.com/places/web-service/autocomplete
-[Google Places API]: https://developers.google.com/places/
+[Place Autocomplete]: https://developers.google.com/maps/documentation/places/web-service/place-autocomplete
+[Google Places API]: https://developers.google.com/maps/documentation/places/web-service/op-overview
 [Configuration]: {{ site.baseurl }}/docs/config.html
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
 [`api key`]: {{ site.baseurl }}/docs/config.html#google

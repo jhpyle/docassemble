@@ -1679,24 +1679,26 @@ The `url_of()` function also has a few special uses.
   optional keyword parameter `next`, which you can set to a URL if you
   want the user to be directed to a particular URL after they log in.
 * `url_of('signin')` does the same thing as `url_of('login')`.
-* `url_of('restart')` returns a URL that will delete the current
-  session and restart it with the same URL parameters.
 * `url_of('new_session')` returns a URL that starts a new session of
   the current interview, preserving the existing session.
-* `url_of('exit')` returns a URL that deletes the interview session
-  and redirects to the [`exitpage`].
 * `url_of('interview')` returns a URL to the interview page. This
   should be used with an `i` parameter. If your `i` parameter does not
   begin with a package name, the current package will be
   substituted. (See also [`interview_url()`], which does something
   similar but with more features.)
+* `url_of('restart')` returns a URL that will delete the current
+  session and restart it with the same URL parameters.
+* `url_of('exit')` returns a URL that deletes the interview session
+  and redirects to the [`exitpage`]. It accepts a `next` parameter,
+  which is a URL to redirect the user to, instead of the [`exitpage`].
 * `url_of('logout')` returns a URL that logs the user out. It accepts
   a `next` parameter.
-* `url_of('exit_logout')` returns a URL that deletes the interview session,
-  logs the user out (if the user is logged in), and redirects to the
-  [`exitpage`].
+* `url_of('exit_logout')` returns a URL that deletes the interview
+  session, logs the user out (if the user is logged in), and redirects
+  to the [`exitpage`]. It accepts a `next` parameter.
 * `url_of('leave')` redirects to the [`exitpage`]. It does not log
-  the user out or delete the interview session.
+  the user out or delete the interview session. It accepts
+  a `next` parameter.
 * `url_of('register')` returns a URL to the user registration page.
   It accepts a `next` parameter.
 * `url_of('profile')` returns a URL to the logged-in user's profile page.
@@ -2285,14 +2287,18 @@ does not work within documents.)  The arguments are expected to be
   address. The description will be the person's name, followed by the
   address. The marker icon can be customized by setting `person.icon`
   (for a [`Person`] object called `person`). If the [`Person`] object
-  is the user, the default icon is a blue circle.
+  is the user, the default icon is a blue pin.
 
 {% include demo-side-by-side.html demo="testgeolocate" %}
 
-In order for maps to appear, you will need to configure a
-[Google API key]. From the [`google`] section of the [configuration],
-the `google maps api key` will be used if it exists. If a
-`google maps api key` is not present, the `api key` will be used.
+In order for maps to appear, you will need to configure a [Google API
+key]. From the [`google`] section of the [configuration], the `google
+maps api key` will be used if it exists. If a `google maps api key` is
+not present, the `api key` will be used. In the Google Cloud console,
+you will need to enable the [Maps JavaScript API].
+
+The `icon` attribute is expected to be a `dict` of options that will
+be passed to a [PinElement] constructor.
 
 ## <a name="location_known"></a>location_known()
 
@@ -7446,34 +7452,37 @@ interview on the server and summarizes the results.
 The contents of the [`read_snapshot.py`] module are as follows.
 
 {% highlight python %}
-from docassemble.base.util import variables_snapshot_connection, user_info
+from docassemble.base.util import variables_snapshot_connect, user_info
 
 __all__ = ['analyze']
 
+
 def analyze():
-  conn = variables_snapshot_connection()
-  cur = conn.cursor()
-  cur.execute("select data->>'favorite_fruit' from jsonstorage where filename='" + user_info().filename + "'")
-  counts = dict()
-  for record in cur.fetchall():
-    fruit = record[0].lower()
-    if fruit not in counts:
-      counts[fruit] = 0
-    counts[fruit] += 1
-  conn.close()
-  return counts
+    with variables_snapshot_connect() as conn:
+        with conn.connection.cursor() as cur:
+            cur.execute("select data->>'favorite_fruit' from jsonstorage where filename='" + user_info().filename + "'")
+            counts = {}
+            for record in cur.fetchall():
+                fruit = record[0].lower()
+                if fruit not in counts:
+                    counts[fruit] = 0
+                counts[fruit] += 1
+    return counts
 {% endhighlight %}
 
-The `analyze()` function imports the `variables_snapshot_connection()`
+The `analyze()` function imports the `variables_snapshot_connect()`
 function from [`docassemble.base.util`] and calls it in order to get a
-SQL connection object. If your database is [PostgreSQL], this will be
-a [`psycopg2`] connection object. Note that
-`variables_snapshot_connection()` is not available for use inside
-interview [YAML] the way `store_variables_snapshot()` is. If you
-tried to call `variables_snapshot_connection()` from inside of a
+SQLAlchemy connection object (`conn`). The underlying connection
+object is `conn.connection`, and `conn.connection.cursor()` returns a
+cursor. If your database is [PostgreSQL], this will be a [`psycopg2`]
+connection object.
+
+Note that `variables_snapshot_connect()` is not available for use
+inside interview [YAML] the way `store_variables_snapshot()` is. If
+you tried to call `variables_snapshot_connect()` from inside of a
 [`code`] block, you would get an error. Always call
-`variables_snapshot_connection()` from a function or method defined in
-a [Python module].
+`variables_snapshot_connect()` from a function or method defined in a
+[Python module].
 
 When using [PostgreSQL], the data type used for the [JSON] `data` is
 [JSONB]. This allows for the use of the special [PostgreSQL]
@@ -7568,7 +7577,7 @@ many other tables in this database, and it may be preferable to use a
 separate database for [JSON] snapshots. If you define a [`variables
 snapshot db`] in your [Configuration], a `jsonstorage` table will be
 created in the referenced database, and `store_variables_snapshot()`
-and `variables_snapshot_connection()` will use this database instead
+and `variables_snapshot_connect()` will use this database instead
 of the default **docassemble** database.
 
 The columns in the `jsonstorage` table are as follows.
@@ -8582,8 +8591,7 @@ page load, or when the user presses the refresh button. The
 screen.
 
 Note that you should only attach a `daPageLoad` listener from a
-[`javascript`] file, not from a [`script`]
-
+[`javascript`] file, not from a [`script`].
 
 [`json_response()`]: #json_response
 [Ajax]: https://en.wikipedia.org/wiki/Ajax_(programming)
@@ -9099,3 +9107,5 @@ Note that you should only attach a `daPageLoad` listener from a
 [`user_privileges()`]: #user_privileges
 [`permissions`]: {{ site.baseurl }}/docs/config.html#permissions
 [Flask Request object]: https://tedboy.github.io/flask/generated/generated/flask.Request.html
+[PinElement]: https://developers.google.com/maps/documentation/javascript/reference/advanced-markers#PinElement
+[Maps JavaScript API]: https://developers.google.com/maps/documentation/javascript/overview

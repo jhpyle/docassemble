@@ -630,7 +630,7 @@
         required: False
 "address-autocomplete-test":
   "height": !!int |-
-    1992
+    1998
   "width": !!int |-
     488
   "yaml": |-
@@ -650,6 +650,10 @@
       - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
         required: False
       - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - "administrative_area_&#8203;level_6": the_address.administrative_area_level_6
+        required: False
+      - "administrative_area_&#8203;level_7": the_address.administrative_area_level_7
         required: False
       - colloquial_area: the_address.colloquial_area
         required: False
@@ -678,8 +682,6 @@
       - room: the_address.room
         required: False
       - route: the_address.route
-        required: False
-      - suite: the_address.suite
         required: False
       - street_number: the_address.street_number
         required: False
@@ -5658,7 +5660,7 @@
       Congratulations, you found Nemo!
     buttons:
       - Try again: restart
-      - Learn More: logout
+      - Learn More: exit
         url: https://en.wikipedia.org/wiki/Amphiprioninae
     mandatory: True
 "exit-url-referer":
@@ -14293,11 +14295,9 @@
       <span id="beg"></span>
     yesno: wants_to_build_snowman
     script: |
-      <script>
-        setTimeout(function(){
-          $("#beg").html("Pretty please?");
-        }, 3000);
-      </script>
+      setTimeout(function(){
+        $("#beg").html("Pretty please?");
+      }, 3000);
 "sections":
   "height": !!int |-
     200
@@ -14411,29 +14411,29 @@
     \ to go eat some\n  ${ favorite_vegetable }\n  now."
 "sections-keywords-get-sections":
   "height": !!int |-
-    4854
+    398
   "width": !!int |-
     488
   "yaml": "sections:\n  - intro: Introduction\n  - about: About you\n    subsections:\n\
     \      - contact: Contact info\n      - demographic: Demographics\n  - prefs:\
     \ Preferences\n  - conclusion: Conclusion\n---\nfeatures:\n  navigation: True\n\
     ---\nmandatory: True\nquestion: |\n  Welcome to the interview\nsubquestion: |\n\
-    \  The sections of this interview,\n  as a Python list, are:\n\n  `${ nav.get_sections()\
-    \ }`\nfield: sees_nav_bar\n---\nmandatory: True\nquestion: |\n  I am going to\
-    \ ask you some\n  questions about yourself.\nfield: intro_to_about_you\nsection:\
-    \ about\n---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n  -\
-    \ First Name: first_name\n  - Last Name: last_name\nsection: contact\n---\nmandatory:\
-    \ True\nquestion: |\n  What is your e-mail address?\nfields:\n  - E-mail: email_address\n\
-    \    datatype: email\n---\nmandatory: True\nquestion: |\n  What is your gender?\n\
-    field: gender\nchoices:\n  - Male\n  - Female\n  - Something else\nsection: demographic\n\
-    ---\nmandatory: True\nquestion: |\n  What kind of belly button\n  do you have?\n\
-    field: belly_button\nchoices:\n  - Innie\n  - Outie\n---\nmandatory: True\nquestion:\
-    \ |\n  What is your favorite fruit?\nfields:\n  - Favorite fruit: favorite_fruit\n\
-    section: prefs\n---\nmandatory: True\nquestion: |\n  What is your favorite vegetable?\n\
-    fields:\n  - Favorite vegetable: favorite_vegetable\n---\nmandatory: True\nquestion:\
-    \ Thank you.\nsubquestion: |\n  ${ first_name },\n\n  Your answers mean a lot\
-    \ to me.\n  \n  I am going to go eat some\n  ${ favorite_vegetable }\n  now.\n\
-    section: conclusion"
+    \  The sections of this interview,\n  as a JSON list, are:\n\n  ```\n  ${ json.dumps(nav.get_sections(),\
+    \ indent=2) }\n  ```\nfield: sees_nav_bar\n---\nmandatory: True\nquestion: |\n\
+    \  I am going to ask you some\n  questions about yourself.\nfield: intro_to_about_you\n\
+    section: about\n---\nmandatory: True\nquestion: |\n  What is your name?\nfields:\n\
+    \  - First Name: first_name\n  - Last Name: last_name\nsection: contact\n---\n\
+    mandatory: True\nquestion: |\n  What is your e-mail address?\nfields:\n  - E-mail:\
+    \ email_address\n    datatype: email\n---\nmandatory: True\nquestion: |\n  What\
+    \ is your gender?\nfield: gender\nchoices:\n  - Male\n  - Female\n  - Something\
+    \ else\nsection: demographic\n---\nmandatory: True\nquestion: |\n  What kind of\
+    \ belly button\n  do you have?\nfield: belly_button\nchoices:\n  - Innie\n  -\
+    \ Outie\n---\nmandatory: True\nquestion: |\n  What is your favorite fruit?\nfields:\n\
+    \  - Favorite fruit: favorite_fruit\nsection: prefs\n---\nmandatory: True\nquestion:\
+    \ |\n  What is your favorite vegetable?\nfields:\n  - Favorite vegetable: favorite_vegetable\n\
+    ---\nmandatory: True\nquestion: Thank you.\nsubquestion: |\n  ${ first_name },\n\
+    \n  Your answers mean a lot to me.\n  \n  I am going to go eat some\n  ${ favorite_vegetable\
+    \ }\n  now.\nsection: conclusion"
 "sections-keywords-review":
   "height": !!int |-
     135
@@ -19120,6 +19120,14 @@
         ${ user } attests, under the pains
         and penalties of perjury, that the
         sky is blue.
+"interrelated":
+  "height": !!int |-
+    214
+  "width": !!int |-
+    488
+  "yaml": |-
+    objects:
+      - s: Situation
 "interview_in_interview":
   "height": !!int |-
     292
@@ -21458,157 +21466,6 @@
         docx template file: tagged.docx
         tagged pdf: True
     mandatory: True
-"testaccordion1":
-  "height": !!int |-
-    450
-  "width": !!int |-
-    488
-  "yaml": |-
-    modules:
-      - docassemble.demo.accordion
-    ---
-    event: review_screen
-    question: |
-      Please review your answers.
-    review:
-      - raw html: |
-          ${ start_accordion('Pets', showing=True) }
-      - Edit: favorite_cat
-        button: |
-          You said your favorite cat was
-          **${ favorite_cat }**.
-      - Edit: favorite_vegetable
-        button: |
-          You said your favorite dog was
-          **${ favorite_dog }**.
-      - raw html: |
-          ${ next_accordion('Food') }
-      - Edit: favorite_fruit
-        button: |
-          You said your favorite fruit was
-          **${ favorite_fruit }**.
-      - Edit: favorite_vegetable
-        button: |
-          You said your favorite vegetable was
-          **${ favorite_vegetable }**.
-      - raw html: |
-          ${ next_accordion('Aesthetics') }
-      - Edit: fashion_aesthetic
-        button: |
-          You said your fashion aesthetic was
-          **${ fashion_aesthetic }**.
-      - Edit: decor_aesthetic
-        button: |
-          You said your home decor aesthetic was
-          **${ decor_aesthetic }**.
-      - raw html: |
-          ${ end_accordion() }
-"testaccordion2":
-  "height": !!int |-
-    438
-  "width": !!int |-
-    488
-  "yaml": |-
-    modules:
-      - docassemble.demo.accordion
-    ---
-    question: |
-      Tell me about your preferences
-    fields:
-      - raw html: |
-          ${ start_accordion('Pets', showing=True) }
-      - Favorite cat: favorite_cat
-      - Favorite dog: favorite_dog
-      - raw html: |
-          ${ next_accordion('Food') }
-      - Favorite fruit: favorite_fruit
-        required: False
-      - Favorite vegetable: favorite_vegetable
-        required: False
-      - Favorite meat dish: favorite_meat_dish
-        show if:
-          variable: favorite_dog
-          is: spaniel
-      - raw html: |
-          ${ next_accordion('Aesthetics') }
-      - Fashion aesthetic: fashion_aesthetic
-        required: False
-      - Decor aesthetic: decor_aesthetic
-        required: False
-      - raw html: ${ end_accordion() }
-"testaccordion3":
-  "height": !!int |-
-    309
-  "width": !!int |-
-    488
-  "yaml": "modules:\n  - docassemble.demo.accordion\n---\nquestion: |\n  Welcome to\
-    \ the interview.\nsubquestion:\n  This interview will determine a recommended\
-    \ direction\n  for your life.\n  \n  ${ start_accordion('What do I need to know\
-    \ before starting?') }\n\n  Modernipsum dolor sit amet illusionism cubo-futurism\
-    \ international\n  gothic historicism, neo-minimalism divisionism cobra intervention\n\
-    \  art art nouveau. Installation art futurism les nabis academic hudson\n  river\
-    \ school young british artists, romanticism neo-expressionism\n  street art orphism,\
-    \ lyrical abstraction avant-garde remodernism\n  vorticism. Divisionism caravaggisti\
-    \ die br\xFCcke tachisme\n  impressionism, gothic art luminism illusionism op\
-    \ art neoclassicism,\n  street art situationist international neoism. Orphism\
-    \ russian\n  symbolism academic ego-futurism kinetic art neo-dada dada stuckism\n\
-    \  international gr\xFCnderzeit, post-impressionism impressionism\n  postmodernism\
-    \ maximalism precisionism post-painterly\n  abstraction. Russian symbolism superflat\
-    \ new media art jugendstil\n  maximalism illusionism, gr\xFCnderzeit scuola romana\
-    \ merovingian\n  rayonism secularism, existentialism op art action painting lyrical\n\
-    \  abstraction.\n  \n  ${ next_accordion('What do I do after I finish the interview?')\
-    \ }\n\n  Metaphysical art barbizon school carolingian neo-minimalism\n  primitivism\
-    \ superflat neo-minimalism naturalism, der blaue reiter\n  hard-edge painting\
-    \ new media art fluxus superstroke\n  monumentalism. Art deco russian futurism\
-    \ cubo-futurism pop art\n  relational art neo-expressionism, synchromism pre-raphaelites\
-    \ sound\n  art photorealism classicism, surrealism gothic art hudson river\n \
-    \ school scuola romana. Rococo biedermeier cloisonnism secularism\n  hudson river\
-    \ school fluxus, modernism, ego-futurism formalism\n  manierism, gr\xFCnderzeit\
-    \ deformalism abstract expressionism\n  postmodernism. Classicism postminimalism\
-    \ superstroke lowbrow\n  tonalism fauvism color field painting systems art, biedermeier\n\
-    \  post-impressionism hyperrealism structuralism neoclassicism. Dada\n  tachisme\
-    \ luminism manierism surrealism, avant-garde performance art\n  neoclassicism\
-    \ hard-edge painting neo-impressionism, nouveau realisme\n  eclecticism tonalism.\n\
-    \  \n  ${ end_accordion() }\ncontinue button field: intro"
-"testaccordion4":
-  "height": !!int |-
-    246
-  "width": !!int |-
-    488
-  "yaml": |-
-    modules:
-      - docassemble.demo.accordion
-    ---
-    features:
-      css: docassemble.demo:data/static/accordion.css
-    ---
-    question: |
-      Tell me about your preferences
-    fields:
-      - raw html: |
-          ${ start_accordion('Pets', showing=True) }
-      - Favorite cat: favorite_cat
-        show if:
-          code: ask_about_pets
-      - Favorite dog: favorite_dog
-        show if:
-          code: ask_about_pets
-      - raw html: |
-          ${ next_accordion('Food') }
-      - Favorite fruit: favorite_fruit
-        required: False
-      - Favorite vegetable: favorite_vegetable
-        required: False
-      - raw html: |
-          ${ next_accordion('Aesthetics') }
-      - Fashion aesthetic: fashion_aesthetic
-        required: False
-      - Decor aesthetic: decor_aesthetic
-        required: False
-      - raw html: ${ end_accordion() }
-    ---
-    code: |
-      ask_about_pets = False
 "testcards":
   "height": !!int |-
     334

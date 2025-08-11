@@ -2656,8 +2656,8 @@ disappointed.
 
 If you have defined a [`google maps api key`] in the [Configuration],
 you can use the [Place Autocomplete] feature of the
-[Google Places API] to help your users enter addresses.  Address
-suggestions will be provided as the user begins to type.  To use this
+[Google Places API] to help your users enter addresses. Address
+suggestions will be provided as the user begins to type. To use this
 feature, modify the street address (`.address`) field by setting
 `address autocomplete` to `True`.
 
@@ -2666,8 +2666,11 @@ feature, modify the street address (`.address`) field by setting
 You can set `address autocomplete` to `True`, `False`, or a Python
 expression that returns `True` or `False`.
 
-For more information on using this feature, see the documentation for
-the [`Address`] object.
+For this feature to work, make sure that in your Google Cloud console,
+you have enabled the following APIs for your [`google maps api key`]:
+
+* Places API (New)
+* Maps JavaScript API
 
 This feature can be used internationally with a variety of address
 types.  Here is an example that illustrates all of the possible
@@ -2675,12 +2678,14 @@ attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 {% include side-by-side.html demo="address-autocomplete-test" %}
 
+For more information on using this feature, see the documentation for
+the [`Address`] object.
+
 ### <a name="address autocomplete advanced"></a>Advanced usage
 
 If you want to use additional features of the [Place Autocomplete]
-JavaScript API that are not, you can set `address autocomplete` to a
-dictionary of options that will be passed directly to the [Place
-Autocomplete] API.
+JavaScript API, you can set `address autocomplete` to a dictionary of
+options that will be passed directly to the [Place Autocomplete] API.
 
 You will need to set the `types` and `fields` items within the
 dictionary to values that the [Place Autocomplete] API considers
@@ -2716,9 +2721,9 @@ to the [Place Autocomplete] API:
 
 {% highlight yaml %}
 types:
-  - address
+  - street_address
 fields:
-  - address_components
+  - addressComponents
 {% endhighlight %}
 
 The following example demonstrates conducting a query on
@@ -3828,8 +3833,8 @@ why this needs to be done manually as opposed to automatically:
 [`false_values()`]: {{ site.baseurl }}/docs/objects.html#DADict.false_values
 [`Address`]: {{ site.baseurl }}/docs/objects.html#address autocomplete
 [`google maps api key`]: {{ site.baseurl }}/docs/config.html#google
-[Place Autocomplete]: https://developers.google.com/places/web-service/autocomplete
-[Google Places API]: https://developers.google.com/places/
+[Place Autocomplete]: https://developers.google.com/maps/documentation/places/web-service/place-autocomplete
+[Google Places API]: https://developers.google.com/maps/documentation/places/web-service/op-overview
 [`datetime.datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
 [`datetime.time`]: https://docs.python.org/3/library/datetime.html#datetime.time
 [`DADateTime`]: {{ site.baseurl }}/docs/objects.html#DADateTime

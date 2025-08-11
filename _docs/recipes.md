@@ -2346,7 +2346,7 @@ stopped their interviews.
 
 {% highlight python %}
 import json
-from docassemble.base.util import store_variables_snapshot, DAObject, user_info, start_time, variables_snapshot_connection
+from docassemble.base.util import store_variables_snapshot, DAObject, user_info, start_time, variables_snapshot_connect
 
 __all__ = ['MyIndex']
 
@@ -2380,11 +2380,10 @@ class MyIndex(DAObject):
             order_string = ''
         else:
             order_string = ' order by ' + order_by
-        conn = variables_snapshot_connection()
-        with conn.cursor() as cur:
-            cur.execute("select data from jsonstorage where tags='" + self.key + "'" + filter_string + order_string)
-            results = [record[0] for record in cur.fetchall()]
-        conn.close()
+        with variables_snapshot_connect() as conn:
+            with conn.cursor() as cur:
+                cur.execute("select data from jsonstorage where tags='" + self.key + "'" + filter_string + order_string)
+                results = [record[0] for record in cur.fetchall()]
         return results
 
 {% endhighlight %}
