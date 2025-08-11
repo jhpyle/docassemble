@@ -28,6 +28,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import toml
 import traceback
 import types
 import unicodedata
@@ -17261,17 +17262,27 @@ def get_package_name_from_zip(zippath):
     with zipfile.ZipFile(zippath, mode='r') as zf:
         min_level = 999999
         setup_py = None
+        pyproject_toml = None
         for zinfo in zf.infolist():
             parts = splitall(zinfo.filename)
             if parts[-1] == 'setup.py':
                 if len(parts) < min_level:
                     setup_py = zinfo
                     min_level = len(parts)
-        if setup_py is None:
-            raise DAException("Not a Python package zip file")
-        with zf.open(setup_py) as f:
-            the_file = TextIOWrapper(f, encoding='utf8')
-            contents = the_file.read()
+                if len(parts) == 'pyproject.toml':
+                    pyproject_toml = zinfo
+                    min_level = len(parts)
+        if setup_py is not None:
+            with zf.open(setup_py) as f:
+                the_file = TextIOWrapper(f, encoding='utf8')
+                return get_package_name_from_setup_py(the_file.read())
+        if pyproject_toml is not None:
+            with zf.open(pyproject_toml) as f:
+                the_file = TextIOWrapper(f, encoding='utf8')
+                return get_package_name_from_pyproject_toml(the_file.read())
+        raise DAException("Not a Python package zip file")
+
+def get_package_name_from_setup_py(contents):
     extracted = {}
     for line in contents.splitlines():
         m = re.search(r"^NAME *= *\(?'(.*)'", line)
@@ -17300,6 +17311,13 @@ def get_package_name_from_zip(zippath):
     if 'name' not in extracted:
         raise DAException("Could not find name of Python package")
     return extracted['name']
+
+def get_package_name_from_pyproject_toml(contents):
+    toml_data = toml.loads(contents)
+    project_name = toml_data.get("project", {}).get("name")
+    if project_name:
+        return project_name
+    raise DAException("Could not find name of Python package in pyproject.toml")
 
 
 @app.route('/updatepackage', methods=['GET', 'POST'])
