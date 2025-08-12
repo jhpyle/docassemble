@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.8.5](https://github.com/jhpyle/docassemble/releases/tag/v1.8.5) - 2025-08-11
+
+
+### Fixed
+- Issue with pyproject.toml files.
+- Issue with comboboxes.
+
 ## [1.8.4](https://github.com/jhpyle/docassemble/releases/tag/v1.8.4) - 2025-08-10
 
 
