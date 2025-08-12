@@ -2768,7 +2768,7 @@ def input_for(status, field, embedded=False, floating_label=None):
     if 'css class' in status.extras and field.number in status.extras['css class']:
         extra_class += ' ' + clean_whitespace(status.extras['css class'][field.number])
     if USE_GOOGLE_PLACES_NEW_API and 'address_autocomplete' in status.extras and field.number in status.extras['address_autocomplete'] and status.extras['address_autocomplete'][field.number]:
-        extra_class += ' da-address-combobox'
+        extra_class += ' combobox da-address-combobox'
     is_hidden = hasattr(field, 'inputtype') and field.inputtype == 'hidden'
     if hasattr(field, 'choicetype') and not is_hidden:
         if field.choicetype in ['compute', 'manual']:
