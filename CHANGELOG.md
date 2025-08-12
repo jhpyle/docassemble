@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.8.5] - 2025-08-11
+
+### Fixed
+- Issue with pyproject.toml files.
+- Issue with comboboxes.
+
 ## [1.8.4] - 2025-08-10
 
 ### Fixed
