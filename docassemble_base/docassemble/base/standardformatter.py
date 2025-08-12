@@ -72,6 +72,7 @@ if USE_GOOGLE_PLACES_NEW_API:
 else:
     DEFAULT_AUTOCOMPLETE = {"types": ["address"], "fields": ["address_components"]}
 
+
 def paren_phrase(status, phrase):
     if status.extras.get('describe_file_types', True) and phrase != "":
         return " (" + phrase + ")"
@@ -811,7 +812,6 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     varnames = {}
     onchange = []
     autocomplete_info = []
-    validation_rules['ignore'] = None
     showUnderText = 'underText' in status.extras and len(status.attachments) == 0
     if status.using_navigation == 'vertical':
         grid_class = daconfig['grid classes']['vertical navigation']['body']
@@ -2126,7 +2126,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 else:
                     validation_rules['messages']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': status.question.fields[0].validation_message('multiple choice required', status, word("You need to select one."))}
                 validation_rules['rules']['X211bHRpcGxlX2Nob2ljZQ'] = {'required': True}
-            output += '                <div id="daerrorcontainer" style="display:none"></div>\n'
+            if status.question.question_variety != 'combobox':
+                output += '                <div id="daerrorcontainer" style="display:none"></div>\n'
             if status.question.question_variety == "radio":
                 output += "                </fieldset>\n"
             output += status.submit

@@ -117,7 +117,6 @@
     },
 
     disable: function () {
-      console.log("disable");
       this.$element.prop("disabled", true);
       this.$button.attr("disabled", true);
       this.$target.prop("disabled", true);
@@ -127,7 +126,6 @@
     },
 
     enable: function () {
-      console.log("enable");
       this.$element.prop("disabled", false);
       this.$button.attr("disabled", false);
       this.$target.prop("disabled", false);
@@ -242,6 +240,8 @@
         this.$element.val(defaultVal);
         this.$target.val(defaultVal);
       }
+      this.$element.addClass("danovalidation");
+      this.$source.addClass("danovalidation");
       if (this.$source.attr("disabled") !== undefined) this.disable();
     },
 

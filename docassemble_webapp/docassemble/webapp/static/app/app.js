@@ -3962,7 +3962,11 @@ function daDisableIfNotHidden(query, value) {
           !$(showIfParent[0]).is(":visible"))
       )
     ) {
-      if ($(this).prop("tagName") == "INPUT" && $(this).hasClass("combobox")) {
+      if (
+        $(this).prop("tagName") == "INPUT" &&
+        $(this).hasClass("combobox") &&
+        daComboBoxes[$(this).attr("id")]
+      ) {
         if (value) {
           daComboBoxes[$(this).attr("id")].disable();
         } else {
@@ -4277,7 +4281,11 @@ function daInitialize(doScroll) {
   $(".dacollectextra")
     .find("input.combobox")
     .each(function () {
-      daComboBoxes[$(this).attr("id")].disable();
+      if (daComboBoxes[$(this).attr("id")]) {
+        daComboBoxes[$(this).attr("id")].disable();
+      } else {
+        $(this).prop("disabled", true);
+      }
     });
   $(".dacollectextra")
     .find("input.daslider")
@@ -4319,7 +4327,11 @@ function daInitialize(doScroll) {
         .each(function () {
           var showifParents = $(this).parents(".dajsshowif,.dashowif");
           if (showifParents.length == 0 || $(showifParents[0]).is(":visible")) {
-            daComboBoxes[$(this).attr("id")].enable();
+            if (daComboBoxes[$(this).attr("id")]) {
+              daComboBoxes[$(this).attr("id")].enable();
+            } else {
+              $(this).prop("disabled", false);
+            }
           }
         });
       $('[data-collectnum="' + num + '"]')
@@ -4370,7 +4382,11 @@ function daInitialize(doScroll) {
     $('[data-collectnum="' + num + '"]')
       .find("input.combobox")
       .each(function () {
-        daComboBoxes[$(this).attr("id")].disable();
+        if (daComboBoxes[$(this).attr("id")]) {
+          daComboBoxes[$(this).attr("id")].disable();
+        } else {
+          $(this).prop("disabled", true);
+        }
       });
     $('[data-collectnum="' + num + '"]')
       .find("input.daslider")
@@ -4402,7 +4418,11 @@ function daInitialize(doScroll) {
     $('[data-collectnum="' + num + '"]')
       .find("input.combobox")
       .each(function () {
-        daComboBoxes[$(this).attr("id")].disable();
+        if (daComboBoxes[$(this).attr("id")]) {
+          daComboBoxes[$(this).attr("id")].disable();
+        } else {
+          $(this).prop("disabled", true);
+        }
       });
     $('[data-collectnum="' + num + '"]')
       .find("input.daslider")
@@ -4433,7 +4453,11 @@ function daInitialize(doScroll) {
     $('[data-collectnum="' + num + '"]')
       .find("input.combobox")
       .each(function () {
-        daComboBoxes[$(this).attr("id")].enable();
+        if (daComboBoxes[$(this).attr("id")]) {
+          daComboBoxes[$(this).attr("id")].enable();
+        } else {
+          $(this).prop("disabled", false);
+        }
       });
     $('[data-collectnum="' + num + '"]')
       .find("input.daslider")
@@ -4772,6 +4796,9 @@ function daInitialize(doScroll) {
   $.each(daComboBoxes, async function (thisId, cb) {
     if (!this.$element.hasClass("da-address-combobox")) {
       return;
+    }
+    if (cb.$target.val()) {
+      cb.$element.val(cb.$target.val());
     }
     await daWaitForGoogle(false);
     const { Place, AutocompleteSessionToken, AutocompleteSuggestion } =
@@ -5456,7 +5483,11 @@ function daInitialize(doScroll) {
               $(showIfDiv)
                 .find("input.combobox")
                 .each(function () {
-                  daComboBoxes[$(this).attr("id")].enable();
+                  if (daComboBoxes[$(this).attr("id")]) {
+                    daComboBoxes[$(this).attr("id")].enable();
+                  } else {
+                    $(this).prop("disabled", false);
+                  }
                 });
               $(showIfDiv)
                 .find("input.daslider")
@@ -5482,7 +5513,11 @@ function daInitialize(doScroll) {
               $(showIfDiv)
                 .find("input.combobox")
                 .each(function () {
-                  daComboBoxes[$(this).attr("id")].disable();
+                  if (daComboBoxes[$(this).attr("id")]) {
+                    daComboBoxes[$(this).attr("id")].disable();
+                  } else {
+                    $(this).prop("disabled", false);
+                  }
                 });
               $(showIfDiv)
                 .find("input.daslider")
@@ -5510,7 +5545,11 @@ function daInitialize(doScroll) {
               $(showIfDiv)
                 .find("input.combobox")
                 .each(function () {
-                  daComboBoxes[$(this).attr("id")].disable();
+                  if (daComboBoxes[$(this).attr("id")]) {
+                    daComboBoxes[$(this).attr("id")].disable();
+                  } else {
+                    $(this).prop("disabled", true);
+                  }
                 });
               $(showIfDiv)
                 .find("input.daslider")
@@ -5536,7 +5575,11 @@ function daInitialize(doScroll) {
               $(showIfDiv)
                 .find("input.combobox")
                 .each(function () {
-                  daComboBoxes[$(this).attr("id")].enable();
+                  if (daComboBoxes[$(this).attr("id")]) {
+                    daComboBoxes[$(this).attr("id")].enable();
+                  } else {
+                    $(this).prop("disabled", false);
+                  }
                 });
               $(showIfDiv)
                 .find("input.daslider")
@@ -5719,7 +5762,11 @@ function daInitialize(doScroll) {
               $(showIfDiv)
                 .find("input.combobox")
                 .each(function () {
-                  daComboBoxes[$(this).attr("id")].enable();
+                  if (daComboBoxes[$(this).attr("id")]) {
+                    daComboBoxes[$(this).attr("id")].enable();
+                  } else {
+                    $(this).prop("disabled", false);
+                  }
                 });
               $(showIfDiv)
                 .find("input.daslider")
@@ -5744,7 +5791,11 @@ function daInitialize(doScroll) {
             $(showIfDiv)
               .find("input.combobox")
               .each(function () {
-                daComboBoxes[$(this).attr("id")].disable();
+                if (daComboBoxes[$(this).attr("id")]) {
+                  daComboBoxes[$(this).attr("id")].disable();
+                } else {
+                  $(this).prop("disabled", true);
+                }
               });
             $(showIfDiv)
               .find("input.daslider")
@@ -5770,7 +5821,11 @@ function daInitialize(doScroll) {
             $(showIfDiv)
               .find("input.combobox")
               .each(function () {
-                daComboBoxes[$(this).attr("id")].disable();
+                if (daComboBoxes[$(this).attr("id")]) {
+                  daComboBoxes[$(this).attr("id")].disable();
+                } else {
+                  $(this).prop("disabled", true);
+                }
               });
             $(showIfDiv)
               .find("input.daslider")
@@ -5801,7 +5856,11 @@ function daInitialize(doScroll) {
               $(showIfDiv)
                 .find("input.combobox")
                 .each(function () {
-                  daComboBoxes[$(this).attr("id")].enable();
+                  if (daComboBoxes[$(this).attr("id")]) {
+                    daComboBoxes[$(this).attr("id")].enable();
+                  } else {
+                    $(this).prop("disabled", false);
+                  }
                 });
               $(showIfDiv)
                 .find("input.daslider")
@@ -6156,6 +6215,7 @@ function daConfigureJqueryFuncs() {
     $(window).on("mouseup", stop);
   };
   $.validator.setDefaults({
+    ignore: ".danovalidation",
     highlight: function (element) {
       $(element).closest(".da-form-group").addClass("da-group-has-error");
       $(element).addClass("is-invalid");
@@ -6199,7 +6259,7 @@ function daConfigureJqueryFuncs() {
           .parent()
           .append(error);
       } else if (element.parent().hasClass("combobox-container")) {
-        error.insertAfter(element.parent());
+        element.parent().append(error);
       } else if (element.hasClass("dafile")) {
         var fileContainer = $(element).parents(".file-input").first();
         if (fileContainer.length > 0) {

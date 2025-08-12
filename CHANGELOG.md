@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.8.6] - 2025-08-12
+
+### Fixed
+- Issues with comboboxes.
+
 ## [1.8.5] - 2025-08-11
 
 ### Fixed
