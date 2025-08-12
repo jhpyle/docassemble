@@ -613,8 +613,8 @@ def make_package_dir(pkgname, info, author_info, directory=None, current_project
     area = {}
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
-    dependencies_list = [y for y in map(lambda x: repr(get_package_identifier(x)), sorted(info['dependencies'])) if y != "''"]
-    dependencies = ", ".join(dependencies_list)
+    dependencies_list = [y for y in map(lambda x: get_package_identifier(x), sorted(info['dependencies'])) if y != ""]
+    dependencies = ", ".join(map(lambda x: repr(x), dependencies_list))
     licensetext = str(info['license'])
     if re.search(r'MIT', licensetext):
         licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(info.get('author_name', '')) + """
