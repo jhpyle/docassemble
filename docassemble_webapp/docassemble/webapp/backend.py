@@ -39,6 +39,7 @@ from docassemble.webapp.da_flask_mail import FlaskMail
 from docassemble.webapp.packages.models import PackageAuth
 from docassemble.webapp.screenreader import to_text
 from docassemble.webapp.sendgrid_mail import Mail as SendgridMail
+from docassemble.webapp.azure_mail import Mail as AzureMail
 from docassemble.webapp.users.models import UserModel, Role, ChatLog, UserDict, UserDictKeys, UserAuthModel, UserRoles
 import docassemble.webapp.cloud
 import docassemble.webapp.database
@@ -272,6 +273,18 @@ def get_mail_config():
             mail_class = SendgridMail
             config = {
                 'SENDGRID_API_KEY': mail_config['sendgrid api key'],
+                'MAIL_DEFAULT_SENDER': mail_config.get('default sender', None),
+                'MAIL_DEBUG': app.config.get('MAIL_DEBUG', False),
+                'MAIL_MAX_EMAILS': app.config.get('MAIL_MAX_EMAILS'),
+                'MAIL_SUPPRESS_SEND': app.config.get('MAIL_SUPPRESS_SEND', False),
+                'MAIL_ASCII_ATTACHMENTS': app.config.get('MAIL_ASCII_ATTACHMENTS', False)
+            }
+        elif 'azure client id' in mail_config and mail_config['azure client id']:
+            mail_class = AzureMail
+            config = {
+                'AZURE_CLIENT_ID': mail_config['azure client id'],
+                'AZURE_CLIENT_SECRET': mail_config.get('azure client secret', None),
+                'AZURE_TENANT_ID': mail_config.get('azure tenant id', None),
                 'MAIL_DEFAULT_SENDER': mail_config.get('default sender', None),
                 'MAIL_DEBUG': app.config.get('MAIL_DEBUG', False),
                 'MAIL_MAX_EMAILS': app.config.get('MAIL_MAX_EMAILS'),
