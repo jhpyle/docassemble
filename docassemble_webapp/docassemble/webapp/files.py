@@ -613,8 +613,8 @@ def make_package_dir(pkgname, info, author_info, directory=None, current_project
     area = {}
     for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules']:
         area[sec] = SavedFile(author_info['id'], fix=True, section=sec)
-    dependencies_list = [y for y in map(lambda x: get_package_identifier(x), sorted(info['dependencies'])) if y != ""]
-    dependencies = ", ".join(map(lambda x: repr(x), dependencies_list))
+    dependencies_list = [y for y in map(get_package_identifier, sorted(info['dependencies'])) if y != ""]
+    dependencies = ", ".join(map(repr, dependencies_list))
     licensetext = str(info['license'])
     if re.search(r'MIT', licensetext):
         licensetext += '\n\nCopyright (c) ' + str(datetime.datetime.now().year) + ' ' + str(info.get('author_name', '')) + """
@@ -648,15 +648,18 @@ SOFTWARE.
     else:
         readme = '# docassemble.' + str(pkgname) + "\n\n" + info['description'] + "\n\n## Author\n\n" + author_info['author name and email'] + "\n\n"
         using_default['readme'] = True
-    the_license = str(info.get('license', 'MIT'))
+    the_license = str(info.get('license', ''))
     if not the_license:
-        the_license = 'MIT'
-    if the_license not in docassemble.webapp.spdx.LICENSES:
+        the_license = ''
+    if the_license not in docassemble.webapp.spdx.LICENSES and not re.search(r'^LicenseRef-[A-Za-z\-0-9]+$', the_license) and the_license != '':
         if re.search(r'MIT', the_license):
             the_license = 'MIT'
         else:
             the_license = ''
-    pyprojecttoml = tomli_w.dumps({'build-system': {'requires': ['setuptools>=80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': info.get('version', '0.0.1'), 'description': info.get('description', 'A docassemble extension.'), 'readme': 'README.md', 'authors': [{'name': str(info.get('author_name', '')), 'email': str(info.get('author_email', ''))}], 'license': str(the_license), 'license-files': ['LICENSE'], 'dependencies': dependencies_list, 'urls': {'Homepage': info['url'] or 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}})
+    package_data = {'build-system': {'requires': ['setuptools>=80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': info.get('version', '0.0.1'), 'description': info.get('description', 'A docassemble extension.'), 'readme': 'README.md', 'authors': [{'name': str(info.get('author_name', '')), 'email': str(info.get('author_email', ''))}], 'dependencies': dependencies_list, 'urls': {'Homepage': info['url'] or 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}}
+    if the_license != '':
+        package_data.update({'license': str(the_license), 'license-files': ['LICENSE']})
+    pyprojecttoml = tomli_w.dumps(package_data)
 
     manifestin = f"""\
 include README.md

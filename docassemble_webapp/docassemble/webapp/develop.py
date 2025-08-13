@@ -14,8 +14,8 @@ class NonValidatingSelectField(SelectField):
 
 
 def spdx_validator(form, field):  # pylint: disable=unused-argument
-    if field.data not in docassemble.webapp.spdx.LICENSES:
-        raise ValidationError(word("A valid SPDX identifier must be provided, e.g., MIT, GPL-3.0, Apache-2.0."))
+    if field.data not in docassemble.webapp.spdx.LICENSES and not re.search(r'^LicenseRef-[A-Za-z\-0-9]+$', field.data) and field.data != '':
+        raise ValidationError(word("A valid SPDX identifier must be provided, e.g., MIT, GPL-3.0, Apache-2.0.") + " you said " + repr(field.data))
 
 
 def validate_project_name(form, field):  # pylint: disable=unused-argument
