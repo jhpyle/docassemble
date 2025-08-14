@@ -2138,6 +2138,40 @@ mail:
   sendgrid api key: s8_MK.S.GmtjGD6krnOl4FkkPGTYe3I8fHqIi2NGZ057k7S-ZhuQfOF2ItWYBW97w6Kzu
 {% endhighlight %}
 
+### <a name="microsoft api"></a>Using the Graph API on Microsoft Azure
+
+You can send email using the [Microsoft Graph API] on [Microsoft Azure].
+
+* Log into the [Azure Portal].
+* Go to App Registrations.
+* Create a New Registration. Give it a name like "Email sending" or
+  whatever you want. Setting up a Redirect URI is not necessary.
+* Note the "Application (client) ID." This will need to go into your
+  `mail` configuration as the `azure client id`.
+* Note the "Directory (tenant) ID." This will need to go into your
+  `mail` configuration as the `azure tenant id`.
+* Go into API Permissions and add a permission. Select Microsoft
+  Graph, then Application Permissions, then `Mail.Send`. Click "Grant
+  admin consent."
+* Go into Certificates & Secrets. Add a new client secret. Call it
+  "Email sending secret" or whatever you want. Copy the "Value." This
+  will need to go into your `mail` configuration as the `azure client
+  secret`.
+
+Then edit your Configuration and add the codes you obtained. For example:
+
+{% highlight yaml %}
+mail:
+  default sender: '"Example, Inc." <no-reply@example.com>'
+  azure client id: "72f3829c-f887-8273-b716-9827e727b91a"
+  azure tenant id: "82392784-bced-7ee5-94fa-7326347873c4"
+  azure client secret: "oj238~2jo23rj02Y3r72y9~u203r9u27yr-82082"
+  default sender: '"Philadelphia Legal Assistance" <bhanson@philalegal.org>'
+{% endhighlight %}
+
+You will only be able to send mail from senders whose mailboxes your
+App Registration has privileges of accessing.
+
 ### <a name="mail multiple"></a>Using multiple mail configurations
 
 You can configure multiple mail configurations and then choose which
@@ -4271,7 +4305,7 @@ password login: False
 {% endhighlight %}
 
 Valid values are `phone`, `google`, `facebook`, `auth0`, `keycloak`,
-`zitadel`, `miniorange`, and `azure`.
+`authentik`, `zitadel`, `miniorange`, and `azure`.
 
 If you wish to prevent the user from being automatically redirected
 when they visit `/user/sign-in`, you can add `from_logout=1` to the URL
@@ -5122,11 +5156,11 @@ The `pypirc path` directive refers to the file where the repository
 URL will be stored. You may need to edit this if you run
 **docassemble** on a non-standard operating system.
 
-## <a name="oauth"></a>Facebook, X, Google, Auth0, Keycloak, Zitadel, miniOrange, and Azure login
+## <a name="oauth"></a>Facebook, Google, Auth0, Keycloak, Authentik, Zitadel, miniOrange, and Azure login
 
-If you want to enable logging in with Facebook, X, Google,
-Auth0, KeyCloak, Zitadel, miniOrange, or Microsoft Azure, you will need to tell
-**docassemble** your [OAuth2] keys for these services:
+If you want to enable logging in with Facebook, Google, Auth0,
+KeyCloak, Authentik, Zitadel, miniOrange, or Microsoft Azure, you will
+need to tell **docassemble** your [OAuth2] keys for these services:
 
 {% highlight yaml %}
 oauth:
@@ -5134,10 +5168,6 @@ oauth:
     enable: True
     id: 423759825983740
     secret: 34993a09909c0909b9000a090d09f099
-  x:
-    enable: True
-    id: Iweh63ReKfOCttaUBE3t27TET
-    secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
   google:
     enable: True
     id: 23123018240-32239fj28fj4fuhf394h3984eurhfurh.apps.googleusercontent.com
@@ -5154,6 +5184,13 @@ oauth:
     domain: "keycloak.mysite.com"
     protocol: "https://"
     realm: master
+  authentik:
+    enable: True
+    id: 29zWxVegWUEaIh75WTOAg9jUnbpAOiuc683JmL2s
+    secret: 6dg8kgi8I87xcYxaOu2LSamj7cWE4j6VxC1bPcGTIl4ddMXr3Xaq6IBLo3TupITFylydPciPLULOKxIff3LmT7FxIOmEcnAsUdQf7OG3334S4FlMzEXhGFgFOARnYcVo
+    application slug: myapplication-authentik
+    domain: myserver:9000
+    protocol: "http://"
   zitadel:
     enable: True
     id: 168422810448705515@yourprojectname
@@ -5173,8 +5210,8 @@ You can disable these login methods by setting `enable` to `False` or
 by removing the configuration entirely.
 
 For more information about how to obtain these keys, see the
-[installation] page's sections on [Facebook], [X], [Google],
-[Auth0], [Keycloak], [Zitadel], [miniOrange] and [Azure].
+[installation] page's sections on [Facebook], [Google], [Auth0],
+[Keycloak], [Authentik], [Zitadel], [miniOrange] and [Azure].
 
 Note that in [YAML], dictionary keys must be unique. So you can only
 have one `ouath:` line in your configuration. Put all of your
@@ -5191,12 +5228,13 @@ because a resourceful hacker could figure out the encryption key for
 decrypting interview answers, based on information stored unencrypted
 on the server.
 
-<a name="allow external auth with admin accounts"></a>By default, users who
-log with an authentication mechanism other than username/password
-cannot have their privileges elevated to `admin`. However, if you
-want to take the risk that administrators could be locked out of their
-accounts if the external authentication mechanism fails, you can set
-`allow external auth with admin accounts` to `True`:
+<a name="allow external auth with admin accounts"></a>By default,
+users who log with an authentication mechanism other than
+username/password cannot have their privileges elevated to
+`admin`. However, if you want to take the risk that administrators
+could be locked out of their accounts if the external authentication
+mechanism fails, you can set `allow external auth with admin accounts`
+to `True`:
 
 {% highlight yaml %}
 allow external auth with admin accounts: True
@@ -6601,10 +6639,10 @@ and Facebook API keys.
 [fork]: https://en.wikipedia.org/wiki/Fork_(software_development)
 [initial database setup]: {{ site.baseurl }}/docs/installation.html#setup
 [Facebook]: {{ site.baseurl }}/docs/installation.html#facebook
-[X]: {{ site.baseurl }}/docs/installation.html#x
 [Google]: {{ site.baseurl }}/docs/installation.html#google
 [Auth0]: {{ site.baseurl }}/docs/installation.html#auth0
 [Keycloak]: {{ site.baseurl }}/docs/installation.html#keycloak
+[Authentik]: {{ site.baseurl }}/docs/installation.html#authentik
 [Zitadel]: {{ site.baseurl }}/docs/installation.html#zitadel
 [miniOrange]: {{ site.baseurl }}/docs/installation.html#miniorange
 [Azure]: {{ site.baseurl }}/docs/installation.html#azure
@@ -6936,3 +6974,4 @@ and Facebook API keys.
 [`docker start`]: https://docs.docker.com/engine/reference/commandline/start/
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [Profile]: {{ site.baseurl }}/docs/users.html#profile
+[Microsoft Graph API]: https://learn.microsoft.com/en-us/graph/api/user-sendmail

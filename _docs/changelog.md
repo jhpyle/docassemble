@@ -3,6 +3,24 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.8.7](https://github.com/jhpyle/docassemble/releases/tag/v1.8.7) - 2025-08-14
+
+
+### Added
+- Support for single-sign-on with Authentik.
+- Support for sending email with Microsoft Azure using the Graph API.
+
+
+### Fixed
+- On the Playground Packages page, adapted the input validation on the
+  License field to better align with PEP 621 and PEP 639.
+
+## [1.8.6](https://github.com/jhpyle/docassemble/releases/tag/v1.8.6) - 2025-08-12
+
+
+### Fixed
+- Issues with comboboxes.
+
 ## [1.8.5](https://github.com/jhpyle/docassemble/releases/tag/v1.8.5) - 2025-08-11
 
 

@@ -840,6 +840,53 @@ oauth:
 without `https://`. If your Keycloak server uses `http://` rather than
 `https://`, set `protocol` to `http://`.
 
+## <a name="authentik"></a>Setting up Authentik logins
+
+To enable users to log in using an external [Authentik] server, you
+need to obtain an `id` and `domain` for use with [Zitadel]'s [OAuth]
+interface.
+
+* Log into the Authentik server as an administrator.
+* Under Applications, click "Create with Provider" to create a new Application.
+* Give the application a name. Users will see this name when they log
+  in, so it needs to reflect the name of your **docassemble** server.
+* Make note of the "Slug." This will need to go into your [`oauth`]
+  configuration as the `application slug`.
+* Under "Choose a Provider," select "OAuth2/OpenID Provider."
+* Set the "Authorization flow" to
+  "default-provider-authorization-explicit-consent."
+* Set the "Client type" to "Confidential."
+* Under "Configure Bindings," you do not need to select anything.
+* Go into the Provider you created and click "Edit."
+* Make note of the "Client ID." This will need to go into your
+  [`oauth`] configuration as the `id`.
+* Make not of the "Client Secret." This will need to go into your
+  [`oauth`] configuration as the `secret`.
+* Under "Redirect URIs/Origins (RegEx)," add a redirect URL for the
+  `/callback/authentik` endpoint on your **docassemble** server. If
+  your **docassemble** server is located at https://da.example.com,
+  then the redirect URL will be
+  https://da.example.com/callback/authentik.
+* Log into your **docassemble** server as an administrator and go to
+  the [configuration].
+* Add an `authentik` configuration under the `oauth` directive, filling
+  in the information about the Authentik server and application.
+  
+{% highlight yaml %}
+oauth:
+  authentik:
+    id: 29zWxVegWUEaIh75WTOAg9jUnbpAOiuc683JmL2s
+    secret: 6dg8kgi8I87xcYxaOu2LSamj7cWE4j6VxC1bPcGTIl4ddMXr3Xaq6IBLo3TupITFylydPciPLULOKxIff3LmT7FxIOmEcnAsUdQf7OG3334S4FlMzEXhGFgFOARnYcVo
+    application slug: myapplication-authentik
+    domain: myserver:9000
+    protocol: "http://"
+{% endhighlight %}
+
+* Note that the `domain` is the hostname of the Authentik server,
+without `http://` or `https://` at the beginning. Set `protocol` to
+`http://` or `https://`. If your Authentik server runs on a
+non-standard port, like port `9000`, indicate that in the `domain`.
+
 ## <a name="zitadel"></a>Setting up Zitadel logins
 
 To enable users to log in with [Zitadel] accounts, you need to obtain

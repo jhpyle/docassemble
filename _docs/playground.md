@@ -235,14 +235,16 @@ Packages are defined with the following elements:
   known as `docassemble.bankruptcy`.
 * **Version**: The version number you indicate here will be the
   version number of your [Python package].
-* **License**: This is the name of the software license that will be associated with your
-  [Python package].  The default license is "The MIT License (MIT),"
+* **License**: This is the name of the software license that will be
+  associated with your [Python package].  The default license is "MIT"
   which is the license under which **docassemble** is distributed.
   This is probably what you want to use.  However, if you want to take
   greater control over your intellectual property, you can indicate a
   different license.  If you choose the MIT License, the content of
   the license will be included in the package, but if you choose
-  another, you will need to edit the `LICENSE` file manually.
+  another, you will need to edit the `LICENSE` file manually. The
+  License must be written in the form of a valid [SPDX expression]. If
+  you want to use a custom license, it must begin with `LicenseRef-`.
 * **Description**: This is a short description of your package (no
   more than 255 characters).
 * **URL**: This is a URL indicating where information about your
@@ -918,3 +920,4 @@ Then the editing screen will load.
 [uWSGI]: https://uwsgi-docs.readthedocs.io/en/latest/
 [Publishing on GitHub]: {{ site.baseurl }}/docs/packages.html#github
 [`enable sharing playgrounds`]: {{ site.baseurl }}/docs/config.html#enable sharing playgrounds
+[SPDX expression]: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license
