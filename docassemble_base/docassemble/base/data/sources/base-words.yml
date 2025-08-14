@@ -818,9 +818,11 @@
 "Register for an account on": Null
 "Register": Null
 "Register with Auth0": Null
+"Register with Authentik": Null
 "Register with Azure": Null
 "Register with Facebook": Null
 "Register with Google": Null
+"Register with Keycloak": Null
 "Register with miniOrange": Null
 "Register with your mobile phone": Null
 "Register with Zitadel": Null
@@ -922,6 +924,7 @@
 "Sign in or sign up to save answers": Null
 "Sign in to save answers": Null
 "Sign in with Auth0": Null
+"Sign in with Authentik": Null
 "Sign in with Azure": Null
 "Sign in with Facebook": Null
 "Sign in with Google": Null
@@ -1304,9 +1307,11 @@
 "You need to increment the version before publishing to PyPI.": Null
 "You need to log in before you can access": Null
 "You need to log in with Auth0.": Null
+"You need to log in with Authentik.": Null
 "You need to log in with Azure.": Null
 "You need to log in with Facebook.": Null
 "You need to log in with Google.": Null
+"You need to log in with Keycloak.": Null
 "You need to select one.": Null
 "You need to select one or type in a new value.": Null
 "You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.": Null

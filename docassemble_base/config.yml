@@ -33,6 +33,13 @@ oauth:
     secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
     domain: keycloak.example.com
     realm: default
+  authentik:
+    enable: False
+    id: 29zWxVegWUEaIh75WTOAg9jUnbpAOiuc683JmL2s
+    secret: 6dg8kgi8I87xcYxaOu2LSamj7cWE4j6VxC1bPcGTIl4ddMXr3Xaq6IBLo3TupITFylydPciPLULOKxIff3LmT7FxIOmEcnAsUdQf7OG3334S4FlMzEXhGFgFOARnYcVo
+    application slug: myapplication-authentik
+    domain: myserver:9000
+    protocol: "http://"
   azure:
     enable: False
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87

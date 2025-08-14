@@ -1123,7 +1123,7 @@ def custom_login():
         if app.config['AUTO_LOGIN'] is True:
             number_of_methods = 0
             the_method = None
-            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_ZITADEL_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AZURE_LOGIN', 'USE_MINIORANGE_LOGIN'):
+            for login_method in ('USE_PHONE_LOGIN', 'USE_GOOGLE_LOGIN', 'USE_FACEBOOK_LOGIN', 'USE_ZITADEL_LOGIN', 'USE_AUTH0_LOGIN', 'USE_KEYCLOAK_LOGIN', 'USE_AUTHENTIK_LOGIN', 'USE_AZURE_LOGIN', 'USE_MINIORANGE_LOGIN'):
                 if app.config[login_method]:
                     number_of_methods += 1
                     the_method = re.sub(r'USE_(.*)_LOGIN', r'\1', login_method).lower()
@@ -1135,7 +1135,7 @@ def custom_login():
             return redirect(url_for('phone_login'))
         if the_method == 'google':
             return redirect(url_for('google_page', next=request.args.get('next', '')))
-        if the_method in ('facebook', 'auth0', 'keycloak', 'azure', 'zitadel', 'miniorange'):
+        if the_method in ('facebook', 'auth0', 'keycloak', 'authentik', 'azure', 'zitadel', 'miniorange'):
             return redirect(url_for('oauth_authorize', provider=the_method, next=request.args.get('next', '')))
     response = make_response(user_manager.render_function(user_manager.login_template,
                                                           form=login_form,
@@ -1192,6 +1192,11 @@ def logout():
             if not protocol.endswith('://'):
                 protocol = protocol + '://'
             next_url = protocol + daconfig['oauth']['keycloak']['domain'] + '/realms/' + daconfig['oauth']['keycloak']['realm'] + '/protocol/openid-connect/logout?' + urlencode({'post_logout_redirect_uri': next_url, 'client_id': daconfig['oauth']['keycloak']['id']})
+        if current_user.social_id.startswith('authentik$') and 'oauth' in daconfig and 'authentik' in daconfig['oauth'] and 'domain' in daconfig['oauth']['authentik'] and daconfig['oauth']['authentik'].get('application slug', None):
+            protocol = daconfig['oauth']['authentik'].get('protocol', 'https://')
+            if not protocol.endswith('://'):
+                protocol = protocol + '://'
+            next_url = f'{protocol}{daconfig['oauth']['authentik']['domain']}/application/o/{daconfig['oauth']['authentik']['application slug']}/end-session/'
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
     delete_session_info()
@@ -1598,6 +1603,7 @@ app.config['USE_ZITADEL_LOGIN'] = False
 app.config['USE_MINIORANGE_LOGIN'] = False
 app.config['USE_AUTH0_LOGIN'] = False
 app.config['USE_KEYCLOAK_LOGIN'] = False
+app.config['USE_AUTHENTIK_LOGIN'] = False
 app.config['USE_AZURE_LOGIN'] = False
 app.config['USE_GOOGLE_DRIVE'] = False
 app.config['USE_ONEDRIVE'] = False
@@ -1609,16 +1615,21 @@ if twilio_config is not None and daconfig.get('phone login', False) is True:
     app.config['USE_PHONE_LOGIN'] = True
 if 'oauth' in daconfig:
     app.config['OAUTH_CREDENTIALS'] = daconfig['oauth']
-    app.config['USE_GOOGLE_LOGIN'] = bool('google' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['google'] and daconfig['oauth']['google']['enable'] is False))
-    app.config['USE_FACEBOOK_LOGIN'] = bool('facebook' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['facebook'] and daconfig['oauth']['facebook']['enable'] is False))
-    app.config['USE_ZITADEL_LOGIN'] = bool('zitadel' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['zitadel'] and daconfig['oauth']['zitadel']['enable'] is False))
-    app.config['USE_MINIORANGE_LOGIN'] = bool('miniorange' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['miniorange'] and daconfig['oauth']['miniorange']['enable'] is False))
-    app.config['USE_AUTH0_LOGIN'] = bool('auth0' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['auth0'] and daconfig['oauth']['auth0']['enable'] is False))
-    app.config['USE_KEYCLOAK_LOGIN'] = bool('keycloak' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['keycloak'] and daconfig['oauth']['keycloak']['enable'] is False))
-    app.config['USE_AZURE_LOGIN'] = bool('azure' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['azure'] and daconfig['oauth']['azure']['enable'] is False))
-    app.config['USE_GOOGLE_DRIVE'] = bool('googledrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['googledrive'] and daconfig['oauth']['googledrive']['enable'] is False))
-    app.config['USE_ONEDRIVE'] = bool('onedrive' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['onedrive'] and daconfig['oauth']['onedrive']['enable'] is False))
-    app.config['USE_GITHUB'] = bool('github' in daconfig['oauth'] and not ('enable' in daconfig['oauth']['github'] and daconfig['oauth']['github']['enable'] is False))
+    oauth_providers = [
+        ('USE_GOOGLE_LOGIN', 'google'),
+        ('USE_FACEBOOK_LOGIN', 'facebook'),
+        ('USE_ZITADEL_LOGIN', 'zitadel'),
+        ('USE_MINIORANGE_LOGIN', 'miniorange'),
+        ('USE_AUTH0_LOGIN', 'auth0'),
+        ('USE_KEYCLOAK_LOGIN', 'keycloak'),
+        ('USE_AUTHENTIK_LOGIN', 'authentik'),
+        ('USE_AZURE_LOGIN', 'azure'),
+        ('USE_GOOGLE_DRIVE', 'googledrive'),
+        ('USE_ONEDRIVE', 'onedrive'),
+        ('USE_GITHUB', 'github'),
+    ]
+    for env_var, oauth_key in oauth_providers:
+        app.config[env_var] = bool(oauth_key in daconfig['oauth'] and not ('enable' in daconfig['oauth'][oauth_key] and daconfig['oauth'][oauth_key]['enable'] is False))
 else:
     app.config['OAUTH_CREDENTIALS'] = {}
 app.config['USE_PYPI'] = daconfig.get('pypi', False)
@@ -5135,6 +5146,61 @@ class KeycloakSignIn(OAuthSignIn):
             email = username
         if user_id is None or username is None or email is None:
             raise DAException("Error: could not get necessary information from keycloak")
+        info_dict = {'name': me.get('name', None)}
+        if 'given_name' in me:
+            info_dict['first_name'] = me.get('given_name')
+        if 'family_name' in me:
+            info_dict['last_name'] = me.get('family_name')
+        return social_id, username, email, info_dict
+
+
+class AuthentikSignIn(OAuthSignIn):
+
+    def __init__(self):
+        super().__init__('authentik')
+        try:
+            protocol = daconfig['oauth']['authentik']['protocol']
+        except KeyError:
+            protocol = 'https://'
+        if not protocol.endswith('://'):
+            protocol = protocol + '://'
+        self.service = OAuth2Service(
+            name='keycloak',
+            client_id=self.consumer_id,
+            client_secret=self.consumer_secret,
+            authorize_url=protocol + str(self.consumer_domain) + '/application/o/authorize/',
+            access_token_url=protocol + str(self.consumer_domain) + '/application/o/token/',
+            base_url=protocol + str(self.consumer_domain)
+        )
+
+    def authorize(self):
+        if 'oauth' in daconfig and 'authentik' in daconfig['oauth'] and daconfig['oauth']['authentik'].get('enable', True) and self.consumer_domain is None:
+            raise DAException("To use Authentik, you need to set your domain in the configuration.")
+        return redirect(self.service.get_authorize_url(
+            response_type='code',
+            scope='openid profile email',
+            redirect_uri=self.get_callback_url())
+        )
+
+    def callback(self):
+        if 'code' not in request.args:
+            return None, None, None, None
+        oauth_session = self.service.get_auth_session(
+            decoder=safe_json_loads,
+            data={'code': request.args['code'],
+                  'grant_type': 'authorization_code',
+                  'redirect_uri': self.get_callback_url()}
+        )
+        me = oauth_session.get('application/o/userinfo/').json()
+        # logmessage("authentik returned " + json.dumps(me))
+        user_id = me.get('sub')
+        social_id = 'authentik$' + str(user_id)
+        username = me.get('preferred_username')
+        email = me.get('email')
+        if email is None and '@' in username:
+            email = username
+        if user_id is None or username is None or email is None:
+            raise DAException("Error: could not get necessary information from authentik")
         info_dict = {'name': me.get('name', None)}
         if 'given_name' in me:
             info_dict['first_name'] = me.get('given_name')

@@ -1984,7 +1984,7 @@ def url_of(file_reference, **kwargs):
 
 def server_capabilities():
     """Returns a dictionary with true or false values indicating various capabilities of the server."""
-    result = {'sms': False, 'fax': False, 'google_login': False, 'facebook_login': False, 'auth0_login': False, 'keycloak_login': False, 'azure_login': False, 'phone_login': False, 'voicerss': False, 's3': False, 'azure': False, 'github': False, 'pypi': False, 'googledrive': False, 'google_maps': False}
+    result = {'sms': False, 'fax': False, 'google_login': False, 'facebook_login': False, 'auth0_login': False, 'keycloak_login': False, 'authentik_login': False, 'azure_login': False, 'miniorange_login': False, 'phone_login': False, 'voicerss': False, 's3': False, 'azure': False, 'github': False, 'pypi': False, 'googledrive': False, 'google_maps': False}
     if 'twilio' in server.daconfig and isinstance(server.daconfig['twilio'], (list, dict)):
         if isinstance(server.daconfig['twilio'], list):
             tconfigs = server.daconfig['twilio']
@@ -1999,27 +1999,20 @@ def server_capabilities():
             if 'phone login' in server.daconfig:
                 result['phone_login'] = True
     if 'oauth' in server.daconfig and isinstance(server.daconfig['oauth'], dict):
-        if 'google' in server.daconfig['oauth'] and isinstance(server.daconfig['oauth']['google'], dict):
-            if not ('enable' in server.daconfig['oauth']['google'] and not server.daconfig['oauth']['google']['enable']):
-                result['google_login'] = True
-        if 'facebook' in server.daconfig['oauth'] and isinstance(server.daconfig['oauth']['facebook'], dict):
-            if not ('enable' in server.daconfig['oauth']['facebook'] and not server.daconfig['oauth']['facebook']['enable']):
-                result['facebook_login'] = True
-        if 'azure' in server.daconfig['oauth'] and isinstance(server.daconfig['oauth']['azure'], dict):
-            if not ('enable' in server.daconfig['oauth']['azure'] and not server.daconfig['oauth']['azure']['enable']):
-                result['azure_login'] = True
-        if 'auth0' in server.daconfig['oauth'] and isinstance(server.daconfig['oauth']['auth0'], dict):
-            if not ('enable' in server.daconfig['oauth']['auth0'] and not server.daconfig['oauth']['auth0']['enable']):
-                result['auth0_login'] = True
-        if 'keycloak' in server.daconfig['oauth'] and isinstance(server.daconfig['oauth']['keycloak'], dict):
-            if not ('enable' in server.daconfig['oauth']['keycloak'] and not server.daconfig['oauth']['keycloak']['enable']):
-                result['keycloak_login'] = True
-        if 'googledrive' in server.daconfig['oauth'] and isinstance(server.daconfig['oauth']['googledrive'], dict):
-            if not ('enable' in server.daconfig['oauth']['googledrive'] and not server.daconfig['oauth']['googledrive']['enable']):
-                result['googledrive'] = True
-        if 'github' in server.daconfig['oauth'] and isinstance(server.daconfig['oauth']['github'], dict):
-            if not ('enable' in server.daconfig['oauth']['github'] and not server.daconfig['oauth']['github']['enable']):
-                result['github'] = True
+        oauth_providers = [
+            ('google', 'google_login'),
+            ('facebook', 'facebook_login'),
+            ('azure', 'azure_login'),
+            ('miniorange', 'miniorange_login'),
+            ('auth0', 'auth0_login'),
+            ('keycloak', 'keycloak_login'),
+            ('authentik', 'authentik_login'),
+            ('googledrive', 'googledrive'),
+            ('github', 'github')
+        ]
+        for provider, result_key in oauth_providers:
+            if provider in server.daconfig['oauth'] and isinstance(server.daconfig['oauth'][provider], dict) and ('enable' not in server.daconfig['oauth'][provider] or server.daconfig['oauth'][provider]['enable']):
+                result[result_key] = True
     if 'pypi' in server.daconfig and server.daconfig['pypi'] is True:
         result['pypi'] = True
     if 'google' in server.daconfig and isinstance(server.daconfig['google'], dict) and ('google maps api key' in server.daconfig['google'] or 'api key' in server.daconfig['google']):

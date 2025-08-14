@@ -154,6 +154,10 @@ class MySignInForm(LoginForm):
                     self.email.errors.append(word("You need to log in with Azure."))
                 elif user.social_id.startswith('auth0$'):
                     self.email.errors.append(word("You need to log in with Auth0."))
+                elif user.social_id.startswith('keycloak$'):
+                    self.email.errors.append(word("You need to log in with Keycloak."))
+                elif user.social_id.startswith('authentik$'):
+                    self.email.errors.append(word("You need to log in with Authentik."))
                 elif user.social_id.startswith('facebook$'):
                     self.email.errors.append(word("You need to log in with Facebook."))
                 else:

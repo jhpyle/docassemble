@@ -42,10 +42,22 @@ oauth:
     secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
     domain: keycloak.example.com
     realm: default
-  twitter:
+  authentik:
     enable: False
-    id: Iweh63ReKfOCttaUBE3t27TET
-    secret: hfieegGgrht5re3hfhsRGStYUbDDAgerergrggSDGHtrErE7rf
+    id: 29zWxVegWUEaIh75WTOAg9jUnbpAOiuc683JmL2s
+    secret: 6dg8kgi8I87xcYxaOu2LSamj7cWE4j6VxC1bPcGTIl4ddMXr3Xaq6IBLo3TupITFylydPciPLULOKxIff3LmT7FxIOmEcnAsUdQf7OG3334S4FlMzEXhGFgFOARnYcVo
+    application slug: myapplication-authentik
+    domain: myserver:9000
+    protocol: "http://"
+  zitadel:
+    enable: False
+    id: 168422810448705515@yourprojectname
+    domain: your-instance-name-edy3i2.zitadel.cloud
+  miniorange:
+    enable: False
+    id: TQBwKWUcsECMUIkCctjxLQjPFXdIsnYU
+    secret: lTUyixltiJmMMKhXYulCBrKWbFbXPrdy
+    domain: myserver.com
   azure:
     enable: False
     id: e378beb1-0bfb-45bc-9b4b-604dcf640c87
