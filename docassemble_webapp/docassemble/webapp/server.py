@@ -21403,8 +21403,8 @@ def api_package():
                         result = docassemble.webapp.worker.update_packages.delay(restart=False)
                     return jsonify_task(result)
                 return jsonify_with_status("You do not have permission to install that package.", 403)
-            except Exception as ex:
-                return jsonify_with_status(f"There was an error when installing that package. {ex}", 400)
+            except Exception as err:
+                return jsonify_with_status(f"There was an error when installing that package. {err.__class__.__name__}: {err}", 400)
     return ('File not found', 404)
 
 
