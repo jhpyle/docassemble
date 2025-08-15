@@ -3,6 +3,12 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.8.8](https://github.com/jhpyle/docassemble/releases/tag/v1.8.8) - 2025-08-15
+
+
+### Fixed
+- Error when installing add-on packages created by earlier versions.
+
 ## [1.8.7](https://github.com/jhpyle/docassemble/releases/tag/v1.8.7) - 2025-08-14
 
 
