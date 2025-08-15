@@ -10490,7 +10490,7 @@ def get_package_name_from_zip(zippath):
         for zinfo in zf.infolist():
             parts = splitall(zinfo.filename)
             if parts[-1] in ('setup.py', 'pyproject.toml'):
-                if len(parts) < min_level:
+                if len(parts) <= min_level:
                     if parts[-1] == 'setup.py':
                         setup_py = zinfo
                     else:
@@ -21403,8 +21403,8 @@ def api_package():
                         result = docassemble.webapp.worker.update_packages.delay(restart=False)
                     return jsonify_task(result)
                 return jsonify_with_status("You do not have permission to install that package.", 403)
-            except:
-                return jsonify_with_status("There was an error when installing that package.", 400)
+            except Exception as ex:
+                return jsonify_with_status(f"There was an error when installing that package. {ex}", 400)
     return ('File not found', 404)
 
 
