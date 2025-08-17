@@ -22553,11 +22553,11 @@ var daAspectRatio;
 var daTheBorders;
 var daSignaturePad;
 
-function daInitializeSignature(penColor) {
+function daInitializeSignature(penColor, defaultImage) {
   daColor = penColor;
   daAspectRatio = 0.4;
   daTheBorders = 30;
-  daNewCanvas();
+  daNewCanvas(defaultImage);
 
   $(window).on("resize", function () {
     daResizeCanvas();
@@ -22608,7 +22608,7 @@ function daSaveCanvas() {
   daPost({ da_success: 1, da_the_image: dataURL, da_ajax: 1 });
 }
 
-function daNewCanvas() {
+function daNewCanvas(defaultImage = null) {
   //console.log("running daNewCanvas");
   daWindowWidth = $(window).width();
   var cwidth = $(window).width() - daTheBorders;
@@ -22641,6 +22641,15 @@ function daNewCanvas() {
     daTheWidth = 1;
   }
   daSignaturePad = new SignaturePad(document.querySelector("#dasigcanvas"));
+  if (defaultImage != null) {
+    daSignaturePad.fromDataURL(defaultImage, {
+      ratio: 1,
+      width: cwidth,
+      height: cheight,
+      xOffset: 0,
+      yOffset: 0,
+    });
+  }
   daSignaturePad.minWidth = 0.5 * daThicknessScalingFactor;
   daSignaturePad.maxWidth = 2.5 * daThicknessScalingFactor;
   daSignaturePad.penColor = daColor;
@@ -25597,7 +25606,7 @@ function daEvalExtraScript(info) {
       $("#" + info.id).slider({ tooltip: "always", enabled: info.enabled });
       break;
     case "signature":
-      daInitializeSignature(info.color);
+      daInitializeSignature(info.color, info.default);
       break;
   }
 }

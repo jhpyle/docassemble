@@ -162,37 +162,6 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
             sizing += 'height:auto;'
     return '<img alt="" class="daicon" src="' + url + '" style="' + str(sizing) + '"/>'
 
-# def signature_html(status, debug, root, validation_rules):
-#     if (status.continueLabel):
-#         continue_label = markdown_to_html(status.continueLabel, trim=True)
-#     else:
-#         continue_label = word('Done')
-#     output = '    <div class="sigpage" id="dasigpage">\n      <div class="sigshowsmallblock sigheader" id="dasigheader">\n        <div class="siginnerheader">\n          <a id="danew" class="signavbtn signav-left">' + word('Clear') + '</a>\n          <a id="dasave" class="signavbtn signav-right">' + continue_label + '</a>\n          <div class="sigtitle">'
-#     if status.questionText:
-#         output += markdown_to_html(status.questionText, trim=True)
-#     else:
-#         output += word('Sign Your Name')
-#     output += '</div>\n        </div>\n      </div>\n      <div class="dasigtoppart" id="dasigtoppart">\n        <div id="daerrormess" class="sigerrormessage signotshowing">' + word("You must sign your name to continue.") + '</div>\n        '
-#     output += '\n      </div>'
-#     if status.subquestionText:
-#         output += '\n      <div class="sigmidpart">\n        ' + markdown_to_html(status.subquestionText) + '\n      </div>'
-#     output += '\n      <div id="dasigcontent"><p style="text-align:center;border-style:solid;border-width:1px">' + word('Loading.  Please wait . . . ') + '</p></div>\n      <div class="sigbottompart" id="sigbottompart">\n        '
-#     if 'underText' in status.extras:
-#         output += markdown_to_html(status.extras['underText'], trim=True)
-#     output += "\n      </div>"
-#     output += """
-#       <div class="form-actions sighidesmall sigbuttons">
-#         <a id="savetwo" class="btn btn-primary btn-lg">""" + continue_label + """</a>
-#         <a id="savetwo" class="btn btn-warning btn-lg">""" + word('Clear') + """</a>
-#       </div>
-# """
-#     output += '    </div>\n    <form action="' + root + '" id="dasigform" method="POST"><input type="hidden" name="_save_as" value="' + escape_id(status.question.fields[0].saveas) + '"/><input type="hidden" id="_the_image" name="_the_image" value=""/><input type="hidden" id="da_success" name="_success" value="0"/>'
-#     output += tracker_tag(status)
-#     output += '</form>\n'
-#     add_validation(status.extra_scripts, validation_rules)
-#     return output
-
-
 def get_choices_with_abb(status, field, the_user_dict, terms=None, links=None):
     if terms is None:
         terms = {}

@@ -8942,7 +8942,15 @@ def index(action_argument=None, refer=None):
             pen_color = interview_status.extras['pen color'][0].strip()
         else:
             pen_color = '#000'
-        interview_status.extra_scripts.append({"type": "signature", "color": pen_color})
+        if 0 in interview_status.defaults and isinstance(interview_status.defaults[0], DAFile) and interview_status.defaults[0].ok:
+            try:
+                default_image = f'data:{interview_status.defaults[0].mimetype};base64,{base64.b64encode(interview_status.defaults[0].slurp(auto_decode=False)).decode('utf-8')}'
+            except Exception as err:
+                logmessage("Could not convert signature into a data URL: " + err.__class__.__name__ + ": " + str(err))
+                default_image = None
+        else:
+            default_image = None
+        interview_status.extra_scripts.append({"type": "signature", "color": pen_color, "default": default_image})
     if not is_ajax:
         if interview.options.get('analytics on', True):
             if ga_configured:
