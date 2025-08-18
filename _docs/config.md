@@ -6105,6 +6105,7 @@ starts. Code that has global effects includes:
 * [`docassemble.base.util.update_nice_numbers()`] function calls
 * [`docassemble.base.util.update_ordinal_numbers()`] function calls
 * [`docassemble.base.util.update_ordinal_function()`] function calls
+* [Custom endpoints]({{ site.baseurl }}/docs/recipes.html#flask page)
 
 The `module whitelist` and `module blacklist` Configuration directives
 allow you to override the normal methods that **docassemble** uses to

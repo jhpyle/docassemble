@@ -2465,7 +2465,11 @@ cannot be changed. However, you can provide a complete HTML page to
 `render_template_string()` if you do not want to use a template.
 
 The line `# pre-load` at the top of the module is important. This
-ensures that the module will be loaded when the server starts.
+ensures that the module will be loaded when the server starts. Note
+that it is important not to load multiple modules that contain a
+definition of the same endpoint; if you do, [Flask] will give an
+error. You may need to use the [`module blacklist`] Configuration
+directive to avoid this.
 
 The root endpoint `/` already has a definition in
 `docassemble.webapp.server`, but you can tell the server to redirect
@@ -2528,6 +2532,13 @@ functions that you cannot call because they depend on that context
 
 The POST data may be in `application/json` or
 `application/x-www-form-urlencoded` format.
+
+The line `# pre-load` at the top of the module is important. This
+ensures that the module will be loaded when the server starts. Note
+that it is important not to load multiple modules that contain a
+definition of the same endpoint; if you do, [Flask] will give an
+error. You may need to use the [`module blacklist`] Configuration
+directive to avoid this.
 
 ## <a name="custom api background"></a>Running background tasks from endpoints
 
@@ -3094,3 +3105,4 @@ session if `multi_user` is not set to `True`.
 [`required privileges`]: {{ site.baseurl }}/docs/initial.html#required privileges
 [stash]: {{ site.baseurl }}/docs/api.html#stash_data
 [`/api/stash_data`]: {{ site.baseurl }}/docs/api.html#stash_data
+[`module blacklist`]: {{ site.baseurl }}/docs/config.html#module blacklist
