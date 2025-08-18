@@ -1598,7 +1598,13 @@ def update_terms(dictionary, auto=False, language='*'):
 def set_save_status(status):
     """Indicates whether the current processing of the interview logic should result in a new step in the interview."""
     if status in ('new', 'overwrite', 'ignore'):
-        this_thread.misc['save_status'] = status
+        if this_thread.misc.get('save_status', 'new') == 'ignore':
+            if status != 'ignore':
+                logmessage("Call to set_save_status disregarded because save status was already 'ignore'")
+        else:
+            this_thread.misc['save_status'] = status
+            if status == 'ignore':
+                server.release_lock(this_thread.current_info['session'], this_thread.current_info['yaml_filename'])
 
 
 class DANav:

@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.8.10] - 2025-08-18
+
+### Changed
+- When `set_save_status('ignore')` is called, the lock on the
+  interview answers will be released.
+
+### Fixed
+- Issues with compatibility with Python 3.10.
+
 ## [1.8.9] - 2025-08-17
 
 ### Changed

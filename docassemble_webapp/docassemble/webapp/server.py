@@ -1196,7 +1196,7 @@ def logout():
             protocol = daconfig['oauth']['authentik'].get('protocol', 'https://')
             if not protocol.endswith('://'):
                 protocol = protocol + '://'
-            next_url = f'{protocol}{daconfig['oauth']['authentik']['domain']}/application/o/{daconfig['oauth']['authentik']['application slug']}/end-session/'
+            next_url = f'{protocol}{daconfig["oauth"]["authentik"]["domain"]}/application/o/{daconfig["oauth"]["authentik"]["application slug"]}/end-session/'
     docassemble_flask_user.signals.user_logged_out.send(current_app._get_current_object(), user=current_user)
     logout_user()
     delete_session_info()
@@ -8944,7 +8944,7 @@ def index(action_argument=None, refer=None):
             pen_color = '#000'
         if 0 in interview_status.defaults and isinstance(interview_status.defaults[0], DAFile) and interview_status.defaults[0].ok:
             try:
-                default_image = f'data:{interview_status.defaults[0].mimetype};base64,{base64.b64encode(interview_status.defaults[0].slurp(auto_decode=False)).decode('utf-8')}'
+                default_image = f'data:{interview_status.defaults[0].mimetype};base64,{base64.b64encode(interview_status.defaults[0].slurp(auto_decode=False)).decode("utf-8")}'
             except Exception as err:
                 logmessage("Could not convert signature into a data URL: " + err.__class__.__name__ + ": " + str(err))
                 default_image = None
@@ -23885,7 +23885,8 @@ docassemble.base.functions.update_server(url_finder=get_url_from_file_reference,
                                          get_login_url=get_login_url,
                                          run_action_in_session=run_action_in_session,
                                          invite_user=invite_user,
-                                         get_url=get_request_url)
+                                         get_url=get_request_url,
+                                         release_lock=release_lock)
 
 # docassemble.base.util.set_user_id_function(user_id_dict)
 # docassemble.base.functions.set_generate_csrf(generate_csrf)
