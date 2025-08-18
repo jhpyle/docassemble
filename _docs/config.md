@@ -3750,13 +3750,21 @@ IP addresses.
 
 **docassemble** also has features, including [address autocomplete]
 and the [`map_of()`] function, which cause the user's web browser to
-call the Google API. For these features, you need to set up an API key
-and place it under the `google` directive as the `google maps api key`:
+call the Google API. For these features, you need to go into Google
+Cloud Console, enable the [Google Places API] (the "New" version),
+and create an API key for accessing this API. When you obtain the API
+key, place it under the `google` directive as the `google maps api
+key`:
 
 {% highlight yaml %}
 google:
   google maps api key: YyFeyuE-36grDgEE34jETRy3WDjGerye0y-wrRb
+  use places api new: True
 {% endhighlight %}
+
+Setting `use places api new: True` enables the use of the "New"
+[Google Places API], which all users should use or transition to in
+2025.
 
 The [address autocomplete] and [`map_of()`] features require sharing
 the API key with the web browser, which means your API key is not
@@ -6975,3 +6983,5 @@ and Facebook API keys.
 [`docker stop`]: https://docs.docker.com/engine/reference/commandline/stop/
 [Profile]: {{ site.baseurl }}/docs/users.html#profile
 [Microsoft Graph API]: https://learn.microsoft.com/en-us/graph/api/user-sendmail
+[Place Autocomplete]: https://developers.google.com/maps/documentation/places/web-service/place-autocomplete
+[Google Places API]: https://developers.google.com/maps/documentation/places/web-service/op-overview

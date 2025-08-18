@@ -2672,8 +2672,11 @@ you have enabled the following APIs for your [`google maps api key`]:
 * Places API (New)
 * Maps JavaScript API
 
+Also make sure that `use places api new: True` is present under
+`google` in your Configuration.
+
 This feature can be used internationally with a variety of address
-types.  Here is an example that illustrates all of the possible
+types. Here is an example that illustrates all of the possible
 attributes of the [`Address`] object that can be set by [Place Autocomplete].
 
 {% include side-by-side.html demo="address-autocomplete-test" %}
@@ -2691,22 +2694,72 @@ You will need to set the `types` and `fields` items within the
 dictionary to values that the [Place Autocomplete] API considers
 valid. Consult the API documentation for the list of valid [types] and
 [fields]. **docassemble** will pass the dictionary of options directly
-to the JavaScript for the [Place Autocomplete] API without checking if
-the options are valid. You need to monitor the JavaScript console and
-consult Google's documentation if you do not get valid results.
+to the [`.fetchFields()`] method without checking if the options are
+valid. You need to monitor the JavaScript console and consult Google's
+documentation if there is an error.
 
 The following example demonstrates conducting a query on
 "establishments" of all types.
 
 {% include side-by-side.html demo="address-autocomplete-establishment" %}
 
-Note that there are some [fields] that the API returns, such as
-`open_hours`, that **docassemble** will not process. The above example
-demonstrates all of the [fields] that **docassemble** is capable of
-populating. Specifying the `geometry` field allows the `latitude` and
-`longitude` fields to be populated. Specifying the
-`address_components` field allows the basic address fields to be
-populated.
+The `fields` should be specified in lowercase underscore
+format (e.g., `adr_format_address`). These will be converted into
+camel case (e.g., `adrFormatAddress`) and passed directly to
+[`.fetchFields()`].
+
+When [`.fetchFields()`] method returns information, attributes of the
+`Address` object will be populated, if the attribute name corresponds
+to the name of the field requested. However, there are some exceptions:
+
+* If you request `address_components`, the `address_components` field
+  is broken out into its numerous components, including
+  `administrative_area_level_1`, `street_number`, etc. Attributes of
+  the `Address` object are populated as follows:
+  * `address` is populated with `street_number` and `route`, separated
+    by a space.
+  * `city` is populated with `locality`, `sublocality_level_1`,
+    `neighborhood`, `administrative_area_level_3`, or `colloquial_area`,
+    whichever is first available.
+  * `state` is popuated with the `shortText` version of
+    `administrative_area_level_1`.
+  * `country` is popuated with the `shortText` version of
+    `country`.
+  * `sublocality` is populated with `sublocality_level_1`,
+    `sublocality_level_2`, `sublocality_level_3`,
+    `sublocality_level_4`, `sublocality_level_5`, whichever is first
+    available.
+  * `zip` is populated with `postal_code`, and if there is a
+    `postal_code_suffix`, it is appended to the `zip`, separated by a
+    hyphen.
+* If you request `address_components` and your `question` populates
+  attributes of the `Address` object that correspond with Google's
+  address components, those fields will be populated with the
+  `longText` version of the component. For example, you can capture
+  Google's `street_number` and `route` fields by using `street_number`
+  and `route` as attributes of your `Address` object in your `question`.
+* If any of the other fields you request is an object, the components
+  of the object are broken out and the individual components of the
+  object are populated.
+  * If you request `accessibility_options`, the fields that are
+    populated are `has_wheelchair_accessible_entrance`,
+    `has_wheelchair_accessible_parking`,
+    `has_wheelchair_accessible_restroom`, and
+    `has_wheelchair_accessible_seating`.
+  * If you request `plus_code`, the fields that are populated are
+    `compound_code` and `global_code`.
+  * If you request `google_maps_links`, the fields that are populated
+    are `directions_uri`, `photos_uri`, `place_uri`, `reviews_uri`,
+    and `write_a_review_uri`.
+  * If you request `location`, the fields that are populated are
+    `latitude` and `longitude`.
+
+Some of the options may contain HTML, or may be a JSON array. You may
+wish to set `datatype: raw` to avoid input validation errors. You may
+also wish to set `input type: hidden` so that the user does not see
+the codes. You may also want to use the `.geocode()` method to
+retrieve this information using the server, rather than retrieving it
+through the user's browser.
 
 Note that in the above example, `address autocomplete` is attached to
 the `name` attribute of the `Address` rather than the `address`
@@ -2723,7 +2776,7 @@ to the [Place Autocomplete] API:
 types:
   - street_address
 fields:
-  - addressComponents
+  - address_components
 {% endhighlight %}
 
 The following example demonstrates conducting a query on
@@ -3914,8 +3967,8 @@ why this needs to be done manually as opposed to automatically:
 [Social Security number]: https://en.wikipedia.org/wiki/Social_Security_number
 [`custom datatypes to load`]: {{ site.baseurl }}/docs/initial.html#custom datatypes to load
 [floating labels]: https://getbootstrap.com/docs/5.2/forms/floating-labels/
-[fields]: https://developers.google.com/maps/documentation/javascript/reference/places-service#PlaceResult
-[types]: https://developers.google.com/maps/documentation/javascript/supported_types
+[fields]: https://developers.google.com/maps/documentation/places/web-service/data-fields
+[types]: https://developers.google.com/maps/documentation/places/web-service/place-types
 [address autocomplete]: #address autocomplete
 [logic system]: {{ site.baseurl }}/docs/logic.html
 [`validation code`]: #validation code
@@ -3934,3 +3987,4 @@ why this needs to be done manually as opposed to automatically:
 [`js disable if`]: #js disable if
 [`disabled`]: #disabled
 [accessibility]: {{ site.baseurl }}/docs/accessibility.html
+[`.fetchFields()`]: https://developers.google.com/maps/documentation/javascript/place-details

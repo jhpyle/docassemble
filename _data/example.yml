@@ -264,9 +264,9 @@
             - "(cities)"
           fields:
             - address_components
-            - geometry
+            - location
       - note: |
-          The following attribute names are Google Place address_components.
+          The following attribute names are Google Places `addressComponents`.
       - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
         required: False
       - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
@@ -276,6 +276,10 @@
       - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
         required: False
       - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - "administrative_area_&#8203;level_6": the_address.administrative_area_level_6
+        required: False
+      - "administrative_area_&#8203;level_7": the_address.administrative_area_level_7
         required: False
       - colloquial_area: the_address.colloquial_area
         required: False
@@ -307,7 +311,9 @@
         required: False
       - note: |
           The following attribute names are built in to **docassemble**.
-          They have different names than Google Place component names.
+          They have different names than Google Places field names. The
+          `latitude` and `longitude` fields come from the Google Places
+          `location` field.
       - city: the_address.city
         required: False
       - state: the_address.state
@@ -333,23 +339,28 @@
           types:
             - establishment
           fields:
+            - accessibility_options
             - address_components
-            - adr_address
+            - adr_format_address
             - business_status
+            - display_name
+            - display_name_language_code
             - formatted_address
-            - formatted_phone_number
-            - geometry
-            - icon
+            - google_maps_links
+            - id
             - international_phone_number
-            - name
-            - place_id
+            - location
+            - national_phone_number
+            - plus_code
             - price_level
+            - primary_type
+            - primary_type_display_name
+            - primary_type_display_name_language_code
             - rating
-            - url
-            - vicinity
-            - website
+            - types
+            - utc_offset_minutes
       - note: |
-          The following attribute names are Google Place address_components.
+          The following attribute names are Google Places `addressComponents`.
       - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
         required: False
       - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
@@ -359,6 +370,10 @@
       - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
         required: False
       - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - "administrative_area_&#8203;level_6": the_address.administrative_area_level_6
+        required: False
+      - "administrative_area_&#8203;level_7": the_address.administrative_area_level_7
         required: False
       - colloquial_area: the_address.colloquial_area
         required: False
@@ -407,35 +422,68 @@
       - subpremise: the_address.subpremise
         required: False
       - note: |
-          The following attribute names are Google Place components other than address_components.
-      - adr_address: the_address.adr_address
+          The following attribute names are Google Places fields other
+          than `addressComponents`. Note that some are HTML and some are
+          JSON, so they require `datatype: raw`.
+      - "has_wheelchair_&#8203;accessible_entrance": the_address.has_wheelchair_accessible_entrance
+        required: False
+      - "has_wheelchair_&#8203;accessible_parking": the_address.has_wheelchair_accessible_parking
+        required: False
+      - "has_wheelchair_&#8203;accessible_restroom": the_address.has_wheelchair_accessible_restroom
+        required: False
+      - "has_wheelchair_&#8203;accessible_seating": the_address.has_wheelchair_accessible_seating
+        required: False
+      - adr_format_address: the_address.adr_format_address
         datatype: raw
         required: False
       - business_status: the_address.business_status
         required: False
+      - display_name: the_address.display_name
+        required: False
+      - "display_name_&#8203;language_code": the_address.display_name_language_code
+        required: False
       - formatted_address: the_address.formatted_address
         required: False
-      - formatted_phone_number: the_address.formatted_phone_number
+      - directions_uri: the_address.directions_uri
         required: False
-      - icon: the_address.icon
+      - photos_uri: the_address.photos_uri
         required: False
-      - international_phone_number: the_address.international_phone_number
+      - place_uri: the_address.place_uri
         required: False
-      - place_id: the_address.place_id
+      - reviews_uri: the_address.reviews_uri
+        required: False
+      - write_a_review_uri: the_address.write_a_review_uri
+        required: False
+      - id: the_address.id
+        required: False
+      - "international_&#8203;phone_number": the_address.international_phone_number
+        required: False
+      - "national_&#8203;phone_number": the_address.national_phone_number
+        required: False
+      - compound_code: the_address.compound_code
+        required: False
+      - global_code: the_address.global_code
         required: False
       - price_level: the_address.price_level
         required: False
+      - primary_type: the_address.primary_type
+        required: False
+      - "primary_type_&#8203;display_name": the_address.primary_type_display_name
+        required: False
+      - "primary_type_&#8203;display_name_language_code": the_address.primary_type_display_name_language_code
+        required: False
       - rating: the_address.rating
         required: False
-      - url: the_address.url
+      - types: the_address.types
         required: False
-      - vicinity: the_address.vicinity
-        required: False
-      - website: the_address.website
+        datatype: raw
+      - utc_offset_minutes: the_address.utc_offset_minutes
         required: False
       - note: |
           The following attribute names are built in to **docassemble**.
-          They have different names than Google Place component names.
+          They have different names than Google Places field names. The
+          `latitude` and `longitude` fields come from the Google Places
+          `location` field.
       - address: the_address.address
         required: False
       - unit: the_address.unit
@@ -478,9 +526,9 @@
             - "(regions)"
           fields:
             - address_components
-            - geometry
+            - location
       - note: |
-          The following attribute names are Google Place address_components.
+          The following attribute names are Google Places `addressComponents`.
       - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
         required: False
       - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
@@ -490,6 +538,10 @@
       - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
         required: False
       - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - "administrative_area_&#8203;level_6": the_address.administrative_area_level_6
+        required: False
+      - "administrative_area_&#8203;level_7": the_address.administrative_area_level_7
         required: False
       - colloquial_area: the_address.colloquial_area
         required: False
@@ -521,7 +573,9 @@
         required: False
       - note: |
           The following attribute names are built in to **docassemble**.
-          They have different names than Google Place component names.
+          They have different names than Google Places field names. The
+          `latitude` and `longitude` fields come from the Google Places
+          `location` field.
       - city: the_address.city
         required: False
       - state: the_address.state
@@ -534,7 +588,7 @@
         required: False
 "address-autocomplete-specific":
   "height": !!int |-
-    614
+    615
   "width": !!int |-
     488
   "yaml": |-
@@ -549,10 +603,9 @@
             - doctor
           fields:
             - address_components
-            - formatted_phone_number
-            - website
+            - national_phone_number
       - note: |
-          The following attribute names are Google Place address_components.
+          The following attribute names are Google Places `addressComponents`.
       - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
         required: False
       - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
@@ -562,6 +615,10 @@
       - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
         required: False
       - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+        required: False
+      - "administrative_area_&#8203;level_6": the_address.administrative_area_level_6
+        required: False
+      - "administrative_area_&#8203;level_7": the_address.administrative_area_level_7
         required: False
       - colloquial_area: the_address.colloquial_area
         required: False
@@ -591,8 +648,6 @@
         required: False
       - route: the_address.route
         required: False
-      - suite: the_address.suite
-        required: False
       - street_number: the_address.street_number
         required: False
       - sublocality: the_address.sublocality
@@ -610,14 +665,13 @@
       - subpremise: the_address.subpremise
         required: False
       - note: |
-          The following attribute names are Google Place components other than address_components.
-      - formatted_phone_number: the_address.formatted_phone_number
-        required: False
-      - website: the_address.website
+          The following attribute names are Google Places fields other
+          than `addressComponents`.
+      - "national_&#8203;phone_number": the_address.national_phone_number
         required: False
       - note: |
           The following attribute names are built in to **docassemble**.
-          They have different names than Google Place component names.
+          They have different names than Google Places field names.
       - address: the_address.address
         required: False
       - unit: the_address.unit
@@ -21466,6 +21520,157 @@
         docx template file: tagged.docx
         tagged pdf: True
     mandatory: True
+"testaccordion1":
+  "height": !!int |-
+    450
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - docassemble.demo.accordion
+    ---
+    event: review_screen
+    question: |
+      Please review your answers.
+    review:
+      - raw html: |
+          ${ start_accordion('Pets', showing=True) }
+      - Edit: favorite_cat
+        button: |
+          You said your favorite cat was
+          **${ favorite_cat }**.
+      - Edit: favorite_vegetable
+        button: |
+          You said your favorite dog was
+          **${ favorite_dog }**.
+      - raw html: |
+          ${ next_accordion('Food') }
+      - Edit: favorite_fruit
+        button: |
+          You said your favorite fruit was
+          **${ favorite_fruit }**.
+      - Edit: favorite_vegetable
+        button: |
+          You said your favorite vegetable was
+          **${ favorite_vegetable }**.
+      - raw html: |
+          ${ next_accordion('Aesthetics') }
+      - Edit: fashion_aesthetic
+        button: |
+          You said your fashion aesthetic was
+          **${ fashion_aesthetic }**.
+      - Edit: decor_aesthetic
+        button: |
+          You said your home decor aesthetic was
+          **${ decor_aesthetic }**.
+      - raw html: |
+          ${ end_accordion() }
+"testaccordion2":
+  "height": !!int |-
+    438
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - docassemble.demo.accordion
+    ---
+    question: |
+      Tell me about your preferences
+    fields:
+      - raw html: |
+          ${ start_accordion('Pets', showing=True) }
+      - Favorite cat: favorite_cat
+      - Favorite dog: favorite_dog
+      - raw html: |
+          ${ next_accordion('Food') }
+      - Favorite fruit: favorite_fruit
+        required: False
+      - Favorite vegetable: favorite_vegetable
+        required: False
+      - Favorite meat dish: favorite_meat_dish
+        show if:
+          variable: favorite_dog
+          is: spaniel
+      - raw html: |
+          ${ next_accordion('Aesthetics') }
+      - Fashion aesthetic: fashion_aesthetic
+        required: False
+      - Decor aesthetic: decor_aesthetic
+        required: False
+      - raw html: ${ end_accordion() }
+"testaccordion3":
+  "height": !!int |-
+    309
+  "width": !!int |-
+    488
+  "yaml": "modules:\n  - docassemble.demo.accordion\n---\nquestion: |\n  Welcome to\
+    \ the interview.\nsubquestion:\n  This interview will determine a recommended\
+    \ direction\n  for your life.\n  \n  ${ start_accordion('What do I need to know\
+    \ before starting?') }\n\n  Modernipsum dolor sit amet illusionism cubo-futurism\
+    \ international\n  gothic historicism, neo-minimalism divisionism cobra intervention\n\
+    \  art art nouveau. Installation art futurism les nabis academic hudson\n  river\
+    \ school young british artists, romanticism neo-expressionism\n  street art orphism,\
+    \ lyrical abstraction avant-garde remodernism\n  vorticism. Divisionism caravaggisti\
+    \ die br\xFCcke tachisme\n  impressionism, gothic art luminism illusionism op\
+    \ art neoclassicism,\n  street art situationist international neoism. Orphism\
+    \ russian\n  symbolism academic ego-futurism kinetic art neo-dada dada stuckism\n\
+    \  international gr\xFCnderzeit, post-impressionism impressionism\n  postmodernism\
+    \ maximalism precisionism post-painterly\n  abstraction. Russian symbolism superflat\
+    \ new media art jugendstil\n  maximalism illusionism, gr\xFCnderzeit scuola romana\
+    \ merovingian\n  rayonism secularism, existentialism op art action painting lyrical\n\
+    \  abstraction.\n  \n  ${ next_accordion('What do I do after I finish the interview?')\
+    \ }\n\n  Metaphysical art barbizon school carolingian neo-minimalism\n  primitivism\
+    \ superflat neo-minimalism naturalism, der blaue reiter\n  hard-edge painting\
+    \ new media art fluxus superstroke\n  monumentalism. Art deco russian futurism\
+    \ cubo-futurism pop art\n  relational art neo-expressionism, synchromism pre-raphaelites\
+    \ sound\n  art photorealism classicism, surrealism gothic art hudson river\n \
+    \ school scuola romana. Rococo biedermeier cloisonnism secularism\n  hudson river\
+    \ school fluxus, modernism, ego-futurism formalism\n  manierism, gr\xFCnderzeit\
+    \ deformalism abstract expressionism\n  postmodernism. Classicism postminimalism\
+    \ superstroke lowbrow\n  tonalism fauvism color field painting systems art, biedermeier\n\
+    \  post-impressionism hyperrealism structuralism neoclassicism. Dada\n  tachisme\
+    \ luminism manierism surrealism, avant-garde performance art\n  neoclassicism\
+    \ hard-edge painting neo-impressionism, nouveau realisme\n  eclecticism tonalism.\n\
+    \  \n  ${ end_accordion() }\ncontinue button field: intro"
+"testaccordion4":
+  "height": !!int |-
+    246
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - docassemble.demo.accordion
+    ---
+    features:
+      css: docassemble.demo:data/static/accordion.css
+    ---
+    question: |
+      Tell me about your preferences
+    fields:
+      - raw html: |
+          ${ start_accordion('Pets', showing=True) }
+      - Favorite cat: favorite_cat
+        show if:
+          code: ask_about_pets
+      - Favorite dog: favorite_dog
+        show if:
+          code: ask_about_pets
+      - raw html: |
+          ${ next_accordion('Food') }
+      - Favorite fruit: favorite_fruit
+        required: False
+      - Favorite vegetable: favorite_vegetable
+        required: False
+      - raw html: |
+          ${ next_accordion('Aesthetics') }
+      - Fashion aesthetic: fashion_aesthetic
+        required: False
+      - Decor aesthetic: decor_aesthetic
+        required: False
+      - raw html: ${ end_accordion() }
+    ---
+    code: |
+      ask_about_pets = False
 "testcards":
   "height": !!int |-
     334
