@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.8.9] - 2025-08-17
+
+### Changed
+- Incorporated `szimek/signature_pad` JavaScript into the operation of
+  `datatype: signature`.
+
+### Fixed
+- Updated advanced usage of `address autocomplete` in light of the
+  switch to the "Places API (New)" API.
+
 ## [1.8.8] - 2025-08-15
 
 ### Fixed

@@ -68,7 +68,7 @@ DEFAULT_LABELAUTY_NOTA_COLOR = daconfig['button colors'].get('labelauty nota', D
 DEFAULT_LABELAUTY_AOTA_COLOR = daconfig['button colors'].get('labelauty aota', DEFAULT_LABELAUTY_COLOR)
 USE_GOOGLE_PLACES_NEW_API = daconfig['google']['use places api new']
 if USE_GOOGLE_PLACES_NEW_API:
-    DEFAULT_AUTOCOMPLETE = {"types": ["street_address"], "fields": ["addressComponents"]}
+    DEFAULT_AUTOCOMPLETE = {"types": ["street_address"], "fields": ["address_components"]}
 else:
     DEFAULT_AUTOCOMPLETE = {"types": ["address"], "fields": ["address_components"]}
 
@@ -77,6 +77,10 @@ def paren_phrase(status, phrase):
     if status.extras.get('describe_file_types', True) and phrase != "":
         return " (" + phrase + ")"
     return ""
+
+
+def underscore_to_camel(text):
+    return re.sub(r'_([a-z])', lambda x: x.group(1).upper(), text)
 
 
 def process_help(help_section, status, full_page=True):

@@ -19,10 +19,9 @@ fields:
         - doctor
       fields:
         - address_components
-        - formatted_phone_number
-        - website
+        - national_phone_number
   - note: |
-      The following attribute names are Google Place address_components.
+      The following attribute names are Google Places `addressComponents`.
   - "administrative_area_&#8203;level_1": the_address.administrative_area_level_1
     required: False
   - "administrative_area_&#8203;level_2": the_address.administrative_area_level_2
@@ -32,6 +31,10 @@ fields:
   - "administrative_area_&#8203;level_4": the_address.administrative_area_level_4
     required: False
   - "administrative_area_&#8203;level_5": the_address.administrative_area_level_5
+    required: False
+  - "administrative_area_&#8203;level_6": the_address.administrative_area_level_6
+    required: False
+  - "administrative_area_&#8203;level_7": the_address.administrative_area_level_7
     required: False
   - colloquial_area: the_address.colloquial_area
     required: False
@@ -61,8 +64,6 @@ fields:
     required: False
   - route: the_address.route
     required: False
-  - suite: the_address.suite
-    required: False
   - street_number: the_address.street_number
     required: False
   - sublocality: the_address.sublocality
@@ -80,14 +81,13 @@ fields:
   - subpremise: the_address.subpremise
     required: False
   - note: |
-      The following attribute names are Google Place components other than address_components.
-  - formatted_phone_number: the_address.formatted_phone_number
-    required: False
-  - website: the_address.website
+      The following attribute names are Google Places fields other
+      than `addressComponents`.
+  - "national_&#8203;phone_number": the_address.national_phone_number
     required: False
   - note: |
       The following attribute names are built in to **docassemble**.
-      They have different names than Google Place component names.
+      They have different names than Google Places field names.
   - address: the_address.address
     required: False
   - unit: the_address.unit

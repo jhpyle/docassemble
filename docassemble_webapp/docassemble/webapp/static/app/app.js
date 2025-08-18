@@ -230,9 +230,11 @@ function daWaitForGoogle(waitForPlaces) {
 function daInitAutocomplete(info) {
   daAutocomplete = Object();
   for (var i = 0; i < info.length; ++i) {
-    var id = info[i][0];
-    var opts = info[i][1];
-    daAutocomplete[id] = { id: info[i][0], opts: info[i][1], suggestions: {} };
+    daAutocomplete[info[i][0]] = {
+      id: info[i][0],
+      opts: info[i][1],
+      suggestions: {},
+    };
   }
 }
 
@@ -356,38 +358,101 @@ function daFillInAddress(origId, place) {
   var baseVarname = atob(id).replace(/.[a-zA-Z0-9_]+$/, "");
   baseVarname = baseVarname.replace(/[\[\]]/g, ".");
   var re = new RegExp("^" + baseVarname + ".(.*)");
-  var componentForm = {
-    locality: "longText",
-    sublocality: "longText",
-    administrative_area_level_3: "longText",
-    administrative_area_level_2: "longText",
-    administrative_area_level_1: "shortText",
-    country: "shortText",
-    postal_code: "shortText",
-    postal_code_suffix: "shortText",
-  };
   var componentTrans = {
-    locality: "city",
-    administrative_area_level_2: "county",
-    administrative_area_level_1: "state",
+    administrative_area_level_1: ["state", "shortText"],
+    administrative_area_level_2: ["county", "longText"],
   };
-  var fieldsToFill = [
+  var alternatives = [
+    [
+      "city",
+      [
+        "locality",
+        "sublocality_level_1",
+        "neighborhood",
+        "administrative_area_level_3",
+        "colloquial_area",
+      ],
+    ],
+    [
+      "sublocality",
+      [
+        "sublocality_level_1",
+        "sublocality_level_2",
+        "sublocality_level_3",
+        "sublocality_level_4",
+        "sublocality_level_5",
+      ],
+    ],
+  ];
+  var fieldsToClear = [
     "address",
-    "city",
-    "county",
-    "state",
-    "zip",
-    "neighborhood",
-    "sublocality",
     "administrative_area_level_1",
     "administrative_area_level_2",
     "administrative_area_level_3",
-    "postal_code",
-    "postal_code_suffix",
-    "room",
+    "administrative_area_level_4",
+    "administrative_area_level_5",
+    "administrative_area_level_6",
+    "administrative_area_level_7",
+    "adr_format_address",
+    "airport",
+    "bus_station",
+    "business_status",
+    "city",
+    "colloquial_area",
+    "compound_code",
+    "country",
+    "county",
+    "directions_uri",
+    "display_name",
+    "display_name_language_code",
+    "establishment",
     "floor",
+    "formatted_address",
+    "global_code",
+    "has_wheelchair_accessible_entrance",
+    "has_wheelchair_accessible_parking",
+    "has_wheelchair_accessible_restroom",
+    "has_wheelchair_accessible_seating",
+    "id",
+    "international_phone_number",
+    "intersection",
+    "landmark",
+    "latitude",
+    "locality",
+    "location",
+    "longitude",
+    "national_phone_number",
+    "natural_feature",
+    "neighborhood",
+    "park",
+    "parking",
+    "photos_uri",
+    "place_uri ",
+    "plus_code",
+    "point_of_interest",
+    "political",
     "post_box",
+    "postal_code",
     "postal_town",
+    "premise",
+    "price_level",
+    "primary_type",
+    "primary_type_display_name",
+    "primary_type_display_name_language_code",
+    "rating",
+    "reviews_uri",
+    "room",
+    "route",
+    "state",
+    "street_number",
+    "sublocality",
+    "subpremise",
+    "train_station",
+    "transit_station",
+    "types",
+    "utc_offset_minutes",
+    "write_a_review_uri",
+    "zip",
   ];
   var idForPart = {};
   $("input, select").each(function () {
@@ -405,14 +470,7 @@ function daFillInAddress(origId, place) {
       } catch (e) {}
     }
   });
-  if (
-    typeof idForPart["address"] != "undefined" &&
-    document.getElementById(idForPart["address"]) != null
-  ) {
-    document.getElementById(idForPart["address"]).value = "";
-  }
-
-  for (var component in fieldsToFill) {
+  for (var component in fieldsToClear) {
     if (
       typeof idForPart[component] != "undefined" &&
       document.getElementById(idForPart[component]) != null
@@ -420,57 +478,35 @@ function daFillInAddress(origId, place) {
       document.getElementById(idForPart[component]).value = "";
     }
   }
-
-  var street_number;
-  var route;
   var savedValues = {};
   var toChange = [];
-  var zipCode = "";
-  var plusFour = "";
   for (var i = 0; i < place.addressComponents.length; i++) {
     var addressType = place.addressComponents[i].types[0];
-    savedValues[addressType] = place.addressComponents[i]["longText"];
-    if (addressType == "street_number") {
-      street_number = place.addressComponents[i]["shortText"];
-    }
-    if (addressType == "route") {
-      route = place.addressComponents[i]["longText"];
-    }
-    if (addressType == "postal_code") {
-      zipCode = place.addressComponents[i]["longText"];
-    }
-    if (addressType == "postal_code_suffix") {
-      plusFour = place.addressComponents[i]["longText"];
+    if (addressType == "street_number" || addressType == "country") {
+      savedValues[addressType] = place.addressComponents[i]["shortText"];
+    } else {
+      savedValues[addressType] = place.addressComponents[i]["longText"];
     }
     if (
-      componentForm[addressType] &&
-      idForPart[componentTrans[addressType]] &&
-      typeof idForPart[componentTrans[addressType]] != "undefined" &&
-      document.getElementById(idForPart[componentTrans[addressType]]) != null
+      componentTrans[addressType] &&
+      idForPart[componentTrans[addressType][0]] &&
+      typeof idForPart[componentTrans[addressType][0]] != "undefined" &&
+      document.getElementById(idForPart[componentTrans[addressType][0]]) != null
     ) {
-      var val = place.addressComponents[i][componentForm[addressType]];
+      var val = place.addressComponents[i][componentTrans[addressType][1]];
       if (typeof val != "undefined") {
-        document.getElementById(idForPart[componentTrans[addressType]]).value =
-          val;
-        toChange.push("#" + idForPart[componentTrans[addressType]]);
+        document.getElementById(
+          idForPart[componentTrans[addressType][0]],
+        ).value = val;
+        toChange.push("#" + idForPart[componentTrans[addressType][0]]);
       }
-      if (componentTrans[addressType] != addressType) {
-        val = place.addressComponents[i]["longText"];
-        if (
-          typeof val != "undefined" &&
-          typeof idForPart[addressType] != "undefined" &&
-          document.getElementById(idForPart[addressType]) != null
-        ) {
-          document.getElementById(idForPart[addressType]).value = val;
-          toChange.push("#" + idForPart[addressType]);
-        }
-      }
-    } else if (
+    }
+    if (
       idForPart[addressType] &&
       typeof idForPart[addressType] != "undefined" &&
       document.getElementById(idForPart[addressType]) != null
     ) {
-      var val = place.addressComponents[i]["longText"];
+      var val = savedValues[addressType];
       if (typeof val != "undefined") {
         document.getElementById(idForPart[addressType]).value = val;
         toChange.push("#" + idForPart[addressType]);
@@ -482,211 +518,101 @@ function daFillInAddress(origId, place) {
     document.getElementById(idForPart["address"]) != null
   ) {
     var the_address = "";
-    if (typeof street_number != "undefined") {
-      the_address += street_number + " ";
+    if (typeof savedValues["street_number"] != "undefined") {
+      the_address += savedValues["street_number"] + " ";
     }
-    if (typeof route != "undefined") {
-      the_address += route;
+    if (typeof savedValues["route"] != "undefined") {
+      the_address += savedValues["route"];
     }
     document.getElementById(idForPart["address"]).value = the_address;
     toChange.push("#" + idForPart["address"]);
   }
   if (
-    typeof idForPart["city"] != "undefined" &&
-    document.getElementById(idForPart["city"]) != null
-  ) {
-    if (
-      document.getElementById(idForPart["city"]).value == "" &&
-      typeof savedValues["sublocality_level_1"] != "undefined"
-    ) {
-      document.getElementById(idForPart["city"]).value =
-        savedValues["sublocality_level_1"];
-    }
-    if (
-      document.getElementById(idForPart["city"]).value == "" &&
-      typeof savedValues["neighborhood"] != "undefined"
-    ) {
-      document.getElementById(idForPart["city"]).value =
-        savedValues["neighborhood"];
-    }
-    if (
-      document.getElementById(idForPart["city"]).value == "" &&
-      typeof savedValues["administrative_area_level_3"] != "undefined"
-    ) {
-      document.getElementById(idForPart["city"]).value =
-        savedValues["administrative_area_level_3"];
-    }
-  }
-  if (
-    typeof idForPart["sublocality"] != "undefined" &&
-    document.getElementById(idForPart["sublocality"]) != null
-  ) {
-    if (
-      document.getElementById(idForPart["sublocality"]).value == "" &&
-      typeof savedValues["sublocality_level_1"] != "undefined"
-    ) {
-      document.getElementById(idForPart["sublocality"]).value =
-        savedValues["sublocality_level_1"];
-    }
-    if (
-      document.getElementById(idForPart["sublocality"]).value == "" &&
-      typeof savedValues["sublocality_level_2"] != "undefined"
-    ) {
-      document.getElementById(idForPart["sublocality"]).value =
-        savedValues["sublocality_level_2"];
-    }
-    if (
-      document.getElementById(idForPart["sublocality"]).value == "" &&
-      typeof savedValues["sublocality_level_3"] != "undefined"
-    ) {
-      document.getElementById(idForPart["sublocality"]).value =
-        savedValues["sublocality_level_3"];
-    }
-    if (
-      document.getElementById(idForPart["sublocality"]).value == "" &&
-      typeof savedValues["sublocality_level_4"] != "undefined"
-    ) {
-      document.getElementById(idForPart["sublocality"]).value =
-        savedValues["sublocality_level_4"];
-    }
-    if (
-      document.getElementById(idForPart["sublocality"]).value == "" &&
-      typeof savedValues["sublocality_level_5"] != "undefined"
-    ) {
-      document.getElementById(idForPart["sublocality"]).value =
-        savedValues["sublocality_level_5"];
-    }
-  }
-  if (
-    place.adr_address &&
-    typeof idForPart["adr_address"] != "undefined" &&
-    document.getElementById(idForPart["adr_address"]) != null
-  ) {
-    document.getElementById(idForPart["adr_address"]).value = place.adr_address;
-  }
-  if (
-    place.business_status &&
-    typeof idForPart["business_status"] != "undefined" &&
-    document.getElementById(idForPart["business_status"]) != null
-  ) {
-    document.getElementById(idForPart["business_status"]).value =
-      place.business_status;
-  }
-  if (
-    place.formatted_address &&
-    typeof idForPart["formatted_address"] != "undefined" &&
-    document.getElementById(idForPart["formatted_address"]) != null
-  ) {
-    document.getElementById(idForPart["formatted_address"]).value =
-      place.formatted_address;
-  }
-  if (
-    place.formatted_phone_number &&
-    typeof idForPart["formatted_phone_number"] != "undefined" &&
-    document.getElementById(idForPart["formatted_phone_number"]) != null
-  ) {
-    document.getElementById(idForPart["formatted_phone_number"]).value =
-      place.formatted_phone_number;
-  }
-  if (
     typeof idForPart["zip"] != "undefined" &&
     document.getElementById(idForPart["zip"]) != null &&
-    zipCode != ""
+    typeof savedValues["postal_code"] != "undefined" &&
+    savedValues["postal_code"] != ""
   ) {
-    var theZipCode = zipCode;
-    if (plusFour) {
-      theZipCode += "-" + plusFour;
+    var theZipCode = savedValues["postal_code"];
+    if (
+      typeof savedValues["postal_code_suffix"] != "undefined" &&
+      savedValues["postal_code_suffix"] != ""
+    ) {
+      theZipCode += "-" + savedValues["postal_code_suffix"];
     }
     document.getElementById(idForPart["zip"]).value = theZipCode;
     toChange.push("#" + idForPart["zip"]);
   }
-  if (place.geometry && place.geometry.location) {
+  if (place.location) {
     if (
       typeof idForPart["latitude"] != "undefined" &&
       document.getElementById(idForPart["latitude"]) != null
     ) {
       document.getElementById(idForPart["latitude"]).value =
-        place.geometry.location.lat();
+        place.location.lat();
+      toChange.push("#" + idForPart["latitude"]);
     }
     if (
       typeof idForPart["longitude"] != "undefined" &&
       document.getElementById(idForPart["longitude"]) != null
     ) {
       document.getElementById(idForPart["longitude"]).value =
-        place.geometry.location.lng();
+        place.location.lng();
+      toChange.push("#" + idForPart["longitude"]);
     }
   }
-  if (
-    place.icon &&
-    typeof idForPart["icon"] != "undefined" &&
-    document.getElementById(idForPart["icon"]) != null
-  ) {
-    document.getElementById(idForPart["icon"]).value = place.icon;
+  for (var i = 0; i < alternatives.length; i++) {
+    const [fieldName, altList] = alternatives[i];
+    if (
+      typeof idForPart[fieldName] != "undefined" &&
+      document.getElementById(idForPart[fieldName]) != null &&
+      document.getElementById(idForPart[fieldName]).value == ""
+    ) {
+    }
+    for (var j = 0; j < altList.length; j++) {
+      if (typeof savedValues[altList[j]] != "undefined") {
+        document.getElementById(idForPart[fieldName]).value =
+          savedValues[altList[j]];
+        toChange.push("#" + idForPart[fieldName]);
+        break;
+      }
+    }
   }
-  if (
-    place.international_phone_number &&
-    typeof idForPart["international_phone_number"] != "undefined" &&
-    document.getElementById(idForPart["international_phone_number"]) != null
-  ) {
-    document.getElementById(idForPart["international_phone_number"]).value =
-      place.international_phone_number;
-  }
-  if (
-    place.name &&
-    typeof idForPart["name"] != "undefined" &&
-    document.getElementById(idForPart["name"]) != null
-  ) {
-    document.getElementById(idForPart["name"]).value = place.name;
-  }
-  if (
-    place.place_id &&
-    typeof idForPart["place_id"] != "undefined" &&
-    document.getElementById(idForPart["place_id"]) != null
-  ) {
-    document.getElementById(idForPart["place_id"]).value = place.place_id;
-  }
-  if (
-    place.price_level &&
-    typeof idForPart["price_level"] != "undefined" &&
-    document.getElementById(idForPart["price_level"]) != null
-  ) {
-    document.getElementById(idForPart["price_level"]).value = place.price_level;
-  }
-  if (
-    place.rating &&
-    typeof idForPart["rating"] != "undefined" &&
-    document.getElementById(idForPart["rating"]) != null
-  ) {
-    document.getElementById(idForPart["rating"]).value = place.rating;
-  }
-  if (
-    place.url &&
-    typeof idForPart["url"] != "undefined" &&
-    document.getElementById(idForPart["url"]) != null
-  ) {
-    document.getElementById(idForPart["url"]).value = place.url;
-  }
-  if (
-    place.utc_offset_minutes &&
-    typeof idForPart["utc_offset_minutes"] != "undefined" &&
-    document.getElementById(idForPart["utc_offset_minutes"]) != null
-  ) {
-    document.getElementById(idForPart["utc_offset_minutes"]).value =
-      place.utc_offset_minutes;
-  }
-  if (
-    place.vicinity &&
-    typeof idForPart["vicinity"] != "undefined" &&
-    document.getElementById(idForPart["vicinity"]) != null
-  ) {
-    document.getElementById(idForPart["vicinity"]).value = place.vicinity;
-  }
-  if (
-    place.website &&
-    typeof idForPart["website"] != "undefined" &&
-    document.getElementById(idForPart["website"]) != null
-  ) {
-    document.getElementById(idForPart["website"]).value = place.website;
+  var fieldsToGet = daAutocomplete[origId].opts.fields || [];
+  for (var i = 0; i < fieldsToGet.length; i++) {
+    var pythonVar = fieldsToGet[i];
+    if (pythonVar == "address_components" || pythonVar == "location") {
+      continue;
+    }
+    var jsVar = underscoreToCamel(pythonVar);
+    if (
+      place[jsVar] != null &&
+      typeof place[jsVar] === "object" &&
+      !Array.isArray(place[jsVar])
+    ) {
+      var transformedObject = JSON.parse(JSON.stringify(place[jsVar]));
+      Object.entries(transformedObject).forEach(([jsSubVar, value]) => {
+        var pythonSubVar = camelToUnderscore(jsSubVar);
+        if (
+          value != null &&
+          typeof idForPart[pythonSubVar] != "undefined" &&
+          document.getElementById(idForPart[pythonSubVar]) != null
+        ) {
+          document.getElementById(idForPart[pythonSubVar]).value =
+            jsonIfObject(value);
+          toChange.push("#" + idForPart[pythonSubVar]);
+        }
+      });
+    } else if (
+      place[jsVar] &&
+      typeof idForPart[pythonVar] != "undefined" &&
+      document.getElementById(idForPart[pythonVar]) != null
+    ) {
+      document.getElementById(idForPart[pythonVar]).value = jsonIfObject(
+        place[jsVar],
+      );
+      toChange.push("#" + idForPart[pythonVar]);
+    }
   }
   for (var i = 0; i < toChange.length; i++) {
     $(toChange[i]).trigger("change");
@@ -4167,6 +4093,33 @@ function daFetchAjax(elem, cb, doShow) {
     },
   );
 }
+
+function jsonIfObject(value) {
+  if (typeof value === "object" || typeof value === "boolean") {
+    return JSON.stringify(value);
+  }
+  return value;
+}
+
+function underscoreToCamel(str) {
+  return str
+    .split("_")
+    .map((word, index) => {
+      if (index === 0) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join("")
+    .replace(/Uri$/, "URI");
+}
+
+function camelToUnderscore(camelStr) {
+  return camelStr
+    .replace(/URI$/, "Uri")
+    .replace(/([A-Z])/g, "_$1")
+    .toLowerCase()
+    .replace(/^_/, "");
+}
+
 function daInitialize(doScroll) {
   if (!daObserverMode) {
     daResetCheckinCode();
@@ -4769,8 +4722,11 @@ function daInitialize(doScroll) {
       let place =
         daAutocomplete[thisId].suggestions[theVal].placePrediction.toPlace();
       await place.fetchFields({
-        fields: daAutocomplete[thisId].opts.fields || ["addressComponents"],
+        fields: (
+          daAutocomplete[thisId].opts.fields || ["addressComponents"]
+        ).map(underscoreToCamel),
       });
+      // console.log(place);
       daFillInAddress(thisId, place);
     });
     elem.on("keyup", async (e) => {
