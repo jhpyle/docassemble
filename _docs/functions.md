@@ -5489,6 +5489,11 @@ parameters:
    saved, they will overwrite the previous interview answers instead
    of creating a new step in the session. The default behavior is to
    create a new step in the session.
+* `read_only`: if set to `True`, then the interview answers will not
+   be saved after the action completes, and the operation of the
+   action will not prevent concurrent processes from accessing the
+   interview answers. If `read_only` is true, then `overwrite` has no
+   effect.
 
 Here is an example interview that uses `run_action_in_session()`,
 among other functions for manipulating other sessions.
@@ -8509,7 +8514,8 @@ when the server responds to the request. In combination with
 [`json_response()`], this can allow you to write [JavaScript] code
 that interacts with "APIs" within your interview.
 
-The [JavaScript] function takes three arguments:
+The [JavaScript] function takes three required and two optional
+arguments:
 
 1. The [action] to take. This corresponds with the name of an
    [`event`] in your interview.
@@ -8520,7 +8526,15 @@ The [JavaScript] function takes three arguments:
    This function takes a single argument (`data` in this example),
    which is the return value of `json_response()`.
 4. (optional) A boolean value representing whether the action should
-   cause any pending actions to be terminated. The default is `false`.
+   cause any pending actions to be terminated. The default is
+   `false`. The keyword name of this parameter is `forgetPrior`.
+5. (optional) A boolean value representing whether the action should
+   be processed in read-only mode. If true, then the action is
+   processed and any changes to the interview answers will not be
+   saved. In addition, while the action is processing, other
+   concurrent processes will be able to access the interview
+   answers. The default is `false`. The keyword name of this parameter
+   is `readOnly`.
 
 {% include side-by-side.html demo="js_action_call" %}
 

@@ -2177,6 +2177,10 @@ Data:
    answers are saved, they will overwrite the previous interview
    answers instead of creating a new step in the session.  The default
    behavior is to create a new step in the session.
+ - `read_only`: if set to `1`, then the interview answers will not be
+   saved after the action completes, and the operation of the action
+   will not prevent concurrent processes from accessing the interview
+   answers. If `read_only` is `1`, then `overwrite` has no effect.
 
 Responses on failure:
 
