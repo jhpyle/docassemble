@@ -65,6 +65,69 @@ Feature: Example interviews
     Then I should see the phrase "Here is your document."
     And I should see the phrase "The following document has been created for you."
 
+  Scenario: Test the interview "Assemble a document in the background"
+    Given I start the interview "docassemble.base:data/questions/examples/assemble-in-background.yml"
+    Then I should see the phrase "What is the name of your sweetheart?"
+    And I set "Name" to "Olíve Oil"
+    And I click the button "Continue"
+    Then I should see the phrase "Please wait"
+    And I wait 12 seconds
+    Then I should see the phrase "Document created"
+    And I should see the phrase "The following document has been created for you."
+    And I click the link "Preview"
+    Then I should see the phrase "Olíve Oil, will you marry me?"
+
+  Scenario: Test the interview "Background error callback" with error
+    Given I start the interview "docassemble.base:data/questions/examples/background-error-action-demo.yml"
+    Then I should see the phrase "Give me some numbers."
+    And I set "Numerator" to "4"
+    And I set "Denominator" to "0"
+    And I click the button "Continue"
+    Then I should see the phrase "Waiting for result"
+    And I wait 12 seconds
+    Then I should see the phrase "There was an error."
+
+  Scenario: Test the interview "Background error callback" without error
+    Given I start the interview "docassemble.base:data/questions/examples/background-error-action-demo.yml"
+    Then I should see the phrase "Give me some numbers."
+    And I set "Numerator" to "8"
+    And I set "Denominator" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Waiting for result"
+    And I wait 12 seconds
+    Then I should see the phrase "The result was 4.0."
+
+  Scenario: Test the interview "Background error callback"
+    Given I start the interview "docassemble.base:data/questions/examples/background-error-action.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Hang tight. Still waiting for an answer."
+    And I wait 20 seconds
+    Then I should see the phrase "The saved error message was Failure at the calculation stage due to a ZeroDivisionError error."
+    Then I should see the phrase "The value was handled_error."
+    Then I should see the phrase "The error was ZeroDivisionError."
+
+  Scenario: Test the interview "Return a value and populate fields"
+    Given I start the interview "docassemble.base:data/questions/examples/background_action_fields.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Your answer will appear shortly."
+    Then I should see the phrase "Wait for it!"
+    And I wait 12 seconds
+    And I click the button "Continue"
+    Then I should see the phrase "{‘the_number’: 555}"
+
+  Scenario: Test the interview "Return a value" 2
+    Given I start the interview "docassemble.base:data/questions/examples/background_action_test_timing.yml"
+    Then I should see the phrase "How much shall I add to 553?"
+    And I set "Number" to "2"
+    And I click the button "Continue"
+    Then I should see the phrase "Hang tight. Still waiting for an answer."
+    And I wait 12 seconds
+    Then I should see the phrase "The answer is 555."
+
   Scenario: Test the interview "Action with arguments"
     Given I start the interview "docassemble.base:data/questions/examples/actions-parameters.yml"
     And I click the link "Add blue fish"
@@ -4991,69 +5054,6 @@ Feature: Example interviews
     And I wait 4 seconds
     And I click the button "Continue"
     Then I should see the phrase "The correct answer is 20.0."
-
-  Scenario: Test the interview "Assemble a document in the background"
-    Given I start the interview "docassemble.base:data/questions/examples/assemble-in-background.yml"
-    Then I should see the phrase "What is the name of your sweetheart?"
-    And I set "Name" to "Olíve Oil"
-    And I click the button "Continue"
-    Then I should see the phrase "Please wait"
-    And I wait 12 seconds
-    Then I should see the phrase "Document created"
-    And I should see the phrase "The following document has been created for you."
-    And I click the link "Preview"
-    Then I should see the phrase "Olíve Oil, will you marry me?"
-
-  Scenario: Test the interview "Background error callback" with error
-    Given I start the interview "docassemble.base:data/questions/examples/background-error-action-demo.yml"
-    Then I should see the phrase "Give me some numbers."
-    And I set "Numerator" to "4"
-    And I set "Denominator" to "0"
-    And I click the button "Continue"
-    Then I should see the phrase "Waiting for result"
-    And I wait 12 seconds
-    Then I should see the phrase "There was an error."
-
-  Scenario: Test the interview "Background error callback" without error
-    Given I start the interview "docassemble.base:data/questions/examples/background-error-action-demo.yml"
-    Then I should see the phrase "Give me some numbers."
-    And I set "Numerator" to "8"
-    And I set "Denominator" to "2"
-    And I click the button "Continue"
-    Then I should see the phrase "Waiting for result"
-    And I wait 12 seconds
-    Then I should see the phrase "The result was 4.0."
-
-  Scenario: Test the interview "Background error callback"
-    Given I start the interview "docassemble.base:data/questions/examples/background-error-action.yml"
-    Then I should see the phrase "How much shall I add to 553?"
-    And I set "Number" to "2"
-    And I click the button "Continue"
-    Then I should see the phrase "Hang tight. Still waiting for an answer."
-    And I wait 20 seconds
-    Then I should see the phrase "The saved error message was Failure at the calculation stage due to a ZeroDivisionError error."
-    Then I should see the phrase "The value was handled_error."
-    Then I should see the phrase "The error was ZeroDivisionError."
-
-  Scenario: Test the interview "Return a value and populate fields"
-    Given I start the interview "docassemble.base:data/questions/examples/background_action_fields.yml"
-    Then I should see the phrase "How much shall I add to 553?"
-    And I set "Number" to "2"
-    And I click the button "Continue"
-    Then I should see the phrase "Your answer will appear shortly."
-    Then I should see the phrase "Wait for it!"
-    And I wait 12 seconds
-    And I click the button "Continue"
-    Then I should see the phrase "{‘the_number’: 555}"
-
-  Scenario: Test the interview "Return a value" 2
-    Given I start the interview "docassemble.base:data/questions/examples/background_action_test_timing.yml"
-    Then I should see the phrase "How much shall I add to 553?"
-    And I set "Number" to "2"
-    And I click the button "Continue"
-    Then I should see the phrase "Hang tight. Still waiting for an answer."
-    And I wait 12 seconds
-    Then I should see the phrase "The answer is 555."
 
   Scenario: Test the interview "Object" 2
     Given I start the possibly error-producing interview "docassemble.base:data/questions/examples/branch-error.yml"

@@ -26,6 +26,7 @@ import docassemble.base.interview_cache
 import docassemble.base.parse
 import docassemble.base.util
 import docassemble.base.functions
+from docassemble.base.functions import SS_NEW, SS_OVERWRITE, SS_IGNORE
 from docassemble.base.logger import logmessage
 
 set_request_active(False)
@@ -233,11 +234,12 @@ def run_cron(the_cron_type):
                                     interview_status = docassemble.base.parse.InterviewStatus(current_info=ci)
                                     obtain_lock_patiently(key, the_filename)
                                     interview.assemble(the_dict, interview_status)
-                                    save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
+                                    save_status = docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW)
                                     if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
                                         reset_user_dict(key, the_filename, force=True)
                                     if interview_status.question.question_type in ["restart", "exit", "logout", "exit_logout", "new_session"]:
-                                        release_lock(key, the_filename)
+                                        if save_status != SS_IGNORE:
+                                            release_lock(key, the_filename)
                                         interview_status.do_sleep()
                                     elif interview_status.question.question_type == "backgroundresponseaction":
                                         new_action = interview_status.question.action
@@ -246,18 +248,19 @@ def run_cron(the_cron_type):
                                             interview.assemble(the_dict, interview_status)
                                         except:
                                             pass
-                                        save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
-                                        if save_status != 'ignore':
+                                        save_status = docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW)
+                                        if save_status != SS_IGNORE:
                                             save_user_dict(key, the_dict, the_filename, encrypt=False, manual_user_id=cron_user_id, steps=steps, max_indexno=indexno)
-                                        release_lock(key, the_filename)
+                                            release_lock(key, the_filename)
                                         interview_status.do_sleep()
                                     elif interview_status.question.question_type == "response" and interview_status.questionText == 'null':
-                                        release_lock(key, the_filename)
+                                        if save_status != SS_IGNORE:
+                                            release_lock(key, the_filename)
                                         interview_status.do_sleep()
                                     else:
-                                        if save_status != 'ignore':
+                                        if save_status != SS_IGNORE:
                                             save_user_dict(key, the_dict, the_filename, encrypt=False, manual_user_id=cron_user_id, steps=steps, max_indexno=indexno)
-                                        release_lock(key, the_filename)
+                                            release_lock(key, the_filename)
                                         interview_status.do_sleep()
                                         if interview_status.question.question_type == "response":
                                             if hasattr(interview_status.question, 'all_variables'):
@@ -273,7 +276,8 @@ def run_cron(the_cron_type):
                                                     except:
                                                         sys.stdout.write("Unable to write output to standard error\n")
                                 except BaseException as err:
-                                    release_lock(key, the_filename)
+                                    if save_status != SS_IGNORE:
+                                        release_lock(key, the_filename)
                                     logmessage("Cron error: " + str(key) + " " + str(the_filename) + " " + str(err.__class__.__name__) + ": " + str(err))
                                     if hasattr(err, 'traceback'):
                                         error_trace = str(err.traceback)

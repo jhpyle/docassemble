@@ -54,6 +54,7 @@ from docassemble.webapp.api_key import encrypt_api_key
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError, DAInvalidFilename, DASourceError
 import docassemble.base.functions
 from docassemble.base.functions import get_default_timezone, ReturnValue, word
+from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
 import docassemble.base.DA
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.base.interview_cache
@@ -479,7 +480,7 @@ ok_extensions = {
 }
 
 
-def nginx_send_file(path, mimetype=None, as_attachment=False, download_name=None):
+def nginx_send_file(path, mimetype=None, as_attachment=False, download_name=None, max_age=None):
     headers = Headers()
     f_stat = os.stat(path)
     size = f_stat.st_size
@@ -524,7 +525,8 @@ def nginx_send_file(path, mimetype=None, as_attachment=False, download_name=None
     if mtime is not None:
         rv.last_modified = mtime
     rv.cache_control.no_cache = True
-    max_age = app.get_send_file_max_age(path)
+    if max_age is None:
+        max_age = app.get_send_file_max_age(path)
     if max_age is not None:
         if max_age > 0:
             rv.cache_control.no_cache = None
@@ -6377,10 +6379,14 @@ def checkin():
         if do_action is not None:
             parameters = {}
             form_parameters = request.form.get('parameters', None)
+            read_only = true_or_false(request.form.get('read_only', False))
             if form_parameters is not None:
                 parameters = json.loads(form_parameters)
             # logmessage("Action was " + str(do_action) + " and parameters were " + repr(parameters))
-            obtain_lock(session_id, yaml_filename)
+            if read_only:
+                docassemble.base.functions.this_thread.misc['save_status'] = SS_IGNORE
+            else:
+                obtain_lock(session_id, yaml_filename)
             # logmessage("checkin: fetch_user_dict2")
             steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
             the_current_info['encrypted'] = is_encrypted
@@ -6405,8 +6411,10 @@ def checkin():
                     commands.append({'action': do_action, 'value': docassemble.base.functions.safe_json(the_response), 'extra': 'backgroundresponse'})
             elif interview_status.question.question_type == "template" and interview_status.question.target is not None:
                 commands.append({'action': do_action, 'value': {'target': interview_status.question.target, 'content': docassemble.base.util.markdown_to_html(interview_status.questionText, trim=True)}, 'extra': 'backgroundresponse'})
-            save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
-            release_lock(session_id, yaml_filename)
+            save_status = docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW)
+            if save_status != SS_IGNORE:
+                save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
+                release_lock(session_id, yaml_filename)
         peer_ok = False
         help_ok = False
         num_peers = 0
@@ -7030,8 +7038,12 @@ def index(action_argument=None, refer=None):
             return redirect(url_for('interview_start'))
         yaml_filename = final_default_yaml_filename
     action = None
+    use_lock = True
     if '_action' in request.form and 'in error' not in session:
         action = tidy_action(json64unquote(request.form['_action']))
+        if true_or_false(request.form.get('_readonly', False)):
+            use_lock = False
+            docassemble.base.functions.this_thread.misc['save_status'] = SS_IGNORE
         no_defs = True
     elif 'action' in request.args and 'in error' not in session:
         action = tidy_action(json64unquote(request.args['action']))
@@ -7185,7 +7197,8 @@ def index(action_argument=None, refer=None):
             need_to_reset = True
     user_code = session_info['uid']
     encrypted = session_info['encrypted']
-    obtain_lock(user_code, yaml_filename)
+    if use_lock:
+        obtain_lock(user_code, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(user_code, yaml_filename, secret=secret)
     except BaseException as the_err:
@@ -7193,7 +7206,8 @@ def index(action_argument=None, refer=None):
             logmessage("index: there was an exception " + str(the_err.__class__.__name__) + ": " + str(the_err) + " after fetch_user_dict with %s and %s, so we need to reset" % (user_code, yaml_filename))
         except:
             logmessage("index: there was an exception " + str(the_err.__class__.__name__) + " after fetch_user_dict with %s and %s, so we need to reset" % (user_code, yaml_filename))
-        release_lock(user_code, yaml_filename)
+        if use_lock:
+            release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch failed")
         clear_session(yaml_filename)
         if session_parameter is not None:
@@ -7209,7 +7223,8 @@ def index(action_argument=None, refer=None):
         return response
     if user_dict is None:
         logmessage("index: no user_dict found after fetch_user_dict with %s and %s, so we need to reset" % (user_code, yaml_filename))
-        release_lock(user_code, yaml_filename)
+        if use_lock:
+            release_lock(user_code, yaml_filename)
         logmessage("index: dictionary fetch returned no results")
         clear_session(yaml_filename)
         redirect_url = daconfig.get('session error redirect url', None)
@@ -7623,7 +7638,7 @@ def index(action_argument=None, refer=None):
         the_question = None
     key_to_orig_key = {}
     for orig_key in copy.deepcopy(post_data):
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_readonly', '_order_changes', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
             continue
         try:
             key = myb64unquote(orig_key)
@@ -7666,7 +7681,7 @@ def index(action_argument=None, refer=None):
     imported_core = False
     special_question = None
     for orig_key in post_data:
-        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
+        if orig_key in ('_checkboxes', '_empties', '_ml_info', '_back_one', '_files', '_files_inline', '_question_name', '_the_image', '_save_as', '_success', '_datatypes', '_event', '_visible', '_tracker', '_track_location', '_varnames', '_next_action', '_next_action_to_set', 'ajax', 'json', 'informed', 'csrf_token', '_action', '_readonly', '_order_changes', '', '_collect', '_collect_delete', '_list_collect_list', '_null_question') or orig_key.startswith('_ignore'):
             continue
         raw_data = post_data[orig_key]
         try:
@@ -8692,7 +8707,7 @@ def index(action_argument=None, refer=None):
     if not interview_status.can_go_back:
         user_dict['_internal']['steps_offset'] = steps
     if was_new:
-        docassemble.base.functions.this_thread.misc['save_status'] = 'overwrite'
+        docassemble.base.functions.this_thread.misc['save_status'] = SS_OVERWRITE
     if not changed and url_args_changed:
         changed = True
         validated = True
@@ -8721,7 +8736,8 @@ def index(action_argument=None, refer=None):
         the_current_info = current_info(yaml=yaml_filename, req=request, interface=the_interface, session_info=session_info, secret=secret, device_id=device_id)
         docassemble.base.functions.this_thread.current_info = the_current_info
         interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
-        release_lock(user_code, yaml_filename)
+        if docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW) != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         user_code, user_dict = reset_session(yaml_filename, secret)
         user_dict['url_args'] = url_args
         user_dict['_internal']['referer'] = referer
@@ -8732,7 +8748,7 @@ def index(action_argument=None, refer=None):
         changed = False
         interview.assemble(user_dict, interview_status)
     title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
-    save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
+    save_status = docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW)
     if interview_status.question.question_type == "interview_exit":
         exit_link = title_info.get('exit link', 'leave')
         if exit_link in ('exit', 'leave', 'logout', 'exit_logout'):
@@ -8741,7 +8757,8 @@ def index(action_argument=None, refer=None):
         manual_checkout(manual_filename=yaml_filename)
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview(i=yaml_filename)
-        release_lock(user_code, yaml_filename)
+        if save_status != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         session["_flashes"] = []
         logmessage("Redirecting because of an exit.")
         if interview_status.questionText != '':
@@ -8757,7 +8774,8 @@ def index(action_argument=None, refer=None):
         manual_checkout(manual_filename=yaml_filename)
         if interview_status.question.question_type == "exit_logout":
             reset_user_dict(user_code, yaml_filename)
-        release_lock(user_code, yaml_filename)
+        if save_status != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         delete_session_info()
         logmessage("Redirecting because of a logout.")
         if interview_status.questionText != '':
@@ -8777,7 +8795,8 @@ def index(action_argument=None, refer=None):
             fake_up(response, current_language)
         return response
     if interview_status.question.question_type == "refresh":
-        release_lock(user_code, yaml_filename)
+        if save_status != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         response = do_refresh(is_ajax, yaml_filename)
         if return_fake_html:
             fake_up(response, current_language)
@@ -8785,7 +8804,8 @@ def index(action_argument=None, refer=None):
             response_wrapper(response)
         return response
     if interview_status.question.question_type == "signin":
-        release_lock(user_code, yaml_filename)
+        if save_status != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         logmessage("Redirecting because of a signin.")
         response = do_redirect(url_for('user.login', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
@@ -8794,7 +8814,8 @@ def index(action_argument=None, refer=None):
             response_wrapper(response)
         return response
     if interview_status.question.question_type == "register":
-        release_lock(user_code, yaml_filename)
+        if save_status != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         logmessage("Redirecting because of a register.")
         response = do_redirect(url_for('user.register', next=url_for('index', i=yaml_filename, session=user_code)), is_ajax, is_json, js_target)
         if return_fake_html:
@@ -8803,7 +8824,8 @@ def index(action_argument=None, refer=None):
             response_wrapper(response)
         return response
     if interview_status.question.question_type == "leave":
-        release_lock(user_code, yaml_filename)
+        if save_status != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         session["_flashes"] = []
         logmessage("Redirecting because of a leave.")
         if interview_status.questionText != '':
@@ -8824,7 +8846,8 @@ def index(action_argument=None, refer=None):
         user_dict['nav'].set_section(docassemble.base.functions.this_thread.current_section)
     if interview_status.question.question_type == "response":
         if is_ajax:
-            release_lock(user_code, yaml_filename)
+            if save_status != SS_IGNORE:
+                release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
                 fake_up(response, current_language)
@@ -8848,7 +8871,8 @@ def index(action_argument=None, refer=None):
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
-            release_lock(user_code, yaml_filename)
+            if save_status != SS_IGNORE:
+                release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
             if return_fake_html:
                 fake_up(response, current_language)
@@ -8876,23 +8900,23 @@ def index(action_argument=None, refer=None):
     if not validated:
         changed = False
     if changed and validated:
-        if save_status == 'new':
+        if save_status == SS_NEW:
             steps += 1
             user_dict['_internal']['steps'] = steps
     if action and not changed:
         changed = True
-        if save_status == 'new':
+        if save_status == SS_NEW:
             steps += 1
             user_dict['_internal']['steps'] = steps
-    if changed and interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
+    if changed and interview.use_progress_bar and interview_status.question.progress is None and save_status == SS_NEW:
         advance_progress(user_dict, interview)
     title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     # Stash the values of the special_vars now, which is after
     # .assemble() has been called and before save_user_dict is called,
     # which would delete the values.
     interview_status.special_vars = {var_name: user_dict[var_name] for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n') if var_name in user_dict}
-    if save_status != 'ignore':
-        if save_status == 'overwrite':
+    if save_status != SS_IGNORE:
+        if save_status == SS_OVERWRITE:
             changed = False
         save_user_dict(user_code, user_dict, yaml_filename, secret=secret, changed=changed, encrypt=encrypted, steps=steps)
         if user_dict.get('multi_user', False) is True and encrypted is True:
@@ -8904,7 +8928,8 @@ def index(action_argument=None, refer=None):
             encrypted = True
             update_session(yaml_filename, encrypted=encrypted)
     if response_to_send is not None:
-        release_lock(user_code, yaml_filename)
+        if save_status != SS_IGNORE:
+            release_lock(user_code, yaml_filename)
         if return_fake_html:
             fake_up(response_to_send, current_language)
         if response_wrapper:
@@ -9502,7 +9527,8 @@ def index(action_argument=None, refer=None):
         response = make_response(output.encode('utf-8'), '200 OK')
         response.headers['Content-type'] = 'text/html; charset=utf-8'
         response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    release_lock(user_code, yaml_filename)
+    if save_status != SS_IGNORE:
+        release_lock(user_code, yaml_filename)
     if 'in error' in session:
         del session['in error']
     if response_wrapper:
@@ -15680,10 +15706,11 @@ def server_error(the_error):
     <script{DEFER}>Object.assign(window, {json.dumps(initial_values)});</script>"""
     error_notification(the_error, message=errmess, history=the_history, trace=the_trace, the_request=request, the_vars=the_vars)
     if (request.path.endswith('/interview') or request.path.endswith('/start') or request.path.endswith('/run')) and docassemble.base.functions.interview_path() is not None:
-        try:
-            release_lock(docassemble.base.functions.this_thread.current_info['session'], docassemble.base.functions.this_thread.current_info['yaml_filename'])
-        except:
-            pass
+        if docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW) != SS_IGNORE:
+            try:
+                release_lock(docassemble.base.functions.this_thread.current_info['session'], docassemble.base.functions.this_thread.current_info['yaml_filename'])
+            except:
+                pass
         if 'in error' not in session and docassemble.base.functions.this_thread.interview is not None and 'error action' in docassemble.base.functions.this_thread.interview.consolidated_metadata:
             session['in error'] = True
             return index(action_argument={'action': docassemble.base.functions.this_thread.interview.consolidated_metadata['error action'], 'arguments': {'error_message': orig_errmess, 'error_history': the_history, 'error_trace': the_trace}}, refer=['error'])
@@ -20667,7 +20694,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
         raise DAException("get_question_data: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e))
-    save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
+    save_status = docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW)
     restore_session(sbackup)
     docassemble.base.functions.restore_thread_variables(tbackup)
     try:
@@ -20679,7 +20706,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
         the_section_display = None
         the_sections = []
     if advance_progress_meter:
-        if interview.use_progress_bar and interview_status.question.progress is None and save_status == 'new':
+        if interview.use_progress_bar and interview_status.question.progress is None and save_status == SS_NEW:
             advance_progress(user_dict, interview)
         if interview.use_progress_bar and interview_status.question.progress is not None and (user_dict['_internal']['progress'] is None or interview.options.get('strict progress', False) or interview_status.question.progress > user_dict['_internal']['progress']):
             user_dict['_internal']['progress'] = interview_status.question.progress
@@ -20880,6 +20907,7 @@ def run_action_in_session(**kwargs):
     action = kwargs.get('action', None)
     persistent = true_or_false(kwargs.get('persistent', False))
     overwrite = true_or_false(kwargs.get('overwrite', False))
+    readonly = true_or_false(kwargs.get('read_only', False))
     if yaml_filename is None or session_id is None or action is None:
         return {"status": "error", "message": "Parameters i, session, and action are required."}
     secret = str(secret)
@@ -20910,11 +20938,16 @@ def run_action_in_session(**kwargs):
     tbackup = docassemble.base.functions.backup_thread_variables()
     sbackup = backup_session()
     docassemble.base.functions.this_thread.current_info = ci
-    obtain_lock(session_id, yaml_filename)
+    if readonly:
+        docassemble.base.functions.this_thread.misc['save_status'] = SS_IGNORE
+        overwrite = False
+    else:
+        obtain_lock(session_id, yaml_filename)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
-        release_lock(session_id, yaml_filename)
+        if docassemble.base.functions.this_thread.misc['save_status'] != SS_IGNORE:
+            release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
         return {"status": "error", "message": "Unable to obtain interview dictionary."}
@@ -20927,14 +20960,14 @@ def run_action_in_session(**kwargs):
         interview.assemble(user_dict, interview_status)
     except DAErrorMissingVariable:
         if overwrite:
-            save_status = 'overwrite'
+            save_status = SS_OVERWRITE
             changed = False
         else:
-            save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
-        if save_status == 'new':
+            save_status = docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW)
+        if save_status == SS_NEW:
             steps += 1
             user_dict['_internal']['steps'] = steps
-        if save_status != 'ignore':
+        if save_status != SS_IGNORE:
             save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=changed, steps=steps)
             if user_dict.get('multi_user', False) is True and is_encrypted is True:
                 is_encrypted = False
@@ -20942,24 +20975,25 @@ def run_action_in_session(**kwargs):
             if user_dict.get('multi_user', False) is False and is_encrypted is False:
                 encrypt_session(secret, user_code=session_id, filename=yaml_filename)
                 is_encrypted = True
-        release_lock(session_id, yaml_filename)
+            release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
         return {"status": "success"}
     except BaseException as e:
-        release_lock(session_id, yaml_filename)
+        if docassemble.base.functions.this_thread.misc['save_status'] != SS_IGNORE:
+            release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
         return {"status": "error", "message": "api_session_action: failure to assemble interview: " + e.__class__.__name__ + ": " + str(e)}
     if overwrite:
-        save_status = 'overwrite'
+        save_status = SS_OVERWRITE
         changed = False
     else:
-        save_status = docassemble.base.functions.this_thread.misc.get('save_status', 'new')
-    if save_status == 'new':
+        save_status = docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW)
+    if save_status == SS_NEW:
         steps += 1
         user_dict['_internal']['steps'] = steps
-    if save_status != 'ignore':
+    if save_status != SS_IGNORE:
         save_user_dict(session_id, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, changed=changed, steps=steps)
         if user_dict.get('multi_user', False) is True and is_encrypted is True:
             is_encrypted = False
@@ -20967,7 +21001,7 @@ def run_action_in_session(**kwargs):
         if user_dict.get('multi_user', False) is False and is_encrypted is False:
             encrypt_session(secret, user_code=session_id, filename=yaml_filename)
             is_encrypted = True
-    release_lock(session_id, yaml_filename)
+        release_lock(session_id, yaml_filename)
     if interview_status.question.question_type == "response":
         if hasattr(interview_status.question, 'all_variables'):
             if hasattr(interview_status.question, 'include_internal'):

@@ -7,6 +7,7 @@ from celery import Celery
 from celery.result import result_from_tuple
 from docassemble.base.config import daconfig
 from docassemble.base.logger import logmessage
+from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
 
 backend = daconfig.get('redis', None)
 if backend is None:
@@ -105,13 +106,13 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
         worker_controller.error_notification(e, message=error_message, trace=error_trace)
     worker_controller.functions.set_language(old_language)
     # is this right?
-    save_status = worker_controller.functions.this_thread.misc.get('save_status', 'new')
-    if save_status != 'ignore':
+    save_status = worker_controller.functions.this_thread.misc.get('save_status', SS_NEW)
+    if save_status != SS_IGNORE:
         if str(user_info.get('the_user_id', None)).startswith('t'):
             worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
         else:
             worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
-    worker_controller.release_lock(session_code, yaml_filename)
+        worker_controller.release_lock(session_code, yaml_filename)
     if hasattr(interview_status, 'question'):
         if interview_status.question.question_type == "response":
             logmessage("Time in error callback was " + str(time.time() - start_time))

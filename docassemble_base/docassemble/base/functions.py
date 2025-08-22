@@ -24,6 +24,7 @@ import us
 import pycountry
 import markdown
 import nltk
+from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
 
 try:
     if not os.path.isfile(os.path.join(nltk.data.path[0], 'corpora', 'omw-1.4.zip')):
@@ -1598,12 +1599,16 @@ def update_terms(dictionary, auto=False, language='*'):
 def set_save_status(status):
     """Indicates whether the current processing of the interview logic should result in a new step in the interview."""
     if status in ('new', 'overwrite', 'ignore'):
-        if this_thread.misc.get('save_status', 'new') == 'ignore':
+        if this_thread.misc.get('save_status', SS_NEW) == SS_IGNORE:
             if status != 'ignore':
                 logmessage("Call to set_save_status disregarded because save status was already 'ignore'")
         else:
-            this_thread.misc['save_status'] = status
+            if status == 'new':
+                this_thread.misc['save_status'] = SS_NEW
+            if status == 'overwrite':
+                this_thread.misc['save_status'] = SS_OVERWRITE
             if status == 'ignore':
+                this_thread.misc['save_status'] = SS_IGNORE
                 server.release_lock(this_thread.current_info['session'], this_thread.current_info['yaml_filename'])
 
 
@@ -5726,14 +5731,14 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, que
     server.set_session_variables(yaml_filename, session_id, variables, secret=secret, del_variables=delete, question_name=question_name, post_setting=not overwrite, process_objects=process_objects)
 
 
-def run_action_in_session(yaml_filename, session_id, action, arguments=None, secret=None, persistent=False, overwrite=False):
+def run_action_in_session(yaml_filename, session_id, action, arguments=None, secret=None, persistent=False, overwrite=False, read_only=False):
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise DAError("You cannot run an action in the current interview session")
     if arguments is None:
         arguments = {}
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
-    result = server.run_action_in_session(i=yaml_filename, session=session_id, secret=secret, action=action, persistent=persistent, overwrite=overwrite, arguments=arguments)
+    result = server.run_action_in_session(i=yaml_filename, session=session_id, secret=secret, action=action, persistent=persistent, overwrite=overwrite, read_only=read_only, arguments=arguments)
     if isinstance(result, dict):
         if result['status'] == 'success':
             return True

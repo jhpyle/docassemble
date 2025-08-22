@@ -1,10 +1,30 @@
 # Change Log
 
+## [1.8.11] - 2025-08-21
+
+### Changed
+- The `action_call` JavaScript function takes a fifth parameter
+  (`readOnly`). If set to a true value, the server processes the
+  action without saving any changes to the interview answers, and
+  without preventing other concurrent processes from accessing the
+  interview answers.
+- The `/api/session/action` takes an optional data value `read_only`,
+  which behaves similarly.
+- The `run_action_in_session()` function takes an optional keyword
+  parameter `read_only`, which behaves similarly.
+
+### Fixed
+- Issue with `use nginx to serve files` on the Logs page.
+- Issue with input validation on the License field of the Playground
+  Packages page.
+
 ## [1.8.10] - 2025-08-18
 
 ### Changed
 - When `set_save_status('ignore')` is called, the lock on the
-  interview answers will be released.
+  interview answers will be released. After
+  `set_save_status('ignore')` is called, the save status cannot be
+  changed to something else.
 
 ### Fixed
 - Issues with compatibility with Python 3.10.

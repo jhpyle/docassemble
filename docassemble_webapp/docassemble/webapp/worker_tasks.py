@@ -15,8 +15,7 @@ from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig, hostname
 from docassemble.base.error import DAError
 from docassemble.webapp.files import SavedFile
-from docassemble.webapp.worker_common import worker_controller, workerapp, process_error, error_object
-
+from docassemble.webapp.worker_common import worker_controller, workerapp, process_error, error_object, SS_NEW, SS_OVERWRITE, SS_IGNORE
 
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 
@@ -1166,13 +1165,14 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     has_error = True
                 # is this right?  Save even though there was an error on assembly?
                 worker_controller.functions.set_language(old_language)
-                save_status = worker_controller.functions.this_thread.misc.get('save_status', 'new')
-                if (not has_error) and save_status != 'ignore':
+                save_status = worker_controller.functions.this_thread.misc.get('save_status', SS_NEW)
+                if (not has_error) and save_status != SS_IGNORE:
                     if str(user_info.get('the_user_id', None)).startswith('t'):
                         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
                     else:
                         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
-                worker_controller.release_lock(session_code, yaml_filename)
+                if save_status != SS_IGNORE:
+                    worker_controller.release_lock(session_code, yaml_filename)
                 if has_error:
                     return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 if hasattr(interview_status, 'question'):

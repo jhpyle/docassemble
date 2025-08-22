@@ -35481,7 +35481,13 @@ function url_action(action, args) {
   return url;
 }
 var da_url_action = url_action;
-function action_call(action, args, callback, forgetPrior = false) {
+function action_call(
+  action,
+  args,
+  callback,
+  forgetPrior = false,
+  readOnly = false,
+) {
   if (args == null) {
     args = {};
   }
@@ -35495,22 +35501,23 @@ function action_call(action, args, callback, forgetPrior = false) {
   var data = { action: action, arguments: args };
   var url;
   if (daJsEmbed) {
-    url =
-      daPostURL + "&action=" + encodeURIComponent(utoa(JSON_stringify(data)));
+    url = daPostURL;
   } else {
-    url =
-      daInterviewUrl +
-      "&action=" +
-      encodeURIComponent(utoa(JSON_stringify(data)));
+    url = daInterviewUrl;
   }
   return $.ajax({
-    type: "GET",
+    type: "POST",
     url: url,
-    success: callback,
     beforeSend: addCsrfHeader,
     xhrFields: {
       withCredentials: true,
     },
+    data: $.param({
+      _action: utoa(JSON_stringify(data)),
+      _readonly: readOnly ? "1" : "0",
+      csrf_token: daCsrf,
+    }),
+    success: callback,
     error: function (xhr, status, error) {
       setTimeout(function () {
         daProcessAjaxError(xhr, status, error);

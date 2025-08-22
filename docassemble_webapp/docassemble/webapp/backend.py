@@ -6,8 +6,8 @@ import math
 import os
 import pickle
 import re
-import sys
-import time
+# import sys
+# import time
 import types
 import xml.etree.ElementTree as ET
 import pandas
@@ -22,7 +22,7 @@ import tzlocal
 from docassemble.base.error import DAException
 from docassemble.webapp.da_flask_mail import Message  # noqa: F401 # pylint: disable=unused-import
 from docassemble.base.functions import pickleable_objects, filename_invalid
-from docassemble.base.config import daconfig, hostname, DEBUG_BOOT, START_TIME, boot_log
+from docassemble.base.config import daconfig, hostname, DEBUG_BOOT, boot_log  # START_TIME
 from docassemble.base.generate_key import random_bytes, random_alphanumeric
 from docassemble.base.logger import logmessage
 import docassemble.base.functions
@@ -988,6 +988,7 @@ def delete_user_data(user_id, r, r_user):
 # @elapsed('reset_user_dict')
 def reset_user_dict(user_code, filename, user_id=None, temp_user_id=None, force=False):
     # logmessage("reset_user_dict called with " + str(user_code) + " and " + str(filename) + " and " + str(user_id) + " and " + str(temp_user_id) + " and " + str(force))
+    user_type = ''
     if force:
         the_user_id = None
     else:
