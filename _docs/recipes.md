@@ -2953,6 +2953,427 @@ This method has the advantage that it does not require using
 **docassemble** site, the user will not be able to resume an encrypted
 session if `multi_user` is not set to `True`.
 
+# <a name="openai"></a>Using the OpenAI API
+
+You can use generative AI as a tool in a **docassemble** interview.
+
+Here is an example that uses the [`openai`] Python package to
+communicate with the [OpenAI Platform].
+
+Prerequisites:
+
+* On the Package Management page, install the `openai` Python
+  package. (If you are developing a package, make sure that `openai` is
+  a dependency.)
+* In the [OpenAI Platform], create an account, enter a payment method,
+  and obtain an API key.
+* Put the API key into your Configuration under `openai key`.
+
+Create this module in your Playground or in your package, calling it
+`chatbot.py`:
+
+{% highlight python %}
+import openai
+from docassemble.base.util import get_config, DAObject
+
+openai.api_key = get_config('openai key')
+
+
+class Conversation(DAObject):
+
+    def init(self, *pargs, **kwargs):
+        self.conversation = []
+        super().init(*pargs, **kwargs)
+
+    def ask(self, prompt):
+        self.conversation.append({"role": "user", "content": prompt})
+        completion = openai.chat.completions.create(
+            model="gpt-5",
+            messages=self.conversation
+        )
+        response = completion.choices[0].message.content
+        self.conversation.append({"role": "assistant", "content": response})
+        return response
+{% endhighlight %}
+
+Then create an interview with the following contents, calling it
+`chatbot.yml`:
+
+{% highlight yaml %}
+modules:
+  - .chatbot
+---
+objects:
+  - name_address: Conversation
+  - user: Individual
+---
+mandatory: True
+code: |
+  bot_response = name_address.ask("""Pretend that you are a polite, helpful \
+  chatbot called Freddy and I am someone living in the United States who is \
+  asking you for help. Ask me for my name and address. You need my name and \
+  address so that you can help me. Make sure I give you both my first name \
+  and my last name. Once I give you my full name and address, your response \
+  should be solely a JSON object containing the keys first_name, last_name, \
+  street_address, city, and state. If I change the subject of conversation \
+  to something other than my name and address, or smalltalk, your response \
+  should be solely a JSON object {"error": "True"}. Start pretending \
+  immediately.""")
+---
+mandatory: True
+code: |
+  while True:
+    bot_response = name_address.ask(prompt)
+    try:
+      address = json.loads(bot_response)
+      assert isinstance(address, dict) and \
+      ('error' in address or 'first_name' in address)
+      break
+    except:
+      pass
+    del prompt
+---
+mandatory: True
+code: |
+  if not address.get("error", False):
+    user.name.first = address.get('first_name', '')
+    user.name.last = address.get('last_name', '')
+    user.address.address = address.get('street_address', '')
+    user.address.city = address.get('city', '')
+    user.address.state = address.get('state', '')
+  del address
+---
+mandatory: True
+question: |
+  Your name and address
+subquestion: |
+  % if user.name.defined():
+  ${ user.address_block() }
+  % else:
+  You failed to cooperate.
+  % endif
+---
+question: |
+  Freddy, a chatbot
+subquestion: |
+  ${ bot_response }
+fields:
+  - no label: prompt
+    datatype: area
+
+{% endhighlight %}
+
+As you can see, interfacing with the OpenAI API requires very little
+code. The `conversation` attribute of the `Conversation` object is a
+`list` such as:
+
+{% highlight python %}
+[
+  {"role": "user", "content": "What is the capital of Argentina?"},
+  {"role": "assistant", "content": "Buenos Aires, the capital of Argentina, is the country's economic and political centre."},
+  {"role": "user", "content": "What is the most popular food there? Answer in one word."}
+]
+{% endhighlight %}
+
+Each time the OpenAI API is called, the `list` with the whole
+conversation is passed to the API. Whatever the API returns is then
+appended to the list as a `dict` like `{"role": "assistant", "content": "Asado"}`.
+The OpenAI server does not remember the context of the
+conversation. Each request it receives from the **docassemble** server
+is new. ChatGPT understands the context of the conversation
+because the whole conversation is provided to the API each time.
+
+In this example, the initial instruction tells ChatGPT to respond with
+pure JSON when the conversation reaches a stopping point. The
+interview logic detects whether the response is a JSON object by
+trying to parse the response as JSON. As a safety measure, ChatGPT is
+instructed to respond with a JSON object if the user changes the
+subject of conversation.
+
+The JSON that ChatGPT returns is then used to populate variables in
+the interview answers
+
+In this manner, you can use generative AI to replace `question` blocks
+with a conversational interface, while still achieving the same end
+goal of populating the interview answers with specific pieces of
+information.
+
+The `question` that is shown during the conversation is:
+
+{% highlight yaml %}
+question: |
+  Freddy, a chatbot
+subquestion: |
+  ${ bot_response }
+fields:
+  - no label: prompt
+    datatype: area
+{% endhighlight %}
+
+This `question` defines `prompt` if `prompt` is undefined. It requires
+`bot_response` to be defined.
+
+The interview logic that causes this `question` to be shown repeatedly
+to the user is:
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  bot_response = name_address.ask(initial_prompt)
+---
+mandatory: True
+code: |
+  while True:
+    bot_response = name_address.ask(prompt)
+    try:
+      address = json.loads(bot_response)
+      assert isinstance(address, dict) and \
+      ('error' in address or 'first_name' in address)
+      break
+    except:
+      pass
+    del prompt
+{% endhighlight %}
+
+In the first block, the initial `bot_response` is obtained, which is
+some type of greeting from ChatGPT, after ChatGPT has been given
+instructions about how to behave.
+
+Once `bot_response` is defined initially in the first `code` block,
+that `code` block is not run again because it is `mandatory` and it
+has run to completion. Now the second `code` block will run every time
+the screen loads, until it runs to completion without raising an
+exception.
+
+The second `code` block is a loop; the `while True` means that the
+code inside will continue to run indefinitely. The first thing the
+code tries to do inside the loop is `bot_response =
+name_address.ask(prompt)`. However, `prompt` is undefined, so an
+undefined variable exception is raised (leaving `bot_response`
+unchanged) and **docassemble** asks the question that defines
+`prompt`. Thus, the user sees the above `question` where
+`bot_response` is the welcome message that ChatGPT came up with after
+being instructed to pretend to be a chatbot. The user then provides a
+`prompt`, and this `code` block executes again, because it is
+`mandatory` and has not run to completion. Now, `prompt` is defined,
+so `bot_response` is defined by the `.ask()` method. Then the code
+tries to parse the response as JSON. The `json.loads()` method will
+return an exception if the response is not JSON. If the response is
+JSON, the `assert` command will raise an `AssertionError` if the data
+structure is not expected. (This is unlikely to happen, but perhaps a
+clever user could trick ChatGPT into responding with arbitrary valid
+JSON.) If the JSON was expected, then `break` terminates the `while
+True` loop, and the `mandatory` block will not run again, since it
+runs to completion. However, if an exception is raised, then the
+exception is trapped, `pass` does nothing, `prompt` is undefined, and
+then the loop goes back to the beginning. The user sees the new
+`bot_response` and can respond to another iteration of the
+conversation.
+
+The next `mandatory`<span> </span>`code` block takes the
+ChatGPT-generated JSON and populates variabes in the interview answers
+as a result.
+
+{% highlight yaml %}
+mandatory: True
+code: |
+  if not address.get("error", False):
+    user.name.first = address.get('first_name', '')
+    user.name.last = address.get('last_name', '')
+    user.address.address = address.get('street_address', '')
+    user.address.city = address.get('city', '')
+    user.address.state = address.get('state', '')
+  del address
+{% endhighlight %}
+
+Note that the code tries to adjust for every eventuality. Maybe the
+response was the signal that the user changed the subject. Maybe
+ChatGPT failed to return a complete JSON object with all of the
+requested keys. The code defaults to populating the empty string if
+something is missing.
+
+You can use multiple `Conversation` objects in the same interview,
+each one of which fulfills a particular mission.
+
+In this example, the `.ask()` method of the `Conversation` object is
+called in a loop, because the conversation could have any number of
+iterations. You could also use `Conversation` objects in the
+background that only have a prompt and a response. For example:
+
+{% highlight yaml %}
+modules:
+  - .chatbot
+---
+objects:
+  - q: Conversation
+---
+question: |
+  In what state were you injured?
+fields:
+  - State: state
+    code: states_list()
+---
+code: |
+  years = int(q.ask(f"""Generally, how many years is the statute of \
+  limitations for tort actions in the state of {state_name(state)}? \
+  Answer only with digits 0-9, and no punctuation."""))
+---
+mandatory: True
+question: |
+  You have ${ quantity_noun(years, "year") } to bring a claim.
+{% endhighlight %}
+
+Note that the ChatGPT API is slow. If your server has a lot of
+traffic, calling the ChatGPT API in the foreground may cause your
+server to become unresponsive.
+
+Calling the OpenAI API in the background is possible. For example,
+create a Python module `chatbot_bg.py` with the following contents:
+
+{% highlight python %}
+import openai
+from docassemble.base.util import get_config, DAObject, background_action
+
+openai.api_key = get_config('openai key')
+
+
+class Conversation(DAObject):
+
+    def init(self, *pargs, **kwargs):
+        self.conversation = []
+        self.stage = 0
+        super().init(*pargs, **kwargs)
+
+    def fg_ask(self, prompt):
+        self.conversation.append({"role": "user", "content": prompt})
+        completion = openai.chat.completions.create(
+            model="gpt-5",
+            messages=self.conversation
+        )
+        response = completion.choices[0].message.content
+        self.conversation.append({"role": "assistant", "content": response})
+        return response
+
+    def ask(self, prompt):
+        if self.stage == 0:
+            self.bg_action = background_action(self.attr_name('bg_ask'), prompt=prompt)
+            self.stage = 1
+            self.wait
+        if self.stage == 1:
+            if not self.bg_action.ready():
+                self.wait
+            response = self.bg_action.get()
+            self.conversation.append({"role": "user", "content": prompt})
+            self.conversation.append({"role": "assistant", "content": response})
+            self.stage = 0
+            del self.bg_action
+            return response
+        return "error"
+{% endhighlight %}
+
+Then create a YAML interview file called `chatbot-bg.yml` with the
+following contents:
+
+{% highlight yaml %}
+modules:
+  - .chatbot_bg
+---
+generic object: Conversation
+event: x.bg_ask
+code: |
+  background_response(x.fg_ask(action_argument('prompt')))
+---
+generic object: Conversation
+event: x.wait
+question: |
+  Please wait . . .
+reload: 5
+{% endhighlight %}
+
+Then create a YAML file for testing this system, called
+`chatbot-slow.yml`:
+
+{% highlight yaml %}
+include:
+  - chatbot-bg.yml
+---
+objects:
+  - name_address: Conversation
+  - user: Individual
+---
+mandatory: True
+code: |
+  bot_response = name_address.ask("""Pretend that you are a polite, helpful \
+  chatbot called Freddy and I am someone living in the United States who is \
+  asking you for help. Ask me for my name and address. You need my name and \
+  address so that you can help me. Make sure I give you both my first name \
+  and my last name. Once I give you my full name and address, your response \
+  should be solely a JSON object containing the keys first_name, last_name, \
+  street_address, city, and state. If I change the subject of conversation \
+  to something other than my name and address, or smalltalk, your response \
+  should be solely a JSON object {"error": "True"}. Start pretending \
+  immediately.""")
+---
+mandatory: True
+code: |
+  while True:
+    bot_response = name_address.ask(prompt)
+    try:
+      address = json.loads(bot_response)
+      assert isinstance(address, dict) and \
+      ('error' in address or 'first_name' in address)
+      break
+    except:
+      pass
+    del prompt
+---
+mandatory: True
+code: |
+  if not address.get("error", False):
+    user.name.first = address.get('first_name', '')
+    user.name.last = address.get('last_name', '')
+    user.address.address = address.get('street_address', '')
+    user.address.city = address.get('city', '')
+    user.address.state = address.get('state', '')
+  del address
+---
+mandatory: True
+question: |
+  Your name and address
+subquestion: |
+  % if user.name.defined():
+  ${ user.address_block() }
+  % else:
+  You failed to cooperate.
+  % endif
+---
+question: |
+  Freddy, a chatbot
+subquestion: |
+  ${ bot_response }
+fields:
+  - no label: prompt
+    datatype: area
+{% endhighlight %}
+
+The only difference between `chatbot-slow.yml` and the earlier
+`chatbot.yml` is that `chatbot-slow.yml` does:
+
+{% highlight yaml %}
+include:
+  - chatbot-bg.yml
+{% endhighlight %}
+
+instead of:
+
+{% highlight yaml %}
+modules:
+  - .chatbot
+{% endhighlight %}
+
+Any time the OpenAI API is called, the user will see the waiting
+screen.
+
 [`retrieve_stashed_data()`]: {{ site.baseurl }}/docs/functions.html#retrieve_stashed_data
 [`/api/session/new` GET endpoint]: {{ site.baseurl }}/docs/api.html#session_new
 [`/api/session` POST endpoint]: {{ site.baseurl }}/docs/api.html#session_post
@@ -3106,3 +3527,5 @@ session if `multi_user` is not set to `True`.
 [stash]: {{ site.baseurl }}/docs/api.html#stash_data
 [`/api/stash_data`]: {{ site.baseurl }}/docs/api.html#stash_data
 [`module blacklist`]: {{ site.baseurl }}/docs/config.html#module blacklist
+[OpenAI Platform]: https://platform.openai.com
+[`openai`]: https://pypi.org/project/openai/

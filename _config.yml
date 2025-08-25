@@ -33,3 +33,5 @@ exclude:
   - .git
   - subdocs
   - CHANGELOG.yml
+plugins:
+  - jekyll-include-cache

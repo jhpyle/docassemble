@@ -6,8 +6,8 @@ short_title: Contributing
 
 If you would like to contribute to the **docassemble** project, the
 most impactful thing you can do is use the software.  You are also
-encouraged to participate in the [Slack] group, contribute bug reports
-and feature requests, and attend [Docacon].
+encouraged to participate in the [Slack] group and contribute bug
+reports and feature requests.
 
 If you would like to help fix bugs, pull requests on GitHub are
 welcome.
@@ -29,5 +29,4 @@ field.
 [make a financial contribution]: https://www.merlinfoundation.org/donate
 [Merlin Legal Open Source Foundation]: https://www.merlinfoundation.org
 [add-on package]: {{ site.baseurl }}/docs/packages.html
-[Docacon]: https://docacon.com
 [Slack]: {{ site.slackurl }}

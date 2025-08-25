@@ -72,7 +72,6 @@ messages.
 The **docassemble** community collaborates in a number of ways:
 
 * A [Slack group];
-* An annual conference called [Docacon]; and
 * A [mailing list];
 
 ### Slack
@@ -106,17 +105,6 @@ If [Slack] itself suffers a data breach, such that e-mail addresses
 are exposed, Jonathan Pyle will post a message in the `#general`
 channel to let users know that it happened.
 
-### Docacon
-
-The Docacon conference is open to the public.  Attendees sign up on
-Google Forms.  Data about attendees and sponsors exists in Google
-Forms.  Access to the sign-up list is limited to event organizers,
-which includes Jonathan Pyle and other people.  Copies of the sign-up
-list may have been made.
-
-If Google Forms suffers a data breach, Jonathan Pyle will take no
-action.
-
 ### Mailing list
 
 Jonathan Pyle created a [mailing list] on [python.org].  It was
@@ -134,7 +122,6 @@ will make an effort to delete the mailing list.
 
 [Slack]: https://slack.com
 [python.org]: https://mail.python.org/archives/
-[Docacon]: https://docacon.com
 [mailing list]: https://mail.python.org/mm3/mailman3/lists/docassemble.python.org/
 [Slack group]: {{ site.slackurl }}
 [MIT License]: {{ site.baseurl }}/docs/license.html

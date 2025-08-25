@@ -25,10 +25,6 @@ If deploying a web app and writing "code" are barriers, there are
 
 # <a name="tutorials"></a>Tutorials
 
-There are video recordings of the June 2020 [Docacon training
-conference](https://docacon.com), where there was a "beginner
-training" and an "advanced training."
-
 [ttamg] wrote up 
 [instructions](https://github.com/ttamg/deploy-docassemble/tree/master/digitalocean-setup)
 on how to install **docassemble** on [Digital Ocean] using [Docker Compose].

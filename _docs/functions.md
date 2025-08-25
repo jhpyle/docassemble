@@ -9105,7 +9105,7 @@ Note that you should only attach a `daPageLoad` listener from a
 [`run_action_in_session()`]: #run_action_in_session
 [`url_action()` JavaScript function]: #js_url_action
 [`action_perform()` JavaScript function]: #js_action_perform
-[`action_call()` JavaScript function]: js_action_call
+[`action_call()` JavaScript function]: #js_action_call
 [locale conventions]: https://docs.python.org/3/library/locale.html#locale.localeconv
 [VoiceRSS Configuration]: {{ site.baseurl }}/docs/config.html#voicerss
 [multiple e-mail configurations]: {{ site.baseurl }}/docs/config.html#mail multiple
