@@ -302,9 +302,9 @@ be something like
 order to allow web browsers to connect to your [EC2] instance.
 
 Using the web browser, you can log in using the default username
-("admin@admin.com") and password ("password"), and make changes to the
+("admin@example.com") and password ("password"), and make changes to the
 configuration from the menu. You should go to User List from the menu,
-click "Edit" next to the `admin@admin.com` user, and change that
+click "Edit" next to the `admin@example.com` user, and change that
 e-mail address to an actual e-mail address you can access.
 
 ## <a name="shutdown"></a>Shutting down
@@ -529,7 +529,7 @@ The `initialize` script does the following.
       created. The credentials for this user are obtained from the
       `DA_ADMIN_EMAIL` and `DA_ADMIN_PASSWORD` environment variables,
       but if the environment variables are not defined,
-      `admin@admin.com` and `password` are used.
+      `admin@example.com` and `password` are used.
     * If the `DA_ADMIN_API_KEY` environment variable is defined, it is
       used to create an API key for the initial administrator user.
     * After the script is run, the `bash` script deletes the values of

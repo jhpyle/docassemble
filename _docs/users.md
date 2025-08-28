@@ -63,11 +63,11 @@ directive in the [Configuration].
 When **docassemble** is first installed, it creates a user with
 "admin" privileges with the following login information:
 
-* Email: admin@admin.com
+* Email: admin@example.com
 * Password: password
 
 As soon as **docassemble** is set up, you should log in as this user,
-go to [User List], edit the admin@admin.com user, and change its e-mail
+go to [User List], edit the admin@example.com user, and change its e-mail
 address and password.
 
 Users can log in with Facebook, Google, Twitter, or Microsoft Azure.

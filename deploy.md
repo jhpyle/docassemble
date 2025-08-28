@@ -108,7 +108,7 @@ docker run --env-file=env.list -v dabackup:/usr/share/docassemble/backup -d -p 8
   your web browser (e.g., `https://da.foobar.com`).
 * If it doesn't work, check out the [Troubleshooting] section.
 * Click the link in the corner to log in. Log in using
-  "admin@admin.com" as the email and "password" as the password.
+  "admin@example.com" as the email and "password" as the password.
 * You will then be asked to change the password.
 
 Note that there are many different cloud providers and domain name
@@ -125,7 +125,7 @@ recommended you take additional steps:
 
 * Go to the User List from the menu. You will see there is one user on the
   system, which is the administrator. The default adddress
-  `admin@admin.com` is obviously not a real e-mail address, so click
+  `admin@example.com` is obviously not a real e-mail address, so click
   Edit and change the e-mail address to your e-mail address.
 * Set up [e-mail sending] and verify that it works.
 * If the server is public-facing, set [`confirm registration`] to
