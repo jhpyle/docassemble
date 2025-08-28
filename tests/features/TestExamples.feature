@@ -1059,9 +1059,9 @@ Feature: Example interviews
   Scenario: Test the interview "E-mail address"
     Given I start the interview "docassemble.base:data/questions/examples/email-field.yml"
     Then I should see the phrase "What is your e-mail address?"
-    And I set "E-mail" to "admin@admin.com"
+    And I set "E-mail" to "admin@example.com"
     And I click the button "Continue"
-    Then I should see the phrase "target_variable is: “admin@admin.com”"
+    Then I should see the phrase "target_variable is: “admin@example.com”"
 
   # Scenario: Test the interview "E-mailing the interview"
   #   Given I start the interview "docassemble.base:data/questions/examples/email-to-case-simple.yml"
