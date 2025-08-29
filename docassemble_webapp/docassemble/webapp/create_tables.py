@@ -124,7 +124,7 @@ def populate_tables(start_time=None):
     result = {}
     admin_defaults = daconfig.get('default admin account', {})
     if 'email' not in admin_defaults:
-        admin_defaults['email'] = os.getenv('DA_ADMIN_EMAIL', 'admin@admin.com')
+        admin_defaults['email'] = os.getenv('DA_ADMIN_EMAIL', 'admin@example.com')
     if 'nickname' not in admin_defaults:
         admin_defaults['nickname'] = 'admin'
     if 'first_name' not in admin_defaults:
