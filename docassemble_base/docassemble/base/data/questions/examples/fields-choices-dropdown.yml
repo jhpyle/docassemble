@@ -1,6 +1,6 @@
 metadata:
-  title: Multiple choice pulldown
-  short title: Multiple choice pulldown
+  title: Multiple choice dropdown
+  short title: Multiple choice dropdown
   documentation: "https://docassemble.org/docs/fields.html#select"
   example start: 1
   example end: 1
