@@ -2684,7 +2684,6 @@ class Question:
             self.initial_code = None
         if 'command' in data and data['command'] in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit', 'wait'):
             self.question_type = data['command']
-            self.content = TextObject(data.get('url', ''), question=self)
         if 'objects from file' in data:
             if not isinstance(data['objects from file'], list):
                 data['objects from file'] = [data['objects from file']]
@@ -6980,12 +6979,12 @@ class Question:
                         self.embeds = True
                         if not uses_value_label:
                             result_dict['label'] = TextObject(key, question=self)
-                        result_dict['key'] = Question({'command': value, 'url': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
+                        result_dict['key'] = Question({'command': value, 'question': the_dict['url']}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif value in ('continue', 'restart', 'refresh', 'signin', 'register', 'exit', 'logout', 'exit_logout', 'leave', 'new_session'):
                         self.embeds = True
                         if not uses_value_label:
                             result_dict['label'] = TextObject(key, question=self)
-                        result_dict['key'] = Question({'command': value}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
+                        result_dict['key'] = Question({'command': value, 'question': ''}, self.interview, register_target=register_target, source=self.from_source, package=self.package)
                     elif key == 'url':
                         pass
                     else:
@@ -9070,7 +9069,7 @@ class Interview:
                 except CommandError as qError:
                     # logmessage("CommandError")
                     docassemble.base.functions.reset_context()
-                    question_data = {'command': qError.return_type, 'url': qError.url, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
+                    question_data = {'command': qError.return_type, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
                     reproduce_basics(self, new_interview)
@@ -9921,7 +9920,7 @@ class Interview:
             except CommandError as qError:
                 # logmessage("CommandError: " + str(qError))
                 docassemble.base.functions.reset_context()
-                question_data = {'command': qError.return_type, 'url': qError.url, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
+                question_data = {'command': qError.return_type, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
                 reproduce_basics(self, new_interview)

@@ -8225,7 +8225,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/fields-ajax.yml"
     Then I should see the phrase "What is your favorite word?"
     And I set the combobox text to "friendly"
-    And I wait 1 second
+    And I wait 3 seconds
     And I select "friendly" from the combobox dropdown
     And I unfocus
     And I click the button "Continue"
