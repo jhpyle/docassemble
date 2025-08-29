@@ -12,10 +12,10 @@ use.  Which one is best for you will depend on your circumstances.
 If you are new to **docassemble**, we recommend that you start by
 installing **docassemble** on your personal laptop or desktop using
 [Docker].  Then you can access **docassemble** at `http://localhost`.
-You can log in using the default username of `admin@admin.com` and the
+You can log in using the default username of `admin@example.com` and the
 default password of `password`.  After you change your password, you
 can use the menu in the upper-right hand corner to navigate to the
-User List, where you can click "Edit" next to the `admin@admin.com`
+User List, where you can click "Edit" next to the `admin@example.com`
 user and change its e-mail address to a real e-mail address.  Then you
 can use the menu to go to the [Playground], where you can try
 modifying the default interview, or go through the steps of the

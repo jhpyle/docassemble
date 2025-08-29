@@ -73,7 +73,7 @@ language: en
 locale: en_US.utf8
 default admin account:
   nickname: admin
-  email: admin@admin.com
+  email: admin@example.com
   password: password
 voicerss:
   enable: False
@@ -2040,7 +2040,7 @@ passwords, or to let users of a [multi-user interview] know that it is
 their turn to start answering questions.
 
 Before you set up your e-mail configuration, make sure that you are
-not using the default fake e-mail address of `admin@admin.com` as the
+not using the default fake e-mail address of `admin@example.com` as the
 e-mail address of the administrative user. If you forget your
 password, you will want to be able to reset it using the "forgot my
 password" feature, which relies on e-mailing an address you can
@@ -2735,7 +2735,7 @@ through the [Package Management] interface or the
 
 When a **docassemble** SQL database is first initialized, an
 administrative user is created. By default, this user has the e-mail
-address `admin@admin.com` and the password `password`. As soon as the
+address `admin@example.com` and the password `password`. As soon as the
 web server comes on-line, you can log in and change the e-mail address
 and password to something more secure.
 

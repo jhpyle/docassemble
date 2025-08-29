@@ -1397,12 +1397,12 @@ You should change the password for the default admin user.  Click
 "Sign in or sign up to save answers" or navigate to `/user/sign-in`.
 Log in with:
 
-* Email: admin@admin.com
+* Email: admin@example.com
 * Password: password
 
 It should immediately prompt you to change your password to something
 secure.  You should also go to User List from the menu, click "Edit"
-next to the `admin@admin.com` user, and change that e-mail address to
+next to the `admin@example.com` user, and change that e-mail address to
 an actual e-mail address you can access.
 
 # <a name="debug"></a>Debugging
