@@ -397,7 +397,7 @@ def on_interview_disconnect():
 def get_current_info(yaml_filename, session_id, secret):
     url_root = daconfig.get('url root', 'http://localhost') + daconfig.get('root', '/')
     url = url_root + 'interview'
-    return {'user': {'is_anonymous': False, 'is_authenticated': True, 'email': 'admin@admin.com', 'theid': 1, 'the_user_id': 1, 'roles': ['admin'], 'firstname': 'Admin', 'lastname': 'User', 'nickname': '', 'country': '', 'subdivisionfirst': '', 'subdivisionsecond': '', 'subdivisionthird': '', 'organization': '', 'location': None, 'session_uid': 'admin', 'device_id': 'admin'}, 'session': session_id, 'secret': secret, 'yaml_filename': yaml_filename, 'url': url, 'url_root': url_root, 'encrypted': True, 'action': None, 'interface': 'chat', 'arguments': {}}
+    return {'user': {'is_anonymous': False, 'is_authenticated': True, 'email': 'admin@example.com', 'theid': 1, 'the_user_id': 1, 'roles': ['admin'], 'firstname': 'Admin', 'lastname': 'User', 'nickname': '', 'country': '', 'subdivisionfirst': '', 'subdivisionsecond': '', 'subdivisionthird': '', 'organization': '', 'location': None, 'session_uid': 'admin', 'device_id': 'admin'}, 'session': session_id, 'secret': secret, 'yaml_filename': yaml_filename, 'url': url, 'url_root': url_root, 'encrypted': True, 'action': None, 'interface': 'chat', 'arguments': {}}
 
 
 def get_dict(yaml_filename):
