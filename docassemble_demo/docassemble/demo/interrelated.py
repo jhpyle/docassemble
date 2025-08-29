@@ -1,5 +1,5 @@
-from docassemble.base.util import Thing, Person, Individual, DAList, DAObject, Organization
-
+# do not pre-load
+from docassemble.base.util import Person, DAList, DAObject, Organization
 
 __all__ = ['Situation']
 

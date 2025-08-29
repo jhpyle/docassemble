@@ -1,3 +1,4 @@
+# do not pre-load
 import re
 from docassemble.base.util import CustomDataType, DAValidationError
 

@@ -1,3 +1,4 @@
+# do not pre-load
 import io
 import docassemble.base.util
 from google.cloud import vision

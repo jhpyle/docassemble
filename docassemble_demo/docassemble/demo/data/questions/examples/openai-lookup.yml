@@ -1,0 +1,28 @@
+metadata:
+  title: OpenAI Lookup
+  require login: True
+  required privileges:
+    - admin
+    - developer
+    - advocate
+---
+modules:
+  - .chatbot
+---
+objects:
+  - q: Conversation
+---
+question: |
+  In what state were you injured?
+fields:
+  - State: state
+    code: states_list()
+---
+code: |
+  years = int(q.ask(f"""Generally, how many years is the statute of \
+  limitations for tort actions in the state of {state_name(state)}? \
+  Answer only with digits 0-9, and no punctuation."""))
+---
+mandatory: True
+question: |
+  You have ${ quantity_noun(years, "year") } to bring a claim.

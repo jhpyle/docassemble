@@ -1,3 +1,4 @@
+# do not pre-load
 __all__ = ['make_pie']
 
 import matplotlib

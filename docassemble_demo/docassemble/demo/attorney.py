@@ -1,3 +1,4 @@
+# do not pre-load
 from docassemble.base.legal import Individual, objects_from_file
 
 organizations = objects_from_file('docassemble.demo:data/objects/organizations.yml')

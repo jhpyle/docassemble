@@ -1,3 +1,4 @@
+# do not pre-load
 from docassemble.base.util import variables_snapshot_connect, user_info
 
 __all__ = ['analyze']

@@ -1,3 +1,4 @@
+# do not pre-load
 from docassemble.base.util import DAOAuth
 from googleapiclient.discovery import build
 

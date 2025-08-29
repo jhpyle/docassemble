@@ -1,3 +1,4 @@
+# do not pre-load
 from docassemble.base.util import as_datetime, DAFile
 from ics import Calendar, Event, Attendee, Organizer
 

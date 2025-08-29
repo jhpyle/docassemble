@@ -1,3 +1,4 @@
+# do not pre-load
 import re
 
 __all__ = ['card_start', 'card_end']

@@ -1,3 +1,4 @@
+# do not pre-load
 import pandas
 from docassemble.base.util import path_and_mimetype
 

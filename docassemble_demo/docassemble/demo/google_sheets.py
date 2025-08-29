@@ -1,3 +1,4 @@
+# do not pre-load
 import json
 import gspread
 from docassemble.base.util import get_config

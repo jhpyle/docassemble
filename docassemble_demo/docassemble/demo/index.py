@@ -1,3 +1,4 @@
+# do not pre-load
 from docassemble.base.util import store_variables_snapshot, DAObject, user_info, start_time, variables_snapshot_connection
 
 __all__ = ['MyIndex']

@@ -1,0 +1,13 @@
+modules:
+  - .chatbot_bg
+---
+generic object: Conversation
+event: x.bg_ask
+code: |
+  background_response(x.fg_ask(action_argument('prompt')))
+---
+generic object: Conversation
+event: x.wait
+question: |
+  Please wait . . .
+reload: 5

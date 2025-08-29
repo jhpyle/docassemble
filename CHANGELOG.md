@@ -1,5 +1,10 @@
 # Change Log
 
+## [1.8.12] - 2025-08-
+
+### Fixed
+- Bug with `interview delete days by filename` when days are `0`.
+
 ## [1.8.11] - 2025-08-21
 
 ### Changed

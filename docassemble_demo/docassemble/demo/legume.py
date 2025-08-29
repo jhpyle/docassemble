@@ -1,3 +1,4 @@
+# do not pre-load
 from docassemble.base.util import Thing, prevent_dependency_satisfaction
 
 __all__ = ['Legume']
