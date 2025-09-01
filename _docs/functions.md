@@ -877,13 +877,35 @@ Note that the [special buttons] perform a similar function to
 `command()`. See also the [starting an interview from the beginning]
 subsection for URL parameters that reset interview sessions.
 
-One use of `command()` is to delete interviews after a period of
-inactivity. See [scheduled tasks] for more information. In the
-context of [scheduled tasks], you can pass the optional keyword
-argument `sleep` with a number of seconds that you want to pause after
-the session is deleted. This can be useful when your [scheduled
-tasks] would overwhelm your SQL server if executed one after another
-without pauses.
+The `command()` function can also be used to instruct the user's web
+browser to wait for a period of time and then reload the screen.
+
+{% highlight python %}
+command('wait')
+{% endhighlight %}
+
+As with the other `command()` options, calling `command('wait')`
+causes code execution to stop on the server. (It raises an exception,
+which is trapped.) The server returns a response to the web browser,
+instructing the web browser to wait for four seconds and then query
+the server again. The user will continue seeing the previous screen,
+and a spinner will appear. If the user reloads the screen, or if the
+interview logic calls `command('wait')` when the user first visits the
+interview, the user will see a screen that says "Please wait . . ."
+
+If you want the browser to query the server after a
+different number of seconds, set the `seconds` parameter.
+
+{% highlight python %}
+command('wait', sleep=10)
+{% endhighlight %}
+
+If you want a message other than "Please wait . . ." you can set
+`question_text` and `subquestion_text`:
+
+{% highlight python %}
+command('wait', question_text='Processing . . .', subquestion_text='The computer is busy. Be patient.')
+{% endhighlight %}
 
 # <a name="texttransformation"></a>Text transformation functions
 
@@ -2753,7 +2775,7 @@ Python code is executing:
   browser, because many requests are Ajax requests. The dictionary
   keys are `args`, `base_url`, `full_path`, `path`, `scheme`, `url`,
   `url_root`. These come directly from the [Flask Request object].
-  
+
 ## <a name="user_info"></a>user_info()
 
 The `user_info()` function will return an object with the following

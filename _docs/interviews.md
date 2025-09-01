@@ -680,7 +680,6 @@ server with the URL `https://interview.example.com`:
   <head>
     <meta charset="utf-8">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="https://interview.example.com/favicon.ico">

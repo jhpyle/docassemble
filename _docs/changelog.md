@@ -3,11 +3,24 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
-## [1.8.12](https://github.com/jhpyle/docassemble/releases/tag/v1.8.12) - 2025-08-
+## [1.8.12](https://github.com/jhpyle/docassemble/releases/tag/v1.8.12) - 2025-09-01
+
+
+### Added
+- The `'wait'` option for the `command()` function, which causes the
+  user's web browser to wait a number of seconds and then query the
+  interview logic again.
+- The `BackgroundAction` object for calling `background_action()` and
+  retrieving the result transparently.
+- The `[NO_EMOJIS]` command to turn off interpretation of inline icons
+  (e.g. `:face-smile:`).
 
 
 ### Fixed
 - Bug with `interview delete days by filename` when days are `0`.
+- Service account authentication with `DAGoogleAPI` is now using a
+  different method that does not cause `google-api-python-client` to
+  trigger an exception.
 
 ## [1.8.11](https://github.com/jhpyle/docassemble/releases/tag/v1.8.11) - 2025-08-21
 

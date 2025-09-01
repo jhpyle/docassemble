@@ -1671,6 +1671,31 @@
     code: |
       the_answer = str(553 + action_argument('additional'))
       background_response("alert('The answer is " + the_answer + ".');")
+"background_action_object":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    objects:
+      bg: BackgroundAction
+    ---
+    code: |
+      answer = bg.run('bg_task', additional=value_to_add)
+    ---
+    question: |
+      How much shall I add to 553?
+    fields:
+      - Number: value_to_add
+        datatype: integer
+    ---
+    event: bg_task
+    code: |
+      background_response(553 + action_argument('additional'))
+    ---
+    mandatory: True
+    question: |
+      The answer is ${ answer }.
 "background_action_refresh":
   "height": !!int |-
     176
@@ -4973,6 +4998,45 @@
     question: |
       You walk into a stinky swamp.
     event: bad_luck
+"drop-down":
+  "height": !!int |-
+    254
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Describe yourself.
+    fields:
+      - Level of education: education
+        choices:
+          - High School
+          - College
+          - Graduate School
+      - Favorite fruit: favorite_fruit
+        choices:
+          - Apple: apples
+          - Pear: pears
+          - Strawberry: strawberries
+"drop-down-with-code":
+  "height": !!int |-
+    308
+  "width": !!int |-
+    488
+  "yaml": |-
+    question: |
+      Describe yourself.
+    fields:
+      - Level of education: education
+        choices:
+          - High School
+          - College
+          - Graduate School
+      - State of birth: birth_state
+        code: |
+          us.states.mapping('abbr', 'name')
+      - Gender: gender
+        code: |
+          {'m': 'Male', 'f': 'Female', 'o': 'Other'}
 "dual-dict":
   "yaml": |-
     mandatory: True
@@ -6483,7 +6547,7 @@
         input type: hidden
     validation code: |
       if not doctor.address.place_id:
-        validation_error('You need to choose a doctor from the pull-down list.')
+        validation_error('You need to choose a doctor from the drop-down list.')
     ---
     depends on:
       - doctor.address.name
@@ -11201,6 +11265,22 @@
     buttons:
       - Restart: restart
     sets: all_done
+"no-emojis":
+  "height": !!int |-
+    170
+  "width": !!int |-
+    488
+  "yaml": |-
+    mandatory: True
+    question: |
+      Third quarter metrics
+    subquestion: |
+      [NO_EMOJIS]
+      We are making more money
+      :far-fa-money-bill-alt: than
+      we did in the second quarter.
+
+      So you can sleep well tonight! :bed:
 "no-label-field":
   "height": !!int |-
     176
@@ -12889,45 +12969,6 @@
       user_likes_turnips
       user_likes_clownfish
       second_part_done = True
-"pull-down":
-  "height": !!int |-
-    254
-  "width": !!int |-
-    488
-  "yaml": |-
-    question: |
-      Describe yourself.
-    fields:
-      - Level of education: education
-        choices:
-          - High School
-          - College
-          - Graduate School
-      - Favorite fruit: favorite_fruit
-        choices:
-          - Apple: apples
-          - Pear: pears
-          - Strawberry: strawberries
-"pull-down-with-code":
-  "height": !!int |-
-    308
-  "width": !!int |-
-    488
-  "yaml": |-
-    question: |
-      Describe yourself.
-    fields:
-      - Level of education: education
-        choices:
-          - High School
-          - College
-          - Graduate School
-      - State of birth: birth_state
-        code: |
-          us.states.mapping('abbr', 'name')
-      - Gender: gender
-        code: |
-          {'m': 'Male', 'f': 'Female', 'o': 'Other'}
 "qr-code":
   "height": !!int |-
     420
@@ -17594,6 +17635,46 @@
   "width": !!int |-
     488
   "yaml": ""
+"chatbot":
+  "height": !!int |-
+    386
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - .chatbot
+"chatbot-bg":
+  "height": !!int |-
+    153
+  "width": !!int |-
+    488
+  "yaml": |-
+    generic object: Conversation
+    event: x.bg_ask
+    code: |
+      background_response(x.fg_ask(action_argument('prompt')))
+"chatbot-bg-object":
+  "height": !!int |-
+    153
+  "width": !!int |-
+    488
+  "yaml": ""
+"chatbot-slow":
+  "height": !!int |-
+    386
+  "width": !!int |-
+    488
+  "yaml": |-
+    include:
+      - chatbot-bg.yml
+"chatbot-slow-object":
+  "height": !!int |-
+    386
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - .chatbot_bg_object
 "clauses":
   "height": !!int |-
     162
@@ -20181,6 +20262,14 @@
     fields:
       - First: client.name.first
       - Last: client.name.last
+"openai-lookup":
+  "height": !!int |-
+    386
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      - .chatbot
 "overlay-pdf":
   "height": !!int |-
     176

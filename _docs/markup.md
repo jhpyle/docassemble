@@ -407,6 +407,11 @@ Note that while ordinary inline icon references work in documents as
 well as on the web, [Font Awesome] references only work in questions,
 not in documents.
 
+You can turn off inline icon conversion for a block of text by
+writing `[NO_EMOJIS]` somewhere in the text.
+
+{% include side-by-side.html demo="no-emojis" %}
+
 # <a name="audio and video"></a>Inserting audio and video
 
 In addition to using the [`audio`] and [`video`]<span></span>

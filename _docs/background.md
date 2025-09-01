@@ -661,6 +661,68 @@ refers to a [`DAFileCollection`] object, which is passed from the
 background task to the user interview, and in the user interview, the
 object is known as `the_letter`.
 
+## <a name="BackgroundAction"></a>The `BackgroundAction` class
+
+The [`BackgroundAction`] class provides a way to launch a background
+task and obtain its result using one method call.
+
+{% include side-by-side.html demo="background_action_object" %}
+
+The call to `bg.run()` looks like it is sychronous, but it is actually
+asynchronous and results in the user's browser polling the server.
+
+The source code of [`BackgroundAction`] is as follows.
+
+{% highlight python %}
+class BackgroundAction(DAObject):
+    """Runs a background action or raises a wait command if the action is still running."""
+
+    def init(self, *pargs, **kwargs):
+        self._running = False
+        self.refresh_seconds = 4
+        super().init(*pargs, **kwargs)
+
+    def run(self, action, **pargs):
+        if not self._running:
+            self.bg_action = background_action(action, **pargs)
+            self._running = True
+            self.initial_wait()
+        if self._running:
+            if not self.bg_action.ready():
+                self.wait()
+            result = self.bg_action.result()
+            failed = self.bg_action.failed()
+            del self.bg_action
+            self._running = False
+            if failed:
+                return self.on_failure(result)
+            return self.process_response(result)
+
+    def initial_wait(self):
+        command('wait', sleep=self.refresh_seconds)
+
+    def wait(self):
+        set_save_status('ignore')
+        command('wait', sleep=self.refresh_seconds)
+
+    def process_response(self, result):
+        return result.value
+
+    def on_failure(self, result):
+        return result.value
+
+    def running(self):
+        return self._running
+
+    def ready(self):
+        if self._running:
+            return self.bg_action.ready()
+        return None
+{% endhighlight %}
+
+You can subclass `BackgroundAction` or borrow the idea of it for a
+class of your own.
+
 ## <a name="cf_scheduled_tasks"></a>Comparison with scheduled tasks
 
 **docassemble** also has a [scheduled tasks] feature, which is similar
@@ -1546,3 +1608,4 @@ privileges and user identity of the [cron user].
 [change]: https://developer.mozilla.org/en-US/docs/Web/Events/change
 [`docker exec`]: https://docs.docker.com/engine/reference/commandline/exec/
 [`showifdef()`]: {{ site.baseurl }}/docs/functions.html#showifdef
+[`BackgroundAction`]: {{ site.baseurl }}/docs/objects.html#BackgroundAction

@@ -5278,6 +5278,86 @@ defined.
 * `email`: this needs to a [`DATemplate`] containing the subject and
 body of the e-mail that will be sent.
 
+## <a name="BackgroundAction"></a>BackgroundAction
+
+The `BackgroundAction` class provides a simplified way of calling
+[`background_action()`].
+
+{% include side-by-side.html demo="background_action_object" %}
+
+The interview logic requires `answer` to be defined, which runs this
+`code`:
+
+{% highlight yaml %}
+code: |
+  answer = bg.run('bg_task', additional=value_to_add)
+{% endhighlight %}
+
+`bg` is defined by the `objects` block as a `BackgroundAction` object.
+
+The interview logic needs a definition of `value_to_add`, so it asks
+the `question` that defines `value_to_add`.
+
+Once this is defined, then `bg.run()` can execute.
+
+The first time `bg.run()` executes, it calls [`background_action()`]
+on the provided positional and keyword arguments. Then it runs
+[`command('wait')`]. This sends a response to the user's web browser,
+telling the browser to try to reload the screen after four
+seconds. Code execution is interrupted, so `answer` does not get
+defined. The user sees a spinner.
+
+When the browser tries to reload the screen after four seconds, the
+interview logic runs again, and `bg.run()` is called again. This time,
+`bg.run()` does not call [`background_action()`] and instead checks to
+see if the background task has finished executing. If the background
+task has not finished executing yet, [`command('wait')`] is called
+again, and the browser tries again four seconds later. This process
+repeats until the background task completes. If the background task
+has completed, `.get()` is called on the task object and the value is
+returned. Thus, `answer` is defined as the value returned by the
+background task via `background_response()`.
+
+Before returning the value, `bg` resets its state. Thus, if `bg.run()`
+is called again, a new background task will be started. The fact that
+`bg` resets its state when `bg.run()` returns a value means that you
+need to be careful to write your interview logic so that `bg.run()` is
+not run again unless you actually want a new background task to be
+spawned.
+
+In addition to `.run()`, `BackgroundAction` has the following methods:
+
+* `.running()` returns `True` or `False` indicating the state of the
+  `bg` object. If it returns `False`, then calling `.run()` will cause
+  a background action to be spawned. If it returns `True`, then
+  calling `.run()` will either cause [`command('wait')`] to run, or
+  cause a response value to be returned.
+* `.ready()` returns `True` if `.running()` is `True` and the
+  underlyling background action has completed. It returns `False` if
+  `.running()` is `True` and the underlyling background action has not
+  completed. Otherwise, it returns `None`.
+
+The `BackgroundAction` can be customized through subclassing. One
+attribute and several methods can be overridden:
+
+* `.refresh_seconds` is an attribute indicating the number of seconds
+  the browser should be told to wait. The default value is `4`.
+* `.initial_wait()` is called after `background_action()` is called to
+  start the background action. The default method runs
+  `command('wait', sleep=self.refresh_seconds)`.
+* `.wait()` is called by `.run()` when the background task has started
+  but has not completed. The default method runs
+  `set_save_status('ignore')`
+  and then
+  `command('wait', sleep=self.refresh_seconds)`.
+* `.process_response()` is called by `.run()` when the background task
+  has completed successfully. It takes one argument, `result`, which
+  is the `.result()` of the background task. The default method
+  returns `result.value`.
+* `.on_failure()` is called by `.run()` when the background task
+  fails. It takes one argument, `result`, which is the `.result()` of
+  the background task. The default method returns `result.value`.
+
 # <a name="DAObject.using"></a>Special object method `using()`
 
 If you wanted to initialize the variable `possession` as a [`DAList`]
@@ -7723,3 +7803,4 @@ the `_uid` of the table rather than the `id`.
 [`as_singular_noun()`]: #DAList.as_singular_noun
 [`number_as_word()`]: #DAList.number_as_word
 [`quantity_noun()`]: #DAList.quantity_noun
+[`command('wait')`]: {{ site.baseurl }}/docs/functions.html#command
