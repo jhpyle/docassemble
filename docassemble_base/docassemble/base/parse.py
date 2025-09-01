@@ -2682,7 +2682,7 @@ class Question:
         else:
             self.is_initial = False
             self.initial_code = None
-        if 'command' in data and data['command'] in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit'):
+        if 'command' in data and data['command'] in ('exit', 'logout', 'exit_logout', 'continue', 'restart', 'leave', 'refresh', 'signin', 'register', 'new_session', 'interview_exit', 'wait'):
             self.question_type = data['command']
             self.content = TextObject(data.get('url', ''), question=self)
         if 'objects from file' in data:
@@ -3996,8 +3996,11 @@ class Question:
                     field['code'] = field['choices']['code']
                     del field['choices']
                 if 'datatype' in field:
-                    if field['datatype'] in ('radio', 'combobox', 'datalist', 'pulldown', 'ajax'):
-                        field['input type'] = field['datatype']
+                    if field['datatype'] in ('radio', 'combobox', 'datalist', 'pulldown', 'dropdown', 'ajax'):
+                        if field['datatype'] == 'pulldown':
+                            field['input type'] = 'dropdown'
+                        else:
+                            field['input type'] = field['datatype']
                         field['datatype'] = 'text'
                     if field['datatype'] == 'mlarea':
                         field['input type'] = 'area'
@@ -4019,7 +4022,9 @@ class Question:
                             raise DASourceError("An ajax field must have an associated action." + self.idebug(data))
                         if 'choices' in field or 'code' in field:
                             raise DASourceError("An ajax field cannot contain a list of choices except through an action." + self.idebug(data))
-                    if field['input type'] in ('radio', 'combobox', 'datalist', 'pulldown') and not ('choices' in field or 'code' in field):
+                    if field['input type'] == 'pulldown':
+                        field['input type'] = 'dropdown'
+                    if field['input type'] in ('radio', 'combobox', 'datalist', 'dropdown') and not ('choices' in field or 'code' in field):
                         raise DASourceError("A multiple choice field must refer to a list of choices." + self.idebug(data))
                 if len(field) == 1 and 'code' in field:
                     field_info['type'] = 'fields_code'
@@ -7787,14 +7792,20 @@ class Question:
                         docassemble.base.functions.set_context('pandoc ' + doc_format)
                         the_markdown += the_content.text(the_user_dict)
                         # logmessage("Markdown is:\n" + repr(the_markdown) + "END")
-                        if emoji_match.search(the_markdown) and len(self.interview.images) > 0:
+                        do_not_scan_for_emojis = bool(re.search(r'\[NO_EMOJIS\]', the_markdown))
+                        if do_not_scan_for_emojis:
+                            the_markdown = re.sub(r'\[NO_EMOJIS\]\s*', r'', the_markdown)
+                        elif emoji_match.search(the_markdown) and len(self.interview.images) > 0:
                             the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
                         result['markdown'][doc_format] = the_markdown
                         docassemble.base.functions.reset_context()
                 elif doc_format in ['html']:
                     docassemble.base.functions.set_context('html')
                     result['markdown'][doc_format] = the_content.text(the_user_dict)
-                    if emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
+                    do_not_scan_for_emojis = bool(re.search(r'\[NO_EMOJIS\]', result['markdown'][doc_format]))
+                    if do_not_scan_for_emojis:
+                        result['markdown'][doc_format] = re.sub(r'\[NO_EMOJIS\]\s*', r'', result['markdown'][doc_format])
+                    elif emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
                         result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
                     docassemble.base.functions.reset_context()
                     # logmessage("output was:\n" + repr(result['content'][doc_format]))
@@ -9059,7 +9070,7 @@ class Interview:
                 except CommandError as qError:
                     # logmessage("CommandError")
                     docassemble.base.functions.reset_context()
-                    question_data = {'command': qError.return_type, 'url': qError.url, 'sleep': qError.sleep}
+                    question_data = {'command': qError.return_type, 'url': qError.url, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
                     new_interview_source = InterviewSourceString(content='')
                     new_interview = new_interview_source.get_interview()
                     reproduce_basics(self, new_interview)
@@ -9910,7 +9921,7 @@ class Interview:
             except CommandError as qError:
                 # logmessage("CommandError: " + str(qError))
                 docassemble.base.functions.reset_context()
-                question_data = {'command': qError.return_type, 'url': qError.url, 'sleep': qError.sleep}
+                question_data = {'command': qError.return_type, 'url': qError.url, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
                 new_interview_source = InterviewSourceString(content='')
                 new_interview = new_interview_source.get_interview()
                 reproduce_basics(self, new_interview)

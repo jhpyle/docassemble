@@ -53,6 +53,7 @@ import pandas
 from docx import Document
 from pikepdf import Pdf
 import google.cloud
+from docassemble.base.config import in_celery
 from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError, DAException
 from docassemble.base.file_docx import include_docx_template
 from docassemble.base.filter import markdown_to_html
@@ -69,6 +70,7 @@ import docassemble.base.parse
 import docassemble.base.pdftk
 from docassemble.base import DA
 from docassemble.webapp.da_flask_mail import Message
+import google_auth_httplib2
 
 capitalize_func = capitalize
 NoneType = type(None)
@@ -168,6 +170,7 @@ __all__ = [
     'send_fax',
     'map_of',
     'selections',
+    'BackgroundAction',
     'DAObject',
     'DAList',
     'DADict',
@@ -7526,6 +7529,53 @@ class DACloudStorage(DAObject):
         return server.cloud.container
 
 
+class BackgroundAction(DAObject):
+    """Runs a background action or raises a wait command if the action is still running."""
+
+    def init(self, *pargs, **kwargs):
+        self._running = False
+        self.refresh_seconds = 4
+        super().init(*pargs, **kwargs)
+
+    def run(self, action, **pargs):
+        if in_celery:
+            raise DAException("You cannot run a BackgroundAction inside of a background action")
+        if not self._running:
+            self.bg_action = background_action(action, **pargs)
+            self._running = True
+            self.initial_wait()
+        if self._running:
+            if not self.bg_action.ready():
+                self.wait()
+            result = self.bg_action.result()
+            failed = self.bg_action.failed()
+            del self.bg_action
+            self._running = False
+            if failed:
+                return self.on_failure(result)
+            return self.process_response(result)
+
+    def initial_wait(self):
+        command('wait', sleep=self.refresh_seconds)
+
+    def wait(self):
+        set_save_status('ignore')
+        command('wait', sleep=self.refresh_seconds)
+
+    def process_response(self, result):
+        return result.value
+
+    def on_failure(self, result):
+        return result.value
+
+    def running(self):
+        return self._running
+
+    def ready(self):
+        if self._running:
+            return self.bg_action.ready()
+        return None
+
 class DAGoogleAPI(DAObject):
 
     def api_credentials(self, scope):
@@ -7534,7 +7584,7 @@ class DAGoogleAPI(DAObject):
 
     def http(self, scope):
         """Returns a credentialized http object for the given scope."""
-        return self.api_credentials(scope).authorize(httplib2.Http())
+        return google_auth_httplib2.AuthorizedHttp(self.cloud_credentials(scopes=[scope]), http=httplib2.Http())
 
     def drive_service(self):
         """Returns a Google Drive service object using google-api-python-client."""
@@ -7544,9 +7594,9 @@ class DAGoogleAPI(DAObject):
         """Returns a Google Sheets service object using google-api-python-client."""
         return apiclient.discovery.build('sheets', 'v4', http=self.http('https://www.googleapis.com/auth/spreadsheets.readonly'))
 
-    def cloud_credentials(self, scope):
-        """Returns a google.oauth2.service_account credentials object for the given scope."""
-        return server.google_api.google_cloud_credentials(scope)
+    def cloud_credentials(self, scopes=None):
+        """Returns a google.oauth2.service_account credentials object."""
+        return server.google_api.google_cloud_credentials(scopes=scopes)
 
     def project_id(self):
         """Returns the ID of the project referenced in the google service account credentials in the Configuration."""

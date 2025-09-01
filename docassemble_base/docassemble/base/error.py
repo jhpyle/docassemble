@@ -359,6 +359,8 @@ class CommandError(Exception):
             self.return_type = "exit"
         self.url = kwargs.get('url', '')
         self.sleep = kwargs.get('sleep', None)
+        self.question_text = kwargs.get('question_text', '')
+        self.subquestion_text = kwargs.get('subquestion_text', '')
         super().__init__()
 
     def __str__(self):

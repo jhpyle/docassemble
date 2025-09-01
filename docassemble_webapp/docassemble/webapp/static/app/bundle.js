@@ -33776,6 +33776,7 @@ var daTheWidth;
 var daAspectRatio;
 var daTheBorders;
 var daSignaturePad;
+var daWaitPage = false;
 
 function daInitializeSignature(penColor, defaultImage) {
   daColor = penColor;
@@ -34748,6 +34749,7 @@ var daAddressAjaxTimeoutRunning = null;
 var daAddressAjaxTimeoutCallAfter = null;
 var daShowHideHappened = false;
 var daCheckinInterval = null;
+var daInitialCheckinTimeout = null;
 var daReloader = null;
 var daDisable = null;
 var daAutoColorScheme = true;
@@ -36765,6 +36767,19 @@ function daEvalExtraScript(info) {
     case "signature":
       daInitializeSignature(info.color, info.default);
       break;
+    case "wait":
+      daWaitPage = true;
+      if (daInitialCheckinTimeout != null) {
+        clearTimeout(daInitialCheckinTimeout);
+      }
+      if (daCheckinInterval != null) {
+        clearInterval(daCheckinInterval);
+      }
+      if (daSpinnerTimeout == null && !daShowingSpinner) {
+        daShowSpinner();
+      }
+      setTimeout(daRefreshSubmit, (info.sleep || 4) * 1000);
+      break;
   }
 }
 function daProcessAjax(data, form, doScroll, actionURL) {
@@ -36778,6 +36793,7 @@ function daProcessAjax(data, form, doScroll, actionURL) {
     daQuestionData = data.question_data;
   }
   if (data.action == "body") {
+    daWaitPage = false;
     if (daShouldForceFullScreen) {
       daForceFullScreen(data);
     }
@@ -36908,6 +36924,11 @@ function daProcessAjax(data, form, doScroll, actionURL) {
       $(form).append($(input));
     }
     form.submit();
+  } else if (data.action == "wait") {
+    if (daSpinnerTimeout == null && !daShowingSpinner) {
+      daShowSpinner();
+    }
+    setTimeout(daRefreshSubmit, (data.sleep || 4) * 1000);
   }
 }
 function daEmbeddedJs(e) {
@@ -37849,7 +37870,7 @@ function daInitialize(doScroll) {
     clearTimeout(daSpinnerTimeout);
     daSpinnerTimeout = null;
   }
-  if (daShowingSpinner) {
+  if (daShowingSpinner && !daWaitPage) {
     daHideSpinner();
   }
   if (daObserverMode) {
@@ -39668,15 +39689,15 @@ function daInitialize(doScroll) {
       }
     }, 20);
   }
-  if (daShowingSpinner) {
+  if (daShowingSpinner && !daWaitPage) {
     daHideSpinner();
   }
   if (!daObserverMode) {
     if (daCheckinInterval != null) {
       clearInterval(daCheckinInterval);
     }
-    if (daCheckinSeconds > 0) {
-      setTimeout(daInitialCheckin, 100);
+    if (daCheckinSeconds > 0 && !daWaitPage) {
+      daInitialCheckinTimeout = setTimeout(daInitialCheckin, 100);
       daCheckinInterval = setInterval(daCheckin, daCheckinSeconds);
     }
     daShowNotifications();

@@ -8844,7 +8844,9 @@ def index(action_argument=None, refer=None):
             user_dict['_internal']['progress'] = interview_status.question.progress
     if interview.use_navigation and interview_status.question.section is not None and docassemble.base.functions.this_thread.current_section:
         user_dict['nav'].set_section(docassemble.base.functions.this_thread.current_section)
-    if interview_status.question.question_type == "response":
+    if interview_status.question.question_type == "wait" and is_ajax:
+        response_to_send = jsonify(action='wait', sleep=interview_status.question.sleep, csrf_token=generate_csrf())
+    elif interview_status.question.question_type == "response":
         if is_ajax:
             if save_status != SS_IGNORE:
                 release_lock(user_code, yaml_filename)
@@ -13193,10 +13195,10 @@ def playground_files():
     if current_project != 'default' and not os.path.isdir(the_directory):
         current_project = set_current_project('default')
         the_directory = directory_for(pgarea, current_project)
-    pulldown_files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    dropdown_files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     current_variable_file = get_variable_file(current_project)
     if current_variable_file is not None:
-        if current_variable_file in pulldown_files:
+        if current_variable_file in dropdown_files:
             active_file = current_variable_file
         else:
             delete_variable_file(current_project)
@@ -13205,11 +13207,11 @@ def playground_files():
         active_file = None
     if active_file is None:
         current_file = get_current_file(current_project, 'questions')
-        if current_file in pulldown_files:
+        if current_file in dropdown_files:
             active_file = current_file
-        elif len(pulldown_files) > 0:
+        elif len(dropdown_files) > 0:
             delete_current_file(current_project, 'questions')
-            active_file = pulldown_files[0]
+            active_file = dropdown_files[0]
         else:
             delete_current_file(current_project, 'questions')
     area = SavedFile(playground_user.id, fix=True, section='playground' + section)
@@ -13450,7 +13452,7 @@ def playground_files():
         header += " / " + playground_user.email
     if current_project != 'default':
         header += " / " + current_project
-    response = make_response(render_template('pages/playgroundfiles.html', current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=playground_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(playground_user.id) + project_name(current_project), own_playground=bool(playground_user.id == current_user.id)), 200)
+    response = make_response(render_template('pages/playgroundfiles.html', current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, back_button=back_button, tab_title=header, page_title=header, extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), header=header, upload_header=upload_header, list_header=list_header, edit_header=edit_header, description=Markup(description), lowerdescription=lowerdescription, form=form, files=sorted(files, key=lambda y: y.lower()), section=section, userid=playground_user.id, editable_files=sorted(editable_files, key=lambda y: y['name'].lower()), editable_file_listing=editable_file_listing, trainable_files=trainable_files, convertible_files=convertible_files, formtwo=formtwo, current_file=the_file, content=content, after_text=after_text, is_new=str(is_new), any_files=any_files, dropdown_files=sorted(dropdown_files, key=lambda y: y.lower()), active_file=active_file, playground_package='docassemble.playground' + str(playground_user.id) + project_name(current_project), own_playground=bool(playground_user.id == current_user.id)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -15563,12 +15565,12 @@ def playground_page():
     docassemble.base.functions.this_thread.current_info = the_current_info
     interview_status = docassemble.base.parse.InterviewStatus(current_info=the_current_info)
     variables_html, vocab_list, vocab_dict, ac_list = get_vars_in_use(interview, interview_status, debug_mode=debug_mode, current_project=current_project)
-    pulldown_files = [x['name'] for x in files]
+    dropdown_files = [x['name'] for x in files]
     define_examples()
     if is_fictitious or is_new:
         new_active_file = word('(New file)')
-        if new_active_file not in pulldown_files:
-            pulldown_files.insert(0, new_active_file)
+        if new_active_file not in dropdown_files:
+            dropdown_files.insert(0, new_active_file)
         if is_fictitious:
             active_file = new_active_file
     initial_values = playground_values(current_project, the_file, playground_user)
@@ -15593,7 +15595,7 @@ def playground_page():
     extra_js = f"""
     <script{DEFER} src="{url_for('static', filename="app/playgroundbundle.min.js", v=da_version)}"></script>
     {redis_script(initial_values)}"""
-    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(playground_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=playground_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, pulldown_files=sorted(pulldown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form), own_playground=bool(playground_user.id == current_user.id), action=url_for('playground_page', project=current_project)), 200)
+    response = make_response(render_template('pages/playground.html', projects=get_list_of_projects(playground_user.id), current_project=current_project, version_warning=None, bodyclass='daadminbody', use_gd=use_gd, use_od=use_od, userid=playground_user.id, page_title=Markup(page_title), tab_title=word("Playground"), extra_css=Markup('\n    <link href="' + url_for('static', filename='app/playgroundbundle.css', v=da_version) + '" rel="stylesheet">'), extra_js=Markup(extra_js), form=form, fileform=fileform, files=sorted(files, key=lambda y: y['name'].lower()), any_files=any_files, dropdown_files=sorted(dropdown_files, key=lambda y: y.lower()), current_file=the_file, active_file=active_file, content=content, variables_html=Markup(variables_html), example_html=pg_ex['encoded_example_html'], interview_path=interview_path, is_new=str(is_new), valid_form=str(valid_form), own_playground=bool(playground_user.id == current_user.id), action=url_for('playground_page', project=current_project)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -23541,7 +23543,7 @@ def mako_parts(expression):
             if expression[i] == ']' and (i == 0 or expression[i-1] != "\\"):
                 mode = 0
                 current += expression[i]
-                for pattern in ['[FILE', '[TARGET ', '[EMOJI ', '[QR ', '[YOUTUBE', '[VIMEO]', '[PAGENUM]', '[BEGIN_TWOCOL]', '[BREAK]', '[END_TWOCOL', '[BEGIN_CAPTION]', '[VERTICAL_LINE]', '[END_CAPTION]', '[TIGHTSPACING]', '[SINGLESPACING]', '[DOUBLESPACING]', '[ONEANDAHALFSPACING]', '[TRIPLESPACING]', '[START_INDENTATION]', '[STOP_INDENTATION]', '[NBSP]', '[REDACTION', '[ENDASH]', '[EMDASH]', '[HYPHEN]', '[CHECKBOX]', '[BLANK]', '[BLANKFILL]', '[PAGEBREAK]', '[PAGENUM]', '[SECTIONNUM]', '[SKIPLINE]', '[NEWLINE]', '[NEWPAR]', '[BR]', '[TAB]', '[END]', '[BORDER]', '[NOINDENT]', '[FLUSHLEFT]', '[FLUSHRIGHT]', '[CENTER]', '[BOLDCENTER]', '[INDENTBY', '[${']:
+                for pattern in ['[FILE', '[TARGET ', '[EMOJI ', '[QR ', '[YOUTUBE', '[VIMEO]', '[PAGENUM]', '[BEGIN_TWOCOL]', '[BREAK]', '[END_TWOCOL', '[BEGIN_CAPTION]', '[VERTICAL_LINE]', '[END_CAPTION]', '[TIGHTSPACING]', '[SINGLESPACING]', '[DOUBLESPACING]', '[ONEANDAHALFSPACING]', '[TRIPLESPACING]', '[START_INDENTATION]', '[STOP_INDENTATION]', '[NBSP]', '[REDACTION', '[ENDASH]', '[EMDASH]', '[HYPHEN]', '[CHECKBOX]', '[BLANK]', '[BLANKFILL]', '[PAGEBREAK]', '[PAGENUM]', '[SECTIONNUM]', '[SKIPLINE]', '[NEWLINE]', '[NEWPAR]', '[BR]', '[TAB]', '[END]', '[BORDER]', '[NOINDENT]', '[FLUSHLEFT]', '[FLUSHRIGHT]', '[CENTER]', '[BOLDCENTER]', '[NO_EMOJIS]', '[INDENTBY', '[${']:
                     if current.startswith(pattern):
                         mode = 2
                         break

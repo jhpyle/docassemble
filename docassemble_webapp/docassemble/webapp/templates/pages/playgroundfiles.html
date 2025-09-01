@@ -123,7 +123,7 @@
 {%- if active_file %}
           <div class="col-md-4 pgright">
             <div id="playgroundbox" class="card bg-body-tertiary playgroundbox">
-              <div class="card-header bg-body-secondary">{{ word('From') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select bg-info">{% for file in pulldown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="dabadge btn btn-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a>&nbsp;<a title="{{ word('Show report of names and associated questions') }}" class="dabadge btn btn-secondary da-larger-badge" data-bs-toggle="modal" href="" id="daVariablesReportLauncher" data-bs-target="#daVariablesReport"><i class="fa-solid fa-list"></i></a>
+              <div class="card-header bg-body-secondary">{{ word('From') }}&nbsp;<span class="select-wrapper"><select tabindex="130" id="daVariables" class="playground-select bg-info">{% for file in dropdown_files %}<option {% if file == active_file %}selected {% endif %}value="{{ file }}">{{ file }}</option>{% endfor %}</select></span>&nbsp;<a class="dabadge btn btn-primary da-larger-badge" target="_blank" id="daRunButton">{{ word('Run') }}</a>&nbsp;<a title="{{ word('Show report of names and associated questions') }}" class="dabadge btn btn-secondary da-larger-badge" data-bs-toggle="modal" href="" id="daVariablesReportLauncher" data-bs-target="#daVariablesReport"><i class="fa-solid fa-list"></i></a>
               </div>
               <div class="card-body" id="daplaygroundcard">
                 <table id="daplaygroundtable" class="daplaygroundtable">

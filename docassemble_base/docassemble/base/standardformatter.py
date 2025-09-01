@@ -2238,6 +2238,16 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '            <form>\n'
             output += tracker_tag(status)
             output += '            </form>\n'
+    elif status.question.question_type == 'wait':
+        output += '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + markdown_to_html(status.questionText or word("Please wait . . ."), trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestionText:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        if showUnderText:
+            output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
+        output += tracker_tag(status)
+        output += '            </form>\n'
+        status.extra_scripts.append({"type": "wait", "sleep": status.question.sleep})
     else:
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'

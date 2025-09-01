@@ -42,9 +42,9 @@ code: |
 question: |
   What is the name of ${ customer.possessive('bank') }?
 fields:
-  - Bank: customer.bank_id # this is always a string, but it may be an integer if the user selects from the pull-down
+  - Bank: customer.bank_id # this is always a string, but it may be an integer if the user selects from the drop-down
     input type: combobox
-    code: Bank.pulldown_list() # this method returns the database ID and name of each bank in the database
+    code: Bank.dropdown_list() # this method returns the database ID and name of each bank in the database
 ---
 # this question is asked if the bank is a new bank
 question: |

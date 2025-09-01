@@ -1,0 +1,73 @@
+metadata:
+  title: OpenAI Chatbot
+  require login: True
+  required privileges:
+    - admin
+    - developer
+    - advocate
+---
+modules:
+  - .chatbot_bg_object
+---
+objects:
+  - name_address: Conversation
+  - user: Individual
+---
+generic object: Conversation
+event: x.bg_ask
+code: |
+  background_response(x.call_api(action_argument('prompt')))
+---
+mandatory: True
+code: |
+  bot_response = name_address.ask("""Pretend that you are a polite, helpful \
+  chatbot called Freddy and I am someone living in the United States who is \
+  asking you for help. Ask me for my name and address. You need my name and \
+  address so that you can help me. Make sure I give you both my first name \
+  and my last name. Once I give you my full name and address, your response \
+  should be solely a JSON object containing the keys first_name, last_name, \
+  street_address, city, and state. If I change the subject of conversation \
+  to something other than my name and address, or smalltalk, your response \
+  should be solely a JSON object {"error": "True"}. Start pretending \
+  immediately.""")
+---
+mandatory: True
+code: |
+  while True:
+    bot_response = name_address.ask(prompt)
+    try:
+      address = json.loads(bot_response)
+      assert isinstance(address, dict) and \
+      ('error' in address or 'first_name' in address)
+      break
+    except:
+      pass
+    del prompt
+---
+mandatory: True
+code: |
+  if not address.get("error", False):
+    user.name.first = address.get('first_name', '')
+    user.name.last = address.get('last_name', '')
+    user.address.address = address.get('street_address', '')
+    user.address.city = address.get('city', '')
+    user.address.state = address.get('state', '')
+  del address
+---
+mandatory: True
+question: |
+  Your name and address
+subquestion: |
+  % if user.name.defined():
+  ${ user.address_block() }
+  % else:
+  You failed to cooperate.
+  % endif
+---
+question: |
+  Freddy, a chatbot
+subquestion: |
+  ${ bot_response }
+fields:
+  - no label: prompt
+    datatype: area

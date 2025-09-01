@@ -47,8 +47,8 @@
     - password-field
     - periodic-amount
     - radio-list
-    - pull-down
-    - pull-down-with-code
+    - drop-down
+    - drop-down-with-code
     - range
     - continue
 - Field settings:

@@ -4107,7 +4107,7 @@ def all_variables(simplify=True, include_internal=False, special=False, make_cop
 
 
 def command(*pargs, **kwargs):
-    """Executes a command, such as exit, logout, restart, or leave."""
+    """Executes a command, such as exit, logout, restart, leave, or wait."""
     raise CommandError(*pargs, **kwargs)
 
 

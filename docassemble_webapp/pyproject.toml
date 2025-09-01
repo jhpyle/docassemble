@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=80.9.0"]
+requires = ["setuptools==80.9.0"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "docassemble.webapp"
@@ -7,7 +7,7 @@ version = '1.8.11'
 description = "The web application components of the docassemble system."
 readme = "README.md"
 authors = [
-  {name = "Jonathan Pyle", email = "jhpyle@gmail.com"}
+  {name = "Jonathan Pyle", email = "jhpyle@gmail.com"},
 ]
 license = "MIT"
 license-files = ["LICENSE.txt"]

@@ -1514,7 +1514,10 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
             result = term_match.sub((lambda x: add_terms(x.group(1), interview_autoterms[lang], label=x.group(2), status=status, question=question)), result)
         elif question.language in interview_autoterms and len(interview_autoterms[question.language]):
             result = term_match.sub((lambda x: add_terms(x.group(1), interview_autoterms[question.language], label=x.group(2), status=status, question=question)), result)
-    if status is not None and question.interview.scan_for_emojis:
+    do_not_scan_for_emojis = bool(re.search(r'\[NO_EMOJIS\]', result))
+    if do_not_scan_for_emojis:
+        result = re.sub(r'\[NO_EMOJIS\]\s*', r'', result)
+    if status is not None and question.interview.scan_for_emojis and not do_not_scan_for_emojis:
         result = emoji_match.sub((lambda x: emoji_html(x.group(1), status=status, question=question)), result)
     result = re.sub(r'<p><i class="visually-hidden *([^>]*)></i>', r'<p class="\1>', result)
     if trim:

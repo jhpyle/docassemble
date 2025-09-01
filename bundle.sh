@@ -32,9 +32,9 @@ if [ "$file_changed" = true ]; then
 fi
 
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/bundle.css ${SERVER}/bundle.css
-sass --style compressed docassemble_webapp/docassemble/webapp/static/app/bundle.css docassemble_webapp/docassemble/webapp/static/app/bundle.min.css
+/usr/bin/sass --style compressed docassemble_webapp/docassemble/webapp/static/app/bundle.css docassemble_webapp/docassemble/webapp/static/app/bundle.min.css
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.css ${SERVER}/playgroundbundle.css
-sass --style compressed docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.css docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.min.css
+/usr/bin/sass --style compressed docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.css docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.min.css
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/bundle.js ${SERVER}/bundle.js
 uglifyjs docassemble_webapp/docassemble/webapp/static/app/bundle.js --source-map "url='bundle.min.js.map',includeSources" --output docassemble_webapp/docassemble/webapp/static/app/bundle.min.js
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/monitorbundle.js ${SERVER}/monitorbundle.js

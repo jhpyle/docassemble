@@ -13,6 +13,26 @@ Feature: Example interviews
   #   And I wait 2 seconds
   #   Then I should see the phrase "Here is the file you uploaded"
 
+  Scenario: Test the interview "Vocabulary" 1
+    Given I start the interview "docassemble.base:data/questions/examples/question-autoterms.yml"
+    Then I should see the phrase "Have you ever met a creeper?"
+    And I should see the phrase "If you have met a zombie pigman, you have almost certainly met a creeper."
+    And I click the link "creeper"
+    And I wait 1 second
+    Then I should see the phrase "A tall green creature that explodes if you get too close."
+    And I unfocus
+    And I wait 1 second
+    Then I should not see the phrase "A tall green creature that explodes if you get too close."
+    And I click the link "zombie pigman"
+    And I wait 1 second
+    Then I should see the phrase "A harmless creature who carries a gold sword."
+    And I unfocus
+    And I wait 1 second
+    Then I should not see the phrase "A harmless creature who carries a gold sword."
+    And I click the button "Yes"
+    Then I should see the phrase "Thank you for telling me about your creeper experience."
+    And I should see the phrase "You are not a noob!"
+
   Scenario: Test the interview "Displaying progress"
     Given I start the interview "docassemble.demo:data/questions/examples/background-tail.yml"
     Then I should see the phrase "How much shall I add to 553?"
@@ -1581,13 +1601,13 @@ Feature: Example interviews
   # Scenario: Test the interview "Combobox within fields"
   #   Given I start the interview "docassemble.base:data/questions/examples/fields-choices-combobox.yml"
 
-  Scenario: Test the interview "Multiple choice pulldown" 1
+  Scenario: Test the interview "Multiple choice dropdown" 1
     Given I start the interview "docassemble.base:data/questions/examples/fields-choices-dropdown.yml"
     And I select "Clogs" as the "Shoe Type"
     And I click the button "Continue"
     Then I should see the phrase "target_variable is: “Clogs”"
 
-  Scenario: Test the interview "Multiple choice pulldown" 2
+  Scenario: Test the interview "Multiple choice dropdown" 2
     Given I start the interview "docassemble.base:data/questions/examples/fields-choices.yml"
     And I select "Apples" as the "Fruit"
     And I click the button "Continue"
@@ -3442,7 +3462,7 @@ Feature: Example interviews
   # Scenario: Test the interview "Ordinal numbers"
   #   Given I start the interview "docassemble.base:data/questions/examples/ordinal-number.yml"
 
-  Scenario: Test the interview "Other field" with pull-down
+  Scenario: Test the interview "Other field" with drop-down
     Given I start the interview "docassemble.base:data/questions/examples/other.yml"
     Then I should see the phrase "What kind of car do you drive?"
     And I select "Toyota" as the "Make"
@@ -3707,8 +3727,8 @@ Feature: Example interviews
     Then I should see the phrase "Done with the interview."
     And I should see the phrase "I am glad you are doing well."
 
-  Scenario: Test the interview "Pulldown with code"
-    Given I start the interview "docassemble.base:data/questions/examples/pull-down-with-code.yml"
+  Scenario: Test the interview "Dropdown with code"
+    Given I start the interview "docassemble.base:data/questions/examples/drop-down-with-code.yml"
     Then I should see the phrase "Describe yourself."
     And I select "High School" as the "Level of education"
     And I select "Connecticut" as the "State of birth"
@@ -3718,8 +3738,8 @@ Feature: Example interviews
     And I should see the phrase "Dear Sir,"
     And I should see the phrase "You have a High School education and you were born in CT."
 
-  Scenario: Test the interview "Pulldown"
-    Given I start the interview "docassemble.base:data/questions/examples/pull-down.yml"
+  Scenario: Test the interview "Dropdown"
+    Given I start the interview "docassemble.base:data/questions/examples/drop-down.yml"
     Then I should see the phrase "Describe yourself."
     And I select "High School" as the "Level of education"
     And I select "Pear" as the "Favorite fruit"
@@ -3742,26 +3762,6 @@ Feature: Example interviews
   Scenario: Test the interview "Quantity of noun"
     Given I start the interview "docassemble.base:data/questions/examples/quantity-noun.yml"
     Then I should see the phrase "You have four apples."
-
-  Scenario: Test the interview "Vocabulary" 1
-    Given I start the interview "docassemble.base:data/questions/examples/question-autoterms.yml"
-    Then I should see the phrase "Have you ever met a creeper?"
-    And I should see the phrase "If you have met a zombie pigman, you have almost certainly met a creeper."
-    And I click the link "creeper"
-    And I wait 1 second
-    Then I should see the phrase "A tall green creature that explodes if you get too close."
-    And I unfocus
-    And I wait 1 second
-    Then I should not see the phrase "A tall green creature that explodes if you get too close."
-    And I click the link "zombie pigman"
-    And I wait 1 second
-    Then I should see the phrase "A harmless creature who carries a gold sword."
-    And I unfocus
-    And I wait 1 second
-    Then I should not see the phrase "A harmless creature who carries a gold sword."
-    And I click the button "Yes"
-    Then I should see the phrase "Thank you for telling me about your creeper experience."
-    And I should see the phrase "You are not a noob!"
 
   Scenario: Test the interview "Question text with markup"
     Given I start the interview "docassemble.base:data/questions/examples/question-markup.yml"
@@ -5969,7 +5969,7 @@ Feature: Example interviews
   #   Given I start the interview "docassemble.demo:data/questions/testproblem.yml"
 
   # Scenario: Test the interview ""
-  #   Given I start the interview "docassemble.demo:data/questions/testpulldown.yml"
+  #   Given I start the interview "docassemble.demo:data/questions/testdropdown.yml"
 
   # Scenario: Test the interview ""
   #   Given I start the interview "docassemble.demo:data/questions/testqr.yml"
@@ -6920,7 +6920,7 @@ Feature: Example interviews
     Then I should see the phrase "Thanks for completing the interview!"
     And I should not see the phrase "Markdown"
 
-  Scenario: Test the interview "Multiple choice pulldown with explicit input type"
+  Scenario: Test the interview "Multiple choice dropdown with explicit input type"
     Given I start the interview "docassemble.base:data/questions/examples/fields-choices-dropdown-input-type.yml"
     And I select "Clogs" as the "Shoe Type"
     And I click the button "Continue"

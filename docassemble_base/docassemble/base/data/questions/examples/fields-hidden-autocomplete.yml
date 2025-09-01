@@ -37,7 +37,7 @@ fields:
     input type: hidden
 validation code: |
   if not doctor.address.place_id:
-    validation_error('You need to choose a doctor from the pull-down list.')
+    validation_error('You need to choose a doctor from the drop-down list.')
 ---
 depends on:
   - doctor.address.name

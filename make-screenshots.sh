@@ -244,7 +244,7 @@ do
 	 "$tfile" = "testpickle" -o \
 	 "$tfile" = "testplural" -o \
 	 "$tfile" = "testproblem" -o \
-	 "$tfile" = "testpulldown" -o \
+	 "$tfile" = "testdropdown" -o \
 	 "$tfile" = "testqr" -o \
 	 "$tfile" = "testqr2" -o \
 	 "$tfile" = "testresponse" -o \

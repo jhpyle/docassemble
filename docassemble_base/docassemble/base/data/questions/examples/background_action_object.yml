@@ -1,0 +1,25 @@
+metadata:
+  title: BackgroundAction
+  example start: 1
+  example end: 5
+  documentation: "https://docassemble.org/docs/objects.html#BackgroundAction"
+---
+objects:
+  bg: BackgroundAction
+---
+code: |
+  answer = bg.run('bg_task', additional=value_to_add)
+---
+question: |
+  How much shall I add to 553?
+fields:
+  - Number: value_to_add
+    datatype: integer
+---
+event: bg_task
+code: |
+  background_response(553 + action_argument('additional'))
+---
+mandatory: True
+question: |
+  The answer is ${ answer }.

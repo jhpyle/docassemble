@@ -149,7 +149,7 @@ class Bank(Person, SQLObject):
         self._session.commit()
 
     @classmethod
-    def pulldown_list(cls):
+    def dropdown_list(cls):
         output = []
         for db_entry in list(cls._session.query(BankModel).order_by(BankModel.name).all()):
             output.append({"label": db_entry.name, "value": db_entry.id})

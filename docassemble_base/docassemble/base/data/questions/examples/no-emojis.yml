@@ -1,0 +1,16 @@
+metadata:
+  title: No inline icons
+  documentation: "https://docassemble.org/docs/markup.html#emoji"
+  example start: 1
+  example end: 1
+---
+mandatory: True
+question: |
+  Third quarter metrics
+subquestion: |
+  [NO_EMOJIS]
+  We are making more money
+  :far-fa-money-bill-alt: than
+  we did in the second quarter.
+
+  So you can sleep well tonight! :bed:

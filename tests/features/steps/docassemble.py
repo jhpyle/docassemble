@@ -5,7 +5,6 @@ import json
 import shutil
 from random import randint, random
 from behave import step, use_step_matcher  # pylint: disable=import-error,no-name-in-module
-from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
@@ -259,12 +258,17 @@ def click_button_post(context, button_name):
 
 @step(r'I click the link "(?P<link_name>[^"]+)"')
 def click_link(context, link_name):
-    do_wait(context)
     try:
-        context.browser.find_element(By.XPATH, '//a[text()="' + link_name + '"]').click()
+        elem = WebDriverWait(context.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//a[text()="' + link_name + '"]'))
+        )
+        elem.click()
     except:
         link_name += " "
-        context.browser.find_element(By.XPATH, '//a[text()="' + link_name + '"]').click()
+        elem = WebDriverWait(context.browser, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//a[text()="' + link_name + '"]'))
+        )
+        elem.click()
     context.browser.wait_for_it()
 
 
@@ -611,7 +615,10 @@ def change_window_size(context, xdimen, ydimen):
 
 @step(r'I unfocus')
 def unfocus(context):
-    context.browser.find_element(By.ID, 'daMainQuestion').click()
+    elem = WebDriverWait(context.browser, 10).until(
+        EC.element_to_be_clickable((By.ID, 'daMainQuestion'))
+    )
+    elem.click()
 
 
 @step(r'I click the final link "(?P<link_name>[^"]+)"')
