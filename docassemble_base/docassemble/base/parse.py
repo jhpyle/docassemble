@@ -52,24 +52,13 @@ import docassemble.base.file_docx
 from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError, DAException, DANameError, DASourceError
 import docassemble.base.functions
 import docassemble.base.util
-from docassemble.base.functions import pickleable_objects, word, get_language, RawValue, get_config
+from docassemble.base.functions import pickleable_objects, word, get_language, RawValue, get_config, safeyaml, altyaml, prettyyaml
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import MyPandoc
 from docassemble.base.mako.template import Template as MakoTemplate
 from docassemble.base.mako.exceptions import SyntaxException, CompileException
 from docassemble.base.astparser import myvisitnode
 
-prettyyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
-prettyyaml.indent(mapping=2, sequence=4, offset=2)
-prettyyaml.default_flow_style = False
-prettyyaml.default_style = '|'
-prettyyaml.allow_unicode = True
-altyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
-altyaml.indent(mapping=2, sequence=4, offset=2)
-altyaml.default_flow_style = False
-altyaml.default_style = '|'
-altyaml.allow_unicode = True
-safeyaml = ruamel.yaml.YAML(typ=['safe', 'string'])
 equals_byte = bytes('=', 'utf-8')
 RangeType = type(range(1, 2))
 NoneType = type(None)

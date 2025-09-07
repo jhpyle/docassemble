@@ -17,11 +17,10 @@ from flask import session, url_for as base_url_for
 from flask_login import current_user
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import or_, and_, select, delete
-import ruamel.yaml
 import tzlocal
 from docassemble.base.error import DAException
 from docassemble.webapp.da_flask_mail import Message  # noqa: F401 # pylint: disable=unused-import
-from docassemble.base.functions import pickleable_objects, filename_invalid
+from docassemble.base.functions import pickleable_objects, filename_invalid, safeyaml
 from docassemble.base.config import daconfig, hostname, DEBUG_BOOT, boot_log  # START_TIME
 from docassemble.base.generate_key import random_bytes, random_alphanumeric
 from docassemble.base.logger import logmessage
@@ -54,8 +53,6 @@ if DEBUG_BOOT:
 TypeType = type(type(None))
 NoneType = type(None)
 DEBUG = daconfig.get('debug', False)
-
-safeyaml = ruamel.yaml.YAML(typ='safe')
 
 # def elapsed(name_of_function):
 #     def elapse_decorator(func):
@@ -824,7 +821,7 @@ def fetch_user_dict(user_code, filename, secret=None):
     user_dict = None
     steps = 1
     encrypted = True
-    subq = select(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('cnt')).where(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()
+    subq = select(db.func.max(UserDict.indexno).label('indexno'), db.func.count(UserDict.indexno).label('cnt')).where(and_(UserDict.key == user_code, UserDict.filename == filename)).subquery()  # pylint: disable=not-callable
     stmt = select(UserDict.indexno, UserDict.dictionary, UserDict.encrypted, subq.c.cnt).join(subq, subq.c.indexno == UserDict.indexno)
     result = db.session.execute(stmt)
     for d in list(result):

@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     $("#config_form").bind("submit", function () {
       {
-        $("#config_content").val(daCm.state.doc.toString());
+        $("#config_content").val(daCm.ev.state.doc.toString());
         return true;
       }
     });

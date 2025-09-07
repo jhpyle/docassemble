@@ -323,6 +323,7 @@
 "File not found: ": Null
 "File": Null
 "Files": Null
+"Files to include": Null
 "File Text": Null
 "File to upload": Null
 "Filter by tag": Null
@@ -363,6 +364,7 @@
 "Ghana": Null
 "Gibraltar": Null
 "GitHub Branch": Null
+"GitHub Commit": Null
 "GitHub integration": Null
 "GitHub Integration": Null
 "GitHub integration was successfully configured.": Null
@@ -894,6 +896,7 @@
 "Select one": Null
 "Select the folder from your OneDrive that you want to be synchronized with the Playground.": Null
 "Select the project": Null
+"Select which files to include in the commit": Null
 "Select zero or more files": Null
 "Select zero or more packages": Null
 "Send confirmation email": Null

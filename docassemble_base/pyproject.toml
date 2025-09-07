@@ -50,7 +50,7 @@ dependencies = [
   "colorama==0.4.6",
   "commonmark==0.9.1",
   "convertapi==2.0.0",
-  "cryptography==45.0.5",
+  "cryptography==45.0.7",
   "cssselect2==0.8.0",
   "defusedxml==0.7.1",
   "Deprecated==1.2.18",

@@ -24,6 +24,7 @@ import us
 import pycountry
 import markdown
 import nltk
+import ruamel.yaml
 from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
 
 try:
@@ -60,7 +61,7 @@ import phonenumbers
 import werkzeug.utils
 import num2words
 from jinja2.runtime import Undefined
-from docassemble.base.logger import logmessage
+from docassemble.base.logger import logmessage  # pylint: disable=ungrouped-imports
 from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError, DANameError, DAInvalidFilename
 from docassemble.base.generate_key import random_string
 import docassemble.base.astparser
@@ -178,7 +179,7 @@ def pop_event_stack(var):
             this_thread.internal['event_stack'][unique_id].pop(0)
             # logmessage("popped the event stack")
     if 'action' in this_thread.current_info and this_thread.current_info['action'] == var:
-        del docassemble.base.functions.this_thread.current_info['action']
+        del this_thread.current_info['action']
 
 
 def pop_current_variable():
@@ -2204,7 +2205,11 @@ def backup_thread_variables():
             backup[key] = getattr(this_thread, key)
             if key == 'global_vars':
                 this_thread.global_vars = GenericObject()
-            elif key in ('current_info', 'misc'):
+            elif key == 'misc':
+                for key in [item for item in this_thread.misc.keys() if item.startswith('yaml_')]:
+                    del this_thread.misc[key]
+                setattr(this_thread, key, copy.deepcopy(this_thread.misc))
+            elif key == 'current_info':
                 setattr(this_thread, key, copy.deepcopy(getattr(this_thread, key)))
             elif key in ('internal', 'gathering_mode', 'saved_files'):
                 setattr(this_thread, key, {})
@@ -2328,6 +2333,58 @@ def worker_caller(func, ui_notification, action):
 # def set_server_redis(target):
 #     global server_redis
 #     server_redis = target
+
+
+class SafeYaml:
+    def __init__(self, yaml_type):
+        self._yaml_type = yaml_type
+
+    def _get_yaml(self):
+        if self._yaml_type not in this_thread.misc:
+            if self._yaml_type == 'bytesyaml':
+                the_yaml = ruamel.yaml.YAML(typ=['safe', 'bytes'])
+            else:
+                the_yaml = ruamel.yaml.YAML(typ=['safe', 'string'])
+            if self._yaml_type == 'prettyyaml':
+                the_yaml.indent(mapping=2, sequence=4, offset=2)
+                the_yaml.default_flow_style = False
+                the_yaml.default_style = '|'
+                the_yaml.allow_unicode = True
+            elif self._yaml_type == 'altyaml':
+                the_yaml.indent(mapping=2, sequence=4, offset=2)
+                the_yaml.default_flow_style = False
+                the_yaml.default_style = '|'
+                the_yaml.allow_unicode = True
+            elif self._yaml_type == 'bytesyaml':
+                the_yaml.default_flow_style = False
+                the_yaml.default_style = '"'
+                the_yaml.allow_unicode = True
+                the_yaml.width = 10000
+            elif self._yaml_type == 'altyamlstring':
+                the_yaml.default_flow_style = False
+                the_yaml.default_style = '"'
+                the_yaml.allow_unicode = True
+                the_yaml.width = 10000
+            this_thread.misc[self._yaml_type] = the_yaml
+        return this_thread.misc[self._yaml_type]
+
+    def load(self, *pargs, **kwargs):
+        return self._get_yaml().load(*pargs, **kwargs)
+
+    def load_all(self, *pargs, **kwargs):
+        return self._get_yaml().load_all(*pargs, **kwargs)
+
+    def dump_to_string(self, *pargs, **kwargs):
+        return self._get_yaml().dump_to_string(*pargs, **kwargs)
+
+    def dump_to_bytes(self, *pargs, **kwargs):
+        return self._get_yaml().dump_to_bytes(*pargs, **kwargs)
+
+safeyaml = SafeYaml('yaml_safeyaml')
+altyaml = SafeYaml('yaml_altyaml')
+prettyyaml = SafeYaml('yaml_prettyyaml')
+bytesyaml = SafeYaml('yaml_bytesyaml')
+altyamlstring = SafeYaml('yaml_altyamlstring')
 
 
 def ordinal_function_en(i, **kwargs):

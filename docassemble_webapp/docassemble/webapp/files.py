@@ -656,7 +656,7 @@ SOFTWARE.
             the_license = 'MIT'
         else:
             the_license = ''
-    package_data = {'build-system': {'requires': ['setuptools>=80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': info.get('version', '0.0.1'), 'description': info.get('description', 'A docassemble extension.'), 'readme': 'README.md', 'authors': [{'name': str(info.get('author_name', '')), 'email': str(info.get('author_email', ''))}], 'dependencies': dependencies_list, 'urls': {'Homepage': info['url'] or 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}}
+    package_data = {'build-system': {'requires': ['setuptools==80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': info.get('version', '0.0.1'), 'description': info.get('description', 'A docassemble extension.'), 'readme': 'README.md', 'authors': [{'name': str(info.get('author_name', '')), 'email': str(info.get('author_email', ''))}], 'dependencies': dependencies_list, 'urls': {'Homepage': info['url'] or 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}}
     if the_license != '':
         package_data.update({'license': str(the_license), 'license-files': ['LICENSE']})
     pyprojecttoml = tomli_w.dumps(package_data)
@@ -745,7 +745,6 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
       zip_safe=False,
       package_data=find_package_data(where='docassemble/""" + str(pkgname) + """/', package='docassemble.""" + str(pkgname) + """'),
      )
-
 """
     templatereadme = """\
 # Template directory
@@ -762,7 +761,7 @@ this directory.
 # Sources directory
 
 This directory is used to store word translation files,
-machine learning training files, and other source files.
+machine learning training files, and other sources of data.
 """
     if directory is None:
         directory = tempfile.mkdtemp(prefix='SavedFile')

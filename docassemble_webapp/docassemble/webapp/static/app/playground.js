@@ -334,18 +334,18 @@ function readyQuestionsPage() {
       event.preventDefault();
     }
   });
-  $("#playground_content").val(daCm.state.doc.toString());
-  $(daCm.dom).attr("tabindex", 70);
-  $(daCm.dom).on("focus", function () {
-    daCm.focus();
+  $("#playground_content").val(daCm.ev.state.doc.toString());
+  $(daCm.ev.dom).attr("tabindex", 70);
+  $(daCm.ev.dom).on("focus", function () {
+    daCm.ev.focus();
   });
   $(window).bind("beforeunload", function () {
-    $("#playground_content").val(daCm.state.doc.toString());
+    $("#playground_content").val(daCm.ev.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
   });
   $("#form").areYouSure(daTranslations.unsavedChangesWarning);
   $("#form").bind("submit", function () {
-    $("#playground_content").val(daCm.state.doc.toString());
+    $("#playground_content").val(daCm.ev.state.doc.toString());
     $("#form").trigger("reinitialize.areYouSure");
     return true;
   });
@@ -401,7 +401,7 @@ function readyQuestionsPage() {
       event.preventDefault();
       return false;
     }
-    $("#playground_content").val(daCm.state.doc.toString());
+    $("#playground_content").val(daCm.ev.state.doc.toString());
     disableButtonsUntilCallback();
     $.ajax({
       type: "POST",
@@ -422,7 +422,7 @@ function readyQuestionsPage() {
   });
   var thisWindow = window;
   $("#daRunSyncGD").click(function (event) {
-    $("#playground_content").val(daCm.state.doc.toString());
+    $("#playground_content").val(daCm.ev.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
     if (
       $("#form").hasClass("dirty") &&
@@ -442,7 +442,7 @@ function readyQuestionsPage() {
     return true;
   });
   $("#daRunSyncOD").click(function (event) {
-    $("#playground_content").val(daCm.state.doc.toString());
+    $("#playground_content").val(daCm.ev.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
     if (
       $("#form").hasClass("dirty") &&
@@ -462,7 +462,7 @@ function readyQuestionsPage() {
     return true;
   });
   $("#form button[name='submit']").click(function (event) {
-    $("#playground_content").val(daCm.state.doc.toString());
+    $("#playground_content").val(daCm.ev.state.doc.toString());
     if (
       validForm == false ||
       isNew == true ||
@@ -504,16 +504,16 @@ function readyQuestionsPage() {
   });
 
   $(".da-example-copy").on("click", function (event) {
-    if (daCm.state.selection.ranges.some((r) => !r.empty)) {
-      daCm.dispatch(daCm.state.replaceSelection(""));
+    if (daCm.ev.state.selection.ranges.some((r) => !r.empty)) {
+      daCm.ev.dispatch(daCm.ev.state.replaceSelection(""));
     }
     var id = $(".da-example-active").data("example");
-    var curPos = daCm.state.selection.main.head;
+    var curPos = daCm.ev.state.selection.main.head;
     var notFound = 1;
-    var curLine = daCm.state.doc.lineAt(curPos).number;
+    var curLine = daCm.ev.state.doc.lineAt(curPos).number;
     let pos = 0;
     for (
-      let lines = daCm.state.doc.iterLines((from = curLine));
+      let lines = daCm.ev.state.doc.iterLines((from = curLine));
       !lines.next().done && notFound;
       pos++
     ) {
@@ -525,17 +525,17 @@ function readyQuestionsPage() {
     let replacementText = "---\n" + exampleData[id]["source"] + "\n";
     var newPos;
     if (notFound) {
-      newPos = daCm.state.doc.length;
+      newPos = daCm.ev.state.doc.length;
       replacementText = "\n" + replacementText;
     } else {
       if (pos > 0) {
         pos--;
       }
-      newPos = daCm.state.doc.line(curLine + pos).from;
+      newPos = daCm.ev.state.doc.line(curLine + pos).from;
     }
-    daCm.dispatch({ selection: { anchor: newPos, head: newPos } });
-    daCm.dispatch(daCm.state.replaceSelection(replacementText, "around"));
-    daCm.focus();
+    daCm.ev.dispatch({ selection: { anchor: newPos, head: newPos } });
+    daCm.ev.dispatch(daCm.ev.state.replaceSelection(replacementText, "around"));
+    daCm.ev.focus();
     event.preventDefault();
     return false;
   });
@@ -576,7 +576,7 @@ function readyQuestionsPage() {
     $("#da-example-source-after").addClass("dainvisible");
   });
   if ($("#playground_name").val().length > 0) {
-    daCm.focus();
+    daCm.ev.focus();
     $("#form").trigger("reset");
   } else {
     $("#playground_name").focus();
@@ -656,20 +656,20 @@ function activateVariables() {
     });
   });
   $(".playground-variable").on("click", function (event) {
-    daCm.dispatch(
-      daCm.state.replaceSelection($(this).data("insert"), "around"),
+    daCm.ev.dispatch(
+      daCm.ev.state.replaceSelection($(this).data("insert"), "around"),
     );
-    daCm.focus();
+    daCm.ev.focus();
   });
   $(".dasearchicon").on("click", function (event) {
     var query = $(this).data("name");
     if (query == null || query.length == 0) {
-      daCm.dispatch({
-        selection: { anchor: daCm.state.selection.main.head },
+      daCm.ev.dispatch({
+        selection: { anchor: daCm.ev.state.selection.main.head },
       });
       return;
     }
-    daStartNewSearch(daCm, query);
+    daStartNewSearch(daCm.ev, query);
     event.preventDefault();
     return false;
   });
@@ -704,7 +704,7 @@ function updateRunLink() {
 }
 
 function fetchVars(changed) {
-  $("#playground_content").val(daCm.state.doc.toString());
+  $("#playground_content").val(daCm.ev.state.doc.toString());
   updateRunLink();
   $.ajax({
     type: "POST",
@@ -853,7 +853,7 @@ function readyVariables() {
       if (tag == "INPUT") {
         e.preventDefault();
         e.stopPropagation();
-        daCm.focus();
+        daCm.ev.focus();
         return false;
       }
     }
@@ -926,21 +926,21 @@ function readyFilesPage() {
     daKeymap,
     daWrapLines,
   );
-  $(daCm.dom).attr("tabindex", 580);
-  $(daCm.dom).on("focus", function () {
-    daCm.focus();
+  $(daCm.ev.dom).attr("tabindex", 580);
+  $(daCm.ev.dom).on("focus", function () {
+    daCm.ev.focus();
   });
   if (daScroll) {
     if ($("#file_name").val().length > 0) {
-      daCm.focus();
+      daCm.ev.focus();
     } else {
       $("#file_name").focus();
     }
     scrollBottom();
   }
-  $("#file_content").val(daCm.state.doc.toString());
+  $("#file_content").val(daCm.ev.state.doc.toString());
   $(window).bind("beforeunload", function () {
-    $("#file_content").val(daCm.state.doc.toString());
+    $("#file_content").val(daCm.ev.state.doc.toString());
     $("#formtwo").trigger("checkform.areYouSure");
   });
   $("#daDelete").click(function (event) {
@@ -950,7 +950,7 @@ function readyFilesPage() {
   });
   $("#formtwo").areYouSure({ message: daTranslations.unsavedChangesWarning });
   $("#formtwo").bind("submit", function (e) {
-    $("#file_content").val(daCm.state.doc.toString());
+    $("#file_content").val(daCm.ev.state.doc.toString());
     $("#formtwo").trigger("reinitialize.areYouSure");
     if (daSection != "modules" && !isNew) {
       var extraVariable = "";
@@ -1033,19 +1033,19 @@ function readyPackagePage() {
     daKeymap,
     daWrapLines,
   );
-  $(daCm.dom).attr("tabindex", 70);
-  $(daCm.dom).on("focus", function () {
-    daCm.focus();
+  $(daCm.ev.dom).attr("tabindex", 70);
+  $(daCm.ev.dom).on("focus", function () {
+    daCm.ev.focus();
   });
-  $("#readme").val(daCm.state.doc.toString());
-  $(daCm.dom).attr("id", "readme_content");
+  $("#readme").val(daCm.ev.state.doc.toString());
+  $(daCm.ev.dom).attr("id", "readme_content");
   $(window).bind("beforeunload", function () {
-    $("#readme").val(daCm.state.doc.toString());
+    $("#readme").val(daCm.ev.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
   });
   $("#form").areYouSure(daTranslations.unsavedChangesWarning);
   $("#form").bind("submit", function () {
-    $("#readme").val(daCm.state.doc.toString());
+    $("#readme").val(daCm.ev.state.doc.toString());
     $("#form").trigger("reinitialize.areYouSure");
     return true;
   });
@@ -1069,6 +1069,7 @@ function readyPackagePage() {
   });
   $("#daCancelGitHub").click(function (event) {
     var daWhichButton = this;
+    $("#files_to_add").prop("disabled", true);
     $("#commit_message_div").hide();
     $(".btn-da").each(function () {
       if (
@@ -1081,6 +1082,10 @@ function readyPackagePage() {
     });
     $("#daGitHub").html(daTranslations.github);
     $(this).hide();
+    $(
+      "#file_name, #version, #license, #author_name, #author_email, #description, #url, #dependencies, #interview_files, #template_files, #static_files, #sources_files, #module_files",
+    ).prop("disabled", false);
+    daCm.enable();
     event.preventDefault();
     return false;
   });
@@ -1143,12 +1148,72 @@ function readyPackagePage() {
         });
         $(this).html(daTranslations.commit);
         $("#daCancelGitHub").show();
+        $(
+          "#file_name, #version, #license, #author_name, #author_email, #description, #url, #dependencies, #interview_files, #template_files, #static_files, #sources_files, #module_files",
+        ).prop("disabled", true);
+        daCm.disable();
+        $("#files_to_add").prop("disabled", false);
+        let currentPrefix = "docassemble/" + $("#file_name").val();
+        let fileList = [
+          ".gitignore",
+          "LICENSE",
+          "MANIFEST.in",
+          "README.md",
+          "pyproject.toml",
+          "setup.cfg",
+          "setup.py",
+          currentPrefix + "/__init__.py",
+          currentPrefix + "/data/templates/README.md",
+          currentPrefix + "/data/static/README.md",
+          currentPrefix + "/data/sources/README.md",
+        ];
+        $("#interview_files")
+          .find("option:selected")
+          .each(function () {
+            fileList.push(currentPrefix + "/data/questions/" + $(this).text());
+          });
+        $("#template_files")
+          .find("option:selected")
+          .each(function () {
+            fileList.push(currentPrefix + "/data/templates/" + $(this).text());
+          });
+        $("#static_files")
+          .find("option:selected")
+          .each(function () {
+            fileList.push(currentPrefix + "/data/static/" + $(this).text());
+          });
+        $("#sources_files")
+          .find("option:selected")
+          .each(function () {
+            fileList.push(currentPrefix + "/data/sources/" + $(this).text());
+          });
+        $("#module_files")
+          .find("option:selected")
+          .each(function () {
+            fileList.push(currentPrefix + "/" + $(this).text());
+          });
+        $("#files_to_add").empty();
+        if (fileList.length < 10) {
+          $("#files_to_add").attr("size", fileList.length);
+        } else {
+          $("#files_to_add").attr("size", 10);
+        }
+        for (var i = 0; i < fileList.length; ++i) {
+          let option = $("<option>");
+          option.text(fileList[i]);
+          option.val(fileList[i]);
+          option.prop("selected", true);
+          $("#files_to_add").append(option);
+        }
       }
       $("#commit_message").focus();
       window.scrollTo(0, document.body.scrollHeight);
       event.preventDefault();
       return false;
     }
+    $(
+      "#file_name, #version, #license, #author_name, #author_email, #description, #url, #dependencies, #interview_files, #template_files, #static_files, #sources_files, #module_files",
+    ).prop("disabled", false);
     if (
       $("#pypi_also").prop("checked") &&
       existingPypiVersion != null &&

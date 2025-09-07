@@ -53,7 +53,7 @@ import docassemble.base.astparser
 from docassemble.webapp.api_key import encrypt_api_key
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError, DAInvalidFilename, DASourceError
 import docassemble.base.functions
-from docassemble.base.functions import get_default_timezone, ReturnValue, word
+from docassemble.base.functions import get_default_timezone, ReturnValue, word, safeyaml, bytesyaml, altyamlstring
 from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
 import docassemble.base.DA
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
@@ -709,17 +709,6 @@ mimetypes.add_type('application/x-yaml', '.yaml')
 if DEBUG_BOOT:
     boot_log("server: creating session store")
 
-safeyaml = ruamel.yaml.YAML(typ='safe')
-altyaml = ruamel.yaml.YAML(typ=['safe', 'bytes'])
-altyaml.default_flow_style = False
-altyaml.default_style = '"'
-altyaml.allow_unicode = True
-altyaml.width = 10000
-altyamlstring = ruamel.yaml.YAML(typ=['safe', 'string'])
-altyamlstring.default_flow_style = False
-altyamlstring.default_style = '"'
-altyamlstring.allow_unicode = True
-altyamlstring.width = 10000
 store = RedisStore(r_store)
 
 kv_session = KVSessionExtension(store, app)
@@ -10849,6 +10838,11 @@ def create_playground_package():
             github_auth_info = json.loads(github_auth)
         github_package_name = 'docassemble-' + re.sub(r'^docassemble-', r'', current_package)
         # github_package_name = re.sub(r'[^A-Za-z\_\-]', '', github_package_name)
+        if 'github_to_add' in session:
+            files_to_add = session['github_to_add']
+            del session['github_to_add']
+        else:
+            files_to_add = None
         if github_package_name in ('docassemble-base', 'docassemble-webapp', 'docassemble-demo'):
             return ('File not found', 404)
         commit_message = request.args.get('commit_message', 'a commit')
@@ -11058,8 +11052,9 @@ def create_playground_package():
                         raise DAError("create_playground_package: error running git init.  " + output)
                     with open(os.path.join(packagedir, 'README.md'), 'w', encoding='utf-8') as the_file:
                         the_file.write("")
-                    with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
-                        the_file.write(DEFAULT_GITIGNORE)
+                    if files_to_add is not None and '.gitignore' in files_to_add:
+                        with open(os.path.join(packagedir, '.gitignore'), 'w', encoding='utf-8') as the_file:
+                            the_file.write(DEFAULT_GITIGNORE)
                     output += "Doing git config user.email " + json.dumps(github_email) + "\n"
                     try:
                         output += subprocess.check_output(["git", "config", "user.email", json.dumps(github_email)], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -11072,12 +11067,19 @@ def create_playground_package():
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
                         raise DAError("create_playground_package: error running git config user.name.  " + output)
-                    output += "Doing git add README.MD .gitignore\n"
+                    output += "Doing git add README.md\n"
                     try:
-                        output += subprocess.check_output(["git", "add", "README.md", ".gitignore"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                        output += subprocess.check_output(["git", "add", "README.md"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
                     except subprocess.CalledProcessError as err:
                         output += err.output.decode()
-                        raise DAError("create_playground_package: error running git add README.md .gitignore.  " + output)
+                        raise DAError("create_playground_package: error running git add README.md.  " + output)
+                    if files_to_add is not None and '.gitignore' in files_to_add:
+                        output += "Doing git add .gitignore\n"
+                        try:
+                            output += subprocess.check_output(["git", "add", ".gitignore"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                        except subprocess.CalledProcessError as err:
+                            output += err.output.decode()
+                            raise DAError("create_playground_package: error running git add .gitignore.  " + output)
                     output += "Doing git commit -m \"first commit\"\n"
                     try:
                         output += subprocess.check_output(["git", "commit", "-m", "first commit"], cwd=packagedir, stderr=subprocess.STDOUT).decode()
@@ -11123,7 +11125,6 @@ def create_playground_package():
                 else:
                     the_timezone = get_default_timezone()
                 fix_ml_files(author_info['id'], current_project)
-                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, directory=directory, current_project=current_project)
                 if branch:
                     the_branch = branch
                 else:
@@ -11155,9 +11156,15 @@ def create_playground_package():
                 except subprocess.CalledProcessError as err:
                     output += err.output.decode()
                     raise DAError("create_playground_package: error running git checkout.  " + output)
-                output += "Doing git add .\n"
+                output += "Writing files.\n"
+                docassemble.webapp.files.make_package_dir(pkgname, info, author_info, directory=directory, current_project=current_project)
                 try:
-                    output += subprocess.check_output(["git", "add", "."], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    if files_to_add is None:
+                        output += "Doing git add .\n"
+                        output += subprocess.check_output(["git", "add", "."], cwd=packagedir, stderr=subprocess.STDOUT).decode()
+                    else:
+                        output += "Doing git add " + (' '.join(files_to_add)) + "\n"
+                        output += subprocess.check_output(["git", "add"] + files_to_add, cwd=packagedir, stderr=subprocess.STDOUT).decode()
                 except subprocess.CalledProcessError as err:
                     output += err.output
                     raise DAError("create_playground_package: error running git add.  " + output)
@@ -11295,7 +11302,7 @@ SOFTWARE.
 """
         gitignore = daconfig.get('default gitignore', DEFAULT_GITIGNORE)
         readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
-        pyprojecttoml = tomli_w.dumps({'build-system': {'requires': ['setuptools>=80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': '0.0.1', 'description': 'A docassemble extension.', 'readme': 'README.md', 'authors': [{'name': str(name_of_user(current_user)), 'email': str(current_user.email)}], 'license': 'MIT', 'license-files': ['LICENSE'], 'urls': {'Homepage': 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}})
+        pyprojecttoml = tomli_w.dumps({'build-system': {'requires': ['setuptools==80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': '0.0.1', 'description': 'A docassemble extension.', 'readme': 'README.md', 'authors': [{'name': str(name_of_user(current_user)), 'email': str(current_user.email)}], 'license': 'MIT', 'license-files': ['LICENSE'], 'urls': {'Homepage': 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}})
         manifestin = f"""\
 include README.md
 graft docassemble/{pkgname}/data
@@ -11426,7 +11433,7 @@ this directory.
 # Sources directory
 
 This directory is used to store word translation files,
-machine learning training files, and other source files.
+machine learning training files, and other sources of data.
 """
         objectfile = """\
 # This is a Python module in which you can write your own Python code,
@@ -14031,17 +14038,17 @@ def playground_packages():
         form.install.data = ''
     if request.method == 'POST' and 'uploadfile' not in request.files:
         the_file = form.file_name.data
-        if form.validate():
-            validated = True
-        # else:
-        #     the_error = ''
-        #     for attrib in ('original_file_name', 'file_name', 'license', 'description', 'author_name', 'author_email', 'version', 'url', 'dependencies', 'interview_files', 'template_files', 'module_files', 'static_files', 'sources_files', 'readme', 'github_branch', 'commit_message', 'submit', 'download', 'install', 'pypi', 'github', 'cancel', 'delete'):
-        #         the_field = getattr(form, attrib)
-        #         for error in the_field.errors:
-        #             the_error += str(error)
-        #     raise DAError("Form did not validate with " + str(the_error))
     the_file = re.sub(r'[^A-Za-z0-9\-\_\.]+', '-', the_file)
     the_file = re.sub(r'^docassemble-', r'', the_file)
+    form.files_to_add.choices = [('.gitignore', '.gitignore'), ('LICENSE', 'LICENSE'), ('MANIFEST.in', 'MANIFEST.in'), ('README.md', 'README.md'), ('pyproject.toml', 'pyproject.toml'), ('setup.cfg', 'setup.cfg'), ('setup.py', 'setup.py'), ('docassemble/' + the_file + '/__init__.py', 'docassemble/' + the_file + '/__init__.py')]
+    for sec, prefix in (('playground', 'data/questions/'), ('playgroundtemplate', 'data/templates/'), ('playgroundstatic', 'data/static/'), ('playgroundsources', 'data/sources/'), ('playgroundmodules', '')):
+        if sec not in ('playground', 'playgroundmodules'):
+            form.files_to_add.choices.append(('docassemble/' + the_file + '/' + prefix + 'README.md', 'docassemble/' + the_file + '/' + prefix + 'README.md'))
+        for item in file_list[sec]:
+            path = 'docassemble/' + the_file + '/' + prefix + item
+            form.files_to_add.choices.append((path, path))
+    if request.method == 'POST' and 'uploadfile' not in request.files and form.validate():
+        validated = True
     the_directory = directory_for(area['playgroundpackages'], current_project)
     files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
     editable_files = []
@@ -14429,6 +14436,7 @@ def playground_packages():
                         return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1', install='1'))
                     return redirect(url_for('create_playground_package', package=the_file, project=current_project, pypi='1'))
                 if form.github.data:
+                    session['github_to_add'] = form.files_to_add.data
                     the_branch = form.github_branch.data
                     if the_branch == "<new>":
                         the_branch = re.sub(r'[^A-Za-z0-9\_\-]', r'', str(form.github_branch_new.data))
@@ -14689,17 +14697,17 @@ function activateVariables(){
         form = 'form'
     output += """
   $(".playground-variable").on("click", function(event){
-    daCm.dispatch(daCm.state.replaceSelection($(this).data("insert"), "around"));
-    daCm.focus();
+    daCm.ev.dispatch(daCm.ev.state.replaceSelection($(this).data("insert"), "around"));
+    daCm.ev.focus();
   });
 
   $(".dasearchicon").on("click", function(event){
     var query = $(this).data('name');
     if (query == null || query.length == 0){
-      daCm.dispatch({selection: {anchor: daCm.state.selection.main.head}})
+      daCm.ev.dispatch({selection: {anchor: daCm.ev.state.selection.main.head}})
       return;
     }
-    daStartNewSearch(daCm, query);
+    daStartNewSearch(daCm.ev, query);
     event.preventDefault();
     return false;
   });
@@ -14720,7 +14728,7 @@ function updateRunLink(){
 }
 
 function fetchVars(changed){
-  $("#playground_content").val(daCm.state.doc.toString());
+  $("#playground_content").val(daCm.ev.state.doc.toString());
   updateRunLink();
   $.ajax({
     type: "POST",
@@ -14843,7 +14851,7 @@ $( document ).ready(function() {
       if (tag == "INPUT"){
         e.preventDefault();
         e.stopPropagation();
-        daCm.focus();
+        daCm.ev.focus();
         return false;
       }
     }
@@ -15262,7 +15270,7 @@ def playground_select():
 @login_required
 @roles_required(['developer', 'admin'])
 def get_pg_var_cache():
-    response = make_response(altyaml.dump_to_bytes(pg_code_cache), 200)
+    response = make_response(bytesyaml.dump_to_bytes(pg_code_cache), 200)
     response.headers['Content-Disposition'] = 'attachment; filename=pgcodecache.yml'
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     response.headers['Content-Type'] = 'text/plain; charset=utf-8'

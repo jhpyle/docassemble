@@ -565,6 +565,119 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
             chown -R www-data:www-data /usr/share/docassemble/config \
                   /usr/share/docassemble/webapp/docassemble.wsgi
         fi
+	if [ "${DAEXTRAFONTS:-false}" == "true" ]; then
+	    apt-get -q -y install \
+		    texlive-fonts-extra \
+		    fonts-adf-accanthis \
+		    fonts-adf-berenis \
+		    fonts-adf-gillius \
+		    fonts-adf-universalis \
+		    fonts-arkpandora \
+		    fonts-beng \
+		    fonts-beng-extra \
+		    fonts-cabin \
+		    fonts-cantarell \
+		    fonts-clear-sans \
+		    fonts-comfortaa \
+		    fonts-comic-neue \
+		    fonts-deva \
+		    fonts-deva-extra \
+		    fonts-ebgaramond-extra \
+		    fonts-font-awesome \
+		    fonts-gargi \
+		    fonts-gfs-artemisia \
+		    fonts-gfs-complutum \
+		    fonts-gfs-didot \
+		    fonts-gfs-neohellenic \
+		    fonts-gfs-olga \
+		    fonts-gfs-solomos \
+		    fonts-go \
+		    fonts-gubbi \
+		    fonts-gujr \
+		    fonts-gujr-extra \
+		    fonts-guru \
+		    fonts-guru-extra \
+		    fonts-indic \
+		    fonts-inter \
+		    fonts-kalapi \
+		    fonts-knda \
+		    fonts-lato \
+		    fonts-liberation2 \
+		    fonts-lobster \
+		    fonts-lobstertwo \
+		    fonts-lohit-beng-assamese \
+		    fonts-lohit-beng-bengali \
+		    fonts-lohit-deva \
+		    fonts-lohit-gujr \
+		    fonts-lohit-guru \
+		    fonts-lohit-knda \
+		    fonts-lohit-mlym \
+		    fonts-lohit-orya \
+		    fonts-lohit-taml \
+		    fonts-lohit-taml-classical \
+		    fonts-lohit-telu \
+		    fonts-mlym \
+		    fonts-nakula \
+		    fonts-navilu \
+		    fonts-noto \
+		    fonts-noto-cjk \
+		    fonts-noto-cjk-extra \
+		    fonts-noto-core \
+		    fonts-noto-extra \
+		    fonts-noto-ui-extra \
+		    fonts-noto-unhinted \
+		    fonts-oflb-asana-math \
+		    fonts-open-sans \
+		    fonts-orya \
+		    fonts-orya-extra \
+		    fonts-pagul \
+		    fonts-paratype \
+		    fonts-roboto-slab \
+		    fonts-roboto-unhinted \
+		    fonts-sahadeva \
+		    fonts-samyak \
+		    fonts-samyak-deva \
+		    fonts-samyak-gujr \
+		    fonts-samyak-mlym \
+		    fonts-samyak-orya \
+		    fonts-samyak-taml \
+		    fonts-sarai \
+		    fonts-sil-andika \
+		    fonts-sil-annapurna \
+		    fonts-sil-charis \
+		    fonts-sil-gentiumplus \
+		    fonts-sil-gentiumplus-compact \
+		    fonts-smc \
+		    fonts-smc-anjalioldlipi \
+		    fonts-smc-chilanka \
+		    fonts-smc-dyuthi \
+		    fonts-smc-gayathri \
+		    fonts-smc-karumbi \
+		    fonts-smc-keraleeyam \
+		    fonts-smc-manjari \
+		    fonts-smc-meera \
+		    fonts-smc-rachana \
+		    fonts-smc-raghumalayalamsans \
+		    fonts-smc-suruma \
+		    fonts-smc-uroob \
+		    fonts-stix \
+		    fonts-taml \
+		    fonts-telu \
+		    fonts-telu-extra \
+		    fonts-teluguvijayam \
+		    fonts-yrsa-rasa \
+		    cm-super
+	fi
+	if [ "${DAGOOGLEFONTS:-false}" == "true" ]; then
+	    cd /tmp \
+		&& wget -q -O google-fonts.tar.gz https://github.com/google/fonts/archive/main.tar.gz \
+		&& tar -zxf google-fonts.tar.gz \
+		&& rm google-fonts.tar.gz \
+		&& mkdir -p /usr/share/fonts/truetype/google-fonts \
+		&& find ./fonts-main/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/google-fonts/ \; \
+		&& rm -r ./fonts-main \
+		&& fc-cache -f -v
+	fi
         touch /etc/hasbeeninitialized
     else
         echo "initialize: This is not the first time the server was initialized" >&2

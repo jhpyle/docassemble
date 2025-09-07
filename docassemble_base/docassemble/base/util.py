@@ -7554,6 +7554,7 @@ class BackgroundAction(DAObject):
             if failed:
                 return self.on_failure(result)
             return self.process_response(result)
+        return None
 
     def initial_wait(self):
         command('wait', sleep=self.refresh_seconds)
@@ -7575,6 +7576,7 @@ class BackgroundAction(DAObject):
         if self._running:
             return self.bg_action.ready()
         return None
+
 
 class DAGoogleAPI(DAObject):
 

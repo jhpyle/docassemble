@@ -1,4 +1,5 @@
 FROM jhpyle/docassemble-os
+USER root
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
@@ -68,7 +69,7 @@ bash -c \
    click==8.2.1 \
    ConfigArgParse==1.7.1 \
    configobj==5.0.9 \
-   cryptography==45.0.5 \
+   cryptography==45.0.7 \
    distro==1.9.0 \
    idna==3.10 \
    joblib==1.5.1 \

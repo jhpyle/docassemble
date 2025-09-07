@@ -81,6 +81,11 @@
                   <option value="{{ package }}"{% if form.dependencies.data and package in form.dependencies.data %} selected{% endif %}>{{ package }}</option>
                   {%- endfor %}
                 </select>
+                {%- if form.dependencies.errors %}
+                  {%- for e in form.dependencies.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+                  {%- endfor %}
+                {%- endif %}
               </div>
               {%- for sec in ['playground', 'playgroundtemplate', 'playgroundstatic', 'playgroundsources', 'playgroundmodules'] %}
               <h2>{{ section_field[sec].label }}</h2>
@@ -91,6 +96,11 @@
                   <option value="{{ file }}"{% if section_field[sec].data and file in section_field[sec].data %} selected{% endif %}>{{ file }}</option>
                   {%- endfor %}
                 </select>
+                {%- if section_field[sec].errors %}
+                  {%- for e in section_field[sec].errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+                  {%- endfor %}
+                {%- endif %}
               </div>
               {%- endfor %}
             </div>
@@ -119,6 +129,17 @@
               {%- endif %}
               {%- if can_publish_to_github %}
               <div id="commit_message_div" style="display:none">
+                <h2>{{ word("GitHub Commit") }}</h2>
+                <div class="da-form-group">
+                  <label class="form-label" for="{{ form.files_to_add.id }}">{{ word("Select which files to include in the commit") }}</label>
+                  <select multiple size="10" class="form-control" name="{{ form.files_to_add.id }}" id="{{ form.files_to_add.id }}" disabled>
+                  </select>
+                  {%- if form.files_to_add.errors %}
+                    {%- for e in form.files_to_add.errors %}
+                  <div class="invalid-feedback d-block">{{ e }}</div>
+                    {%- endfor %}
+                  {%- endif %}
+                </div>
                 <div id="github_branch_div">
                   {{ render_select_field(form.github_branch) }}
                   <div id="new_branch_div" style="display:none">

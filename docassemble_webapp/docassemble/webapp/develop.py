@@ -167,6 +167,7 @@ class PlaygroundPackagesForm(FlaskForm):
     readme = TextAreaField(word('README file'), default='')
     github_branch = NonValidatingSelectField(word('Branch'))
     github_branch_new = StringField(word('Name of new branch'), validators=[html_validator])
+    files_to_add = SelectMultipleField(word('Files to include'))
     commit_message = StringField(word('Commit message'), default="")
     pypi_also = BooleanField(word('Publish on PyPI also'))
     install_also = BooleanField(word('Install package on this server also'))
