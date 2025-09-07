@@ -1529,6 +1529,11 @@ your container for the new configuration to take effect.
 * <a name="GOTENBERGURL"></a>`GOTENBERGURL`: This can be set to the
   URL of your [Gotenberg] server, if you have one. See the [`gotenberg
   url`] configuration directive.
+* <a name="DAGOOGLEFONTS"></a>`DAGOOGLEFONTS`: This can be set to
+  `true` if you want the [Google TrueType fonts] to be installed on
+  your server.
+* <a name="DAEXTRAFONTS"></a>`DAEXTRAFONTS`: This can be set to `true`
+  if you want additional fonts to be installed on your server.
 * <a name="USENGINXTOSERVEFILES"></a>`USENGINXTOSERVEFILES`: If
   NGINX is not being used in the container (i.e. traffic is
   connected directly to `uwsgi`) then this should be
@@ -3810,3 +3815,4 @@ endpoints that you can use.
 [`locale`]: {{ site.baseurl }}/docs/config.html#locale
 [Alembic]: https://alembic.sqlalchemy.org/en/latest/
 [docassemble repository]: {{ site.github.repository_url }}
+[Google TrueType fonts]: https://github.com/google/fonts

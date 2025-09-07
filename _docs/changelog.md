@@ -3,6 +3,38 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.8.13](https://github.com/jhpyle/docassemble/releases/tag/v1.8.13) - 2025-09-07
+
+
+### Added
+
+- On the Playground Packages page, if the GitHub button is clicked,
+  developers can deselect particular files from the commit.
+
+
+### Changed
+
+- The number of fonts installed in the underlying Ubuntu operating is
+  reduced to the minimum fonts required by `libreoffice`, `texlive`,
+  `ttf-mscorefonts-installer`, `fonts-liberation`, and
+  `fonts-dejavu-core`. The removal of these fonts may affect DOCX to
+  PDF conversion, especially if you are using languages other than
+  English. If the environment variable `DAEXTRAFONTS` is `true`, then
+  these additional fonts will be installed during container
+  startup. You can also install particular fonts using the `PACKAGES`
+  environment variable. This change only takes effect on new
+  installations or system upgrades.
+- Likewise, the Google Fonts will now be installed when the container
+  starts, and only if the environment variable `DAGOOGLEFONTS` is
+  `true`. This change only takes effect on new installations or system
+  upgrades.
+
+
+### Fixed
+
+- Made `ruamel.yaml` objects thread-local due to issues on `arm64`
+  architectures.
+
 ## [1.8.12](https://github.com/jhpyle/docassemble/releases/tag/v1.8.12) - 2025-09-01
 
 
