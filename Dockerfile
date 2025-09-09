@@ -48,9 +48,6 @@ bash -c \
 && chmod ogu+r /usr/share/docassemble/config/config.yml.dist \
 && chmod 755 /etc/ssl/docassemble \
 && cd /tmp \
-&& echo \"en_US.UTF-8 UTF-8\" >> /etc/locale.gen \
-&& locale-gen \
-&& update-locale \
 && /usr/bin/pip3 install --break-system-packages unoconv \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
 && python3 -m venv --copies /usr/share/docassemble/local3.12 \
