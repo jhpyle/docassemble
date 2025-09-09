@@ -565,7 +565,9 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
             chown -R www-data:www-data /usr/share/docassemble/config \
                   /usr/share/docassemble/webapp/docassemble.wsgi
         fi
+	echo "initialize: considering whether to install extra fonts" >&2
 	if [ "${DAEXTRAFONTS:-false}" == "true" ]; then
+	    echo "initialize: installing extra fonts" >&2
 	    apt-get -q -y install \
 		    texlive-fonts-extra \
 		    fonts-adf-accanthis \
@@ -666,17 +668,29 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
 		    fonts-telu-extra \
 		    fonts-teluguvijayam \
 		    fonts-yrsa-rasa \
-		    cm-super
+		    cm-super &> /dev/null
+	    if [ $? -eq 0 ]; then
+		echo "initialize: extra fonts installed." >&2
+	    else
+		echo "initialize: error while installing extra fonts." >&2
+	    fi
 	fi
+	echo "initialize: considering whether to install google fonts" >&2
 	if [ "${DAGOOGLEFONTS:-false}" == "true" ]; then
-	    cd /tmp \
-		&& wget -q -O google-fonts.tar.gz https://github.com/google/fonts/archive/main.tar.gz \
-		&& tar -zxf google-fonts.tar.gz \
-		&& rm google-fonts.tar.gz \
-		&& mkdir -p /usr/share/fonts/truetype/google-fonts \
-		&& find ./fonts-main/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/google-fonts/ \; \
-		&& rm -r ./fonts-main \
-		&& fc-cache -f -v
+	    echo "initialize: installing google fonts" >&2
+	    { cd /tmp \
+		  && wget -q -O google-fonts.tar.gz https://github.com/google/fonts/archive/main.tar.gz \
+		  && tar -zxf google-fonts.tar.gz \
+		  && rm google-fonts.tar.gz \
+		  && mkdir -p /usr/share/fonts/truetype/google-fonts \
+		  && find ./fonts-main/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/google-fonts/ \; \
+		  && rm -r ./fonts-main \
+		  && fc-cache -f -v; } &> /dev/null
+	    if [ $? -eq 0 ]; then
+		echo "initialize: google fonts installed." >&2
+	    else
+		echo "initialize: error while installing google fonts." >&2
+	    fi
 	fi
         touch /etc/hasbeeninitialized
     else
