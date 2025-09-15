@@ -3,6 +3,19 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.8.14](https://github.com/jhpyle/docassemble/releases/tag/v1.8.14) - 2025-09-15
+
+
+### Added
+
+- The `login_method` and `phone_number` attributes of `user_info()`.
+- The `log to std` Configuration directive to log all output to
+  STDERR.
+- The `enable training` Configuration directive for disabling the
+  Train page.
+- The `enable monitor` Configuration directive for disabling the
+  Monitor page.
+
 ## [1.8.13](https://github.com/jhpyle/docassemble/releases/tag/v1.8.13) - 2025-09-07
 
 

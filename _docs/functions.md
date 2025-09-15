@@ -2786,6 +2786,11 @@ attributes describing the current user:
 * `first_name`
 * `last_name`
 * `email`
+* `login_method` (will be `local` for regular username and password,
+  `phone` for telephone login, or will indicate the third-party
+  sign-on method)
+* `phone_number` the user's phone number in [E.164] format, if
+  `login_method` is `phone`,
 * `country` (will be an official [ISO 3166-1 alpha-2] country code like `US`)
 * `subdivision_first` (e.g., state)
 * `subdivision_second` (e.g., county)

@@ -232,6 +232,38 @@ files by going to Logs from the menu. To disable this feature, set
 allow log viewing: False
 {% endhighlight %}
 
+## <a name="log to std"></a>Sending log messages to standard error
+
+By default, web application log messages are written to
+`docassemble.log` and `celery` worker log messages are written to
+`worker.log`. By setting `log to std` to `True`, these messages will
+be written to `STDERR` instead.
+
+{% highlight yaml %}
+log to std: True
+{% endhighlight %}
+
+## <a name="enable monitor"></a>Allowing use of the Monitor page
+
+By default, a user with `admin` or `advocate` privileges can go to the
+Monitor from the menu. To disable this feature, set `enable monitor`
+to `False`.
+
+{% highlight yaml %}
+enable monitor: False
+{% endhighlight %}
+
+## <a name="enable training"></a>Allowing use of the Train page
+
+By default, a user with `admin`, `developer`, or `trainer` privileges
+can go to Train from the menu and manage the training data of machine
+learning models. To disable this feature, set `enable training` to
+`False`.
+
+{% highlight yaml %}
+enable training: False
+{% endhighlight %}
+
 ## <a name="developer can install"></a>Whether users with developer accounts can install packages
 
 By default, any user with `admin` or `developer` privileges can use
