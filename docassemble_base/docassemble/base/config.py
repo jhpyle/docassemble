@@ -905,7 +905,7 @@ def load(**kwargs):
             del daconfig['checkin interval']
     if daconfig.get('checkin interval', 5) == 0:
         daconfig['enable monitor'] = False
-    else:
+    elif 'enable monitor' not in daconfig:
         daconfig['enable monitor'] = True
     try:
         assert isinstance(daconfig['jinja data'], dict)

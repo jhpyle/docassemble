@@ -884,6 +884,18 @@ class TheUser:
         return None
 
     @property
+    def login_method(self):
+        if user_logged_in():
+            return this_thread.current_info['user']['login_method']
+        return None
+
+    @property
+    def phone_number(self):
+        if user_logged_in() and this_thread.current_info['user']['login_method'] == 'phone':
+            return this_thread.current_info['user']['nickname']
+        return None
+
+    @property
     def email(self):
         if user_logged_in():
             return this_thread.current_info['user']['email']

@@ -96,7 +96,7 @@
                   {%- if current_user.has_roles(['admin', 'advocate']) and config['ENABLE_MONITOR'] %}
                   <a class="dropdown-item" href="{{ url_for('monitor') }}">{{ word('Monitor') }}</a>
                   {%- endif %}
-                  {%- if current_user.has_roles(['admin', 'developer', 'trainer']) %}
+                  {%- if current_user.has_roles(['admin', 'developer', 'trainer']) and config['ENABLE_TRAINING'] %}
                   <a class="dropdown-item" href="{{ url_for('train') }}">{{ word('Train') }}</a>
                   {%- endif %}
                   {%- if current_user.has_roles(['admin', 'developer']) %}

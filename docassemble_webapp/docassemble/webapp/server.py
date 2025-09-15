@@ -1404,7 +1404,7 @@ def add_log_handler():
             sys_logger.addHandler(stderr_log_handler)
         break
 
-if not (in_celery or in_cron):
+if not (in_celery or in_cron or daconfig.get('log to std', False)):
     sys_logger = logging.getLogger('docassemble')
     sys_logger.setLevel(logging.DEBUG)
     add_log_handler()
@@ -3428,7 +3428,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                             navbar += source_menu_item
                         if current_user.has_role('admin', 'advocate') and app.config['ENABLE_MONITOR']:
                             navbar += '<a class="dropdown-item" href="' + url_for('monitor') + '">' + word('Monitor') + '</a>'
-                        if current_user.has_role('admin', 'developer', 'trainer'):
+                        if current_user.has_role('admin', 'developer', 'trainer') and app.config['ENABLE_TRAINING']:
                             navbar += '<a class="dropdown-item" href="' + url_for('train') + '">' + word('Train') + '</a>'
                         if current_user.has_role('admin', 'developer'):
                             if app.config['ALLOW_UPDATES'] and (app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
@@ -4532,7 +4532,6 @@ def trigger_update(except_for=None):
             db.session.execute(sqldelete(Supervisors).filter_by(id=id_to_delete))
             db.session.commit()
 
-
 def restart_on(host):
     logmessage("restart_on: " + str(host.hostname))
     if host.hostname == hostname:
@@ -4633,7 +4632,8 @@ def current_info(yaml=None, req=None, action=None, location=None, interface='web
         role_list = [str(role.name) for role in current_user.roles]
         if len(role_list) == 0:
             role_list = ['user']
-        ext = {'email': current_user.email, 'roles': role_list, 'the_user_id': current_user.id, 'theid': current_user.id, 'firstname': current_user.first_name, 'lastname': current_user.last_name, 'nickname': current_user.nickname, 'country': current_user.country, 'subdivisionfirst': current_user.subdivisionfirst, 'subdivisionsecond': current_user.subdivisionsecond, 'subdivisionthird': current_user.subdivisionthird, 'organization': current_user.organization, 'timezone': current_user.timezone, 'language': current_user.language}
+        login_method = current_user.social_id.split('$')[0]
+        ext = {'email': current_user.email, 'roles': role_list, 'the_user_id': current_user.id, 'theid': current_user.id, 'login_method': login_method, 'firstname': current_user.first_name, 'lastname': current_user.last_name, 'nickname': current_user.nickname, 'country': current_user.country, 'subdivisionfirst': current_user.subdivisionfirst, 'subdivisionsecond': current_user.subdivisionsecond, 'subdivisionthird': current_user.subdivisionthird, 'organization': current_user.organization, 'timezone': current_user.timezone, 'language': current_user.language}
     else:
         ext = {'email': None, 'the_user_id': 't' + str(session.get('tempuser', None)), 'theid': session.get('tempuser', None), 'roles': []}
     headers = {}
@@ -16457,6 +16457,8 @@ def ml_prefix(the_package, the_file):
 @login_required
 @roles_required(['admin', 'developer', 'trainer'])
 def train():
+    if not app.config['ENABLE_TRAINING']:
+        return ('File not found', 404)
     setup_translation()
     the_package = request.args.get('package', None)
     if the_package is not None:
