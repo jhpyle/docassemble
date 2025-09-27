@@ -6183,7 +6183,7 @@ module, the module will still be loaded. `module blacklist` only
 affects the auto-loading of modules that happens when **docassemble**
 starts.
 
-## <a name="celery modules"></a>Modules to be loaded in Celery
+## <a name="celery modules"></a><a name="celery task routes"></a>Modules to be loaded in Celery
 
 The [Celery] system, which handles background tasks, can be extended
 using the `celery modules` directive in order to support launching
@@ -6227,6 +6227,19 @@ expect because it assumes that it is being called from within
 interview logic, where the identity of the current user is known and
 there is a specific session in a specific interview. Those
 circumstances are not present in the context of a custom API endpoint.
+
+If you want tasks to be directed to a particular queue, you can alter
+the celery `task_routes` configuration by specifying `celery task
+routes`.
+
+{% highlight yaml %}
+celery task routes:
+  docassemble.mypackage.myfunc:
+    queue: single
+{% endhighlight %}
+
+This will cause all tasks of the `docassemble.mypackage.myfunc`
+function to be directed to the `single` queue.
 
 ## <a name="config from"></a>Importing configuration directives
 

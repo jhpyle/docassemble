@@ -216,8 +216,8 @@ parameters will be used again.  The user is redirected to the first
 question of the interview.
 
 <a name="new_session"></a>`new_session` does not disturb the current
-interview session, but starts a new session for the same interview.
-The original URL parameters are not used.
+interview session, but starts a new session for the same interview,
+with the same URL parameters and Referer.
 
 <a name="exit"></a>`exit` means that the user's variable store will be
 erased and the user will be redirected either to the URL given by the

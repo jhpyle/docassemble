@@ -6822,34 +6822,6 @@ it converts a variable name from base64 encoding to plain text.
 'favorite_fruit'
 {% endhighlight %}
 
-## <a name="mmdc"></a>mmdc()
-
-Using the `mmdc()` function, you can use the [mermaid] diagram-drawing
-system to produce a [`DAFile`] containing a completed diagram.
-
-The `mmdc()` function is defined in the `docassemble.base.mermaid`
-package. To use it, you will need to include the
-`docassemble.base.mermaid` module in your interview:
-
-{% highlight yaml %}
-modules:
-  - docassemble.base.mermaid
-{% endhighlight %}
-
-Then you can call the `mmdc()` function on a text string or a
-[`template`] object.
-
-{% include side-by-side.html demo="mermaid" %}
-
-If you installed **docassemble** with the standard [Docker]
-installation, then the [mermaid] executable (`mmdc`) should be
-available on the standard system path. You can set a precise location
-by setting the `mmdc path` directive in the [Configuration].
-
-{% highlight yaml %}
-mmdc path: /var/www/node_modules/.bin/mmdc
-{% endhighlight %}
-
 ## <a name="transform_json_variables"></a>transform_json_variables()
 
 `transform_json_variables()` is a function that is used by
