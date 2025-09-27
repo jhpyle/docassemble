@@ -11,5 +11,8 @@ broker_connection_retry_on_startup = True
 
 if daconfig.get('has_celery_single_queue', False):
     task_routes = {"docassemble.webapp.worker.ocr_page": {"queue": "single"}}
+else:
+    task_routes = {}
+task_routes.update(daconfig.get('celery task routes', None) or {})
 if 'celery processes' in daconfig:
     worker_concurrency = daconfig['celery processes']

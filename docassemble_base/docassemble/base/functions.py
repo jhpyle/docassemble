@@ -106,7 +106,7 @@ def raw(val):
     return RawValue(val)
 
 
-class ReturnValue:
+class ReturnValue:  # This class is defined here for backwards-compatibility reasons because it might be pickled in existing data.
 
     def __init__(self, **kwargs):
         self.extra = kwargs.get('extra', None)

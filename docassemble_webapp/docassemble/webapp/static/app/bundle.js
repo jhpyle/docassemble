@@ -36240,7 +36240,7 @@ function daValidationHandler(form) {
   daSpinnerTimeout = setTimeout(daShowSpinner, 1000);
   var do_iframe_upload = false;
   inline_succeeded = false;
-  if ($('input[name="_files"]').length) {
+  if ($('input[name="_files"]').length > 0) {
     var filesToRead = 0;
     var filesRead = 0;
     var newFileList = Array();
@@ -36374,6 +36374,7 @@ function daValidationHandler(form) {
                       fileArray,
                       inline_file_list,
                       newFileList,
+                      daSubmitter,
                     );
                   }
                 };
@@ -36387,6 +36388,7 @@ function daValidationHandler(form) {
                     fileArray,
                     inline_file_list,
                     newFileList,
+                    daSubmitter,
                   );
                 }
               }
@@ -36533,7 +36535,21 @@ function daResumeUploadSubmission(
   fileArray,
   inline_file_list,
   newFileList,
+  daSubmitter,
 ) {
+  if (
+    daSubmitter != null &&
+    daSubmitter.name &&
+    $(form).find('input[name="' + daSubmitter.name + '"]').length == 0
+  ) {
+    $("<input>")
+      .attr({
+        type: "hidden",
+        name: daSubmitter.name,
+        value: daSubmitter.value,
+      })
+      .appendTo($(form));
+  }
   $("<input>")
     .attr({
       type: "hidden",

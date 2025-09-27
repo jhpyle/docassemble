@@ -737,7 +737,7 @@ def concatenate_files(path_list):
                 ext = 'rtf'
             elif mimetype == 'application/msword':
                 ext = 'doc'
-            elif mimetype == 'application/vnd.oasis.opendocument.text':
+            else:
                 ext = 'odt'
             docassemble.base.pandoc.convert_file(path, new_docx_file.name, ext, 'docx')
             new_path_list.append(new_docx_file.name)

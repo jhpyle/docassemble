@@ -6,7 +6,7 @@ import shutil
 import types
 import yaml
 from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
+from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions, can_convert_word_to_markdown
 from docassemble.base.util import DAObject, DADict, DAList
 from docassemble.base.error import DAError, DAException
 import docassemble.base.functions
@@ -397,6 +397,8 @@ class PlaygroundSection:
         if not self.file_exists(filename):
             return False
         path = self.get_file(filename)
+        if not can_convert_word_to_markdown():
+            return False
         result_file = word_to_markdown(path, 'docx')
         if result_file is None:
             return False

@@ -15,7 +15,7 @@ from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig, hostname
 from docassemble.base.error import DAError
 from docassemble.webapp.files import SavedFile
-from docassemble.webapp.worker_common import worker_controller, workerapp, process_error, error_object, SS_NEW, SS_OVERWRITE, SS_IGNORE
+from docassemble.webapp.worker_common import worker_controller, workerapp, process_error, error_object, ReturnValue, SS_NEW, SS_OVERWRITE, SS_IGNORE
 
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 
@@ -78,7 +78,7 @@ def sync_with_google_drive(user_id):
     credentials = storage.get()
     if not credentials or credentials.invalid:
         logmessage("sync_with_google_drive: credentials failed")
-        return worker_controller.functions.ReturnValue(ok=False, error="credentials expired", restart=False)
+        return ReturnValue(ok=False, error="credentials expired", restart=False)
     try:
         with worker_controller.flaskapp.app_context():
             http = credentials.authorize(httplib2.Http())
@@ -92,7 +92,7 @@ def sync_with_google_drive(user_id):
             the_mime_type = response.get('mimeType', None)
             trashed = response.get('trashed', False)
             if trashed is True or the_mime_type != "application/vnd.google-apps.folder":
-                return worker_controller.functions.ReturnValue(ok=False, error="error accessing Google Drive", restart=False)
+                return ReturnValue(ok=False, error="error accessing Google Drive", restart=False)
             local_files = {}
             local_modtimes = {}
             gd_files = {}
@@ -139,10 +139,10 @@ def sync_with_google_drive(user_id):
                                                      fields='id').execute()
                     new_id = new_dir.get('id', None)
                     if new_id is None:
-                        return worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
+                        return ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
                     subdirs.append(new_id)
                 if len(subdirs) == 0:
-                    return worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
+                    return ReturnValue(ok=False, error="error accessing " + section + " in Google Drive", restart=False)
                 subdir = subdirs[0]
                 gd_files[section] = set()
                 gd_dirlist[section] = {}
@@ -338,11 +338,11 @@ def sync_with_google_drive(user_id):
             if commentary != '':
                 logmessage(commentary)
         do_restart = bool('modules' in sections_modified)
-        return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
+        return ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except DAError as e:
-        return worker_controller.functions.ReturnValue(ok=False, error=str(e), restart=False)
+        return ReturnValue(ok=False, error=str(e), restart=False)
     except BaseException as e:
-        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with Google Drive: " + worker_controller.noquote(str(e)), restart=False)
+        return ReturnValue(ok=False, error="Error syncing with Google Drive: " + worker_controller.noquote(str(e)), restart=False)
 
 
 def try_request(*pargs, **kwargs):
@@ -378,7 +378,7 @@ def sync_with_onedrive(user_id):
     credentials = storage.get()
     if not credentials or credentials.invalid:
         logmessage("sync_with_onedrive: credentials failed")
-        return worker_controller.functions.ReturnValue(ok=False, error="credentials expired", restart=False)
+        return ReturnValue(ok=False, error="credentials expired", restart=False)
     try:
         with worker_controller.flaskapp.app_context():
             http = credentials.authorize(httplib2.Http())
@@ -386,7 +386,7 @@ def sync_with_onedrive(user_id):
             # drive_id = json.loads(content)['id']
             # r, content = try_request(http, "https://graph.microsoft.com/v1.0/drive/special/approot")
             # if int(r['status']) != 200:
-            #     return worker_controller.functions.ReturnValue(ok=False, error="Could not verify application root", restart=False)
+            #     return ReturnValue(ok=False, error="Could not verify application root", restart=False)
             key = 'da:onedrive:mapping:userid:' + str(user_id)
             the_folder = worker_controller.r.get(key)
             if the_folder is None:
@@ -402,7 +402,7 @@ def sync_with_onedrive(user_id):
                 logmessage('trash_gd_file: folder did not exist')
                 return False
             if trashed is True or 'folder' not in info:
-                return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive", restart=False)
+                return ReturnValue(ok=False, error="error accessing OneDrive", restart=False)
             local_files = {}
             local_modtimes = {}
             od_files = {}
@@ -419,7 +419,7 @@ def sync_with_onedrive(user_id):
             r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(the_folder) + "/children?$select=id,name,deleted,folder", "GET")
             while True:
                 if int(r['status']) != 200:
-                    return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolders", restart=False)
+                    return ReturnValue(ok=False, error="error accessing OneDrive subfolders", restart=False)
                 info = json.loads(content.decode())
                 for item in info['value']:
                     if 'deleted' in item or 'folder' not in item:
@@ -440,12 +440,12 @@ def sync_with_onedrive(user_id):
                     data["@microsoft.graph.conflictBehavior"] = "rename"
                     resp, content = http.request("https://graph.microsoft.com/v1.0/me/drive/items/" + str(the_folder) + "/children", "POST", headers=headers, body=json.dumps(data))
                     if int(resp['status']) != 201:
-                        worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
+                        ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
                     new_item = json.loads(content.decode())
                     subdirs[section] = new_item['id']
                     subdir_count[section] = 0
                 if section not in subdirs:
-                    worker_controller.functions.ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
+                    ReturnValue(ok=False, error="error accessing " + section + " in OneDrive", restart=False)
                 local_files[section] = set()
                 local_modtimes[section] = {}
                 if section == 'questions':
@@ -472,7 +472,7 @@ def sync_with_onedrive(user_id):
                     logmessage("sync_with_onedrive: processing " + section + ", which is " + str(subdirs[section]))
                     while True:
                         if int(r['status']) != 200:
-                            return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " " + str(r['status']) + ": " + content.decode() + " looking for " + str(subdirs[section]), restart=False)
+                            return ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " " + str(r['status']) + ": " + content.decode() + " looking for " + str(subdirs[section]), restart=False)
                         info = json.loads(content.decode())
                         # logmessage("sync_with_onedrive: result was " + repr(info))
                         for the_file in info['value']:
@@ -501,7 +501,7 @@ def sync_with_onedrive(user_id):
                         logmessage("sync_with_onedrive: processing " + section + " subdir " + subdir_name + ", which is " + str(subdir_id))
                         while True:
                             if int(r['status']) != 200:
-                                return worker_controller.functions.ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " subdir " + subdir_name + " " + str(r['status']) + ": " + content.decode() + " looking for " + str(subdir_id), restart=False)
+                                return ReturnValue(ok=False, error="error accessing OneDrive subfolder " + section + " subdir " + subdir_name + " " + str(r['status']) + ": " + content.decode() + " looking for " + str(subdir_id), restart=False)
                             info = json.loads(content.decode())
                             for the_file in info['value']:
                                 if 'folder' in the_file:
@@ -582,7 +582,7 @@ def sync_with_onedrive(user_id):
                                 result = onedrive_upload(http, od_dirlist[section][dir_name], dir_name, data, the_path)
                             else:
                                 result = onedrive_upload(http, subdirs[section], section, data, the_path)
-                            if isinstance(result, worker_controller.functions.ReturnValue):
+                            if isinstance(result, ReturnValue):
                                 return result
                             od_files[section].add(f)
                             od_ids[section][f] = result
@@ -604,7 +604,7 @@ def sync_with_onedrive(user_id):
                             # data["fileSystemInfo"] = {"createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime}
                             # data["@microsoft.graph.conflictBehavior"] = "replace"
                             result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
-                            if isinstance(result, worker_controller.functions.ReturnValue):
+                            if isinstance(result, ReturnValue):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
                             logmessage("After update, timestamp on OneDrive is " + str(od_modtimes[section][f]))
@@ -627,7 +627,7 @@ def sync_with_onedrive(user_id):
                             data["fileSystemInfo"] = {"createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime}
                             # data["@microsoft.graph.conflictBehavior"] = "replace"
                             result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
-                            if isinstance(result, worker_controller.functions.ReturnValue):
+                            if isinstance(result, ReturnValue):
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
                         else:
@@ -654,18 +654,18 @@ def sync_with_onedrive(user_id):
                         headers = {'Content-Type': 'application/json'}
                         r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(od_ids[section][f]), "PATCH", headers=headers, body=json.dumps({'fileSystemInfo': {"createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime}}, sort_keys=True))
                         if int(r['status']) != 200:
-                            return worker_controller.functions.ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + str(r['status']) + ": " + content.decode(), restart=False)
+                            return ReturnValue(ok=False, error="error updating OneDrive file in subfolder " + section + " " + str(r['status']) + ": " + content.decode(), restart=False)
                         od_modtimes[section][f] = local_modtimes[section][f]
             for key in worker_controller.r.keys('da:interviewsource:docassemble.playground' + str(user_id) + ':*'):
                 worker_controller.r.incr(key)
             if commentary != '':
                 logmessage(commentary)
         do_restart = bool('modules' in sections_modified)
-        return worker_controller.functions.ReturnValue(ok=True, summary=commentary, restart=do_restart)
+        return ReturnValue(ok=True, summary=commentary, restart=do_restart)
     except DAError as e:
-        return worker_controller.functions.ReturnValue(ok=False, error=str(e), restart=False)
+        return ReturnValue(ok=False, error=str(e), restart=False)
     except BaseException as e:
-        return worker_controller.functions.ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e) + str(traceback.format_tb(e.__traceback__)), restart=False)
+        return ReturnValue(ok=False, error="Error syncing with OneDrive: " + str(e) + str(traceback.format_tb(e.__traceback__)), restart=False)
 
 
 def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=None):
@@ -678,7 +678,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
             logmessage("Error0")
             logmessage(str(r['status']))
             logmessage(content.decode())
-            return worker_controller.functions.ReturnValue(ok=False, error="error uploading zero-byte file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
+            return ReturnValue(ok=False, error="error uploading zero-byte file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
         if new_item_id is None:
             new_item_id = json.loads(content.decode())['id']
     else:
@@ -686,7 +686,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
         body_data = {"item": {"@microsoft.graph.conflictBehavior": "replace"}}
         r, content = try_request(http, the_url, 'POST', headers=headers, body=json.dumps(body_data, sort_keys=True))
         if int(r['status']) != 200:
-            return worker_controller.functions.ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + json.dumps(body_data, sort_keys=True) + " and is_new is " + repr(is_new), restart=False)
+            return ReturnValue(ok=False, error="error uploading to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode() + " and url was " + the_url + " and folder name was " + folder_name + " and path was " + the_path + " and data was " + json.dumps(body_data, sort_keys=True) + " and is_new is " + repr(is_new), restart=False)
         logmessage("Upload session created.")
         upload_url = json.loads(content.decode())["uploadUrl"]
         logmessage("Upload url obtained.")
@@ -705,7 +705,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
                         logmessage("Error1")
                         logmessage(str(r['status']))
                         logmessage(content.decode())
-                        return worker_controller.functions.ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
+                        return ReturnValue(ok=False, error="error uploading file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
                     if new_item_id is None:
                         new_item_id = json.loads(content.decode())['id']
                 else:
@@ -713,7 +713,7 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
                         logmessage("Error2")
                         logmessage(str(r['status']))
                         logmessage(content.decode())
-                        return worker_controller.functions.ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
+                        return ReturnValue(ok=False, error="error during upload of file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
                     logmessage("Got 202")
     item_data = copy.deepcopy(data)
     if 'fileSystemInfo' in item_data and 'createdDateTime' in item_data['fileSystemInfo']:
@@ -723,14 +723,14 @@ def onedrive_upload(http, folder_id, folder_name, data, the_path, new_item_id=No
     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "PATCH", headers=headers, body=json.dumps(item_data, sort_keys=True))
     logmessage("PATCH request sent")
     if int(r['status']) != 200:
-        return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
+        return ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + content.decode(), restart=False)
     # tries = 1
     # start_time = time.time()
     # while tries < 3:
     #     logmessage("Checking in on results " + "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id) + " at " + str(time.time() - start_time))
     #     r, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive/items/" + quote(new_item_id), "GET")
     #     if int(r['status']) != 200:
-    #         return worker_controller.functions.ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + str(content), restart=False)
+    #         return ReturnValue(ok=False, error="error during updating of uploaded file to OneDrive subfolder " + folder_id + " " + str(r['status']) + ": " + str(content), restart=False)
     #     logmessage("Metadata is now " + str(content))
     #     time.sleep(5)
     #     tries += 1
@@ -754,8 +754,8 @@ def ocr_dummy(doc, indexno, **kwargs):
                 worker_controller.login_user(user_object, remember=False)
             worker_controller.set_request_active(False)
             if doc._is_pdf():
-                return worker_controller.functions.ReturnValue(ok=True, value={'indexno': indexno, 'doc': doc})
-            return worker_controller.functions.ReturnValue(ok=True, value={'indexno': indexno, 'doc': worker_controller.util.pdf_concatenate(doc)})
+                return ReturnValue(ok=True, value={'indexno': indexno, 'doc': doc})
+            return ReturnValue(ok=True, value={'indexno': indexno, 'doc': worker_controller.util.pdf_concatenate(doc)})
 
 
 @workerapp.task
@@ -773,7 +773,7 @@ def ocr_page(indexno, **kwargs):
                 user_object = worker_controller.get_user_object(user_info['theid'])
                 worker_controller.login_user(user_object, remember=False)
             worker_controller.set_request_active(False)
-            return worker_controller.functions.ReturnValue(ok=True, value=worker_controller.util.ocr_page(indexno, **kwargs))
+            return ReturnValue(ok=True, value=worker_controller.util.ocr_page(indexno, **kwargs))
 
 
 @workerapp.task
@@ -818,12 +818,12 @@ def ocr_finalize(*pargs, **kwargs):
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_finalize: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err)
                         logmessage(error_message)
-                        return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError)
+                        return ReturnValue(ok=False, error_message=error_message, error_type=DAError)
                     if user_dict is None:
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_finalize: dictionary could not be found"
                         logmessage(error_message)
-                        return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError)
+                        return ReturnValue(ok=False, error_message=error_message, error_type=DAError)
                     user_dict['__PDF_OCR_OBJECT'] = target
                     try:
                         assert worker_controller.functions.illegal_variable_name(target.instanceName) is not True
@@ -839,18 +839,18 @@ def ocr_finalize(*pargs, **kwargs):
                         worker_controller.release_lock(session_code, yaml_filename)
                         error_message = "ocr_pdf: could not save file object: " + str(the_err.__class__.__name__) + ": " + str(the_err)
                         logmessage(error_message)
-                        return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=DAError)
+                        return ReturnValue(ok=False, error_message=error_message, error_type=DAError)
                     del user_dict['__PDF_OCR_OBJECT']
                     if str(user_info.get('the_user_id', None)).startswith('t'):
                         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, steps=steps)
                     else:
                         worker_controller.save_user_dict(session_code, user_dict, yaml_filename, secret=secret, encrypt=is_encrypted, manual_user_id=user_info['theid'], steps=steps)
                     worker_controller.release_lock(session_code, yaml_filename)
-                    return worker_controller.functions.ReturnValue(ok=True, value=True)
-                return worker_controller.functions.ReturnValue(ok=True, value=message, content=worker_controller.util.ocr_finalize(*pargs, **kwargs), extra=kwargs.get('extra', None))
+                    return ReturnValue(ok=True, value=True)
+                return ReturnValue(ok=True, value=message, content=worker_controller.util.ocr_finalize(*pargs, **kwargs), extra=kwargs.get('extra', None))
             except BaseException as the_error:
                 logmessage("Error in ocr_finalize: " + the_error.__class__.__name__ + ': ' + str(the_error))
-                return worker_controller.functions.ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
+                return ReturnValue(ok=False, value=str(the_error), error_message=str(the_error), extra=kwargs.get('extra', None))
 
 
 @workerapp.task
@@ -915,14 +915,14 @@ def update_packages(restart=True):
             if restart and ':all:' not in CONTAINER_ROLE:
                 worker_controller.trigger_update(except_for=hostname)
                 logmessage("update_packages in worker: trigger completed after " + str(time.time() - start_time) + " seconds")
-            return worker_controller.functions.ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname, restart=restart)
+            return ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname, restart=restart)
     except:
         e = sys.exc_info()[0]
         error_mess = sys.exc_info()[1]
         logmessage("update_packages in worker: error was " + str(e) + " with message " + str(error_mess))
-        return worker_controller.functions.ReturnValue(ok=False, error_message=str(e), restart=False)
+        return ReturnValue(ok=False, error_message=str(e), restart=False)
     logmessage("update_packages in worker: all done")
-    return worker_controller.functions.ReturnValue(ok=False, error_message="Reached end", restart=False)
+    return ReturnValue(ok=False, error_message="Reached end", restart=False)
 
 
 @workerapp.task
@@ -975,8 +975,8 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
                         logmessage("Error of type" + str(errmess.__class__.__name__) + " that could not be displayed")
                     success = False
             if success:
-                return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
-            return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
+                return ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
+            return ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
 
 # @workerapp.task
 # def old_email_attachments(yaml_filename, user_info, user_code, secret, url, url_root, email_address, question_number, include_editable):
@@ -1040,9 +1040,9 @@ def email_attachments(user_code, email_address, attachment_info, language, subje
 #                         success = False
 
 #     if success:
-#         return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
+#         return ReturnValue(value=worker_controller.functions.word("E-mail was sent to") + " " + email_address, extra='flash')
 #     else:
-#         return worker_controller.functions.ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
+#         return ReturnValue(value=worker_controller.functions.word("Unable to send e-mail to") + " " + email_address, extra='flash')
 
 
 @workerapp.task
@@ -1075,12 +1075,12 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             except BaseException as the_err:
                 worker_controller.release_lock(session_code, yaml_filename)
                 logmessage("background_action: could not obtain dictionary because of " + str(the_err.__class__.__name__) + ": " + str(the_err))
-                return worker_controller.functions.ReturnValue(extra=extra)
+                return ReturnValue(extra=extra)
             the_current_info['encrypted'] = is_encrypted
             worker_controller.release_lock(session_code, yaml_filename)
             if user_dict is None:
                 logmessage("background_action: dictionary could not be found")
-                return worker_controller.functions.ReturnValue(extra=extra)
+                return ReturnValue(extra=extra)
             start_time = time.time()
             interview_status = worker_controller.parse.InterviewStatus(current_info=the_current_info)
             old_language = worker_controller.functions.get_language()
@@ -1102,7 +1102,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 variables = list(reversed(list(worker_controller.functions.this_thread.current_variable)))
                 worker_controller.error_notification(e, message=error_message, trace=error_trace)
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
-                    return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables)
+                    return ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, variables=variables)
                 logmessage("Time in background action before error callback was " + str(time.time() - start_time))
                 worker_controller.functions.set_language(old_language)
                 return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
@@ -1110,7 +1110,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
             logmessage("Time in background action was " + str(time.time() - start_time))
             if not hasattr(interview_status, 'question'):
                 # logmessage("background_action: status had no question")
-                return worker_controller.functions.ReturnValue(extra=extra)
+                return ReturnValue(extra=extra)
             if interview_status.question.question_type in ["restart", "exit", "exit_logout"]:
                 # logmessage("background_action: status was restart or exit")
                 worker_controller.obtain_lock_patiently(session_code, yaml_filename)
@@ -1131,7 +1131,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                     sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
             if interview_status.question.question_type == "backgroundresponse":
                 # logmessage("background_action: status was backgroundresponse")
-                return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
+                return ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
             if interview_status.question.question_type == "backgroundresponseaction":
                 # logmessage("background_action: status was backgroundresponseaction")
                 start_time = time.time()
@@ -1174,7 +1174,7 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 if save_status != SS_IGNORE:
                     worker_controller.release_lock(session_code, yaml_filename)
                 if has_error:
-                    return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
+                    return ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 if hasattr(interview_status, 'question'):
                     if interview_status.question.question_type == "response":
                         # logmessage("background_action: status was response")
@@ -1184,9 +1184,9 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                             sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
                     elif interview_status.question.question_type == "backgroundresponse":
                         logmessage("Time in background response action was " + str(time.time() - start_time))
-                        return worker_controller.functions.ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
+                        return ReturnValue(value=interview_status.question.backgroundresponse, extra=extra)
                 logmessage("Time in background response action was " + str(time.time() - start_time))
-                return worker_controller.functions.ReturnValue(value=new_action, extra=extra)
+                return ReturnValue(value=new_action, extra=extra)
             if hasattr(interview_status, 'questionText') and interview_status.questionText:
                 if interview_status.orig_sought != interview_status.sought:
                     sought_message = str(interview_status.orig_sought) + " (" + interview_status.sought + ")"
@@ -1201,10 +1201,10 @@ def background_action(yaml_filename, user_info, session_code, secret, url, url_r
                 variables = list(reversed(list(worker_controller.functions.this_thread.current_variable)))
                 worker_controller.error_notification(Exception("The end result of the background action was the seeking of the variable " + sought_message + ", which resulted in asking this question: " + repr(str(interview_status.questionText).strip())))
                 if 'on_error' not in worker_controller.functions.this_thread.current_info:
-                    return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
+                    return ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
                 return process_error(interview, session_code, yaml_filename, secret, user_info, url, url_root, is_encrypted, error_type, error_message, error_trace, variables, extra)
             logmessage("background_action: finished")
-            return worker_controller.functions.ReturnValue(extra=extra)
+            return ReturnValue(extra=extra)
 
 
 @workerapp.task

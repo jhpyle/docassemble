@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.8.15] - 2025-09-27
+
+### Added
+
+- The `celery task routes` Configuration directive.
+
+### Changed
+
+- The `mmdc()` function in `docassemble.base.mermaid` is
+  deprecated. The module will be removed in a future version.
+
+### Fixed
+
+- The `continue button field` information was not submitted when
+  `maximum image size` feature was used.
+- If a signature image after trimming is very small, the trimmed
+  version is not used.
+
 ## [1.8.14] - 2025-09-15
 
 ### Added

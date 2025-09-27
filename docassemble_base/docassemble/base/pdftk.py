@@ -356,6 +356,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 continue
             im = Image.open(temp_png.name)
             width, height = im.size
+            if width < 10 or height < 10:
+                im.close()
+                im = Image.open(file_info['fullpath'])
+                width, height = im.size
             xone, yone, xtwo, ytwo = fields[field]['rect']
             dppx = width/(xtwo-xone)
             dppy = height/(ytwo-yone)
@@ -484,13 +488,11 @@ def overlay_pdf(main_file, logo_file, out_file, first_page=None, last_page=None,
         first_page = 1
     if last_page is None or last_page < 1:
         last_page = len(main_pdf.pages)
-    if first_page > len(main_pdf.pages):
-        first_page = len(main_pdf.pages)
+    first_page = min(first_page, len(main_pdf.pages))
     last_page = max(last_page, first_page)
     if logo_page is None or logo_page < 1:
         logo_page = 1
-    if logo_page > len(logo_pdf.pages):
-        logo_page = len(logo_pdf.pages)
+    logo_page = min(logo_page, len(logo_pdf.pages))
     for page_no in range(first_page - 1, last_page):
         if only == 'even':
             if page_no % 2 == 0:

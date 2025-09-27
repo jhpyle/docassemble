@@ -23,6 +23,23 @@ workerapp.set_current()
 workerapp.set_default()
 
 
+class ReturnValue:
+
+    def __init__(self, **kwargs):
+        self.extra = kwargs.get('extra', None)
+        self.value = kwargs.get('value', None)
+        for key, val in kwargs.items():
+            if key not in ['extra', 'value']:
+                setattr(self, key, val)
+
+    def __str__(self):
+        if hasattr(self, 'ok') and self.ok and hasattr(self, 'content'):
+            return str(self.content)
+        if hasattr(self, 'error_message'):
+            return str(self.error_message)
+        return str(self.value)
+
+
 class WorkerController:
 
     def __init__(self):
@@ -123,9 +140,9 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
                 sys.stdout.write(interview_status.questionText.rstrip().encode('utf8') + "\n")
         elif interview_status.question.question_type == "backgroundresponse":
             logmessage("Time in error callback was " + str(time.time() - start_time))
-            return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, value=interview_status.question.backgroundresponse, extra=extra)
+            return ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, value=interview_status.question.backgroundresponse, extra=extra)
     logmessage("Time in error callback was " + str(time.time() - start_time))
-    return worker_controller.functions.ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
+    return ReturnValue(ok=False, error_type=error_type, error_trace=error_trace, error_message=error_message, variables=variables, extra=extra)
 
 
 def error_object(err):
@@ -134,7 +151,7 @@ def error_object(err):
     error_message = str(err)
     error_trace = None
     worker_controller.error_notification(err, message=error_message, trace=error_trace)
-    return worker_controller.functions.ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, restart=False)
+    return ReturnValue(ok=False, error_message=error_message, error_type=error_type, error_trace=error_trace, restart=False)
 
 
 @contextmanager

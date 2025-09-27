@@ -3,7 +3,7 @@ USER root
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
-"apt-get -y update \
+"apt-get -q -y update \
 && ln -s /var/mail/mail /var/mail/root \
 && cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \

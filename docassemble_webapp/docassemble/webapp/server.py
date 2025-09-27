@@ -53,13 +53,13 @@ import docassemble.base.astparser
 from docassemble.webapp.api_key import encrypt_api_key
 from docassemble.base.error import DAError, DAErrorNoEndpoint, DAErrorMissingVariable, DAErrorCompileError, DAValidationError, DAException, DANotFoundError, DAInvalidFilename, DASourceError
 import docassemble.base.functions
-from docassemble.base.functions import get_default_timezone, ReturnValue, word, safeyaml, bytesyaml, altyamlstring
+from docassemble.base.functions import get_default_timezone, word, safeyaml, bytesyaml, altyamlstring
 from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
 import docassemble.base.DA
 from docassemble.base.generate_key import random_string, random_lower_string, random_alphanumeric, random_digits
 import docassemble.base.interview_cache
 from docassemble.base.logger import logmessage
-from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions
+from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions, can_convert_word_to_markdown
 import docassemble.base.parse
 import docassemble.base.pdftk
 from docassemble.base.standardformatter import as_html, as_sms, get_choices_with_abb
@@ -90,6 +90,7 @@ from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, 
 from docassemble.webapp.users.views import user_profile_page
 if not in_celery:
     import docassemble.webapp.worker
+    from docassemble.webapp.worker_common import ReturnValue
     import celery.exceptions
 
 import packaging
@@ -211,6 +212,7 @@ PERMISSIONS_LIST = [
     'template_parse'
     ]
 
+CAN_CONVERT_WORD = can_convert_word_to_markdown()
 HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
 GITHUB_BRANCH = daconfig.get('github default branch name', 'main')
 USE_GOOGLE_PLACES_NEW_API = daconfig['google']['use places api new']
@@ -13258,7 +13260,10 @@ def playground_files():
                     else:
                         flash(word("File format not understood: ") + argument, "error")
                         return redirect(url_for('playground_files', section=section, project=current_project))
-                    result = word_to_markdown(filename, the_format)
+                    if CAN_CONVERT_WORD:
+                        result = word_to_markdown(filename, the_format)
+                    else:
+                        result = None
                     if result is None:
                         flash(word("File could not be converted: ") + argument, "error")
                         return redirect(url_for('playground_files', section=section, project=current_project))
@@ -13359,11 +13364,12 @@ def playground_files():
                 editable_files.append({'name': a_file, 'modtime': os.path.getmtime(os.path.join(the_directory, a_file))})
     assign_opacity(editable_files)
     editable_file_listing = [x['name'] for x in editable_files]
-    for a_file in files:
-        extension, mimetype = get_ext_and_mimetype(a_file)
-        b_file = os.path.splitext(a_file)[0] + '.md'
-        if b_file not in editable_file_listing and ((mimetype and mimetype in convertible_mimetypes) or (extension and extension in convertible_extensions)):
-            convertible_files.append(a_file)
+    if CAN_CONVERT_WORD:
+        for a_file in files:
+            extension, mimetype = get_ext_and_mimetype(a_file)
+            b_file = os.path.splitext(a_file)[0] + '.md'
+            if b_file not in editable_file_listing and ((mimetype and mimetype in convertible_mimetypes) or (extension and extension in convertible_extensions)):
+                convertible_files.append(a_file)
     if the_file and not is_new and the_file not in editable_file_listing:
         the_file = ''
     if not the_file and not is_new:
@@ -16057,7 +16063,7 @@ def read_fields(filename, orig_file_name, input_format, output_format):
             return fields_output
         if input_format in ('docx', 'markdown'):
             result = ''
-            if input_format == 'docx':
+            if input_format == 'docx' and CAN_CONVERT_WORD:
                 result_file = word_to_markdown(filename, 'docx')
                 if result_file is None:
                     raise DAException(word("Error: no fields could be found in the file"))
@@ -16100,7 +16106,10 @@ def read_fields(filename, orig_file_name, input_format, output_format):
             return json.dumps(output, sort_keys=True, indent=2)
         if input_format in ('docx', 'markdown'):
             if input_format == 'docx':
-                result_file = word_to_markdown(filename, 'docx')
+                if CAN_CONVERT_WORD:
+                    result_file = word_to_markdown(filename, 'docx')
+                else:
+                    result_file = None
                 if result_file is None:
                     return json.dumps({'fields': []}, indent=2)
                 with open(result_file.name, 'r', encoding='utf-8') as fp:
@@ -22153,7 +22162,10 @@ def api_convert_file():
                     return jsonify_with_status("Invalid input file format.", 400)
                 with tempfile.NamedTemporaryFile() as temp_file:
                     the_file.save(temp_file.name)
-                    result = word_to_markdown(temp_file.name, the_format)
+                    if CAN_CONVERT_WORD:
+                        result = word_to_markdown(temp_file.name, the_format)
+                    else:
+                        result = None
                     if result is None:
                         return jsonify_with_status("Unable to convert file.", 400)
                     with open(result.name, 'r', encoding='utf-8') as fp:

@@ -14,6 +14,7 @@ __all__ = ['mmdc']
 
 
 def mmdc(input_text, file_format='svg', flags=None):
+    logmessage("mmdc: the docassemble.base.mermaid module is deprecated and will be removed in a future version.")
     if flags is None:
         flags = {}
     if not isinstance(flags, dict):

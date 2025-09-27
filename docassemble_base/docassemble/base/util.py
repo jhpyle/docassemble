@@ -53,14 +53,14 @@ import pandas
 from docx import Document
 from pikepdf import Pdf
 import google.cloud
-from docassemble.base.config import in_celery
+from docassemble.base.config import in_celery, daconfig
 from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError, DAException
 from docassemble.base.file_docx import include_docx_template
 from docassemble.base.filter import markdown_to_html
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, get_voice, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, update_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, current_context, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, invite_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, ReturnValue, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, get_voice, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, update_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, current_context, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, invite_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
 from docassemble.base.generate_key import random_alphanumeric, random_string
 from docassemble.base.logger import logmessage
-from docassemble.base.pandoc import word_to_markdown, concatenate_files
+from docassemble.base.pandoc import word_to_markdown, concatenate_files, can_convert_word_to_markdown
 import docassemble.base.file_docx
 import docassemble.base.filter
 import docassemble.base.functions
@@ -78,6 +78,18 @@ NoneType = type(None)
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 match_inside_and_outside_brackets = re.compile(r'(.*)\[([^\]]+)\]$')
 is_number = re.compile(r'^[0-9]+$')
+
+DISABLED = 0
+LOCAL = 1
+REMOTE = 2
+TESSERACT_PATH = 'tesseract'
+if daconfig.get('tesseract with celery', False):
+    TESSERACT_MODE = REMOTE
+    from docassemble.tesseract.tasks import run_tesseract, run_gs  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
+elif TESSERACT_PATH and shutil.which(TESSERACT_PATH):
+    TESSERACT_MODE = LOCAL
+else:
+    TESSERACT_MODE = DISABLED
 
 QPDF_PATH = 'qpdf'
 DEFAULT_BLUE_ICON = {'background': 'blue', 'borderColor': 'blue', 'glyph': None}
@@ -352,8 +364,9 @@ __all__ = [
 
 
 def fix_word_processing(filename, extension):
-    result = word_to_markdown(filename, extension)
-    assert result is not None
+    if can_convert_word_to_markdown():
+        result = word_to_markdown(filename, extension)
+        assert result is not None
 
 
 def fix_docx(filename):
@@ -4960,7 +4973,10 @@ class DAFile(DAObject):
             if not docassemble.base.pandoc.convert_file(input_path, output_to.path(), input_extension, output_extension):
                 raise DAError("Could not convert file")
         elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension == 'md':
-            result = docassemble.base.pandoc.word_to_markdown(input_path, input_extension)
+            if can_convert_word_to_markdown():
+                result = docassemble.base.pandoc.word_to_markdown(input_path, input_extension)
+            else:
+                result = None
             if result is None:
                 raise DAError("Could not convert file")
             shutil.copyfile(result.name, output_to.path())
@@ -4977,7 +4993,7 @@ class DAFile(DAObject):
         output_to.retrieve()
 
     def fix_up(self):
-        """Makes corrections to the file and changes it in-place if necessary.
+        """Make corrections to the file and changes it in-place if necessary.
         Raises an exception if the file is corrupt and cannot be fixed."""
         if not self.ok and not hasattr(self, 'content'):
             self.initialized  # pylint: disable=pointless-statement
@@ -9898,13 +9914,21 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
         brightened = bright.enhance(1.5)
         contrast = ImageEnhance.Contrast(brightened)
         final_image = contrast.enhance(2.0)
-        file_to_read = tempfile.TemporaryFile()
+        file_to_read = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".png")
         final_image.save(file_to_read, "PNG")
         file_to_read.seek(0)
-        try:
-            text = subprocess.check_output(['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read).decode('utf-8', 'ignore')
-        except subprocess.CalledProcessError as err:
-            raise DAError("ocr_file: failed to list available languages: " + str(err) + " " + str(err.output.decode()))
+        if TESSERACT_MODE == LOCAL:
+            try:
+                text = subprocess.check_output([TESSERACT_PATH, 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], stdin=file_to_read).decode('utf-8', 'ignore')
+            except subprocess.CalledProcessError as err:
+                raise DAError("ocr_file: failed to OCR file: " + str(err) + " " + str(err.output.decode()))
+        elif TESSERACT_MODE == REMOTE:
+            result = run_tesseract.delay(['stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)
+            if not result.ok:
+                raise DAError("ocr_file: failed to OCR file")
+            text = result.content
+        else:
+            raise DAError("ocr_file: tesseract not installed")
         page_text.append(text)
     for directory in temp_directory_list:
         shutil.rmtree(directory)
@@ -10544,7 +10568,10 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         temp_file = tempfile.NamedTemporaryFile()
         docx_template.save(temp_file.name)
         docassemble.base.file_docx.fix_docx(temp_file.name)
-        result = docassemble.base.pandoc.word_to_markdown(temp_file.name, 'docx')
+        if can_convert_word_to_markdown():
+            result = docassemble.base.pandoc.word_to_markdown(temp_file.name, 'docx')
+        else:
+            result = None
         if not result:
             raise DAError("Unable to convert docx to Markdown")
         shutil.copyfile(result.name, output_path)
@@ -10976,14 +11003,14 @@ def ocr_finalize(*pargs, **kwargs):
         for parg in pargs:
             if isinstance(parg, list):
                 for item in parg:
-                    if isinstance(item, ReturnValue):
+                    if item.__class__.__name__ == 'ReturnValue':
                         if isinstance(item.value, dict):
                             if 'page' in item.value:
                                 file_list.append([item.value['indexno'], int(item.value['page']), item.value['doc']._pdf_page_path(int(item.value['page']))])
                             else:
                                 file_list.append([item.value['indexno'], 0, item.value['doc'].path()])
             else:
-                if isinstance(parg, ReturnValue):
+                if parg.__class__.__name__ == 'ReturnValue':
                     if isinstance(item.value, dict):
                         if 'page' in item.value:
                             file_list.append([parg.value['indexno'], int(parg.value['page']), parg.value['doc']._pdf_page_path(int(parg.value['page']))])
@@ -11004,10 +11031,10 @@ def ocr_finalize(*pargs, **kwargs):
         if isinstance(parg, list):
             for item in parg:
                 # logmessage("ocr_finalize: sub item is a " + str(type(item)))
-                if isinstance(item, ReturnValue) and isinstance(item.value, dict):
+                if item.__class__.__name__ == 'ReturnValue' and isinstance(item.value, dict):
                     output[int(item.value['page'])] = item.value['text']
         else:
-            if isinstance(parg, ReturnValue) and isinstance(parg.value, dict):
+            if parg.__class__.__name__ == 'ReturnValue' and isinstance(parg.value, dict):
                 output[int(parg.value['page'])] = parg.value['text']
         # index += 1
     # logmessage("ocr_finalize: assembling output")
@@ -11050,10 +11077,18 @@ def get_ocr_language(language):
 
 
 def get_available_languages():
-    try:
-        output = subprocess.check_output(['tesseract', '--list-langs'], stderr=subprocess.STDOUT).decode()
-    except subprocess.CalledProcessError as err:
-        raise DAError("get_available_languages: failed to list available languages: " + str(err))
+    if TESSERACT_MODE == LOCAL:
+        try:
+            output = subprocess.check_output([TESSERACT_PATH, '--list-langs'], stderr=subprocess.STDOUT).decode()
+        except subprocess.CalledProcessError as err:
+            raise DAError("get_available_languages: failed to list available languages: " + str(err))
+    elif TESSERACT_MODE == REMOTE:
+        result = run_tesseract.delay(['--list-langs'], mode=1).get(disable_sync_subtasks=False)
+        if not result.ok:
+            raise DAError("get_available_languages: failed to list available languages")
+        output = result.content
+    else:
+        raise DAError("get_available_languages: tesseract not installed")
     result = output.splitlines()
     result.pop(0)
     return result
@@ -11217,28 +11252,56 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
         if doc.extension == 'pdf':
             tiff_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".tiff", delete=False)
             params = ['gs', '-q', '-dNOPAUSE', '-sDEVICE=' + the_device, '-r600', '-sOutputFile=' + tiff_file.name, path, '-c', 'quit']
-            try:
-                result = subprocess.run(params, timeout=60*60, check=False).returncode
-            except subprocess.TimeoutExpired:
-                result = 1
-                logmessage("ocr_pdf: call to gs took too long")
+            if TESSERACT_MODE == LOCAL:
+                try:
+                    result = subprocess.run(params, timeout=60*60, check=False).returncode
+                except subprocess.TimeoutExpired:
+                    result = 1
+                    logmessage("ocr_pdf: call to gs took too long")
+            elif TESSERACT_MODE == REMOTE:
+                result = run_gs.delay(params[1:]).get(disable_sync_subtasks=False)
+                if result is None:
+                    result = 1
+                    logmessage("ocr_pdf: call to gs took too long")
+            else:
+                raise DAError("ocr_pdf: ghostscript not installed")
             if result != 0:
                 raise DAError("ocr_pdf: failed to run gs with command " + " ".join(params))
-            params = ['tesseract', tiff_file.name, pdf_file.name, '-l', str(lang), '--psm', str(psm), '--dpi', '600', 'pdf']
-            try:
-                result = subprocess.run(params, timeout=60*60, check=False).returncode
-            except subprocess.TimeoutExpired:
-                result = 1
-                logmessage("ocr_pdf: call to tesseract took too long")
+            params = [TESSERACT_PATH, tiff_file.name, pdf_file.name, '-l', str(lang), '--psm', str(psm), '--dpi', '600', 'pdf']
+            if TESSERACT_MODE == LOCAL:
+                try:
+                    result = subprocess.run(params, timeout=60*60, check=False).returncode
+                except subprocess.TimeoutExpired:
+                    result = 1
+                    logmessage("ocr_pdf: call to tesseract took too long")
+            elif TESSERACT_MODE == REMOTE:
+                result = run_tesseract.delay(params[1:], mode=2).get(disable_sync_subtasks=False)
+                if result.ok:
+                    result = result.content
+                else:
+                    result = 1
+                    logmessage("ocr_pdf: call to tesseract took too long")
+            else:
+                raise DAError("ocr_pdf: tesseract not installed")
             if result != 0:
                 raise DAError("ocr_pdf: failed to run tesseract with command " + " ".join(params))
         else:
-            params = ['tesseract', path, pdf_file.name, '-l', str(lang), '--psm', str(psm), '--dpi', '300', 'pdf']
-            try:
-                result = subprocess.run(params, timeout=60*60, check=False).returncode
-            except subprocess.TimeoutExpired:
-                result = 1
-                logmessage("ocr_pdf: call to tesseract took too long")
+            params = [TESSERACT_PATH, path, pdf_file.name, '-l', str(lang), '--psm', str(psm), '--dpi', '300', 'pdf']
+            if TESSERACT_MODE == LOCAL:
+                try:
+                    result = subprocess.run(params, timeout=60*60, check=False).returncode
+                except subprocess.TimeoutExpired:
+                    result = 1
+                    logmessage("ocr_pdf: call to tesseract took too long")
+            elif TESSERACT_MODE == REMOTE:
+                result = run_tesseract.delay(params[1:], mode=2).get(disable_sync_subtasks=False)
+                if result.ok:
+                    result = result.content
+                else:
+                    result = 1
+                    logmessage("ocr_pdf: call to tesseract took too long")
+            else:
+                raise DAError("ocr_pdf: tesseract not installed")
             if result != 0:
                 raise DAError("ocr_pdf: failed to run tesseract with command " + " ".join(params))
         output.append(pdf_file.name + '.pdf')
@@ -11302,7 +11365,7 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
             the_file = output_file.name + '.png'
     else:
         the_file = path
-    file_to_read = tempfile.NamedTemporaryFile()
+    file_to_read = tempfile.NamedTemporaryFile(prefix="datemp")
     if pdf and preserve_color:
         shutil.copyfile(the_file, file_to_read.name)
     else:
@@ -11313,26 +11376,42 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
         brightened = bright.enhance(1.5)
         contrast = ImageEnhance.Contrast(brightened)
         final_image = contrast.enhance(2.0)
-        file_to_read = tempfile.TemporaryFile()
+        file_to_read = tempfile.NamedTemporaryFile(prefix="datemp", suffix='.png')
         final_image.convert('RGBA').save(file_to_read, "PNG")
     file_to_read.seek(0)
     if pdf:
         outfile = doc._pdf_page_path(page)
-        params = ['tesseract', 'stdin', re.sub(r'\.pdf$', '', outfile), '-l', str(lang), '--psm', str(psm), '--dpi', str(ocr_resolution), 'pdf']
+        params = [TESSERACT_PATH, 'stdin', re.sub(r'\.pdf$', '', outfile), '-l', str(lang), '--psm', str(psm), '--dpi', str(ocr_resolution), 'pdf']
         logmessage("ocr_page: piping to command " + " ".join(params))
+        if TESSERACT_MODE == LOCAL:
+            try:
+                text = subprocess.check_output(params, stdin=file_to_read).decode()
+            except subprocess.CalledProcessError as err:
+                raise DAError("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
+        elif TESSERACT_MODE == REMOTE:
+            result = run_tesseract.delay(params[1:], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)
+            if result.ok:
+                text = result.content
+            else:
+                raise DAError("ocr_page: failed to run tesseract with command " + " ".join(params))
+        else:
+            raise DAError("ocr_page: tesseract not installed")
+        logmessage("ocr_page finished with pdf page " + str(page))
+        doc.commit()
+        return {'indexno': indexno, 'page': page, 'doc': doc}
+    params = [TESSERACT_PATH, 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm), '--dpi', str(ocr_resolution)]
+    logmessage("ocr_page: piping to command " + " ".join(params))
+    if TESSERACT_MODE == LOCAL:
         try:
             text = subprocess.check_output(params, stdin=file_to_read).decode()
         except subprocess.CalledProcessError as err:
             raise DAError("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
-        logmessage("ocr_page finished with pdf page " + str(page))
-        doc.commit()
-        return {'indexno': indexno, 'page': page, 'doc': doc}
-    params = ['tesseract', 'stdin', 'stdout', '-l', str(lang), '--psm', str(psm), '--dpi', str(ocr_resolution)]
-    logmessage("ocr_page: piping to command " + " ".join(params))
-    try:
-        text = subprocess.check_output(params, stdin=file_to_read).decode()
-    except subprocess.CalledProcessError as err:
-        raise DAError("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
+    elif TESSERACT_MODE == REMOTE:
+        result = run_tesseract.delay(params[1:], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)
+        if result.ok:
+            text = result.content
+        else:
+            raise DAError("ocr_page: failed to run tesseract with command " + " ".join(params))
     logmessage("ocr_page finished with page " + str(page))
     return {'indexno': indexno, 'page': page, 'text': text}
 

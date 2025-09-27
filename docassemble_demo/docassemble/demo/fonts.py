@@ -18,6 +18,7 @@ def lang_name(language):
 
 def get_fonts(language):
     arguments = ['fc-list', ':lang=' + language, 'family', 'file']
+    error_message = ''
     try:
         completed_process = subprocess.run(arguments, timeout=600, check=False, capture_output=True)
         result = completed_process.returncode

@@ -7170,7 +7170,7 @@ class Question:
                                 the_template.save(docx_file.name)
                                 docassemble.base.file_docx.fix_docx(docx_file.name)
                                 if result['update_references']:
-                                    docassemble.base.pandoc.update_references(docx_file.name)
+                                    docassemble.base.pandoc.update_references(docx_file.name)  # does this update refs twice?
                                 if 'pdf' in result['formats_to_use']:
                                     with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False) as pdf_file:
                                         if not docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'], filename=result['filename']):
