@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.8.16] - 2025-09-27
+
+### Fixed
+
+- Issue introduced in 1.8.15 related to unpickling Celery return
+  values.
+
 ## [1.8.15] - 2025-09-27
 
 ### Added

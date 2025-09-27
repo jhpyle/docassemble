@@ -15,7 +15,7 @@ from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig, hostname
 from docassemble.base.error import DAError
 from docassemble.webapp.files import SavedFile
-from docassemble.webapp.worker_common import worker_controller, workerapp, process_error, error_object, ReturnValue, SS_NEW, SS_OVERWRITE, SS_IGNORE
+from docassemble.webapp.worker_common import worker_controller, workerapp, process_error, error_object, ReturnValue, SS_NEW, SS_IGNORE
 
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 
@@ -582,7 +582,7 @@ def sync_with_onedrive(user_id):
                                 result = onedrive_upload(http, od_dirlist[section][dir_name], dir_name, data, the_path)
                             else:
                                 result = onedrive_upload(http, subdirs[section], section, data, the_path)
-                            if isinstance(result, ReturnValue):
+                            if result.__class__.__name__ == 'ReturnValue':
                                 return result
                             od_files[section].add(f)
                             od_ids[section][f] = result
@@ -604,7 +604,7 @@ def sync_with_onedrive(user_id):
                             # data["fileSystemInfo"] = {"createdDateTime": od_createtimes[section][f], "lastAccessedDateTime": the_modtime, "lastModifiedDateTime": the_modtime}
                             # data["@microsoft.graph.conflictBehavior"] = "replace"
                             result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
-                            if isinstance(result, ReturnValue):
+                            if result.__class__.__name__ == 'ReturnValue':
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
                             logmessage("After update, timestamp on OneDrive is " + str(od_modtimes[section][f]))
@@ -627,7 +627,7 @@ def sync_with_onedrive(user_id):
                             data["fileSystemInfo"] = {"createdDateTime": iso_from_epoch(od_createtimes[section][f]), "lastModifiedDateTime": the_modtime}
                             # data["@microsoft.graph.conflictBehavior"] = "replace"
                             result = onedrive_upload(http, subdirs[section], section, data, the_path, new_item_id=od_ids[section][f])
-                            if isinstance(result, ReturnValue):
+                            if result.__class__.__name__ == 'ReturnValue':
                                 return result
                             od_modtimes[section][f] = local_modtimes[section][f]
                         else:

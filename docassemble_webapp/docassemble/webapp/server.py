@@ -90,7 +90,6 @@ from docassemble.webapp.users.models import UserAuthModel, UserModel, UserDict, 
 from docassemble.webapp.users.views import user_profile_page
 if not in_celery:
     import docassemble.webapp.worker
-    from docassemble.webapp.worker_common import ReturnValue
     import celery.exceptions
 
 import packaging
@@ -4534,6 +4533,7 @@ def trigger_update(except_for=None):
             db.session.execute(sqldelete(Supervisors).filter_by(id=id_to_delete))
             db.session.commit()
 
+
 def restart_on(host):
     logmessage("restart_on: " + str(host.hostname))
     if host.hostname == hostname:
@@ -6598,7 +6598,7 @@ def checkin():
                     try:
                         result = docassemble.webapp.worker.workerapp.AsyncResult(id=worker_id)
                         if result.ready():
-                            if isinstance(result.result, ReturnValue):
+                            if result.result.__class__.__name__ == 'ReturnValue':
                                 commands.append({'value': docassemble.base.functions.safe_json(result.result.value), 'extra': result.result.extra})
                         else:
                             r.rpush(worker_key, worker_id)
@@ -10489,7 +10489,7 @@ def update_package_ajax():
         # if 'taskwait' in session:
         #     del session['taskwait']
         the_result = result.get()
-        if isinstance(the_result, ReturnValue):
+        if the_result.__class__.__name__ == 'ReturnValue':
             if the_result.ok:
                 # logmessage("update_package_ajax: success")
                 if (hasattr(the_result, 'restart') and not the_result.restart) or (START_TIME > session['serverstarttime'] and not reset_process_running()):
@@ -12492,7 +12492,7 @@ def checkin_sync_with_google_drive():
         if 'taskwait' in session:
             del session['taskwait']
         the_result = result.get()
-        if isinstance(the_result, ReturnValue):
+        if the_result.__class__.__name__ == 'ReturnValue':
             if the_result.ok:
                 logmessage("checkin_sync_with_google_drive: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
@@ -12522,7 +12522,7 @@ def checkin_sync_with_onedrive():
         if 'taskwait' in session:
             del session['taskwait']
         the_result = result.get()
-        if isinstance(the_result, ReturnValue):
+        if the_result.__class__.__name__ == 'ReturnValue':
             if the_result.ok:
                 logmessage("checkin_sync_with_onedrive: success")
                 return jsonify(success=True, status='finished', ok=the_result.ok, summary=add_br(the_result.summary), restart=the_result.restart)
@@ -21490,7 +21490,7 @@ def api_package_update_status():
     result = docassemble.webapp.worker.workerapp.AsyncResult(id=task_info['id'])
     if result.ready():
         the_result = result.get()
-        if isinstance(the_result, ReturnValue):
+        if the_result.__class__.__name__ == 'ReturnValue':
             if the_result.ok:
                 if the_result.restart and (START_TIME <= task_info['server_start_time'] or reset_process_running()):
                     return jsonify(status='working')
