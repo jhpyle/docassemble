@@ -1157,6 +1157,8 @@ def interview_url(**kwargs):
     additional users to participate."""
     do_local = False
     args = {}
+    temporary = kwargs.pop('temporary', None)
+    once_temporary = kwargs.pop('once_temporary', None)
     for key, val in kwargs.items():
         args[key] = val
     if 'local' in args:
@@ -1217,15 +1219,15 @@ def interview_url(**kwargs):
         url = url_of('flex_interview', **args)
     else:
         url = url_of('interview', **args)
-    if 'temporary' in args:
-        if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
-            expire_seconds = int(args['temporary'] * 60 * 60)
+    if temporary:
+        if isinstance(temporary, (int, float)) and temporary > 0:
+            expire_seconds = int(temporary * 60 * 60)
         else:
             expire_seconds = 24 * 60 * 60
         return temp_redirect(url, expire_seconds, do_local, False)
-    if 'once_temporary' in args:
-        if isinstance(args['once_temporary'], (int, float)) and args['once_temporary'] > 0:
-            expire_seconds = int(args['once_temporary'] * 60 * 60)
+    if once_temporary in args:
+        if isinstance(once_temporary, (int, float)) and once_temporary > 0:
+            expire_seconds = int(once_temporary * 60 * 60)
         else:
             expire_seconds = 24 * 60 * 60
         return temp_redirect(url, expire_seconds, do_local, True)
@@ -1448,6 +1450,8 @@ def interview_url_action(action, **kwargs):
         if is_priority:
             kwargs = {'_action': action, '_arguments': kwargs}
             action = '_da_priority_action'
+    temporary = kwargs.pop('temporary', None)
+    once_temporary = kwargs.pop('once_temporary', None)
     args['action'] = myb64quote(json.dumps({'action': action, 'arguments': kwargs}))
     if not do_local:
         args['_external'] = True
@@ -1493,19 +1497,15 @@ def interview_url_action(action, **kwargs):
         url = url_of('flex_interview', **args)
     else:
         url = url_of('interview', **args)
-    if 'temporary' in kwargs:
-        args['temporary'] = kwargs['temporary']
-    if 'once_temporary' in kwargs:
-        args['once_temporary'] = kwargs['once_temporary']
-    if 'temporary' in args:
-        if isinstance(args['temporary'], (int, float)) and args['temporary'] > 0:
-            expire_seconds = int(args['temporary'] * 60 * 60)
+    if temporary is not None:
+        if isinstance(temporary, (int, float)) and temporary > 0:
+            expire_seconds = int(temporary * 60 * 60)
         else:
             expire_seconds = 24 * 60 * 60
         return temp_redirect(url, expire_seconds, do_local, False)
-    if 'once_temporary' in args:
-        if isinstance(args['once_temporary'], (int, float)) and args['once_temporary'] > 0:
-            expire_seconds = int(args['once_temporary'] * 60 * 60)
+    if once_temporary is not None:
+        if isinstance(once_temporary, (int, float)) and once_temporary > 0:
+            expire_seconds = int(once_temporary * 60 * 60)
         else:
             expire_seconds = 24 * 60 * 60
         return temp_redirect(url, expire_seconds, do_local, True)
@@ -1593,18 +1593,18 @@ def update_terms(dictionary, auto=False, language='*'):
                 for term, definition in termitems:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     if auto:
-                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     else:
-                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                        terms[lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
             else:
                 raise DAError("update_terms: terms organized as a list must be a list of dictionary items.")
     elif isinstance(dictionary, dict):
         for term in dictionary:
             lower_term = re.sub(r'\s+', ' ', term.lower())
             if auto:
-                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
             else:
-                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                terms[lower_term] = {'definition': str(dictionary[term]), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
     else:
         raise DAError("update_terms: terms must be organized as a dictionary or a list.")
 

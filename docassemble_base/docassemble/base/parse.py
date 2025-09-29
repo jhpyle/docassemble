@@ -2061,7 +2061,7 @@ def evaluate_image_in_item(data, user_dict):
 def process_js_vars(expr):
     output = set()
     for item in expr:
-        m = re.search('^(.*)\[[an]ota\]$', item)  # noqa: W605
+        m = re.search(r'^(.*)\[[an]ota\]$', item)  # noqa: W605
         if m:
             output.add(m.group(1))
         else:
@@ -3016,10 +3016,10 @@ class Question:
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = {}
                     re_dict = {}
-                    re_dict[self.language] = re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                    re_dict[self.language] = re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                        re_dict[lang] = re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                        re_dict[lang] = re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                         alt_terms[lang] = tr_tuple[0]
                     self.terms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'auto terms' in data and 'question' in data:
@@ -3039,10 +3039,10 @@ class Question:
                     term_textobject = TextObject(str(lower_term), question=self)
                     alt_terms = {}
                     re_dict = {}
-                    re_dict[self.language] = re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                    re_dict[self.language] = re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                        re_dict[lang] = re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
+                        re_dict[lang] = re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_other),), re.IGNORECASE | re.DOTALL)  # noqa: W605
                         alt_terms[lang] = tr_tuple[0]
                     self.autoterms[lower_term] = {'definition': TextObject(definitions + str(definition), question=self), 're': re_dict, 'alt_terms': alt_terms}
         if 'terms' in data and 'question' not in data:
@@ -3060,14 +3060,14 @@ class Question:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
                             definition_textobject = TextObject(str(definition), question=self)
-                            self.interview.terms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                            self.interview.terms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.terms:
                                     self.interview.terms[lang] = {}
                                 if tr_tuple[0] not in self.interview.terms[lang]:
                                     if lang in definition_textobject.other_lang:
                                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                        self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     else:
                         raise DASourceError("A terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['terms'], dict):
@@ -3075,14 +3075,14 @@ class Question:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     definition_textobject = TextObject(str(data['terms'][term]), question=self)
-                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                    self.interview.terms[self.language][lower_term] = {'definition': str(data['terms'][term]), 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         if lang not in self.interview.terms:
                             self.interview.terms[lang] = {}
                         if tr_tuple[0] not in self.interview.terms[lang]:
                             if lang in definition_textobject.other_lang:
                                 lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                self.interview.terms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){(%s)(\|[^\}]*)?}" % (re.sub(r'\s', r'\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
             else:
                 raise DASourceError("A terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'auto terms' in data and 'question' not in data:
@@ -3100,14 +3100,14 @@ class Question:
                             lower_term = re.sub(r'\s+', ' ', term.lower())
                             term_textobject = TextObject(str(lower_term), question=self)
                             definition_textobject = TextObject(str(definition), question=self)
-                            self.interview.autoterms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                            self.interview.autoterms[self.language][lower_term] = {'definition': str(definition), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                             for lang, tr_tuple in term_textobject.other_lang.items():
                                 if lang not in self.interview.autoterms:
                                     self.interview.autoterms[lang] = {}
                                 if tr_tuple[0] not in self.interview.autoterms[lang]:
                                     if lang in definition_textobject.other_lang:
                                         lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                        self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     else:
                         raise DASourceError("An auto terms section organized as a list must be a list of dictionary items." + self.idebug(data))
             elif isinstance(data['auto terms'], dict):
@@ -3115,14 +3115,14 @@ class Question:
                     lower_term = re.sub(r'\s+', ' ', term.lower())
                     term_textobject = TextObject(str(lower_term), question=self)
                     definition_textobject = TextObject(str(data['auto terms'][term]), question=self)
-                    self.interview.autoterms[self.language][lower_term] = {'definition': str(data['auto terms'][term]), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                    self.interview.autoterms[self.language][lower_term] = {'definition': str(data['auto terms'][term]), 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_term),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
                     for lang, tr_tuple in term_textobject.other_lang.items():
                         if lang not in self.interview.autoterms:
                             self.interview.autoterms[lang] = {}
                         if tr_tuple[0] not in self.interview.autoterms[lang]:
                             if lang in definition_textobject.other_lang:
                                 lower_other = re.sub(r'\s+', ' ', tr_tuple[0].lower())
-                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', '\\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
+                                self.interview.autoterms[lang][tr_tuple[0]] = {'definition': definition_textobject.other_lang[lang][0], 're': re.compile(r"(?i){?\b(%s)\b}?" % (re.sub(r'\s', r'\\s+', lower_other),), re.IGNORECASE | re.DOTALL)}  # noqa: W605
             else:
                 raise DASourceError("An auto terms section must be organized as a dictionary or a list." + self.idebug(data))
         if 'default role' in data:

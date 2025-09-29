@@ -2,6 +2,34 @@ Feature: Example interviews
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Test the interview "Ajax Combobox"
+    Given I start the interview "docassemble.base:data/questions/examples/fields-ajax-list-collect.yml"
+    Then I should see the phrase "What is your first favorite word?"
+    And I set the combobox text to "friendly"
+    And I wait 3 seconds
+    And I select "friendly" from the combobox dropdown
+    And I unfocus
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite words are friendly."
+
+  Scenario: Test the interview "Ajax Combobox two"
+    Given I start the interview "docassemble.base:data/questions/examples/fields-ajax.yml"
+    Then I should see the phrase "What is your favorite word?"
+    And I set the combobox text to "friendly"
+    And I wait 3 seconds
+    And I select "friendly" from the combobox dropdown
+    And I unfocus
+    And I click the button "Continue"
+    Then I should see the phrase "Your favorite word is friendly."
+
+  Scenario: Test the interview "List fonts"
+    Given I start the interview "docassemble.demo:data/questions/fontlist.yml"
+    Then I should see the phrase "Select a language to see the installed fonts for that language."
+    And I choose "Albanian"
+    And I wait 1 second
+    And I click the button "Continue"
+    Then I should see the phrase "Maiden Orange"
+
   Scenario: Test the interview "Review answers"
     Given I start the interview "docassemble.base:data/questions/examples/review-8.yml"
     Then I should see the phrase "What is your address?"

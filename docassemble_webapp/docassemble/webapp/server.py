@@ -3630,6 +3630,7 @@ def install_zip_package(packagename, file_number):
         db.session.add(package_entry)
     else:
         if existing_package.type == 'zip' and existing_package.upload is not None and existing_package.upload != file_number:
+            logmessage("install_zip_package: deleting old ZIP file for " + packagename + " with number " + str(existing_package.upload))
             SavedFile(existing_package.upload).delete()
         existing_package.package_auth.user_id = current_user.id
         existing_package.package_auth.authtype = 'owner'
@@ -3659,6 +3660,7 @@ def install_git_package(packagename, giturl, branch):
             existing_package = db.session.execute(select(Package).where(or_(Package.giturl == giturl, Package.giturl == giturl + '/')).order_by(Package.id.desc()).with_for_update()).scalar()
         if existing_package is not None:
             if existing_package.type == 'zip' and existing_package.upload is not None:
+                logmessage("install_git_package: deleting old ZIP file for " + packagename + " with number " + str(existing_package.upload))
                 SavedFile(existing_package.upload).delete()
             existing_package.package_auth.user_id = current_user.id
             existing_package.package_auth.authtype = 'owner'
@@ -3686,6 +3688,7 @@ def install_pip_package(packagename, limitation):
         db.session.add(package_entry)
     else:
         if existing_package.type == 'zip' and existing_package.upload is not None:
+            logmessage("install_pip_package: deleting old ZIP file for " + packagename + " with number " + str(existing_package.upload))
             SavedFile(existing_package.upload).delete()
         existing_package.package_auth.user_id = current_user.id
         existing_package.package_auth.authtype = 'owner'
@@ -4535,6 +4538,8 @@ def trigger_update(except_for=None):
 
 
 def restart_on(host):
+    if not USING_SUPERVISOR:
+        return True
     logmessage("restart_on: " + str(host.hostname))
     if host.hostname == hostname:
         the_url = 'http://localhost:9001'
@@ -4561,7 +4566,7 @@ def restart_all():
 
 def restart_this():
     logmessage("restart_this: hostname is " + str(hostname))
-    if SINGLE_SERVER:
+    if SINGLE_SERVER and USING_SUPERVISOR:
         args = SUPERVISORCTL + ['-s', 'http://localhost:9001', 'start', 'reset']
         result = subprocess.run(args, check=False).returncode
         if result == 0:
@@ -4725,6 +4730,8 @@ def call_sync():
 
 
 def reset_process_running():
+    if not USING_SUPERVISOR:
+        return False
     check_args = SUPERVISORCTL + ['-s', 'http://localhost:9001', 'status', 'reset']
     output, err = Popen(check_args, stdout=PIPE, stderr=PIPE).communicate()  # pylint: disable=unused-variable
     if re.search(r'RUNNING', output.decode()):
@@ -10640,7 +10647,7 @@ def update_package():
                 filename = secure_filename(the_file.filename)
                 file_number = get_new_file_number(None, filename)
                 saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
-                file_set_attributes(file_number, private=False, persistent=True)
+                file_set_attributes(file_number, private=True, persistent=True)
                 zippath = saved_file.path
                 the_file.save(zippath)
                 saved_file.save()
@@ -11243,7 +11250,7 @@ def create_playground_package():
                 return redirect(url_for('playground_packages', **the_args))
             nice_name = 'docassemble-' + str(pkgname) + '.zip'
             file_number = get_new_file_number(None, nice_name)
-            file_set_attributes(file_number, private=False, persistent=True)
+            file_set_attributes(file_number, private=True, persistent=True)
             saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
             if playground_user.timezone:
                 the_timezone = playground_user.timezone
@@ -11507,7 +11514,7 @@ class Fruit(DAObject):
             the_file.write(questionfiletext)
         nice_name = 'docassemble-' + str(pkgname) + '.zip'
         file_number = get_new_file_number(None, nice_name)
-        file_set_attributes(file_number, private=False, persistent=True)
+        file_set_attributes(file_number, private=True, persistent=True)
         saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
         zf = zipfile.ZipFile(saved_file.path, compression=zipfile.ZIP_DEFLATED, mode='w')
         trimlength = len(directory) + 1
@@ -21451,7 +21458,7 @@ def api_package():
                 filename = secure_filename(the_file.filename)
                 file_number = get_new_file_number(docassemble.base.functions.get_uid(), filename)
                 saved_file = SavedFile(file_number, extension='zip', fix=True, should_not_exist=True)
-                file_set_attributes(file_number, private=False, persistent=True)
+                file_set_attributes(file_number, private=True, persistent=True)
                 zippath = saved_file.path
                 the_file.save(zippath)
                 saved_file.save()

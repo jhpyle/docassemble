@@ -98,6 +98,7 @@ def clear_invalid_package(start_time=None):
         .filter(PackageB.id > PackageA.id)
         .group_by(PackageA.id)).all()
     for item in result:
+        logmessage("clear_invalid_package: deleting duplicate package id " + str(item.id))
         db.session.execute(delete(Package).filter_by(id=item.id))
     db.session.commit()
     logmessage("clear_invalid_package: finishing after " + str(time.time() - start_time) + " seconds")
@@ -484,7 +485,7 @@ def add_dependencies(user_id, start_time=None):
             continue
         if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
             continue
-        # logmessage("add_dependencies: going to delete " + repr(package.key))
+        logmessage("add_dependencies: deleting package record " + repr(package.key))
         db.session.execute(delete(Package).filter_by(name=package.key))
         packages_to_add.append(package)
     did_something = False
@@ -502,6 +503,7 @@ def add_dependencies(user_id, start_time=None):
                     package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='pip', packageversion=package.version, dependency=True)
             else:
                 package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='pip', packageversion=package.version, dependency=True)
+            logmessage("add_dependencies: adding package record " + repr(package.key))
             db.session.add(package_entry)
             db.session.commit()
             install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)

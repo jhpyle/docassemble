@@ -266,7 +266,7 @@ class SavedFile:
             if os.path.isfile(self.path + '.' + self.extension):
                 os.remove(self.path + '.' + self.extension)
             try:
-                os.symlink(self.path, self.path + '.' + self.extension)
+                os.symlink(os.path.basename(self.path), self.path + '.' + self.extension)
             except:
                 shutil.copyfile(self.path, self.path + '.' + self.extension)
         if finalize:

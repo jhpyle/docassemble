@@ -166,6 +166,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
             sizing += 'height:auto;'
     return '<img alt="" class="daicon" src="' + url + '" style="' + str(sizing) + '"/>'
 
+
 def get_choices_with_abb(status, field, the_user_dict, terms=None, links=None):
     if terms is None:
         terms = {}
@@ -3479,7 +3480,7 @@ def input_for(status, field, embedded=False, floating_label=None):
             if field.datatype in ['integer', 'float', 'currency', 'number']:
                 if field.datatype != 'currency':
                     extra_class += ' danumeric'
-                input_type = 'text" inputmode="numeric" pattern="[\-\d.]*'  # noqa: W605
+                input_type = r'text" inputmode="numeric" pattern="[\-\d.]*'
                 if hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step']:
                     step_string = ' step="' + str(status.extras['step'][field.number]) + '"'
                 else:

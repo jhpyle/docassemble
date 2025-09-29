@@ -8211,26 +8211,6 @@ Feature: Example interviews
     Then I should see the phrase "Your document is ready."
     And I should see the phrase "The following document has been created for you."
 
-  Scenario: Test the interview "Ajax Combobox"
-    Given I start the interview "docassemble.base:data/questions/examples/fields-ajax-list-collect.yml"
-    Then I should see the phrase "What is your first favorite word?"
-    And I set the combobox text to "friendly"
-    And I wait 3 seconds
-    And I select "friendly" from the combobox dropdown
-    And I unfocus
-    And I click the button "Continue"
-    Then I should see the phrase "Your favorite words are friendly."
-
-  Scenario: Test the interview "Ajax Combobox two"
-    Given I start the interview "docassemble.base:data/questions/examples/fields-ajax.yml"
-    Then I should see the phrase "What is your favorite word?"
-    And I set the combobox text to "friendly"
-    And I wait 3 seconds
-    And I select "friendly" from the combobox dropdown
-    And I unfocus
-    And I click the button "Continue"
-    Then I should see the phrase "Your favorite word is friendly."
-
   Scenario: Test the interview "Manual list"
     Given I start the interview "docassemble.base:data/questions/examples/list-table-manual-gather-simple.yml"
     Then I should see the phrase "Who is the first person?"
@@ -9986,14 +9966,6 @@ Feature: Example interviews
 
   # Scenario: Test the interview ""
   #   Given I start the interview "docassemble.demo:data/questions/examples/upload-handler.yml"
-
-  Scenario: Test the interview "List fonts"
-    Given I start the interview "docassemble.demo:data/questions/fontlist.yml"
-    Then I should see the phrase "Select a language to see the installed fonts for that language."
-    And I choose "Albanian"
-    And I wait 1 second
-    And I click the button "Continue"
-    Then I should see the phrase "Maiden Orange"
 
   Scenario: Test the interview "Disabled field"
     Given I start the interview "docassemble.base:data/questions/examples/disabled-field-dummy.yml"

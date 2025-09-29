@@ -1114,11 +1114,15 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" == "false" ] && [ "
     ${SUPERVISORCMD} start main:postgres || exit 1
     sleep 4
     su -c "while ! pg_isready -q; do sleep 1; done" postgres
-    echo "initialize: Testing if the database user exists" >&2
-    roleexists=`su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DBUSER:-docassemble}'\"" postgres`
-    if [ -z "$roleexists" ]; then
-        echo "initialize: Creating the database user" >&2
-        echo "create role "${DBUSER:-docassemble}" with login password '"${DBPASSWORD:-abc123}"';" | su -c psql postgres || exit 1
+    if [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ]; then
+	echo "initialize: Using remote SQL server so no need to test if database user exists" >&2
+    else
+	echo "initialize: Testing if the database user exists" >&2
+	roleexists=`su -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DBUSER:-docassemble}'\"" postgres`
+	if [ -z "$roleexists" ]; then
+	    echo "initialize: Creating the database user" >&2
+	    echo "create role "${DBUSER:-docassemble}" with login password '"${DBPASSWORD:-abc123}"';" | su -c psql postgres || exit 1
+	fi
     fi
     if [ "${RESTOREFROMBACKUP}" == "true" ]; then
         echo "initialize: Restoring SQL database" >&2
@@ -1142,8 +1146,12 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" == "false" ] && [ "
             cd "$PGBACKUPDIR"
             chown -R postgres:postgres "$PGBACKUPDIR"
             for db in $( find . -maxdepth 1 -type f ! -iname ".*" ); do
-                echo "initialize: Restoring postgres database $db" >&2
-                pg_restore -f - -F c -C -c $db | su -c psql postgres
+		if [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ] && [ "${DBBACKUP:-true}" == "true" ] && [ "${DBNAME:-docassemble}" == "${db}" ]; then
+		    echo "initialize: Not restoring postgres database $db because it is a backup of the remote database" >&2
+		else
+                    echo "initialize: Restoring postgres database $db" >&2
+                    pg_restore -f - -F c -C -c $db | su -c psql postgres
+		fi
             done
             if ([ "${S3ENABLE:-false}" == "true" ] || [ "${AZUREENABLE:-false}" == "true" ]) && [ "${PGBACKUPDIR}" != "${DA_ROOT}/backup/postgres" ]; then
                 cd /
@@ -1152,11 +1160,15 @@ if [[ $CONTAINERROLE =~ .*:(all|sql):.* ]] && [ "$PGRUNNING" == "false" ] && [ "
             cd /tmp
         fi
     fi
-    echo "initialize: Testing if database exists" >&2
-    dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'\"" postgres`
-    if [ -z "$dbexists" ]; then
-        echo "initialize: Creating SQL database" >&2
-        echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}" encoding UTF8;" | su -c psql postgres || exit 1
+    if [[ $CONTAINERROLE =~ .*:all:.* ]] && [ "${DBHOST:-localhost}" != "localhost" ]; then
+	echo "initialize: Using remote SQL server so no need to test if database exists" >&2
+    else
+	echo "initialize: Testing if database exists" >&2
+	dbexists=`su -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DBNAME:-docassemble}'\"" postgres`
+	if [ -z "$dbexists" ]; then
+	    echo "initialize: Creating SQL database" >&2
+	    echo "create database "${DBNAME:-docassemble}" owner "${DBUSER:-docassemble}" encoding UTF8;" | su -c psql postgres || exit 1
+	fi
     fi
 elif [ "$PGRUNNING" == "false" ] && [ "$DBTYPE" == "postgresql" ]; then
     export PGHOST="${DBHOST}"
