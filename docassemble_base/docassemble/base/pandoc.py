@@ -63,7 +63,7 @@ def cloudconvert_to_pdf(in_format, from_file, to_file, pdfa, password):
                 ],
                 "optimize_print": True,
                 "pdf_a": pdfa,
-                "filename": "myoutput.docx"
+                "filename": "myoutput.pdf"
             },
             "export-1": {
                 "operation": "export/url",
