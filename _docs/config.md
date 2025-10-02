@@ -4844,7 +4844,8 @@ accessible from within the **docassemble** container on hostname
 
 {% highlight yaml %}
 enable unoconv: false
-gotenberg url: http://mygotenberg:3000
+gotenberg:
+  url: http://mygotenberg:3000
 {% endhighlight %}
 
 Then, all DOCX-to-PDF conversion will use this server.
@@ -4879,11 +4880,28 @@ Then you can set the `gotenberg url` as follows:
 
 {% highlight yaml %}
 enable unoconv: false
-gotenberg url: http://gotenberg:3000
+gotenberg:
+  url: http://gotenberg:3000
+{% endhighlight %}
+
+You can also start gotenberg on a publically visible server with
+basic authentication enabled, so that it can only be used if a
+username and password are supplied. These can also be set in the
+config.
+
+{% highlight yaml %}
+enable unoconv: false
+gotenberg:
+  url: https://gotenberg.example.com
+  username: myusername
+  password: abc-makethismuchlonger-123
 {% endhighlight %}
 
 The `gotenberg url` can be prepopulated in the **docassemble**
 configuration using the [`GOTENBERGURL`] environment variable.
+The [`GOTENBERGUSERNAME`] and [`GOTENBERGPASSWORD`] environment
+variables can also be set to connect to a gotenberg server with
+basic auth.
 
 Disabling [unoconv] when using [Gotenberg] is important not only to
 save memory but to prevent any conflicts between [Gotenberg]'s use of
