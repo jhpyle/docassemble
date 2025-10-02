@@ -141,6 +141,9 @@ sql ping: {{DASQLPING}}
 default icons: font awesome
 config from: {{CONFIGFROM}}
 enable unoconv: {{ENABLEUNOCONV}}
-gotenberg url: {{GOTENBERGURL}}
+gotenberg:
+  url: {{GOTENBERGURL}}
+  username: {{GOTENBERGUSERNAME}}
+  password: {{GOTENBERGPASSWORD}}
 javascript defer: True
 use nginx to serve files: {{USENGINXTOSERVEFILES}}
