@@ -425,6 +425,23 @@ def load(**kwargs):
             daconfig['celery modules'] = []
     else:
         daconfig['celery modules'] = []
+    if 'gotenberg' in daconfig:
+        if not isinstance(daconfig['gotenberg'], dict):
+            config_error("gotenberg must be a dict")
+            daconfig['gotenberg'] = {'enable': False}
+        if 'url' in daconfig['gotenberg'] and isinstance(daconfig['gotenberg']['url'], str) and re.search(r'[a-z]', daconfig['gotenberg']['url']) and 'enable' not in daconfig['gotenberg']:
+            daconfig['gotenberg']['enable'] = True
+        daconfig['gotenberg']['enable'] = bool(daconfig['gotenberg'].get('enable', False))
+        if daconfig['gotenberg']['enable']:
+            if 'url' not in daconfig['gotenberg'] or not isinstance(daconfig['gotenberg']['url'], str):
+                config_error("invalid gotenberg url")
+                daconfig['gotenberg'] = {'enable': False}
+    else:
+        daconfig['gotenberg'] = {'enable': False}
+    if 'gotenberg url' in daconfig and isinstance(daconfig['gotenberg url'], str) and re.search(r'[a-z]', daconfig['gotenberg url']):
+        config_error("The gotenberg url directive is deprecated; use the gotenberg dictionary")
+        daconfig['gotenberg']['url'] = daconfig['gotenberg url']
+        daconfig['gotenberg']['enable'] = True
     if isinstance(daconfig['signature pen thickness scaling factor'], int):
         daconfig['signature pen thickness scaling factor'] = float(daconfig['signature pen thickness scaling factor'])
     if not isinstance(daconfig['signature pen thickness scaling factor'], float):
@@ -1099,7 +1116,7 @@ def load(**kwargs):
             override_config(daconfig, messages, 'read only file system', 'DAREADONLYFILESYSTEM')
         if env_exists('ENABLEUNOCONV'):
             override_config(daconfig, messages, 'enable unoconv', 'ENABLEUNOCONV')
-        for env_var, key in (('GOTENBERGURL', 'url'), ('GOTENBERGUSERNAME', 'username'), ('GOTENBERGPASSWORD', 'password')):
+        for env_var, key in (('GOTENBERGURL', 'url'), ('GOTENBERGUSERNAME', 'username'), ('GOTENBERGPASSWORD', 'password'), ('GOTENBERGENABLE', 'enable')):
             if env_exists(env_var):
                 override_config(daconfig, messages, key, env_var, pre_key=['gotenberg'])
         env_messages = messages

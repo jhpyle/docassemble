@@ -142,6 +142,7 @@ default icons: font awesome
 config from: {{CONFIGFROM}}
 enable unoconv: {{ENABLEUNOCONV}}
 gotenberg:
+  enable: {{GOTENBERGENABLE}}
   url: {{GOTENBERGURL}}
   username: {{GOTENBERGUSERNAME}}
   password: {{GOTENBERGPASSWORD}}
