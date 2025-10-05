@@ -505,6 +505,8 @@ if [ ! -f "$DA_CONFIG_FILE" ]; then
         -e 's/{{DASUPERVISORUSERNAME}}/'"${DASUPERVISORUSERNAME:-null}"'/g' \
         -e 's/{{DASUPERVISORPASSWORD}}/'"${DASUPERVISORPASSWORD:-null}"'/g' \
         -e 's#{{GOTENBERGURL}}#'"${GOTENBERGURL:-null}"'#g' \
+        -e 's#{{GOTENBERGUSERNAME}}#'"${GOTENBERGUSERNAME:-null}"'#g' \
+        -e 's#{{GOTENBERGPASSWORD}}#'"${GOTENBERGPASSWORD:-null}"'#g' \
 	-e 's/{{USENGINXTOSERVEFILES}}/'"${USENGINXTOSERVEFILES:-true}"'/g' \
         "$DA_CONFIG_FILE_DIST" > "$DA_CONFIG_FILE" || exit 1
 fi
