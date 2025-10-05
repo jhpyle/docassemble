@@ -3,6 +3,35 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.8.17](https://github.com/jhpyle/docassemble/releases/tag/v1.8.17) - 2025-10-05
+
+
+### Added
+
+- Support for using Basic Auth when using Gotenberg.
+
+
+### Fixed
+
+- Make symbolic links in `files` relative instead of absolute.
+- Prevent the `temporary` and `once_temporary` parameters to
+  `interview_url()` and `interview_url_action()` from passing through
+  to the URL.
+- When single-server mode is in use and the `db` database is remote,
+  avoid creating or restoring the `db` database locally.
+- The daily cron job should backup the local PostgreSQL database even
+  if there is a non-PostgreSQL database as the main database.
+- Only call `supervisorctl` if `supervisord` is in use.
+- Incorrect output filename when using CloudConvert.
+
+## [1.8.16](https://github.com/jhpyle/docassemble/releases/tag/v1.8.16) - 2025-09-27
+
+
+### Fixed
+
+- Issue introduced in 1.8.15 related to unpickling Celery return
+  values.
+
 ## [1.8.15](https://github.com/jhpyle/docassemble/releases/tag/v1.8.15) - 2025-09-27
 
 

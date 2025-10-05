@@ -6,7 +6,8 @@ order: 40
 ---
 
 The easiest way to deploy **docassemble** to install it using
-[Docker]. If you want very fine-grained control, you can [install] it
+[Docker]. It can also be deployed [using Docker Compose] or [using
+Helm]. If you want very fine-grained control, you can [install] it
 without using Docker, but very few people do that.
 
 Most people run **docassemble** on a virtual machine in the
@@ -177,3 +178,5 @@ group].  Consultants who are available for projects include:
 [`brandname`]: {{ site.baseurl }}/docs/config.html#brandname
 [`default interview`]: {{ site.baseurl }}/docs/config.html#default interview
 [`allow forgot password`]: {{ site.baseurl }}/docs/config.html#allow forgot password
+[using Docker Compose]: https://github.com/jhpyle/docassemble-compose
+[using Helm]: https://github.com/jhpyle/charts

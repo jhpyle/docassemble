@@ -8,10 +8,10 @@ short_title: Configuration
 
 **docassemble** reads its configuration directives from a [YAML] file,
 which is located in `/usr/share/docassemble/config/config.yml`. If you
-are using [Docker] with [S3], [S3]-compatible object storage, or
-[Azure blob storage], **docassemble** will attempt to copy the
-configuration file from your [S3] bucket or [Azure blob storage]
-container before starting.
+are using the `jhpyle/docassemble` [Docker] image with [S3],
+[S3]-compatible object storage, or [Azure blob storage],
+**docassemble** will attempt to copy the configuration file from your
+[S3] bucket or [Azure blob storage] container before starting.
 
 # <a name="edit"></a>How to edit the configuration file
 
@@ -21,16 +21,15 @@ the menu under "Configuration."  After the configuration [YAML] is
 saved, the web application is restarted.
 
 Some Configuration directives do not fully take effect until the
-entire system is restarted, in which case you would need to [`docker
-stop`] and then [`docker start`] your [Docker] container.
+entire system is restarted.
 
 You can also edit the configuration file directly on the file system.
 You may need to do so if the web application becomes inoperative due
 to a problem with the configuration.
 
-If you are using [Docker] and you try to edit
-`/usr/share/docassemble/config/config.yml` on the file system, keep in
-mind that under some conditions the `config.yml` file may be
+If you are using the `jhpyle/docassemble` [Docker] image and you try
+to edit `/usr/share/docassemble/config/config.yml` on the file system,
+keep in mind that under some conditions the `config.yml` file may be
 overwritten by a file located in another place. If you are using [S3]
 or [Azure blob storage], the version of `config.yml` located in the
 cloud always overwrites the local copy, so you should edit
@@ -276,6 +275,8 @@ developer can install: False
 {% endhighlight %}
 
 ## <a name="root owned"></a>Whether files on the server are owned by root
+
+{% include docker.html %}
 
 By default, the **docassemble** Configuration and packages can be
 updated through the web interface. Accordingly, the Configuration
@@ -1789,11 +1790,9 @@ information, and other information.
 
 The `db` directives should be treated as read-only. The primary way
 you would adjust your database configuration is when starting a new
-server for the first time. At that time, you can set [Docker]
-configuration variables [`DBHOST`], [`DBNAME`], [`DBUSER`],
-[`DBPASSWORD`], and other related variables in order to specify that a
-particular SQL database should be used. For example, you would set
-these environment variables if you were using a cloud-based managed
+server for the first time. At that time, you can specify that a
+particular SQL database should be used. For example, you would change
+the default configuration if you were using a cloud-based managed
 database system like [RDS].
 
 The password should only contain alphanumeric characters. The special
@@ -1825,16 +1824,14 @@ the `user` and `password`. It will connect to the database called
 `name`. If you want separate **docassemble** systems to share the
 same database, you can set a `table prefix`.
 
-If you are using [Docker] with [S3], [S3]-compatible object storage,
-or [Azure blob storage], and you omit the `host` or set it to `null`,
-then **docassemble** will automatically find the hostname of the
-central SQL server in cloud storage.
-
-The value of `backup` is only applicable if you are using [Docker] and
-the `host` is off-site. If `backup` is true (which is the default),
-then the SQL database will be backed up on a daily basis. You will
-want to set it to `false` if backing up the SQL database could lead to
-the exhaustion of hard drive space.
+The value of `backup` is only applicable if you are using the
+`jhpyle/docassemble` [Docker] image in a multi-server configuration
+and your SQL database is external. If `backup` is true (which is the
+default), then the SQL database will be backed up on a daily basis to
+the rolling backup. You will want to set it to `false` if backing up
+the SQL database could lead to the exhaustion of hard drive space. If
+you are using a managed SQL server that has its own backup feature,
+you will probably want to set `backup` to false.
 
 If you want to connect to a [PostgreSQL] server using an SSL
 certificate, you can use the `ssl mode`, `ssl cert`, `ssl key`, and/or
@@ -1866,13 +1863,12 @@ These parameters must refer to the names of files present in the
 otherwise, the files must be present in
 `/usr/share/docassemble/certs/` at the time the system initializes
 (from there, they will be copied into other directories). For
-instructions on loading your own certificates when using [Docker], see
-[managing certificates with Docker]. See also the [`certs`]
-Configuration directive.
+instructions on loading your own certificates when using the
+`jhpyle/docassemble` [Docker] image, see [managing certificates with
+Docker]. See also the [`certs`] Configuration directive.
 
 After changing the `db` configuration, you need to restart the server
-(typically by doing `docker stop -t 600 <containerID>` followed by
-`docker start <containerID>`) in order for the change to take effect.
+in order for the change to take effect.
 
 ## <a name="sql ping"></a>Avoiding SQL errors
 
@@ -2027,11 +2023,12 @@ If you leave the `certs` setting undefined (which is recommended),
 **docassemble** will look in `/usr/share/docassemble/certs` if the
 [`s3`] and [`azure`] settings are not enabled.
 
-If you are using [Docker] and you are not using [S3] or [Azure blob
-storage], you can create a volume, copy your certificates there, and
-then mount that volume as `/usr/share/docassemble/certs` when you
-execute `docker run`. For more information on how to do this, see
-[managing certificates with Docker].
+If you are using the `jhpyle/docassemble` [Docker] image and you are
+not using [S3] or [Azure blob storage], you can create a volume, copy
+your certificates there, and then mount that volume as
+`/usr/share/docassemble/certs` when you execute `docker run`. For more
+information on how to do this, see [managing certificates with
+Docker].
 
 If [`s3`] is enabled, **docassemble** will look for [S3] keys with the
 prefix `certs/` in the `bucket` defined in the [`s3`] configuration.
@@ -2467,8 +2464,10 @@ The code needs to be a valid country code accepted by the
 
 ## <a name="os locale"></a>Operating system locale
 
-If you are using [Docker], the `os locale` directive will set the
-default operating system locale.
+{% include docker.html %}
+
+If you are using the `jhpyle/docassemble` [Docker] image, the `os
+locale` directive will set the default operating system locale.
 
 {% highlight yaml %}
 os locale: so_SO.UTF-8 UTF-8
@@ -2487,12 +2486,14 @@ After changing `os locale`, you will need to restart your container
 
 ## <a name="other os locales"></a>Other available locales
 
+{% include docker.html %}
+
 If your interviews use locale and language settings that your
 operating system does not support, you will get an error.
 
-On [Docker], you can enable locales other than the [`os locale`] in
-the operating system by providing a list of locales to the `other os
-locales` directive:
+If you are using the `jhpyle/docassemble` [Docker] image, you can
+enable locales other than the [`os locale`] in the operating system by
+providing a list of locales to the `other os locales` directive:
 
 {% highlight yaml %}
 other os locales:
@@ -2511,16 +2512,6 @@ When the server starts, each of the `other os locales` is appended to
 After changing `other os locales`, you will need to restart your
 container (`docker stop -t 600 <container ID>` followed by `docker
 start <container ID>`).
-
-## <a name="server administrator email"></a>E-mail address of server administrator
-
-On [Docker], you can provide an e-mail address to the [NGINX] web
-server, so that if your server has an error, users are told an
-appropriate e-mail address to contact.
-
-{% highlight yaml %}
-server administrator email: support@example.com
-{% endhighlight %}
 
 ## <a name="error notification email"></a>E-mail address to which error messages shall be sent
 
@@ -2629,9 +2620,11 @@ inside the [`metadata`].
 
 ## <a name="ubuntu packages"></a><a name="debian packages"></a>ubuntu packages to install
 
-On [Docker], you can ensure that particular [Ubuntu] packages are
-installed by providing a list of packages to the `ubuntu packages`
-directive:
+{% include docker.html %}
+
+When using the `jhpyle/docassemble` [Docker] image, you can ensure
+that particular [Ubuntu] packages are installed by providing a list of
+packages to the `ubuntu packages` directive:
 
 {% highlight yaml %}
 ubuntu packages:
@@ -2744,9 +2737,11 @@ enable those field names.
 
 ## <a name="python packages"></a>Python packages to install
 
-On [Docker], you can ensure that particular [Python] packages are
-installed by providing a list of packages to the `python packages`
-directive:
+{% include docker.html %}
+
+When using the `jhpyle/docassemble` [Docker] image, you can ensure
+that particular [Python] packages are installed by providing a list of
+packages to the `python packages` directive:
 
 {% highlight yaml %}
 python packages:
@@ -2883,13 +2878,15 @@ random value that cannot be guessed.
 secretkey: CnFUCzajSgjVZKD1xFfMQdFW8o9JxnBL
 {% endhighlight %}
 
-The [startup process] on [Docker] sets the `secretkey` to a random
-value.
+The [startup process] on the `jhpyle/docassemble` [Docker] image sets
+the `secretkey` to a random value.
 
 After you already have a working system, you should not change the
 `secretkey`. If you do, none of your passwords or API keys will work.
 
 ## <a name="backup days"></a>Number of days of backups to keep
+
+{% include docker.html %}
 
 The [Docker] setup creates 14 days of daily backups. The number of
 days can be changed using the `backup days` directive.
@@ -2902,6 +2899,8 @@ If you set `backup days` to `0`, the daily backup process will be
 disabled.
 
 ## <a name="backup file storage"></a>Whether to backup file storage
+
+{% include docker.html %}
 
 By default, files that users upload and files that are generated by
 the system (e.g., uploaded files, `DAFile` files, document assembly
@@ -2954,10 +2953,10 @@ This sets the limit to 25 megabytes.
 
 To have no limit, set `maximum content length` to `None`.
 
-If you are using [Docker] and [NGINX], then after changing this value,
-you will need to do a complete restart of the system for the change to
-take effect. (That is, `docker stop -t 600 <container ID>` followed
-by `docker start <container ID>`.)
+The `maximum content length` applies at the Python level and the web
+server level. If you are using the `jhpyle/docassemble` [Docker]
+image, then after changing this value, you will need to do a complete
+restart of the system for the change to take effect.
 
 ## <a name="signature pen thickness scaling factor"></a>Scaling factor for thickness of signature line
 
@@ -3318,41 +3317,16 @@ You may wish to [disable registration] entirely when using `ldap
 login`. In that case, it is not necessary to set the `base dn`, `bind
 email`, and `bind password` directives.
 
-## <a name="xsendfile"></a>Support for xsendfile
-
-If your web server is not configured to support X-Sendfile headers,
-set the `xsendfile` directive to `False`.
-
-{% highlight yaml %}
-xsendfile: False
-{% endhighlight %}
-
-Use of X-Sendfile is recommended because it allows the web server,
-rather than the Python [WSGI] server, to serve files. This is
-particularly useful when serving sound files, since the web browser
-typically asks for only a range of bytes from the sound file at a
-time, and the [WSGI] server does not support the HTTP Range header.
-
-This variable can be set using the [Docker] environment variable
-[`XSENDFILE`].
-
-However, there are some problems with the implementation of X-Sendfile
-that can sometimes cause problems. If you get random JavaScript
-errors in your application, look at the network console, and if it
-reports 0-byte JavaScript files being served, try setting `xsendfile:
-False` in your Configuration. This has been an issue when
-**docassemble** operates behind a load balancer on [ECS]. On [Docker], if you
-set [`BEHINDHTTPSLOADBALANCER`] to `true`, then `xsendfile` will be
-set to `False` by default when the initial Configuration is first
-created.
 
 ## <a name="websockets"></a><a name="websockets ip"></a><a name="websockets port"></a>Configuring the websockets server
 
-The [live help] features depend on a [WebSocket] server. On [Docker],
-there is a [supervisor] service called `websockets` that runs the
-`docassemble.webapp.socketserver` module. By default, the server runs
-on port 5000 on the localhost network (127.0.0.1). This can be
-configured:
+{% include docker.html %}
+
+The [live help] features depend on a [WebSocket] server. In the
+`jhpyle/docassemble` [Docker] image, there is a [supervisor] service
+called `websockets` that runs the `docassemble.webapp.socketserver`
+module. By default, the server runs on port 5000 on the localhost
+network (127.0.0.1). This can be configured:
 
 {% highlight yaml %}
 websockets ip: 75.34.2.14
@@ -3377,6 +3351,8 @@ associated with the `eth0` network.
 
 ## <a name="http port"></a>Alternative port for HTTP
 
+{% include docker.html %}
+
 By default, if you are not using [HTTPS], the **docassemble** web
 application runs on port 80. When running [Docker], you can map any
 port on the host to port 80 in the container. However, if you are
@@ -3398,11 +3374,6 @@ The default directory is `/usr/share/docassemble/log`.
 
 If a `log server` is set, **docassemble** will write messages to TCP
 port 514 on that server, and will not write to the `log` directory.
-
-If you are using [Docker] with [S3], [S3]-compatible object storage,
-or [Azure blob storage], and you omit the `log server` or set it to
-`null`, then **docassemble** will automatically find the hostname of
-the central log server in cloud storage.
 
 ## <a name="interview delete days"></a>Days of inactivity before interview deletion
 
@@ -4133,13 +4104,14 @@ s3:
     KMS key ID: null
 {% endhighlight %}
 
-If you are using [Docker], you should not define an `s3` directive in
-the Configuration using the web application when you already have a
-server running. The [S3] configuration is used throughout the boot
-process and the shutdown process. If you want to start using [S3],
-you should start a new container using [`docker run`] with the
-[`S3BUCKET`] and other `S3` environment variables set. For more
-information, see the [Docker section].
+If you are using the `jhpyle/docassemble` [Docker] image, you should
+not define an `s3` directive in the Configuration using the web
+application when you already have a server running. The [S3]
+configuration is used throughout the boot process and the shutdown
+process. If you want to start using [S3], you should start a new
+container using [`docker run`] with the [`S3BUCKET`] and other `S3`
+environment variables set. For more information, see the [Docker
+section].
 
 ## <a name="azure"></a>azure
 
@@ -4466,13 +4438,11 @@ the location bar on the web browser, `external hostname` will be
 external hostname: docassemble.example.com
 {% endhighlight %}
 
-This variable is only effective if **docassemble** is running on
-[Docker]. It is typically set by the [`DAHOSTNAME`] environment
-variable when the [`docker run`] command is run for the first time.
-
-If you change `external hostname`, you need to do a complete restart
-of the system for the change to take effect. (That is, `docker
-stop -t 600 <container ID>` followed by `docker start <container ID>`.)
+This setting is used at the Python level and also at the web server
+level. If you are using the `jhpyle/docassemble` image, and you change
+`external hostname`, you need to do a complete restart of the system
+for the change to take effect. The web server configuration needs to
+know the correct hostname.
 
 ## <a name="behind https load balancer"></a>When behind a proxy
 
@@ -4514,9 +4484,11 @@ your **docassemble** server by visiting `/headers` on your site.
 
 ## <a name="use lets encrypt"></a><a name="lets encrypt email"></a>Using Let's Encrypt
 
-If you are using [Docker] and you want your server to use [HTTPS] set
-up through [Let's Encrypt], you can set the following in your
-[Configuration].
+{% include docker.html %}
+
+If you are using the `jhpyle/docassemble` [Docker] image and you want
+your server to use [HTTPS] set up through [Let's Encrypt], you can set
+the following in your [Configuration].
 
 {% highlight yaml %}
 external hostname: docassemble.example.com
@@ -4534,6 +4506,8 @@ system using `docker stop -t 600 <container ID>` followed by
 `docker start <container ID>`.
 
 ## <a name="nginx ssl protocols"></a>SSL protocols
+
+{% include docker.html %}
 
 The `nginx ssl protocols` directive indicates the SSL protocols that
 [NGINX] should accept (assuming you are using [NGINX]). You might
@@ -4554,6 +4528,8 @@ system using `docker stop -t 600 <container ID>` followed by `docker
 start <container ID>`.
 
 ## <a name="nginx ssl ciphers"></a>SSL ciphers
+
+{% include docker.html %}
 
 The `nginx ssl ciphers` directive indicates the SSL ciphers that
 [NGINX] should accept (assuming you are using [NGINX]).
@@ -4621,10 +4597,12 @@ want to set [`enable playground`] to `false`.
 
 ## <a name="update on start"></a>Whether software is updated on start
 
-By default, when a [Docker] container starts, whether it is starting
-for the first time during a [`docker run`] process, or restarting during a
-[`docker start`] process, one of the steps taken during the container
-initialization process is the updating of Python packages.
+{% include docker.html %}
+
+By default, when the [Docker] container starts, whether it is starting
+for the first time during a [`docker run`] process, or restarting
+during a [`docker start`] process, one of the steps taken during the
+container initialization process is the updating of Python packages.
 
 This process is necessary in order to install any custom Python
 packages you have, such as interviews you have created. If you
@@ -4685,19 +4663,17 @@ in [Redis].
 
 The `redis` directive should be treated as read-only. The primary way
 you would adjust your [Redis] configuration is when starting a new
-server for the first time. At that time, you can set [Docker]
-configuration variable [`REDIS`] in order to specify that a particular
-external [Redis] database should be used. For example, you would set
-this environment variable if you were using a cloud-based managed
-Redis system like [ElastiCache for Redis].
+server for the first time. For example, you would change this setting
+if you were using a cloud-based managed Redis system like [ElastiCache
+for Redis].
 
 Changing the `redis` directive after you already have a working system
 can lead to major problems, such as API keys not working. You should
 not change the `redis` value using the web-based front end unless you
 really know what you are doing.
 
-In the default [Docker] configuration, `redis` directive is set to
-`null`.
+In the default configuration of the `jhpyle/docassemble` [Docker]
+deployment, `redis` directive is set to `null`.
 
 {% highlight yaml %}
 redis: null
@@ -4742,11 +4718,6 @@ the parameter `ssl=True`. If any of the above files are present, the
 `ssl_ca_certs`, `ssl_certfile`, and/or `ssl_keyfile` parameters will
 be used as well.
 
-If you are using [Docker] with [S3] or [Azure blob storage], and you
-omit the `redis` directive or set it to `null`, then **docassemble**
-will automatically find the hostname of the central redis server in
-cloud storage.
-
 **docassemble** uses three [Redis] "databases."  By default, it uses
 databases 0, 1, and 2. If you want it to use different database
 numbers, you can set `redis database offset` to a number.
@@ -4777,11 +4748,6 @@ rabbitmq: pyamqp://guest@rabbitmqserver.local//
 
 The `rabbitmq` directive needs to be written in the form of an [AMQP
 URI].
-
-If you are using [Docker] with [S3] or [Azure blob storage], and you
-omit the `rabbitmq` directive or set it to `null`, then
-**docassemble** will automatically find the hostname of the central
-[RabbitMQ] server in cloud storage.
 
 ## <a name="imagemagick"></a><a name="pdftoppm"></a>Image conversion
 
@@ -4968,12 +4934,14 @@ For more information about what font file to use, see [`rendering font`].
 
 ## <a name="enable unoconv"></a>Using unoconv instead of LibreOffice for processing DOCX files
 
-Starting with system version 1.3.18, a [unoconv] listener is
-available, which keeps LibreOffice in memory and uses it to convert
-files with a client/server model. **docassemble** uses LibreOffice to
-convert DOCX to PDF and other formats, as well as to update references
-within a DOCX after `docx template file` is used to assemble a
-document.
+{% include docker.html %}
+
+Starting with system version 1.3.18, a [unoconv] listener is available
+in the `jhpyle/docassemble` [Docker] image, which keeps LibreOffice in
+memory and uses it to convert files with a client/server
+model. **docassemble** uses LibreOffice to convert DOCX to PDF and
+other formats, as well as to update references within a DOCX after
+`docx template file` is used to assemble a document.
 
 The [unoconv] listener will run only if `enable unoconv` is set to
 `True` in your Configuration. If `enable unoconv` is missing or is not
@@ -4992,6 +4960,9 @@ After changing `enable unoconv`, you need to restart your system with
 `docker stop`/`docker start`.
 
 See also the [`ENABLEUNOCONV`] environment variable.
+
+Unfortunately, [unoconv] is no longer under active development. Using
+[Gotenberg](#gotenberg url) is recommended.
 
 ## <a name="maximum image size"></a>Limiting size of uploaded images
 
@@ -5145,6 +5116,8 @@ manifest file] for the sidebar from the [Utilities] page of your
 server, you will see this URL embedded in the XML.
 
 ## <a name="timezone"></a>Setting the time zone
+
+{% include docker.html %}
 
 Functions like [`as_datetime()`] that deal with dates will use a
 default time zone if an explicit timezone is not supplied. If you set
@@ -5786,6 +5759,8 @@ when you have time, you should adapt your DOCX files if you are using
 
 ## <a name="web server"></a>Choosing Apache instead of NGINX
 
+{% include docker.html %}
+
 By default, the web server used with [Docker] is [NGINX]. You can
 change this to [Apache] by adding the following to your Configuration:
 
@@ -5798,6 +5773,8 @@ The default is `nginx`. After changing this, you will need to do a
 requires system version 0.5.0 or later.
 
 See also the [`DAWEBSERVER`] environment variable.
+
+Support for [Apache] is deprecated and will be removed in a future version.
 
 ## <a name="use nginx to serve files"></a>Using NGINX to serve files
 
@@ -5835,8 +5812,6 @@ container starts, then set `use minio` to `True`.
 {% highlight yaml %}
 use minio: True
 {% endhighlight %}
-
-See also the [`USEMINIO`] environment variable for [Docker].
 
 ## <a name="use cloud urls"></a>URLs pointing to files in cloud server
 
@@ -5920,6 +5895,8 @@ pagination limit: 50
 {% endhighlight %}
 
 ## <a name="pip index"></a>Python package index
+
+{% include docker.html %}
 
 By default, Python packages are installed from [PyPI] using
 `pip`. However, `pip` can be configured to use a different package
@@ -6096,11 +6073,14 @@ elevated privileges to non-logged in users.
 
 ## <a name="supervisor"></a>Username and password for the supervisord daemon
 
+{% include docker.html %}
+
 For increased security when using a [multi-server arrangement],
 **docassemble** has the option of using a username and password when
 **docassemble** containers need to send [supervisor] commands to
-themselves or to others. The username and password are set through the
-[Docker] environment variables `DASUPERVISORUSERNAME` and
+themselves or to others. When using the `jhpyle/docassemble` [Docker]
+image, the username and password are set through the [Docker]
+environment variables `DASUPERVISORUSERNAME` and
 `DASUPERVISORPASSWORD`. The values of these variables are stored in
 the `supervisor` directive of the Configuration, which is a dictionary
 with keys `user` and `password`. This directive should be considered

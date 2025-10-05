@@ -21,18 +21,9 @@ first time. It is also ideal in a production environment.
 Since the **docassemble** application depends on so many different
 component parts, including a web server, SQL server, Redis server,
 distributed task queue, background task system, scheduled task system,
-and other components, running it inside of a [Docker] container is
-convenient. When all of these components are running inside of a
-"container," you don't have to do the work of installing and
-maintaining these components.
-
-[Docker] can also be used to deploy even the most complex
-**docassemble** installations. For example, [Kubernetes] or Amazon's
-[EC2 Container Service] can be used to maintain a cluster of
-**docassemble** web server instances, created from [Docker] images,
-that communicate with a central server. For information about how to
-install **docassemble** in a multi-server arrangement, see the
-[scalability] section.
+and other components, running it with [Docker] is convenient. When all
+of these components are handled for you, you don't have to do the work
+of installing and maintaining these components.
 
 As much as [Docker] simplifies the process of installing
 **docassemble**, it takes some time to understand the concepts behind
@@ -86,6 +77,38 @@ In these analogies, a [Docker] "image" is analogous to a Windows
 installation DVD, a [Docker] "container" is analogous to a particular
 computer that runs Windows, and a [Docker] "volume" is (very loosely)
 analogous to a USB drive.
+
+There are multiple ways that [Docker] can be used to deploy
+**docassemble**:
+
+1. You can `docker run` the image `jhpyle/docassemble` and run a
+   single container that contains the software needed to use all of
+   **docassemble**'s features. This is the simplest way to deploy
+   **docassemble**.
+2. You can use [Docker Compose], a tool for deploying multi-container
+   applications on a single host server. The GitHub repository
+   [`jhpyle/docassemble-compose`] shows how to do this. The advantages
+   of this method are that you can economize on disk space if you do
+   not need to use all of the software contained in the monolithic
+   `jhpyle/docassemble` image, and you can more easily scan the
+   [Docker] images for software vulnerabilities.
+3. You can use [Helm], a tool for deploying multi-container
+   applications on a cluster of servers, using [Kubernetes]. The
+   GitHub repository [`jhpyle/charts`] shows how to do this. The
+   advantage of this method is that it can handle a very high volume
+   of traffic. You may want to explore using [Helm] if you have
+   already optimized your application by pushing time-consuming tasks
+   into background tasks and are already running **docassemble** on
+   powerful hardware, but the server is still unable to handle the
+   traffic.
+
+The remainder of this section of the documentation will describe
+deploying **docassemble** using the `jhpyle/docassemble` image. If you
+want to use one of the other methods, see the documentation in the
+README files of the separate GitHub repositories. You can also follow
+the instructions in the [installation] section to deploy
+**docassemble** directly on a Linux machine, but there are multiple
+steps to this process and it requires knowledge of Linux and patience.
 
 # <a name="where"></a>Choosing where to run Docker
 
@@ -145,7 +168,8 @@ If you have a Windows PC, follow the
 will need administrator access on your PC in order to install (or
 upgrade) Docker.
 
-If you have a Mac, follow the [Docker installation instructions for OS X]{:target="_blank"}.
+If you have a Mac, follow the
+[Docker installation instructions for OS X]{:target="_blank"}.
 
 On Ubuntu (assuming username `ubuntu`):
 
@@ -1285,10 +1309,12 @@ your container for the new configuration to take effect.
   database. The value is a prefix to be added to each table in the
   database.
 * <a name="DBBACKUP"></a>`DBBACKUP`: Set this to `false` if you are
-  using an off-site [PostgreSQL] `DBHOST` and you do not want the
-  database to be backed up by the daily cron job. This is important
-  if the off-site SQL database is large compared to the available disk
-  space on the server. The default value is `true`.
+  using **docassemble** in a multi-server configuration, you are using
+  an external [PostgreSQL] `DBHOST` (i.e. a managed SQL server like
+  AWS RDS) and you do not want the database to be backed up to the
+  rolling backup by the daily cron job. This is important if the
+  off-site SQL database is large compared to your available disk
+  space. The default value is `true`.
 * <a name="DBSSLMODE"></a>`DBSSLMODE`: This is relevant if you have a
   [PostgreSQL] database and you have an SSL certificate for it. This
   sets the `sslmode` parameter. For more information, see the
@@ -1377,13 +1403,6 @@ your container for the new configuration to take effect.
   memory-based limit is to restrictive, you can set
   `DAMAXCELERYWORKERS` to integer greater than or equal to 1. See the
   [`max celery processes`] configuration directive.
-* <a name="SERVERADMIN"></a>`SERVERADMIN`: If your **docassemble** web
-  server generates an error, the error message will contain an e-mail
-  address that the user can contact for help. This e-mail address
-  defaults to `webmaster@localhost`. You can set this e-mail address
-  by setting the `SERVERADMIN` environment variable to the e-mail
-  address you want to use. See the [`server administrator email`]
-  configuration directive.
 * <a name="POSTURLROOT"></a>`POSTURLROOT`: If users access
   **docassemble** at https://docassemble.example.com/da, set `POSTURLROOT`
   to `/da/`. The trailing slash is important. If users access
@@ -1401,9 +1420,6 @@ your container for the new configuration to take effect.
   headers when it passes HTTP requests to your server or servers. See
   the [`behind https load balancer`] configuration directive for more
   information.
-* <a name="XSENDFILE"></a>`XSENDFILE`: Set this to `false` if the
-  X-Sendfile header is not functional in your configuration for
-  whatever reason. See the [`xsendfile`] configuration directive.
 * <a name="DAALLOWUPDATES"></a>`DAALLOWUPDATES`: Set this to `false`
   if you want to disable the updating of software through the user
   interface. See the [`allow updates`] configuration directive.
@@ -1417,7 +1433,8 @@ your container for the new configuration to take effect.
   to `true` if you are setting `DAALLOWUPDATES=false` and
   `DAENABLEPLAYGROUND=false` you also want to take the extra step of
   making the directories containing code owned by `root` so that the
-  web browser user cannot access them.
+  web browser user cannot access them. See the [`root owned`]
+  configuration directive.
 * <a
   name="DAALLOWCONFIGURATIONEDITING"></a>`DAALLOWCONFIGURATIONEDITING`:
   Set this to `false` to prevent the editing of the Configuration.
@@ -1427,8 +1444,8 @@ your container for the new configuration to take effect.
   [`enable playground`] directive.
 * <a name="DAALLOWLOGVIEWING"></a>`DAALLOWLOGVIEWING`: Set this to
   `false` to prevent administrators and developers from viewing the
-  system logs by going to Logs on the menu. By default, administrators
-  and developers can access Logs.
+  system logs by going to Logs on the menu. By default, this menu is
+  available to administrators and developers.
 * <a name="DADEBUG"></a>`DADEBUG`: Set this to `false` if you want the
   server to be in production mode rather than developer mode. This
   will also disable access to example and demonstration interviews in
@@ -1498,11 +1515,6 @@ your container for the new configuration to take effect.
   you are using cloud storage but you do not want URLs for files to
   point directly to the cloud storage provider. See the [`use cloud
   urls`] configuration directive.
-* <a name="DASTABLEVERSION"></a>`DASTABLEVERSION`: Set this to `true`
-  if you want **docassemble** to stay on version 1.0.x. This is the
-  `stable` branch of the [GitHub] repository, which only receives bug
-  fixes and security updates. See the [`stable version`]
-  configuration directive.
 * <a name="DASSLPROTOCOLS"></a>`DASSLPROTOCOLS`: This indicates the
   SSL protocols that [NGINX] should accept. The default is `TLSv1.2
   TLSv1.3`.  You might want to set it to `TLSv1 TLSv1.1 TLSv1.2
@@ -3774,6 +3786,7 @@ endpoints that you can use.
 [BusyBox]: https://hub.docker.com/_/busybox
 [`http port`]: {{ site.baseurl }}/docs/config.html#http port
 [`celery processes`]: {{ site.baseurl }}/docs/config.html#celery processes
+[`max celery processes`]: {{ site.baseurl }}/docs/config.html#max celery processes
 [bash]: https://en.wikipedia.org/wiki/Bash_(Unix_shell)
 [`backup file storage`]: {{ site.baseurl }}/docs/config.html#backup file storage
 [Docker volume]: https://docs.docker.com/storage/volumes/
@@ -3816,3 +3829,7 @@ endpoints that you can use.
 [Alembic]: https://alembic.sqlalchemy.org/en/latest/
 [docassemble repository]: {{ site.github.repository_url }}
 [Google TrueType fonts]: https://github.com/google/fonts
+[Docker Compose]: https://docs.docker.com/compose/
+[`jhpyle/docassemble-compose`]: https://github.com/jhpyle/docassemble-compose
+[`jhpyle/charts`]: https://github.com/jhpyle/charts
+[`root owned`]: {{ site.baseurl }}/docs/config.html#root owned
