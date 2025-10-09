@@ -7911,13 +7911,14 @@ def index(action_argument=None, refer=None):
                 info = docassemble.base.functions.custom_types[known_datatypes[real_key]]
                 if info['is_object']:
                     is_object = True
+                    obj_key = '__DANEWOBJECT' + orig_key
                 if set_to_empty:
                     if info['skip_if_empty']:
                         continue
                     test_data = info['class'].empty()
                     if is_object:
-                        user_dict['__DANEWOBJECT'] = raw_data
-                        data = '__DANEWOBJECT'
+                        user_dict[obj_key] = raw_data
+                        data = obj_key
                     else:
                         data = repr(test_data)
                 else:
@@ -7948,8 +7949,8 @@ def index(action_argument=None, refer=None):
                         continue
                     test_data = info['class'].call_transform(raw_data, key_with_sub, field_data)
                     if is_object:
-                        user_dict['__DANEWOBJECT'] = test_data
-                        data = '__DANEWOBJECT'
+                        user_dict[obj_key] = test_data
+                        data = obj_key
                     else:
                         data = repr(test_data)
             elif known_datatypes[real_key] == 'raw':
@@ -8068,13 +8069,14 @@ def index(action_argument=None, refer=None):
                 info = docassemble.base.functions.custom_types[known_datatypes[orig_key]]
                 if info['is_object']:
                     is_object = True
+                    obj_key = '__DANEWOBJECT' + orig_key
                 if set_to_empty:
                     if info['skip_if_empty']:
                         continue
                     test_data = info['class'].empty()
                     if is_object:
-                        user_dict['__DANEWOBJECT'] = raw_data
-                        data = '__DANEWOBJECT'
+                        user_dict[obj_key] = raw_data
+                        data = obj_key
                     else:
                         data = repr(test_data)
                 else:
@@ -8092,8 +8094,8 @@ def index(action_argument=None, refer=None):
                         continue
                     test_data = info['class'].call_transform(raw_data, key_tr)
                     if is_object:
-                        user_dict['__DANEWOBJECT'] = test_data
-                        data = '__DANEWOBJECT'
+                        user_dict[obj_key] = test_data
+                        data = obj_key
                     else:
                         data = repr(test_data)
             elif known_datatypes[orig_key] == 'raw':
@@ -8208,11 +8210,16 @@ def index(action_argument=None, refer=None):
                 logmessage("Tried to run " + the_string + " and got error " + errMess.__class__.__name__ + ": " + str(errMess))
             except:
                 pass
-        if is_object:
-            if '__DANEWOBJECT' in user_dict:
-                del user_dict['__DANEWOBJECT']
         if key not in key_to_orig_key:
             key_to_orig_key[key] = orig_key
+
+    def cleanup_objs():
+        for orig_key in post_data:
+            obj_key = '__DANEWOBJECT' + orig_key
+            if obj_key in user_dict:
+                logmessage(f"Removing {obj_key} from user_dict")
+                del user_dict[obj_key]
+
     if validated and special_question is None and not disregard_input:
         for orig_key in empty_fields:
             key = myb64unquote(orig_key)
@@ -8752,6 +8759,7 @@ def index(action_argument=None, refer=None):
         if exit_link in ('exit', 'leave', 'logout', 'exit_logout'):
             interview_status.question.question_type = exit_link
     if interview_status.question.question_type == "exit":
+        cleanup_objs()
         manual_checkout(manual_filename=yaml_filename)
         reset_user_dict(user_code, yaml_filename)
         delete_session_for_interview(i=yaml_filename)
@@ -8769,6 +8777,7 @@ def index(action_argument=None, refer=None):
             response_wrapper(response)
         return response
     if interview_status.question.question_type in ("exit_logout", "logout"):
+        cleanup_objs()
         manual_checkout(manual_filename=yaml_filename)
         if interview_status.question.question_type == "exit_logout":
             reset_user_dict(user_code, yaml_filename)
@@ -8800,8 +8809,10 @@ def index(action_argument=None, refer=None):
             fake_up(response, current_language)
         if response_wrapper:
             response_wrapper(response)
+        cleanup_objs()
         return response
     if interview_status.question.question_type == "signin":
+        cleanup_objs()
         if save_status != SS_IGNORE:
             release_lock(user_code, yaml_filename)
         logmessage("Redirecting because of a signin.")
@@ -8812,6 +8823,7 @@ def index(action_argument=None, refer=None):
             response_wrapper(response)
         return response
     if interview_status.question.question_type == "register":
+        cleanup_objs()
         if save_status != SS_IGNORE:
             release_lock(user_code, yaml_filename)
         logmessage("Redirecting because of a register.")
@@ -8822,6 +8834,7 @@ def index(action_argument=None, refer=None):
             response_wrapper(response)
         return response
     if interview_status.question.question_type == "leave":
+        cleanup_objs()
         if save_status != SS_IGNORE:
             release_lock(user_code, yaml_filename)
         session["_flashes"] = []
@@ -8846,6 +8859,7 @@ def index(action_argument=None, refer=None):
         response_to_send = jsonify(action='wait', sleep=interview_status.question.sleep, csrf_token=generate_csrf())
     elif interview_status.question.question_type == "response":
         if is_ajax:
+            cleanup_objs()
             if save_status != SS_IGNORE:
                 release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
@@ -8871,6 +8885,7 @@ def index(action_argument=None, refer=None):
         response_to_send.headers['Content-Type'] = interview_status.extras['content_type']
     elif interview_status.question.question_type == "sendfile":
         if is_ajax:
+            cleanup_objs()
             if save_status != SS_IGNORE:
                 release_lock(user_code, yaml_filename)
             response = jsonify(action='resubmit', csrf_token=generate_csrf())
@@ -8928,6 +8943,7 @@ def index(action_argument=None, refer=None):
             encrypted = True
             update_session(yaml_filename, encrypted=encrypted)
     if response_to_send is not None:
+        cleanup_objs()
         if save_status != SS_IGNORE:
             release_lock(user_code, yaml_filename)
         if return_fake_html:
@@ -9169,6 +9185,7 @@ def index(action_argument=None, refer=None):
         the_field_errors = field_error
     else:
         the_field_errors = None
+    cleanup_objs()
     # restore this, maybe
     # if next_action_to_set:
     #     interview_status.next_action.append(next_action_to_set)
@@ -9533,6 +9550,7 @@ def index(action_argument=None, refer=None):
         del session['in error']
     if response_wrapper:
         response_wrapper(response)
+    cleanup_objs()
     return response
 
 
