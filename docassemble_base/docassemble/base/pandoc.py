@@ -56,7 +56,11 @@ def copy_if_different(source, destination):
 
 def gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password):
     if pdfa:
-        data = {'nativePdfFormat': 'PDF/A-1a'}
+        data = {
+          'nativePdfFormat': 'PDF/A-1a', # For gotenberg pre-7.10
+          'pdfa': 'PDF/A-1b', # For gotenberg post-7.10
+          'pdfua': 'true'
+        }
     else:
         data = {}
     url = daconfig['gotenberg']['url']
