@@ -54,15 +54,16 @@ def copy_if_different(source, destination):
         shutil.copyfile(source, destination)
 
 
-def gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password):
+def gotenberg_to_pdf(from_file, to_file, pdfa, tagged, password, owner_password):
     if pdfa:
         data = {
           'nativePdfFormat': 'PDF/A-1a', # For gotenberg pre-7.10
           'pdfa': 'PDF/A-1b', # For gotenberg post-7.10
-          'pdfua': 'true'
         }
     else:
         data = {}
+    if tagged:
+        data['pdfua'] = True
     url = daconfig['gotenberg']['url']
     gotenberg_username = daconfig['gotenberg'].get('username', None)
     gotenberg_password = daconfig['gotenberg'].get('password', None)
@@ -414,7 +415,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
             if daconfig['gotenberg']['enable']:
                 # update_references(from_file)  # not necessary, since Gotenberg updates references
                 try:
-                    gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password)
+                    gotenberg_to_pdf(from_file, to_file, pdfa, tagged, password, owner_password)
                     result = 0
                 except BaseException as err:
                     logmessage("Call to gotenberg failed")
@@ -454,7 +455,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
                     raise DAException('LibreOffice is not available')
         elif daconfig['gotenberg']['enable']:
             try:
-                gotenberg_to_pdf(from_file, to_file, pdfa, password, owner_password)
+                gotenberg_to_pdf(from_file, to_file, pdfa, tagged, password, owner_password)
                 result = 0
             except BaseException as err:
                 logmessage("Call to gotenberg failed")
