@@ -5427,6 +5427,7 @@ def safe_json(the_object, level=0, is_key=False):
                 continue
             new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(data, level=level+1)
         return new_dict
+
     try:
         json.dumps(the_object)
     except:

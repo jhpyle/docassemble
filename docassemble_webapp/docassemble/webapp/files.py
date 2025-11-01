@@ -658,7 +658,7 @@ SOFTWARE.
             the_license = ''
     package_data = {'build-system': {'requires': ['setuptools==80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': info.get('version', '0.0.1'), 'description': info.get('description', 'A docassemble extension.'), 'readme': 'README.md', 'authors': [{'name': str(info.get('author_name', '')), 'email': str(info.get('author_email', ''))}], 'dependencies': dependencies_list, 'urls': {'Homepage': info['url'] or 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}}
     if the_license != '':
-        package_data.update({'license': str(the_license), 'license-files': ['LICENSE']})
+        package_data['project'].update({'license': str(the_license), 'license-files': ['LICENSE']})
     pyprojecttoml = tomli_w.dumps(package_data)
 
     manifestin = f"""\

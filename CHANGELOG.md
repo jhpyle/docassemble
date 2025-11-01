@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.8.18] - 2025-11-01
+
+### Fixed
+
+- Bugs with the Monitor system introduced in 1.8.0.
+- Bug where generated `pyproject.toml` files contained the license in
+  the wrong place.
+
 ## [1.8.17] - 2025-10-05
 
 ### Added

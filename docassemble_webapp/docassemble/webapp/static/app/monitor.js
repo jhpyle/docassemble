@@ -536,7 +536,9 @@ function daDrawSession(key, obj) {
     var theChatArea = document.createElement("div");
     $(theChatArea).addClass("monitor-chat-area dainvisible");
     $(theChatArea).html(
-      '<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><button role="button" class="btn " + daButtonStyle + "secondary daChatButton" type="button" disabled="">' +
+      '<div class="row"><div class="col-md-12"><ul class="list-group dachatbox" id="daCorrespondence"></ul></div></div><form autocomplete="off"><div class="row"><div class="col-md-12"><div class="input-group"><input type="text" class="form-control daChatMessage" disabled=""><button role="button" class="btn ' +
+        daButtonStyle +
+        'secondary daChatButton" type="button" disabled="">' +
         daSendWord +
         "</button></div></div></div></form>",
     );

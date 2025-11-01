@@ -311,8 +311,10 @@ class SoupParser:
     def __str__(self):
         output = ''
         for para in self.paragraphs:
-            # logmessage("Got a paragraph where style is " + para['params']['style'] + " and indentation is " + str(para['params']['indentation']))
+            # logmessage("Got a paragraph where style is " + para['params'].get('style', 'undefined') + " and indentation is " + str(para['params'].get('indentation', 'undefined')))
             output += '<w:p><w:pPr><w:pStyle w:val="Normal"/>'
+            if 'align' not in para['params']:
+                para['params']['align'] = 'start'
             if para['params']['align'] == 'center':
                 output += '<w:jc w:val="center"/>'
             elif para['params']['align'] == 'end':

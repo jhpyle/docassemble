@@ -10339,18 +10339,23 @@ def observer():
         "daInitialExtraScripts": obj['extra_scripts'],
         "daQuestionData": None,
         "daAutoColorScheme": False,
-        "daObserverMode": True
+        "daObserverMode": True,
+        "daRootUrl": ROOT
     })
     page_title = word('Observation')
     scripts = "\n    " + standard_scripts(interview_language=obj.get('lang', 'en'))
     if 'javascript' in obj['external_files']:
-        for packageref, fileref in obj['external_files']:
+        for item in obj['external_files']:
+            packageref = item[0]
+            fileref = item[1]
             the_url = get_url_from_file_reference(fileref, _package=packageref)
             if the_url is not None:
                 scripts += "\n" + f'    <script{DEFER} src="{get_url_from_file_reference(fileref, _package=packageref)}"></script>'
     output = standard_html_start(interview_language=obj.get('lang', 'en'), debug=DEBUG, bootstrap_theme=obj.get('bootstrap_theme', None))
     if 'css' in obj['external_files']:
-        for packageref, fileref in obj['external_files']['css']:
+        for item in obj['external_files']['css']:
+            packageref = item[0]
+            fileref = item[1]
             the_url = get_url_from_file_reference(fileref, _package=packageref)
             if the_url is not None:
                 output += "\n" + '    <link href="' + the_url + '" rel="stylesheet">'

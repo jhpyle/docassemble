@@ -2,6 +2,12 @@ metadata:
   title: Live chat
   documentation: "https://docassemble.org/docs/livehelp.html#chat"
 ---
+features:
+  javascript:
+    - my-functions.js
+  css:
+    - fruit.css
+---
 interview help: |
   This is the interview help.
 ---

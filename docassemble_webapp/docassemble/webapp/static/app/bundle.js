@@ -34693,6 +34693,9 @@ if (window.location !== window.parent.location) {
 var daChatPartnersAvailable = 0;
 var daPhoneAvailable = false;
 var daInitialized = false;
+var daConfirmed = false;
+var daNoConnectionCount = 0;
+var daObserverChangesInterval = null;
 var daNotYetScrolled = true;
 var daInformedChanged = false;
 var daShowingSpinner = false;
@@ -35994,6 +35997,33 @@ function daUnfakeHtmlResponse(text) {
   text = atou(text);
   return text;
 }
+window.daTurnOnControl = function () {
+  //console.log("Turning on control");
+  daSendChanges = true;
+  daNoConnectionCount = 0;
+  daResetPushChanges();
+  daSocket.emit("observerStartControl", {
+    uid: daUid,
+    i: daYamlFilename,
+    userid: daUserObserved,
+  });
+};
+window.daTurnOffControl = function () {
+  //console.log("Turning off control");
+  if (!daSendChanges) {
+    //console.log("Already turned off");
+    return;
+  }
+  daSendChanges = false;
+  daConfirmed = false;
+  daStopPushChanges();
+  daSocket.emit("observerStopControl", {
+    uid: daUid,
+    i: daYamlFilename,
+    userid: daUserObserved,
+  });
+  return;
+};
 function daInjectTrim(handler) {
   return function (element, event) {
     if (
