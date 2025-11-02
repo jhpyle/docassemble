@@ -231,7 +231,7 @@ dependencies = [
   "python-editor==1.0.4",
   "python-engineio==4.12.2",
   "python-http-client==3.3.7",
-  "python-ldap==3.4.4",
+  "python-ldap==3.4.5",
   "python-socketio==5.14.0",
   "pytz==2025.2",
   "pytz-deprecation-shim==0.1.0.post0",
