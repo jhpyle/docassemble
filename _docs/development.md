@@ -643,9 +643,9 @@ line will install all the packages:
 pip install --no-deps --force-reinstall --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo
 {% endhighlight %}
 
-The `--no-deps` and `--no-index` flags speed up the installation
-process because they cause `pip` not to go on the internet to update
-all the dependency packages.
+The `--no-deps` flags speed up the installation process because it
+causes `pip` to only install the specified packages and not all of
+their required dependencies.
 
 After you run `pip`, you need to restart the services that use the
 [Python] code.  If you are only going to test your code using the web
@@ -682,7 +682,7 @@ Here are the contents of `compile.sh`:
 
 {% highlight bash %}
 #! /bin/bash
-su -c '/bin/bash --init-file ./www-compile.sh -i' www-data" root
+su --pty -c "/bin/bash --init-file ./www-compile.sh" "www-data"
 {% endhighlight %}
 
 Here are the contents of `www-compile.sh`:
@@ -693,7 +693,7 @@ source /etc/profile
 source /usr/share/docassemble/local3.12/bin/activate
 pip install --no-deps --force-reinstall --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo && touch /usr/share/docassemble/webapp/docassemble.wsgi
 history -s "source /usr/share/docassemble/local3.12/bin/activate"
-history -s "pip install --no-deps --no-index --force-reinstall --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo && touch /usr/share/docassemble/webapp/docassemble.wsgi"
+history -s "pip install --no-deps --force-reinstall --upgrade ./docassemble_base ./docassemble_webapp ./docassemble_demo && touch /usr/share/docassemble/webapp/docassemble.wsgi"
 {% endhighlight %}
 
 When `compile.sh` runs, it will leave you logged in as `www-data` in
