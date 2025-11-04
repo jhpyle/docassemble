@@ -57,8 +57,8 @@ def copy_if_different(source, destination):
 def gotenberg_to_pdf(from_file, to_file, pdfa, tagged, password, owner_password):
     if pdfa:
         data = {
-          'nativePdfFormat': 'PDF/A-1a', # For gotenberg pre-7.10
-          'pdfa': 'PDF/A-1b', # For gotenberg post-7.10
+          'nativePdfFormat': 'PDF/A-1a',
+          'pdfa': 'PDF/A-1b',
         }
     else:
         data = {}
