@@ -5377,6 +5377,8 @@ def safe_json(the_object, level=0, is_key=False):
         return 'None' if is_key else None
     if isinstance(the_object, (str, bool, int, float)):
         return the_object
+    if hasattr(the_object, "to_json") and callable(the_object.to_json):
+        return the_object.to_json()
     if isinstance(the_object, list):
         return [safe_json(x, level=level+1) for x in the_object]
     if isinstance(the_object, dict):
