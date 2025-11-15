@@ -3285,7 +3285,7 @@ class DADict(DAObject):
         for key, val in kwargs.items():
             new_obj_parameters[key] = val
         newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', *pargs, **new_obj_parameters)
-        self.elements[entry] = newobject
+        self[entry] = newobject
         self.there_are_any = True
         if objectFunction is None and self.ask_object_type and hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
@@ -3678,7 +3678,7 @@ class DADict(DAObject):
                         parameters_to_use = {}
                     else:
                         raise DAError("new_object_type must be an object type")
-                    self.elements[key] = object_type_to_use(self.instanceName + '[' + repr(key) + ']', **parameters_to_use)
+                    self[key] = object_type_to_use(self.instanceName + '[' + repr(key) + ']', **parameters_to_use)
             if hasattr(self, 'new_object_type'):
                 delattr(self, 'new_object_type')
         for key in keys:
@@ -3769,7 +3769,7 @@ class DADict(DAObject):
             else:
                 self.new_item_name  # pylint: disable=pointless-statement
                 if hasattr(self, 'new_item_value'):
-                    self.elements[self.new_item_name] = self.new_item_value
+                    self[self.new_item_name] = self.new_item_value
                     delattr(self, 'new_item_value')
                     delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_one_other'):
@@ -3834,7 +3834,7 @@ class DADict(DAObject):
                 var_name = object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "]"
                 raise DAIndexError("name '" + var_name + "' is not defined")
             if self.ask_object_type:
-                self.elements[index] = None
+                self[index] = None
             else:
                 self.initializeObject(index, self.object_type, **self.object_type_parameters)
             return self.elements[index]
