@@ -5377,8 +5377,6 @@ def safe_json(the_object, level=0, is_key=False):
         return 'None' if is_key else None
     if isinstance(the_object, (str, bool, int, float)):
         return the_object
-    if hasattr(the_object, "to_json") and callable(the_object.to_json):
-        return the_object.to_json()
     if isinstance(the_object, list):
         return [safe_json(x, level=level+1) for x in the_object]
     if isinstance(the_object, dict):
@@ -5403,6 +5401,10 @@ def safe_json(the_object, level=0, is_key=False):
         for sub_object in the_object:
             new_list.append(safe_json(sub_object, level=level+1))
         return new_list
+    if hasattr(the_object, "as_dict") and callable(the_object.as_dict):
+        return the_object.as_dict()
+    if hasattr(the_object, "to_json") and callable(the_object.to_json):
+        return the_object.to_json()
     if isinstance(the_object, TypeType):
         the_class_name = class_name(the_object)
         if not the_class_name.startswith('docassemble.'):
@@ -5429,7 +5431,6 @@ def safe_json(the_object, level=0, is_key=False):
                 continue
             new_dict[safe_json(key, level=level+1, is_key=True)] = safe_json(data, level=level+1)
         return new_dict
-
     try:
         json.dumps(the_object)
     except:

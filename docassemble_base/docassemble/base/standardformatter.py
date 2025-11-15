@@ -3480,7 +3480,10 @@ def input_for(status, field, embedded=False, floating_label=None):
             if field.datatype in ['integer', 'float', 'currency', 'number']:
                 if field.datatype != 'currency':
                     extra_class += ' danumeric'
-                input_type = r'text" inputmode="numeric" pattern="[\-\d.]*'
+                if field.datatype == 'integer':
+                    input_type = r'text" inputmode="numeric" pattern="[\-\d.]*'
+                else:
+                    input_type = r'text" inputmode="decimal" pattern="[\-\d.]*'
                 if hasattr(field, 'extras') and 'step' in field.extras and 'step' in status.extras and field.number in status.extras['step']:
                     step_string = ' step="' + str(status.extras['step'][field.number]) + '"'
                 else:
