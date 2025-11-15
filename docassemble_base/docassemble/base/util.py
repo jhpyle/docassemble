@@ -6942,13 +6942,13 @@ class DAContext(DADict):
         self.pargs = pargs
         self.kwargs = kwargs
         if len(pargs) == 1:
-            self.elements['question'] = pargs[0]
-            self.elements['document'] = pargs[0]
+            self['question'] = pargs[0]
+            self['document'] = pargs[0]
         if len(pargs) >= 2:
-            self.elements['question'] = pargs[0]
-            self.elements['document'] = pargs[1]
+            self['question'] = pargs[0]
+            self['document'] = pargs[1]
         for key, val in kwargs.items():
-            self.elements[key] = val
+            self[key] = val
 
     def __str__(self):
         if isinstance(docassemble.base.functions.this_thread.evaluation_context, str) and docassemble.base.functions.this_thread.evaluation_context.startswith('pandoc'):
