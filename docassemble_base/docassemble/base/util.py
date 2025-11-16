@@ -604,6 +604,14 @@ class DAEmpty:
     def __hash__(self):
         return hash(('',))
 
+    def to_json(self):
+        output = {'_class': 'docassemble.base.util.DAEmpty'}
+        try:
+            output.update({'str': object.__getattribute__(self, 'str')})
+        except Exception:
+            pass
+        return output
+
 
 class DAObjectPlusParameters:
     pass
