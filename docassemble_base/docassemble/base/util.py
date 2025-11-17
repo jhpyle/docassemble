@@ -3690,6 +3690,26 @@ class DADict(DAObject):
             else:
                 str(elem)
 
+    def cancel_add_or_edit(self):
+        unique_id = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+        if 'event_stack' in docassemble.base.functions.this_thread.internal and unique_id in docassemble.base.functions.this_thread.internal['event_stack']:
+            new_stack = []
+            for item in docassemble.base.functions.this_thread.internal['event_stack'][unique_id]:
+                if 'arguments' in item:
+                    if 'dict' in item['arguments'] and item['arguments']['dict'] == self.instanceName:
+                        continue
+                    if 'group' in item['arguments'] and item['arguments']['group'] == self.instanceName:
+                        continue
+                if 'action' in item and item['action'].startswith(self.instanceName + '['):
+                    continue
+                new_stack.append(item)
+            docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
+        if self.complete_elements().number() < self.number_gathered():
+            self.popitem()
+        if hasattr(self, 'new_item_name'):
+            delattr(self, 'new_item_name')
+        self.delattr('doing_gathered_and_complete', 'there_is_one_other')
+
     def gathered_and_complete(self):
         """Ensures all items in the dictionary are complete and then returns True."""
         if not hasattr(self, 'doing_gathered_and_complete'):
