@@ -3706,9 +3706,7 @@ class DADict(DAObject):
             docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
         if self.complete_elements().number() < self.number_gathered():
             self.popitem()
-        if hasattr(self, 'new_item_name'):
-            delattr(self, 'new_item_name')
-        self.delattr('doing_gathered_and_complete', 'there_is_one_other')
+        self.delattr('doing_gathered_and_complete', 'there_is_one_other', 'new_item_name')
 
     def gathered_and_complete(self):
         """Ensures all items in the dictionary are complete and then returns True."""
