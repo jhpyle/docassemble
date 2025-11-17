@@ -1914,7 +1914,7 @@ class DAList(DAObject):
                     continue
                 new_stack.append(item)
             docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
-        if self.complete_elements().number() != self.number_gathered():
+        if self.complete_elements().number() < self.number_gathered():
             self.pop()
         self.delattr('doing_gathered_and_complete', '_necessary_length', 'there_is_one_other')
 
