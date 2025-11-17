@@ -2541,7 +2541,7 @@ class DAList(DAObject):
             else:
                 try:
                     str(item)
-                except:
+                except Exception:
                     continue
             items.append(item)
         items.gathered = True
@@ -3621,7 +3621,7 @@ class DADict(DAObject):
         """Returns a dictionary containing the key/value pairs that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
-        items = {}
+        items = self.__class__(self.instanceName)
         for key, val in self.elements.items():
             if val is None:
                 continue
@@ -3636,9 +3636,10 @@ class DADict(DAObject):
             else:
                 try:
                     str(val)
-                except:
+                except Exception:
                     continue
             items[key] = val
+        items.gathered = True
         return items
 
     def _sorted_keys(self):
@@ -4262,10 +4263,10 @@ class DASet(DAObject):
         return True
 
     def complete_elements(self, complete_attribute=None):
-        """Returns a subset with the elements that are complete."""
+        """Returns a set of the elements that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
-        items = set()
+        items = self.__class__(self.instanceName)
         for item in self.elements:
             if item is None:
                 continue
@@ -4280,9 +4281,10 @@ class DASet(DAObject):
             else:
                 try:
                     str(item)
-                except:
+                except Exception:
                     continue
             items.add(item)
+        items.gathered = True
         return items
 
     def filter(self, *pargs, **kwargs):
