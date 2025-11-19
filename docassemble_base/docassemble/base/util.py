@@ -3011,9 +3011,10 @@ class DAList(DAObject):
                 message = word("Add an item")
         else:
             message = word(str(message))
+        the_url = docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         if url_only:
-            return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return self._add_action_button(docassemble.base.functions.url_action('_da_list_add', list=self.instanceName), 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
+            return the_url
+        return self._add_action_button(the_url, 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
 
     def hook_on_gather(self, *pargs, **kwargs):
         """Code that runs just before a list is marked as gathered."""
@@ -4165,9 +4166,10 @@ class DADict(DAObject):
                 message = word("Add an item")
         else:
             message = word(str(message))
+        the_url = docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName)
         if url_only:
-            return docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
+            return the_url
+        return '<a href="' + the_url + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
 
     def _new_elements(self):
         return {}
