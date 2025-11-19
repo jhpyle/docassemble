@@ -4125,6 +4125,11 @@ class DADict(DAObject):
             return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
 
+    def _add_action_button(self, url, classes, icon, the_message):
+        if icon != '':
+            icon = f'<i class="{icon}"></i> '
+        return f'<a href="{url}" class="{classes}">{icon}{the_message}</a>'
+
     def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color=None, size='sm', block=None, classname=None):  # pylint: disable=redefined-outer-name
         """Returns HTML for adding an item to a dict"""
         if color is None:
@@ -4148,7 +4153,6 @@ class DADict(DAObject):
             icon = re.sub(r'^fas ', 'fa-solid ', icon)
             icon = re.sub(r'^far ', 'fa-regular ', icon)
             icon = re.sub(r'^fab ', 'fa-brands ', icon)
-            icon = '<i class="' + icon + '"></i> '
         else:
             icon = ''
         if classname is None:
@@ -4169,7 +4173,7 @@ class DADict(DAObject):
         the_url = docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName)
         if url_only:
             return the_url
-        return '<a href="' + the_url + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
+        return self._add_action_button(the_url, 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
 
     def _new_elements(self):
         return {}
