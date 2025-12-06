@@ -196,7 +196,7 @@ dependencies = [
   "ua-parser==1.0.1",
   "ua-parser-builtins==0.18.0.post1",
   "uritemplate==4.2.0",
-  "urllib3==2.5.0",
+  "urllib3==2.6.0",
   "us==3.2.0",
   "user-agents==2.2.0",
   "wcwidth==0.2.13",
