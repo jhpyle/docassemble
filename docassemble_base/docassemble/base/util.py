@@ -5288,13 +5288,13 @@ class DAFile(DAObject):
         if not all_pdf:
             docs = [pdf_concatenate(docs).path()]
         filename = kwargs.get('filename', None)
-        prefix = kwargs.get('prefix', 'TEST')
-        digits = kwargs.get('digits', 5)
-        start = kwargs.get('start', 1)
-        area = kwargs.get('area', None)
-        font_size = kwargs.get('font_size', None)
-        offset_horizontal = kwargs.get('offset_horizontal', None)
-        offset_vertical = kwargs.get('offset_vertical', None)
+        prefix = kwargs.get('prefix') or 'TEST'
+        digits = kwargs.get('digits') or 5
+        start = kwargs.get('start') or 1
+        area = kwargs.get('area') or None
+        font_size = kwargs.get('font_size') or 10
+        offset_horizontal = kwargs.get('offset_horizontal') or 15
+        offset_vertical = kwargs.get('offset_vertical') or 15
         if area is None:
             area = 'BOTTOM_RIGHT'
         if area not in ('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT'):
