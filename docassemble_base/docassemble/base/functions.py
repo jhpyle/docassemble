@@ -5469,7 +5469,7 @@ def class_name(the_object):
 def plain(text, default=None):
     """Substitutes empty string or the value of the default parameter if the text is empty."""
     ensure_definition(text, default)
-    if text is None or text == '':
+    if text is None or not str(text).strip():
         if default is None:
             return ''
         return default
@@ -5479,7 +5479,7 @@ def plain(text, default=None):
 def bold(text, default=None):
     """Adds Markdown tags to make the text bold if it is not blank."""
     ensure_definition(text, default)
-    if text is None or text == '':
+    if text is None or not str(text).strip():
         if default is None:
             return ''
         return '**' + str(default) + '**'
@@ -5489,7 +5489,7 @@ def bold(text, default=None):
 def italic(text, default=None):
     """Adds Markdown tags to make the text italic if it is not blank."""
     ensure_definition(text, default)
-    if text is None or text == '':
+    if text is None or not str(text).strip():
         if default is None:
             return ''
         return '_' + str(default) + '_'
