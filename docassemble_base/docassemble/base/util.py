@@ -3019,9 +3019,10 @@ class DAList(DAObject):
                 message = word("Add an item")
         else:
             message = word(str(message))
+        the_url = docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
         if url_only:
-            return docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
-        return self._add_action_button(docassemble.base.functions.url_action('_da_list_add', list=self.instanceName), 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
+            return the_url
+        return self._add_action_button(the_url, 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
 
     def hook_on_gather(self, *pargs, **kwargs):
         """Code that runs just before a list is marked as gathered."""
@@ -4132,6 +4133,11 @@ class DADict(DAObject):
             return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
 
+    def _add_action_button(self, url, classes, icon, the_message):
+        if icon != '':
+            icon = f'<i class="{icon}"></i> '
+        return f'<a href="{url}" class="{classes}">{icon}{the_message}</a>'
+
     def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color=None, size='sm', block=None, classname=None):  # pylint: disable=redefined-outer-name
         """Returns HTML for adding an item to a dict"""
         if color is None:
@@ -4155,7 +4161,6 @@ class DADict(DAObject):
             icon = re.sub(r'^fas ', 'fa-solid ', icon)
             icon = re.sub(r'^far ', 'fa-regular ', icon)
             icon = re.sub(r'^fab ', 'fa-brands ', icon)
-            icon = '<i class="' + icon + '"></i> '
         else:
             icon = ''
         if classname is None:
@@ -4173,9 +4178,10 @@ class DADict(DAObject):
                 message = word("Add an item")
         else:
             message = word(str(message))
+        the_url = docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName)
         if url_only:
-            return docassemble.base.functions.url_action('_da_dict_add', list=self.instanceName)
-        return '<a href="' + docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName) + '" class="btn' + size + block + ' ' + server.button_class_prefix + color + classname + '">' + icon + str(message) + '</a>'
+            return the_url
+        return self._add_action_button(the_url, 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
 
     def _new_elements(self):
         return {}
