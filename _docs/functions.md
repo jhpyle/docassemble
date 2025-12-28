@@ -5340,7 +5340,7 @@ an encryption key for a different user, you can use
 
 To get the interview filename for the current interview, and the
 session ID for the current interview session, you can use the
-[`user_info()`] function.
+[`current_context()`] function.
 
 However, note that if you want to get the dictionary for the current
 interview session, you can simply use the [`all_variables()`]

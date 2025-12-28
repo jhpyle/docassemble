@@ -7662,7 +7662,7 @@ the `_uid` of the table rather than the `id`.
 [`service account credentials`]: {{ site.baseurl }}/docs/config.html#service account credentials
 [Object-oriented Programming for Document Assembly Developers]: https://www.nonprofittechy.com/2018/09/12/object-oriented-programming-for-document-assembly-developers/
 [Quinten Steenhuis]: https://www.nonprofittechy.com/about/
-[Python book]: https://shop.oreilly.com/product/0636920028154.do
+[Python book]: https://www.oreilly.com/library/view/learning-python-6th/9781098171292/
 [list comprehension]: https://docs.python.org/3.12/tutorial/datastructures.html#list-comprehensions
 [interview session dictionary]: {{ site.baseurl }}/docs/interviews.html#howstored
 [logic]: {{ site.baseurl }}/docs/logic.html
