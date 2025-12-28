@@ -106,7 +106,7 @@ dependencies = [
   "Flask-SocketIO==5.5.1",
   "Flask-SQLAlchemy==3.1.1",
   "Flask-WTF==1.2.2",
-  "fonttools==4.59.0",
+  "fonttools==4.60.2",
   "frozenlist==1.7.0",
   "future==1.0.0",
   "gcs-oauth2-boto-plugin==3.3",
