@@ -460,29 +460,30 @@ Other methods available on a `DAList` are:
   button that adds a new item to the list.  This will set up a queue
   of actions for the user that will ensure that a new item will be
   added and its elements gathered.  See the [groups] section for
-  details of how [`DAList`] and [`DADict`] gathering works.  By
-  default, the text of the button is "Add an item" if the list is
-  empty, and "Add another" if the list is non-empty.  The label can be
-  overridden with the optional keyword parameter `label`.  The `label`
-  passes through the [`word()`] function, so you can use the
-  translation system to handle different languages.  If you set the
-  optional keyword parameter `url_only` to `True`, the method will
-  return only the URL for the action, not the HTML for a button.  You
-  can change the color of the button to another [Bootstrap] color with
-  the optional keyword parameter `color`.  The default color is
-  `secondary`, or whatever the `add` value is under [`button colors`]
-  in the [Configuration].  The size of the button can be changed with
-  the optional keyword parameter `size`.  The options are `sm`, `md`,
-  and `lg`.  The default is `sm`.  If you want the button to fill the
-  width of its container, you can set the optional keyword parameter
-  `block` to `True`.  The icon that appears in the button can be
-  customized with the optional keyword parameter `icon`.  The default
-  value is `plus-circle`, which refers to the [Font Awesome] icon `fas
-  fa-plus-circle`.  It will assume you mean to refer to a "solid" icon
-  unless you spell out the icon type with a full reference like `far
-  fa-plus-circle`.  If you want to add your own CSS classes to the
-  button, you can set them with the optional keyword parameter
-  `classname`.
+  details of how [`DAList`] and [`DADict`] gathering works.  This
+  should only be used when the underlying group has the attribute
+  `gathered` set to `True`.  By default, the text of the button is
+  "Add an item" if the list is empty, and "Add another" if the list is
+  non-empty.  The label can be overridden with the optional keyword
+  parameter `label`.  The `label` passes through the [`word()`]
+  function, so you can use the translation system to handle different
+  languages.  If you set the optional keyword parameter `url_only` to
+  `True`, the method will return only the URL for the action, not the
+  HTML for a button.  You can change the color of the button to
+  another [Bootstrap] color with the optional keyword parameter
+  `color`.  The default color is `secondary`, or whatever the `add`
+  value is under [`button colors`] in the [Configuration].  The size
+  of the button can be changed with the optional keyword parameter
+  `size`.  The options are `sm`, `md`, and `lg`.  The default is `sm`.
+  If you want the button to fill the width of its container, you can
+  set the optional keyword parameter `block` to `True`.  The icon that
+  appears in the button can be customized with the optional keyword
+  parameter `icon`.  The default value is `plus-circle`, which refers
+  to the [Font Awesome] icon `fas fa-plus-circle`.  It will assume you
+  mean to refer to a "solid" icon unless you spell out the icon type
+  with a full reference like `far fa-plus-circle`.  If you want to add
+  your own CSS classes to the button, you can set them with the
+  optional keyword parameter `classname`.
 * <a name="DAList.item_actions"></a><a
   name="DADict.item_actions"></a>`item_actions()` - returns HTML for
   "Edit" and "Delete" buttons.  This method is primarily used
