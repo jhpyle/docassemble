@@ -7082,6 +7082,17 @@ class DAGlobal(DAObject):
             globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(key)
         return server.server_sql_defined(globalkey)
 
+    @classmethod
+    def delete(cls, base, key):
+        """Deletes the key from the base in the global storage area."""
+        if base == 'interview':
+            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
+        elif base == 'global':
+            globalkey = 'da:daglobal:global:' + str(key)
+        else:
+            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(key)
+        server.server_sql_delete(globalkey)
+
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
         if 'base' not in kwargs:
