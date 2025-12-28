@@ -6233,6 +6233,26 @@ basically just wraps the method in a `try`/`except` and raises a
 generic [`Exception`] if any exception is raised from inside the
 method.
 
+## <a name="to_json"></a>Convert to JSON
+
+If you write a class that **docassemble** can't convert to [JSON],
+has attributes that can't convert to [JSON], or converts to [JSON]
+incorrectly, then you can implement your own `.to_json()` method
+that will be used by **docassemble** instead.
+
+Your `.to_json()` method should return a simplified representation
+of the class using built-in [Python] types that can be easily and
+logically converted to JSON, like `str`, `int`, `float`, `list`,
+or `dict`.
+
+{% highlight python %}
+from docassemble.base.util import DAObject
+
+class ComplicatedDAObject(DAObject):
+  def to_json(self):
+    return "This object is too complicated to display."
+{% endhighlight %}
+
 # <a name="DADateTime"></a>Special date/time class `DADateTime`
 
 When you set a variable with [`datatype: date`], or use one of the
