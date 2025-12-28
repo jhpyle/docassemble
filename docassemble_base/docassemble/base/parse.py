@@ -745,7 +745,7 @@ class InterviewStatus:
                             if the_field.number in self.extras['show_if_js']:
                                 self.extras['show_if_js'][the_field.number]['expression'] = re.sub(iterator_re, '[' + str(list_indexno) + ']', self.extras['show_if_js'][the_field.number]['expression'])
                             if the_field.extras['show_if_js']['expression'].uses_mako:
-                                the_field.extras['show_if_js']['expression'].template = MakoTemplate(the_field.extras['show_if_js']['expression'].original_text, strict_undefined=True, input_encoding='utf-8')
+                                the_field.extras['show_if_js']['expression'].template = MakoTemplate(the_field.extras['show_if_js']['expression'].original_text, strict_undefined=True, input_encoding='utf-8', uri='')
                             for ii in range(len(the_field.extras['show_if_js']['vars'])):
                                 the_field.extras['show_if_js']['vars'][ii] = re.sub(iterator_re, '[' + str(list_indexno) + ']', the_field.extras['show_if_js']['vars'][ii])
                             if the_field.number in self.extras['show_if_js']:
@@ -1600,7 +1600,7 @@ class TextObject:
                 names_used = set()
             else:
                 names_used = question.names_used
-            self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8')
+            self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8', uri=question.id_debug({}) if question else None)
             for y in self.template.names_used - self.template.names_set:
                 names_used.add(y)
             self.uses_mako = True
@@ -1618,9 +1618,9 @@ class TextObject:
                             xx = question.interview.translation_dict[self.original_text][orig_lang][target_lang]
                             if not self.uses_mako and isinstance(xx, str) and match_mako.search(xx):
                                 self.uses_mako = True
-                                self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8')
+                                self.template = MakoTemplate(x, strict_undefined=True, input_encoding='utf-8', uri=question.id_debug({}))
                             if self.uses_mako:
-                                the_template = MakoTemplate(xx, strict_undefined=True, input_encoding='utf-8')
+                                the_template = MakoTemplate(xx, strict_undefined=True, input_encoding='utf-8', uri=question.id_debug({}))
                                 if question is not None:
                                     for y in the_template.names_used - the_template.names_set:
                                         question.names_used.add(y)
