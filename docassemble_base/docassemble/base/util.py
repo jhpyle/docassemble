@@ -1922,7 +1922,7 @@ class DAList(DAObject):
                     continue
                 new_stack.append(item)
             docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
-        if self.complete_elements().number() != self.number_gathered():
+        if self.complete_elements().number() < self.number_gathered():
             self.pop()
         self.delattr('doing_gathered_and_complete', '_necessary_length', 'there_is_one_other')
 
@@ -2549,7 +2549,7 @@ class DAList(DAObject):
             else:
                 try:
                     str(item)
-                except:
+                except Exception:
                     continue
             items.append(item)
         items.gathered = True
@@ -3630,7 +3630,7 @@ class DADict(DAObject):
         """Returns a dictionary containing the key/value pairs that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
-        items = {}
+        items = self.__class__(self.instanceName)
         for key, val in self.elements.items():
             if val is None:
                 continue
@@ -3645,9 +3645,10 @@ class DADict(DAObject):
             else:
                 try:
                     str(val)
-                except:
+                except Exception:
                     continue
             items[key] = val
+        items.gathered = True
         return items
 
     def _sorted_keys(self):
@@ -3697,6 +3698,24 @@ class DADict(DAObject):
                     complex_getattr(elem, attrib)
             else:
                 str(elem)
+
+    def cancel_add_or_edit(self):
+        unique_id = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+        if 'event_stack' in docassemble.base.functions.this_thread.internal and unique_id in docassemble.base.functions.this_thread.internal['event_stack']:
+            new_stack = []
+            for item in docassemble.base.functions.this_thread.internal['event_stack'][unique_id]:
+                if 'arguments' in item:
+                    if 'dict' in item['arguments'] and item['arguments']['dict'] == self.instanceName:
+                        continue
+                    if 'group' in item['arguments'] and item['arguments']['group'] == self.instanceName:
+                        continue
+                if 'action' in item and item['action'].startswith(self.instanceName + '['):
+                    continue
+                new_stack.append(item)
+            docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
+        if self.complete_elements().number() < self.number_gathered():
+            self.popitem()
+        self.delattr('doing_gathered_and_complete', 'there_is_one_other', 'new_item_name')
 
     def gathered_and_complete(self):
         """Ensures all items in the dictionary are complete and then returns True."""
@@ -4276,10 +4295,10 @@ class DASet(DAObject):
         return True
 
     def complete_elements(self, complete_attribute=None):
-        """Returns a subset with the elements that are complete."""
+        """Returns a set of the elements that are complete."""
         if complete_attribute is None and hasattr(self, 'complete_attribute'):
             complete_attribute = self.complete_attribute
-        items = set()
+        items = self.__class__(self.instanceName)
         for item in self.elements:
             if item is None:
                 continue
@@ -4294,9 +4313,10 @@ class DASet(DAObject):
             else:
                 try:
                     str(item)
-                except:
+                except Exception:
                     continue
             items.add(item)
+        items.gathered = True
         return items
 
     def filter(self, *pargs, **kwargs):
