@@ -3212,22 +3212,22 @@ class Question:
                         raise DASourceError("The css classifier specifier in an action buttons item must refer to plain text." + self.idebug(data))
                     if not isinstance(forget_prior, bool):
                         raise DASourceError("The forget prior specifier in an action buttons item must refer to true or false." + self.idebug(data))
-                    button = {'action': TextObject(definitions + action, question=self), 'label': TextObject(definitions + label, question=self), 'color': TextObject(definitions + color, question=self)}
+                    button = {'action': TextObject(definitions + action, question=self), 'label': TextObject(definitions + label, question=self), 'color': TextObject(definitions + color, question=self, translate=False)}
                     button['show if'] = showif
                     if target is not None:
-                        button['target'] = TextObject(definitions + target, question=self)
+                        button['target'] = TextObject(definitions + target, question=self, translate=False)
                     else:
                         button['target'] = None
                     if icon is not None:
-                        button['icon'] = TextObject(definitions + icon, question=self)
+                        button['icon'] = TextObject(definitions + icon, question=self, translate=False)
                     else:
                         button['icon'] = None
                     if placement is not None:
-                        button['placement'] = TextObject(definitions + placement, question=self)
+                        button['placement'] = TextObject(definitions + placement, question=self, translate=False)
                     else:
                         button['placement'] = None
                     if css_class is not None:
-                        button['css_class'] = TextObject(definitions + css_class, question=self)
+                        button['css_class'] = TextObject(definitions + css_class, question=self, translate=False)
                     else:
                         button['css_class'] = None
                     if forget_prior:

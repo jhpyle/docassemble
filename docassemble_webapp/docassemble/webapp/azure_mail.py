@@ -21,6 +21,51 @@ def extract_raw_email(email):
     return email
 
 
+def body_as_json(message):
+    if message.html:
+        return {
+            "contentType": "HTML",
+            "content": message.html
+        }
+    return {
+        "contentType": "Text",
+        "content": message.body
+    }
+
+
+def email_as_json(email):
+    if isinstance(email, tuple):
+        return {
+            "emailAddress": {
+                "address": email[1],
+                "name": email[0]
+            }
+        }
+    email = str(email)
+    m = re.search(r"(.*) <([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>", email)
+    if m:
+        return {
+            "emailAddress": {
+                "address": m.group(2),
+                "name": m.group(1).strip('"')
+            }
+        }
+    return {
+        "emailAddress": {
+            "address": email,
+        }
+    }
+
+
+def attachment_as_json(attachment):
+    return {
+        "@odata.type": "#microsoft.graph.fileAttachment",
+        "name": attachment.filename,
+        "contentType": attachment.content_type,
+        "contentBytes": base64.b64encode(attachment.data).decode()
+    }
+
+
 class Connection:
 
     def __init__(self, mail):
@@ -58,13 +103,23 @@ class Connection:
 
         headers = {
             "Authorization": f"Bearer {access_token}",
-            "Content-Type": "text/plain"
+            "Content-Type": "application/json"
         }
-
+        payload = {
+            "message": {
+                "subject": message.subject,
+                "body": body_as_json(message),
+                "toRecipients": [email_as_json(recipient) for recipient in message.recipients],
+                "ccRecipients": [email_as_json(recipient) for recipient in message.cc],
+                "bccRecipients": [email_as_json(recipient) for recipient in message.bcc],
+                "attachments": [attachment_as_json(attachment) for attachment in message.attachments]
+            },
+            "saveToSentItems": True
+        }
         response = requests.post(
             f"https://graph.microsoft.com/v1.0/users/{extract_raw_email(message.sender)}/sendMail",
             headers=headers,
-            data=base64.b64encode(message.as_string().encode()).decode(),
+            json=payload,
             timeout=60
         )
 

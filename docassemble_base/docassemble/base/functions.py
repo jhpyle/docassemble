@@ -25,6 +25,7 @@ import pycountry
 import markdown
 import nltk
 import ruamel.yaml
+from types import SimpleNamespace
 from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
 
 try:
@@ -205,7 +206,10 @@ def set_gathering_mode(mode, instanceName):
             # logmessage("set_gathering_mode: using " + str(get_current_variable()))
             this_thread.gathering_mode[instanceName] = get_current_variable()
     else:
-        del this_thread.gathering_mode[instanceName]
+        try:
+            del this_thread.gathering_mode[instanceName]
+        except KeyError:
+            pass
 
 
 def get_gathering_mode(instanceName):
@@ -229,7 +233,10 @@ def reset_gathering_mode(*pargs):
             todel.append(instanceName)
     # logmessage("reset_gathering_mode: deleting " + repr([y for y in todel]))
     for item in todel:
-        del this_thread.gathering_mode[item]
+        try:
+            del this_thread.gathering_mode[item]
+        except KeyError:
+            pass
 
 
 def set_uid(uid):
@@ -2176,31 +2183,41 @@ class GenericObject:
 #         self.__dict__.update(kw)
 
 this_thread = threading.local()
-this_thread.language = server.default_language
-this_thread.dialect = server.default_dialect
-this_thread.voice = server.default_voice
-this_thread.country = server.default_country
-this_thread.locale = server.default_locale
-this_thread.current_info = {}
-this_thread.internal = {}
-this_thread.initialized = False
-this_thread.session_id = None
-this_thread.current_package = None
-this_thread.interview = None
-this_thread.interview_status = None
-this_thread.evaluation_context = None
-this_thread.gathering_mode = {}
-this_thread.global_vars = GenericObject()
-this_thread.current_variable = []
-this_thread.open_files = set()
-this_thread.markdown = markdown.Markdown(extensions=['smarty', 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
-this_thread.saved_files = {}
-this_thread.message_log = []
-this_thread.misc = {}
-this_thread.probing = False
-this_thread.prevent_going_back = False
-this_thread.current_question = None
-this_thread.current_section = None
+
+def populate_this_thread_defaults():
+    this_thread.language = server.default_language
+    this_thread.dialect = server.default_dialect
+    this_thread.voice = server.default_voice
+    this_thread.country = server.default_country
+    this_thread.locale = server.default_locale
+    this_thread.current_info = {}
+    this_thread.internal = {}
+    this_thread.initialized = False
+    this_thread.session_id = None
+    this_thread.current_package = None
+    this_thread.interview = None
+    this_thread.interview_status = None
+    this_thread.evaluation_context = None
+    this_thread.gathering_mode = {}
+    this_thread.global_vars = GenericObject()
+    this_thread.current_variable = []
+    this_thread.open_files = set()
+    this_thread.markdown = markdown.Markdown(extensions=['smarty', 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
+    this_thread.saved_files = {}
+    this_thread.message_log = []
+    this_thread.misc = {}
+    this_thread.probing = False
+    this_thread.prevent_going_back = False
+    this_thread.current_question = None
+    this_thread.current_section = None
+
+populate_this_thread_defaults()
+
+
+def enable_threading():
+    global this_thread
+    this_thread = SimpleNamespace()
+    populate_this_thread_defaults()
 
 
 def backup_thread_variables():
@@ -5470,7 +5487,7 @@ def class_name(the_object):
 def plain(text, default=None):
     """Substitutes empty string or the value of the default parameter if the text is empty."""
     ensure_definition(text, default)
-    if text is None or not str(text).strip():
+    if text is None or str(text).strip() == '':
         if default is None:
             return ''
         return default
@@ -5480,7 +5497,7 @@ def plain(text, default=None):
 def bold(text, default=None):
     """Adds Markdown tags to make the text bold if it is not blank."""
     ensure_definition(text, default)
-    if text is None or not str(text).strip():
+    if text is None or str(text).strip() == '':
         if default is None:
             return ''
         return '**' + str(default) + '**'
@@ -5490,7 +5507,7 @@ def bold(text, default=None):
 def italic(text, default=None):
     """Adds Markdown tags to make the text italic if it is not blank."""
     ensure_definition(text, default)
-    if text is None or not str(text).strip():
+    if text is None or str(text).strip() == '':
         if default is None:
             return ''
         return '_' + str(default) + '_'

@@ -3783,7 +3783,8 @@ class DADict(DAObject):
             elif hasattr(self, 'there_is_another'):
                 # logmessage("0gather " + self.instanceName + ": del on there_is_another")
                 delattr(self, 'there_is_another')
-        while (number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and (self.there_is_another or (hasattr(self, 'there_is_one_other') and self.there_is_one_other))):
+        should_break_out = False
+        while not should_break_out and ((number is not None and len(self.elements) < int(number)) or (minimum is not None and len(self.elements) < int(minimum)) or (self.ask_number is False and minimum != 0 and (self.there_is_another or (hasattr(self, 'there_is_one_other') and self.there_is_one_other)))):
             if item_object_type is not None:
                 self.initializeObject(self.new_item_name, item_object_type, **new_item_parameters)
                 if hasattr(self, 'there_is_one_other'):
@@ -3808,6 +3809,7 @@ class DADict(DAObject):
                 else:
                     the_name = self.new_item_name
                     self.__getitem__(the_name)  # pylint: disable=unnecessary-dunder-call
+                    should_break_out = True
                     if hasattr(self, 'new_item_name'):
                         delattr(self, 'new_item_name')
                     if hasattr(self, 'there_is_one_other'):
@@ -4105,6 +4107,12 @@ class DADict(DAObject):
             return capitalize_func(output)
         return output
 
+    def _edit_button(self, url, classes):
+        return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-pencil-alt"></i> {word("Edit")}</span></a> '
+
+    def _delete_button(self, url, classes):
+        return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-trash"></i> {word("Delete")}</span></a>'
+
     def item_actions(self, *pargs, **kwargs):
         """Returns HTML for editing the items in a dictionary"""
         the_args = list(pargs)
@@ -4139,13 +4147,13 @@ class DADict(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_dict_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_edit', items=items) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit"><i class="fa-solid fa-pencil-alt"></i> ' + word('Edit') + '</a> '
+            output += self._edit_button(docassemble.base.functions.url_action('_da_dict_edit', items=items), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit')
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += '<a href="' + docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)) + '" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure + '"><i class="fa-solid fa-trash"></i> ' + word('Delete') + '</a>'
+            output += self._delete_button(docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
         if kwargs.get('edit_url_only', False):
             return docassemble.base.functions.url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -7083,8 +7091,8 @@ class DAGlobal(DAObject):
         return server.server_sql_defined(globalkey)
 
     @classmethod
-    def delete(cls, base, key):
-        """Deletes the key from the base in the global storage area."""
+    def remove(cls, base, key):
+        """Deletes the key from the data store."""
         if base == 'interview':
             globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
         elif base == 'global':
@@ -9968,7 +9976,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
             except subprocess.CalledProcessError as err:
                 raise DAError("ocr_file: failed to OCR file: " + str(err) + " " + str(err.output.decode()))
         elif TESSERACT_MODE == REMOTE:
-            result = run_tesseract.delay(['stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)
+            result = run_tesseract.delay(['stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)  # pylint: disable=possibly-used-before-assignment
             if not result.ok:
                 raise DAError("ocr_file: failed to OCR file")
             text = result.content
@@ -11304,7 +11312,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
                     result = 1
                     logmessage("ocr_pdf: call to gs took too long")
             elif TESSERACT_MODE == REMOTE:
-                result = run_gs.delay(params[1:]).get(disable_sync_subtasks=False)
+                result = run_gs.delay(params[1:]).get(disable_sync_subtasks=False)  # pylint: disable=possibly-used-before-assignment
                 if result is None:
                     result = 1
                     logmessage("ocr_pdf: call to gs took too long")
@@ -11372,6 +11380,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
 
 def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, psm=6, page=None, x=None, y=None, W=None, H=None, user_code=None, user=None, pdf=False, preserve_color=False):  # pylint: disable=unused-argument
     """Runs optical character recognition on an image or a page of a PDF file and returns the recognized text."""
+    text = ''
     if page is None:
         page = 1
     if psm is None:

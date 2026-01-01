@@ -53,6 +53,7 @@ class WorkerController:
         import docassemble.webapp.update  # pylint: disable=import-outside-toplevel, redefined-outer-name
         import docassemble.base.functions  # pylint: disable=import-outside-toplevel
         docassemble.base.functions.server_context.context = 'celery'
+        docassemble.base.functions.enable_threading()
         import docassemble.base.interview_cache  # pylint: disable=import-outside-toplevel
         import docassemble.base.util  # pylint: disable=import-outside-toplevel
         import docassemble.base.parse  # pylint: disable=import-outside-toplevel

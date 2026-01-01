@@ -6251,6 +6251,26 @@ def checkout():
     return jsonify(success=True)
 
 
+@app.route('/check_restart_status', methods=['GET'])
+@login_required
+@roles_required(['admin', 'developer'])
+def check_restart_status():
+    if not app.config['ALLOW_RESTARTING']:
+        return ('File not found', 404)
+    code = request.args.get('task_id', None)
+    if code is None:
+        return jsonify_with_status("Missing task_id", 400)
+    the_key = 'da:restart_status:' + str(code)
+    task_data = r.get(the_key)
+    if task_data is None:
+        return jsonify(status='unknown')
+    task_info = json.loads(task_data.decode())
+    if START_TIME <= task_info['server_start_time'] or reset_process_running():
+        return jsonify(status='working')
+    r.expire(the_key, 30)
+    return jsonify(status='completed')
+
+
 @app.route("/restart_ajax", methods=['POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -6264,8 +6284,9 @@ def restart_ajax():
     #     logmessage("restart_ajax: user has no permission")
     if request.form.get('action', None) == 'restart' and current_user.has_role('admin', 'developer'):
         logmessage("restart_ajax: restarting")
+        return_val = jsonify_restart_task()
         restart_all()
-        return jsonify(success=True)
+        return return_val
     return jsonify(success=False)
 
 
@@ -11558,10 +11579,37 @@ def restart_page():
     setup_translation()
     if not app.config['ALLOW_RESTARTING']:
         return ('File not found', 404)
+    next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('interview_list', post_restart=1)))
     script = f"""
     <script{DEFER}>
+      var nextUrl = {json.dumps(next_url)};
+      var pollInterval = null;
+      var taskId = null;
       function daRestartCallback(data){{
-        //console.log("Restart result: " + data.success);
+        taskId = data.task_id;
+        pollInterval = setInterval(daPoll, 4000);
+      }}
+      function daPoll(){{
+        $.ajax({{
+          type: 'GET',
+          url: {json.dumps(url_for('check_restart_status'))} + '?' + $.param({{"task_id": taskId}}),
+          success: daCheckStatus,
+          error: daIgnoreStatus,
+          dataType: 'json',
+          timeout: 3500
+        }});
+      }}
+      function daCheckStatus(data){{
+        if (data.status == "completed"){{
+          clearInterval(pollInterval);
+          window.location.replace(nextUrl);
+        }}
+        else{{
+          console.log("Status of restart was: " + data.status + ".");
+        }}
+      }}
+      function daIgnoreStatus(data){{
+        console.log("Unable to check status of restart. Perhaps the server will respond again.")
       }}
       function daRestart(){{
         $.ajax({{
@@ -11580,9 +11628,7 @@ def restart_page():
         }});
       }});
     </script>"""
-    next_url = app.user_manager.make_safe_url_function(request.args.get('next', url_for('interview_list', post_restart=1)))
-    extra_meta = """\n    <meta http-equiv="refresh" content="8;URL='""" + next_url + """'">"""
-    response = make_response(render_template('pages/restart.html', version_warning=None, bodyclass='daadminbody', extra_meta=Markup(extra_meta), extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting')), 200)
+    response = make_response(render_template('pages/restart.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Restarting'), page_title=word('Restarting')), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
 
@@ -11965,8 +12011,34 @@ def gd_sync_wait():
       var daCheckinInterval = null;
       var autoNext = {json.dumps(auto_next_url)};
       var resultsAreIn = false;
+      var pollInterval = null;
+      var taskId = null;
       function daRestartCallback(data){{
-        //console.log("Restart result: " + data.success);
+        taskId = data.task_id;
+        pollInterval = setInterval(daPoll, 4000);
+      }}
+      function daPoll(){{
+        $.ajax({{
+          type: 'GET',
+          url: {json.dumps(url_for('check_restart_status'))} + '?' + $.param({{"task_id": taskId}}),
+          success: daCheckStatus,
+          error: daIgnoreStatus,
+          dataType: 'json',
+          timeout: 3500
+        }});
+      }}
+      function daCheckStatus(data){{
+        if (data.status == "completed"){{
+          clearInterval(pollInterval);
+          $("#returnButton").show();
+          $("#restartButton").hide();
+        }}
+        else{{
+          console.log("Status of restart was: " + data.status + ".");
+        }}
+      }}
+      function daIgnoreStatus(data){{
+        console.log("Unable to check status of restart. Perhaps the server will respond again.")
       }}
       function daRestart(){{
         $.ajax({{
@@ -12003,6 +12075,8 @@ def gd_sync_wait():
               clearInterval(daCheckinInterval);
             }}
             if (data.restart){{
+              $("#returnButton").hide();
+              $("#restartButton").show();
               daRestart();
             }}
           }}
@@ -12378,13 +12452,34 @@ def od_sync_wait():
       var daCheckinInterval = null;
       var autoNext = {json.dumps(auto_next_url)};
       var resultsAreIn = false;
+      var pollInterval = null;
+      var taskId = null;
       function daRestartCallback(data){{
-        if (autoNext != null){{
-          setTimeout(function(){{
-            window.location.replace(autoNext);
-          }}, 1000);
+        taskId = data.task_id;
+        pollInterval = setInterval(daPoll, 4000);
+      }}
+      function daPoll(){{
+        $.ajax({{
+          type: 'GET',
+          url: {json.dumps(url_for('check_restart_status'))} + '?' + $.param({{"task_id": taskId}}),
+          success: daCheckStatus,
+          error: daIgnoreStatus,
+          dataType: 'json',
+          timeout: 3500
+        }});
+      }}
+      function daCheckStatus(data){{
+        if (data.status == "completed"){{
+          clearInterval(pollInterval);
+          $("#returnButton").show();
+          $("#restartButton").hide();
         }}
-        //console.log("Restart result: " + data.success);
+        else{{
+          console.log("Status of restart was: " + data.status + ".");
+        }}
+      }}
+      function daIgnoreStatus(data){{
+        console.log("Unable to check status of restart. Perhaps the server will respond again.")
       }}
       function daRestart(){{
         $.ajax({{
@@ -12418,6 +12513,8 @@ def od_sync_wait():
               clearInterval(daCheckinInterval);
             }}
             if (data.restart){{
+              $("#returnButton").hide();
+              $("#restartButton").show();
               daRestart();
             }}
             else{{
@@ -20980,7 +21077,7 @@ def run_action_in_session(**kwargs):
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)
     except:
-        if docassemble.base.functions.this_thread.misc['save_status'] != SS_IGNORE:
+        if docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW) != SS_IGNORE:
             release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
@@ -21014,7 +21111,7 @@ def run_action_in_session(**kwargs):
         docassemble.base.functions.restore_thread_variables(tbackup)
         return {"status": "success"}
     except BaseException as e:
-        if docassemble.base.functions.this_thread.misc['save_status'] != SS_IGNORE:
+        if docassemble.base.functions.this_thread.misc.get('save_status', SS_NEW) != SS_IGNORE:
             release_lock(session_id, yaml_filename)
         restore_session(sbackup)
         docassemble.base.functions.restore_thread_variables(tbackup)
@@ -21309,7 +21406,7 @@ def jsonify_restart_task():
     pipe.set(the_key, json.dumps({'server_start_time': START_TIME}))
     pipe.expire(the_key, 3600)
     pipe.execute()
-    return jsonify({'task_id': code})
+    return jsonify({'task_id': code, 'success': True})
 
 
 def should_run_create(package_name):
