@@ -3,6 +3,48 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.0](https://github.com/jhpyle/docassemble/releases/tag/v1.9.0) - 2025-12-31
+
+
+### Added
+
+- The `.cancel_add_or_edit()` method of `DADict`.
+- The methods `_edit_button()`, `_delete_button()`, and
+  `_add_action_button()` of the `DADict` class, so that `DADict` can
+  be subclassed for customizing the appearance of these buttons.
+- The `remove()` class method of `DAGlobal` that can be used to delete
+  any key from the data store, for any given base.
+
+
+### Changed
+
+- Upgraded Python dependencies. Note that if you are using third-party
+  Python packages, you may encounter dependency conflicts. It is
+  possible that your interviews will need to be updated.
+- Upgraded Font Awesome, Bootstrap, and CodeMirror.
+- Use process-local rather than thread-local variables to store global
+  information in the context of the Celery background task system.
+- The `plain()`, `bold()`, and `italic()` functions will return the
+  empty string if given blank space.
+- Added additional information to Mako error messages.
+- The `.complete_elements()` method of `DAList` and `DADict` now
+  returns an object of the same class, rather than a pure Python data
+  structure.
+- The Google Drive sync and OneDrive sync result page now wait for
+  the server to finish restarting.
+
+
+### Fixed
+- Avoided `KeyError` error messages related to `gathering_mode` and
+  `save_status`.
+- Avoided translation of non-user-facing Mako template text in field
+  modifiers.
+- Fix to dictionary gathering.
+- The restart process from the Configuration page could show a 502
+  error to the user when the Python app is behind a reverse proxy.
+- The Microsoft Azure mail sending feature did not support sending to
+  bcc recipients.
+
 ## [1.8.18](https://github.com/jhpyle/docassemble/releases/tag/v1.8.18) - 2025-11-01
 
 
