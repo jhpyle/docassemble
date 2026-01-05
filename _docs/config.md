@@ -123,7 +123,8 @@ debug: True
 
 Setting `debug` to `True` enables the following features:
 
-* The "Source" button in the web app, which shows the [YAML] source code used
+* The "</>" button in the nav bar (called the source button) in
+  the web app, which shows the [YAML] source code used
   to generate the current question, an explanation of the path the
   interview took to get to the current question, and [readability
   statistics] for the question and the help text.
