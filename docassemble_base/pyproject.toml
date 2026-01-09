@@ -201,7 +201,7 @@ dependencies = [
   "user-agents==2.2.0",
   "wcwidth==0.2.14",
   "webencodings==0.5.1",
-  "Werkzeug==3.1.4",
+  "Werkzeug==3.1.5",
   "wheel==0.45.1",
   "wrapt==2.0.1",
   "xfdfgen==0.4",
