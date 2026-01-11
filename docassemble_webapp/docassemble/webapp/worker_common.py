@@ -48,12 +48,12 @@ class WorkerController:
     def initialize(self):
         if self.loaded:
             return
-        from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, obtain_lock_patiently, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification, noquote, update_last_login  # pylint: disable=import-outside-toplevel
-        from docassemble.webapp.server import app as flaskapp  # pylint: disable=import-outside-toplevel
-        import docassemble.webapp.update  # pylint: disable=import-outside-toplevel, redefined-outer-name
         import docassemble.base.functions  # pylint: disable=import-outside-toplevel
         docassemble.base.functions.server_context.context = 'celery'
         docassemble.base.functions.enable_threading()
+        from docassemble.webapp.server import set_request_active, fetch_user_dict, save_user_dict, obtain_lock, obtain_lock_patiently, release_lock, Message, reset_user_dict, da_send_mail, get_info_from_file_number, retrieve_email, trigger_update, r, apiclient, get_ext_and_mimetype, get_user_object, login_user, error_notification, noquote, update_last_login  # pylint: disable=import-outside-toplevel
+        from docassemble.webapp.server import app as flaskapp  # pylint: disable=import-outside-toplevel
+        import docassemble.webapp.update  # pylint: disable=import-outside-toplevel, redefined-outer-name
         import docassemble.base.interview_cache  # pylint: disable=import-outside-toplevel
         import docassemble.base.util  # pylint: disable=import-outside-toplevel
         import docassemble.base.parse  # pylint: disable=import-outside-toplevel
