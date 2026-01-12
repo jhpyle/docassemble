@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.9.1] - 2026-01-11
+
+### Fixed
+
+- Applied security-related patch upgrades.
+- Issue with `include_docx_template()` used in a Celery process.
+
 ## [1.9.0] - 2025-12-31
 
 ### Added

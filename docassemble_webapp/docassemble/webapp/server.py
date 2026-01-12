@@ -5333,9 +5333,12 @@ def oauth_callback(provider):
         return ('The method is not allowed for the requested URL.', 405)
     # for argument in request.args:
     #     logmessage("argument " + str(argument) + " is " + str(request.args[argument]))
-    oauth = OAuthSignIn.get_provider(provider)
+    try:
+        oauth = OAuthSignIn.get_provider(provider)
+    except KeyError:
+        abort(404)
     if not oauth.enabled():
-        abort(403)
+        abort(404)
     social_id, username, email, name_data = oauth.callback()
     if not verify_email(email):
         flash(word('E-mail addresses with this domain are not authorized to register for accounts on this system.'), 'error')
