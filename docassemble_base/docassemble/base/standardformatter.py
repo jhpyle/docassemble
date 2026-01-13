@@ -562,7 +562,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
         if use_fieldset == 1:
             aria_req += 'role="radiogroup" '
         id_for_label = f'da-label-{field.number}'
-        aria_lb = f' aria-labeledby="{id_for_label}" '
+        aria_lb = f' aria-labelledby="{id_for_label}" '
         label_id = f' id="{id_for_label}"'
     else:
         enclosing_type = 'div'
