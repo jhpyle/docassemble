@@ -35,7 +35,7 @@ dependencies = [
   "atomicwrites==1.4.1",
   "attrs==25.4.0",
   "azure-common==1.1.28",
-  "azure-core==1.37.0",
+  "azure-core==1.38.0",
   "azure-identity==1.25.1",
   "azure-keyvault-secrets==4.10.0",
   "azure-nspkg==3.0.2",
