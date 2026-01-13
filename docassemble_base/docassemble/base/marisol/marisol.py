@@ -27,7 +27,7 @@ class RedactionStyle(Enum):
 
 class Marisol:
 
-    def __init__(self, prefix, fill, start, area=Area.BOTTOM_RIGHT):
+    def __init__(self, prefix, fill, start, area=Area.BOTTOM_RIGHT, offset_horizontal=None, offset_vertical=None, font_size=None):
         """
         Marisol Base Class - A collection of documents to be bates numbered.
 
@@ -36,6 +36,9 @@ class Marisol:
             fill (int): Length for zero-filling
             start (int): Starting bates number
             area (Area): Area in which to place the bates number.
+            offset_horizontal: distance from the left or right edge to place the bates number
+            offset_vertical: distance from the top or bottom edge to place the bates number
+            font_size: the size of the font for the bates number
         """
         self.prefix = prefix
         self.fill = fill
@@ -46,6 +49,9 @@ class Marisol:
         self.number = 0
 
         self.documents = []
+        self.offset_horizontal = offset_horizontal
+        self.offset_vertical = offset_vertical
+        self.font_size = font_size
         self.overwrite = False
 
     def __getitem__(self, key):
@@ -90,7 +96,7 @@ class Marisol:
         Returns:
             marisol.Marisol: The current Marisol instance.
         """
-        d = Document(file, self.prefix, self.fill, self.start+self.number, self.area)
+        d = Document(file, self.prefix, self.fill, self.start+self.number, self.area, self.offset_horizontal, self.offset_vertical, self.font_size)
         self.number += len(d)
         self.documents.append(d)
         return self
@@ -114,7 +120,7 @@ class Marisol:
 
 class Document:
 
-    def __init__(self, file, prefix, fill, start, area):
+    def __init__(self, file, prefix, fill, start, area, offset_horizontal=None, offset_vertical=None, font_size=None):
         """
         Represents a document to be numbered.
 
@@ -124,6 +130,9 @@ class Document:
             fill (int): Length to zero-pad number to.
             start (int): Number to start with.
             area (Area): Area on the document where the number should be drawn
+            offset_horizontal: distance from the left or right edge to place the bates number
+            offset_vertical: distance from the top or bottom edge to place the bates number
+            font_size: the size of the font for the bates number
         """
         self.reader = Pdf.open(file)
         self.prefix = prefix
@@ -132,13 +141,13 @@ class Document:
         self.area = area
 
         self.overlays = {x: None for x in Area}
-        self.overlays[area] = BatesOverlay(None, self.area)
+        self.overlays[area] = BatesOverlay(None, self.area, offset_horizontal, offset_vertical)
 
         self.index = 0
 
         self.pages = []
         for num, page in enumerate(self.reader.pages):
-            p = Page(self, page, self.prefix, self.fill, self.start + num)
+            p = Page(self, page, self.prefix, self.fill, self.start + num, font_size)
             self.pages.append(p)
 
     def __getitem__(self, k):
@@ -226,7 +235,7 @@ class Document:
 
 class Page:
 
-    def __init__(self, document, page, prefix, fill, start):
+    def __init__(self, document, page, prefix, fill, start, font_size=None):
         """
         Represents a page within a document that will be bates numbered.
 
@@ -236,6 +245,7 @@ class Page:
             prefix (str): Bates number prefix.
             fill (int): Length to zero-pad number to.
             start (int): Number to start with.
+            font_size: the size of the font for the bates number
         """
         self.document = document
         self.page = page
@@ -248,6 +258,7 @@ class Page:
 
         self.canvas_file = io.BytesIO()
         self.canvas = canvas.Canvas(self.canvas_file, pagesize=(self.width, self.height))
+        self.canvas.setFontSize(font_size)
 
         self.redactions = []
 
@@ -310,9 +321,11 @@ class Page:
 
 class GenericTextOverlay:
 
-    def __init__(self, text, area):
+    def __init__(self, text, area, offset_horizontal=15, offset_vertical=15):
         self.text = text
         self.area = area
+        self.offset_horizontal = offset_horizontal
+        self.offset_vertical = offset_vertical
 
     def apply(self, c):
         """
@@ -335,14 +348,14 @@ class GenericTextOverlay:
             tuple: the position
         """
         if self.area in [Area.TOP_LEFT, Area.TOP_RIGHT]:  # top
-            from_bottom = c._pagesize[1]-15  # 15 down from height of page
+            from_bottom = c._pagesize[1] - self.offset_vertical # down from height of page
         elif self.area in [Area.BOTTOM_LEFT, Area.BOTTOM_RIGHT]:  # bottom
-            from_bottom = 15  # 15 up from bottom of page
+            from_bottom = self.offset_vertical  # up from bottom of page
 
         if self.area in [Area.TOP_LEFT, Area.BOTTOM_LEFT]:  # left
-            from_left = 15
+            from_left = self.offset_horizontal
         elif self.area in [Area.TOP_RIGHT, Area.BOTTOM_RIGHT]:  # right
-            offset = 15  # initial offset
+            offset = self.offset_horizontal  # initial offset
             offset += c.stringWidth(self.text)  # offset for text length
             from_left = c._pagesize[0]-offset
 
