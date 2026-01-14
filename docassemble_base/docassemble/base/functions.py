@@ -5418,6 +5418,8 @@ def safe_json(the_object, level=0, is_key=False):
         for sub_object in the_object:
             new_list.append(safe_json(sub_object, level=level+1))
         return new_list
+    if the_object.__class__.__name__ == "DAEmpty":
+        return the_object.to_json()
     if hasattr(the_object, "as_dict") and callable(the_object.as_dict):
         return the_object.as_dict()
     if hasattr(the_object, "to_json") and callable(the_object.to_json):
