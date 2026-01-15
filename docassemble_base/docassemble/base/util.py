@@ -604,6 +604,9 @@ class DAEmpty:
     def __hash__(self):
         return hash(('',))
 
+    def to_dict(self):
+        return self.to_json()
+
     def to_json(self):
         output = {'_class': 'docassemble.base.util.DAEmpty'}
         try:
