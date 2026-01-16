@@ -211,7 +211,7 @@ dependencies = [
   "psutil==7.2.0",
   "psycopg2-binary==2.9.11",
   "pwdlib==0.3.0",
-  "pyasn1==0.6.1",
+  "pyasn1==0.6.2",
   "pyasn1_modules==0.4.2",
   "pycountry==24.6.1",
   "pycparser==2.23",
