@@ -5289,13 +5289,16 @@ class DAFile(DAObject):
         digits = kwargs.get('digits', 5)
         start = kwargs.get('start', 1)
         area = kwargs.get('area', None)
+        font_size = kwargs.get('font_size', 10)
+        offset_horizontal = kwargs.get('offset_horizontal', 15)
+        offset_vertical = kwargs.get('offset_vertical', 15)
         if area is None:
             area = 'BOTTOM_RIGHT'
         if area not in ('TOP_LEFT', 'TOP_RIGHT', 'BOTTOM_RIGHT', 'BOTTOM_LEFT'):
             raise DAError("bates_number: area must be one of TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, or BOTTOM_LEFT")
         if filename is None:
             filename = 'file.pdf'
-        args = [os.path.join(server.daconfig['modules'], 'bin', 'python'), '-m', 'docassemble.base.bates', '--prefix', str(prefix), '--digits', str(digits), '--start', str(start), '--area', area]
+        args = [os.path.join(server.daconfig['modules'], 'bin', 'python'), '-m', 'docassemble.base.bates', '--prefix', str(prefix), '--digits', str(digits), '--start', str(start), '--area', area, '--font-size', str(font_size), '--offset-horizontal', str(offset_horizontal), '--offset-vertical', str(offset_vertical)]
         for doc in docs:
             if isinstance(doc, str):
                 args.append(doc)
