@@ -202,7 +202,7 @@ dependencies = [
   "wcwidth==0.2.14",
   "webencodings==0.5.1",
   "Werkzeug==3.1.5",
-  "wheel==0.45.1",
+  "wheel==0.46.2",
   "wrapt==2.0.1",
   "xfdfgen==0.4",
   "xlrd==2.0.2",
