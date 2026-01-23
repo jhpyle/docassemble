@@ -1583,7 +1583,7 @@ The available keys for the dictionary are:
   screen.  If it is `Fruit ${ i + 1 },` the items will be labeled
   "Fruit 1," "Fruit 2," etc.
 * `is final`: this can be `True`, `False`, or [Python] code that
-  evaluates to a true or false value.  If the value is true, then the
+  evaluates to a true or false value.  If the value is `False`, then the
   `there_is_another` attribute will be set to `True` when the user
   presses the Continue button.  The default value is `True`.
 * `allow append`: this can be `True`, `False`, or [Python] code that
