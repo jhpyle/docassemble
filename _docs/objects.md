@@ -562,7 +562,7 @@ Other methods available on a `DAList` are:
   gathering is complete, `hook_after_gather()` should not trigger the
   asking of any [`question`]s or the running of any [`code`] blocks,
   because the logic will not be idempotent; there would be no reason
-  in the for the `hook_after_gather()` method to be called again.  By
+  for the `hook_after_gather()` method to be called again.  By
   contrast, the `hook_on_gather()` method can trigger the asking of
   [`question`]s or the running of [`code`] blocks, since the
   completion of `hook_on_gather()` is a prerequisite to the list being
