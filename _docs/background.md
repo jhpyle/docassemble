@@ -170,7 +170,7 @@ called `the_task`.  This variable can be used in the following ways:
 * `the_task.get()` returns the result of the task.  If the task has
   not been completed yet, the system will wait until the task is
   completed and then return the result of the task. If the task or an
-  action triggered by the task (like a `background_error_action`
+  action triggered by the task (including a `background_error_action`)
   raised an error, `the_task.get()` returns `None`.
 * `the_task.result()` is like `.get()`, except it returns an object
   containing details about the result of the task.  This is useful
