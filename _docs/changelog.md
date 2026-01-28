@@ -3,6 +3,20 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.2](https://github.com/jhpyle/docassemble/releases/tag/v1.9.2) - 2026-01-27
+
+
+### Added
+- The `allow external auth to bypass local auth` Configuration
+  directive.
+
+
+### Changed
+- The `.bates_number()` method of `DAFile` now accepts parameters
+  `offset_horizontal`, `offset_vertical`, and `font_size`.
+- Upgraded `azure-core`, `wheel`, `numpy`, and `pyasn1`.
+- Downgraded `contourpy` to avoid requiring Python 3.11.
+
 ## [1.9.1](https://github.com/jhpyle/docassemble/releases/tag/v1.9.1) - 2026-01-11
 
 

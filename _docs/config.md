@@ -5286,10 +5286,30 @@ allow external auth with multiple methods: True
 
 The default is `False`.
 
-Note that if you enable this feature, users may experience an apparent
-loss in access to sessions. While they are allowed to log in to the
-same account, because it has the same email address, the encryption
-key will be different because the authentication method is different.
+Note that if you enable this feature, you should set `multi_user =
+True` and refrain from using any features that use
+encryption. Encryption features rely on a stable encryption key, which
+is not stored on the server. Each authentication method has as
+different encryption key associated with it.
+
+<a name="allow external auth to bypass local auth"></a>By default, a
+user who has a username/password account must use the password method
+to log in. If you want to allow users to sign in with an external
+authentication method after they have already created a
+username/password account, set `allow external auth to bypass local
+auth` to `True`:
+
+{% highlight yaml %}
+allow external auth to bypass local auth: True
+{% endhighlight %}
+
+The default is `False`.
+
+Note that if you enable this feature, you should set `multi_user =
+True` and refrain from using any features that use
+encryption. Encryption features rely on a stable encryption key, which
+is not stored on the server. Each authentication method has as
+different encryption key associated with it.
 
 ## <a name="googledrive"></a>Google Drive configuration
 
