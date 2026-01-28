@@ -1,0 +1,25 @@
+metadata:
+  title: Numbers
+  documentation: "https://docassemble.org/docs/fields.html#number"
+---
+features:
+  numeric inputs: True
+---
+question: |
+  Describe your possessions.
+fields:
+  - Number of cars: number_cars
+    datatype: integer
+  - Ounces of gold: gold_ounces
+    datatype: number
+---
+question: Result of question
+subquestion: |
+  % if int(number_cars) == 1:
+  You have only one car.
+  % else:
+  You have ${ number_cars } cars.
+  % endif
+  You also have ${ gold_ounces }
+  ounces of gold.
+mandatory: True

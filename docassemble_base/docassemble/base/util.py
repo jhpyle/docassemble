@@ -57,7 +57,7 @@ from docassemble.base.config import in_celery, daconfig
 from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError, DAException
 from docassemble.base.file_docx import include_docx_template
 from docassemble.base.filter import markdown_to_html
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, get_voice, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, update_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, this_thread, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, current_context, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, invite_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
+from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, get_voice, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, update_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, current_context, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, invite_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
 from docassemble.base.generate_key import random_alphanumeric, random_string
 from docassemble.base.logger import logmessage
 from docassemble.base.pandoc import word_to_markdown, concatenate_files, can_convert_word_to_markdown
@@ -604,7 +604,7 @@ class DAEmpty:
     def __hash__(self):
         return hash(('',))
 
-    def to_dict(self):
+    def as_dict(self):
         return self.to_json()
 
     def to_json(self):
@@ -899,7 +899,7 @@ class DAObject:
     def get_point_of_view(self):
         if hasattr(self, '_point_of_view'):
             return self._point_of_view
-        if self is this_thread.global_vars.user:
+        if self is docassemble.base.functions.this_thread.global_vars.user:
             return '2'
         return None
 
@@ -1064,7 +1064,7 @@ class DAObject:
 
     def is_user(self):
         """Returns True if the object is the user, otherwise False."""
-        return self is this_thread.global_vars.user
+        return self is docassemble.base.functions.this_thread.global_vars.user
 
     def initializeAttribute(self, *pargs, **kwargs):
         """Defines an attribute for the object, setting it to a newly initialized object.
@@ -7078,33 +7078,33 @@ class DAGlobal(DAObject):
     @classmethod
     def keys(cls, base):
         if base == 'interview':
-            globalbase = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', ''))
+            globalbase = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', ''))
         elif base == 'global':
             globalbase = 'da:daglobal:global'
         else:
-            globalbase = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id'])
+            globalbase = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
         return server.server_sql_keys(globalbase + ':')
 
     @classmethod
     def defined(cls, base, key):
         """Returns True if the key exists in the data store, otherwise returns False."""
         if base == 'interview':
-            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
+            globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
         elif base == 'global':
             globalkey = 'da:daglobal:global:' + str(key)
         else:
-            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(key)
+            globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(key)
         return server.server_sql_defined(globalkey)
 
     @classmethod
     def remove(cls, base, key):
         """Deletes the key from the data store."""
         if base == 'interview':
-            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
+            globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
         elif base == 'global':
             globalkey = 'da:daglobal:global:' + str(key)
         else:
-            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(key)
+            globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(key)
         server.server_sql_delete(globalkey)
 
     def init(self, *pargs, **kwargs):
@@ -7114,11 +7114,11 @@ class DAGlobal(DAObject):
         if 'key' not in kwargs:
             self.key = random_alphanumeric(32)
         if self.base == 'interview':
-            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
+            globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
         elif self.base == 'global':
             globalkey = 'da:daglobal:global:' + str(self.key)
         else:
-            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
+            globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
         saved_dict = server.server_sql_get(globalkey)  # pylint: disable=assignment-from-none
         if isinstance(saved_dict, dict):
             for key, val in saved_dict.items():
@@ -7127,11 +7127,11 @@ class DAGlobal(DAObject):
     def __getstate__(self):
         if hasattr(self, 'base') and hasattr(self, 'key'):
             if self.base == 'interview':
-                globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
+                globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
             elif self.base == 'global':
                 globalkey = 'da:daglobal:global:' + str(self.key)
             else:
-                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
+                globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
             dict_to_save = copy.copy(self.__dict__)
             dict_to_return = {'attrList': []}
             if 'instanceName' in dict_to_save:
@@ -7155,11 +7155,11 @@ class DAGlobal(DAObject):
         self.__dict__ = pickle_dict
         if 'base' in pickle_dict and 'key' in pickle_dict:
             if pickle_dict['base'] == 'interview':
-                globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(pickle_dict['key'])
+                globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(pickle_dict['key'])
             elif pickle_dict['base'] == 'global':
                 globalkey = 'da:daglobal:global:' + str(pickle_dict['key'])
             else:
-                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(pickle_dict['key'])
+                globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(pickle_dict['key'])
 
             saved_dict = server.server_sql_get(globalkey)  # pylint: disable=assignment-from-none
             if isinstance(saved_dict, dict):
@@ -7170,11 +7170,11 @@ class DAGlobal(DAObject):
         """Deletes the data in the global storage area and undefines all attributes."""
         if hasattr(self, 'base') and hasattr(self, 'key'):
             if self.base == 'interview':
-                globalkey = 'da:daglobal:i:' + this_thread.current_info.get('yaml_filename', '') + ':' + self.key
+                globalkey = 'da:daglobal:i:' + docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') + ':' + self.key
             elif self.base == 'global':
                 globalkey = 'da:daglobal:global:' + self.key
             else:
-                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + self.key
+                globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + self.key
             server.server_sql_delete(globalkey)
             self.__dict__ = {'instanceName': self.instanceName, 'attrList': [], 'has_nonrandom_instance_name': self.has_nonrandom_instance_name}
 
@@ -7201,15 +7201,15 @@ class DAStore(DAObject):
     def _get_base_key(self):
         if hasattr(self, 'base'):
             if self.base == 'interview':
-                return 'da:i:' + this_thread.current_info.get('yaml_filename', '')
+                return 'da:i:' + docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')
             if self.base == 'user':
-                return 'da:userid:' + str(this_thread.current_info['user']['the_user_id'])
+                return 'da:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
             if self.base == 'session':
-                return 'da:uid:' + get_uid() + ':i:' + this_thread.current_info.get('yaml_filename', '')
+                return 'da:uid:' + get_uid() + ':i:' + docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')
             if self.base == 'global':
                 return 'da:global'
             return str(self.base)
-        return 'da:userid:' + str(this_thread.current_info['user']['the_user_id'])
+        return 'da:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
 
     def defined(self, key):
         """Returns True if the key exists in the data store, otherwise returns False."""
@@ -7219,12 +7219,12 @@ class DAStore(DAObject):
     def get(self, key):
         """Reads an object from the data store for the given key."""
         the_key = self._get_base_key() + ':' + key
-        return server.server_sql_get(the_key, secret=this_thread.current_info.get('secret', None))
+        return server.server_sql_get(the_key, secret=docassemble.base.functions.this_thread.current_info.get('secret', None))
 
     def set(self, key, the_value):
         """Writes an object to the data store under the given key."""
         the_key = self._get_base_key() + ':' + key
-        server.server_sql_set(the_key, the_value, encrypted=self.is_encrypted(), secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
+        server.server_sql_set(the_key, the_value, encrypted=self.is_encrypted(), secret=docassemble.base.functions.this_thread.current_info.get('secret', None), the_user_id=docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
 
     def delete(self, key):
         """Deletes an object from the data store"""
@@ -7522,7 +7522,7 @@ class DARedis(DAObject):
 
     def key(self, keyname):
         """Returns a key that combines the interview name with the keyname."""
-        return this_thread.current_info.get('yaml_filename', '') + ':' + str(keyname)
+        return docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') + ':' + str(keyname)
 
     def get_data(self, key):
         """Returns data from Redis and unpickles it."""
@@ -7691,9 +7691,9 @@ class DAGoogleAPI(DAObject):
 def run_python_module(module, arguments=None):
     """Runs a python module, as though from the command line, and returns the output."""
     if re.search(r'\.py$', module):
-        module = this_thread.current_package + '.' + re.sub(r'\.py$', '', module)
+        module = docassemble.base.functions.this_thread.current_package + '.' + re.sub(r'\.py$', '', module)
     elif re.search(r'^\.', module):
-        module = this_thread.current_package + module
+        module = docassemble.base.functions.this_thread.current_package + module
     commands = [re.sub(r'/lib/python.*', '/bin/python3', docassemble.base.pandoc.__file__), '-m', module]
     if arguments:
         if not isinstance(arguments, list):
@@ -7788,11 +7788,11 @@ def year_of(the_date, language=None):
 
 
 def interview_default(the_part, default_value, language):
-    if the_part in this_thread.internal and this_thread.internal[the_part] is not None:
-        return this_thread.internal[the_part]
+    if the_part in docassemble.base.functions.this_thread.internal and docassemble.base.functions.this_thread.internal[the_part] is not None:
+        return docassemble.base.functions.this_thread.internal[the_part]
     for lang in (language, get_language(), '*'):
-        if lang is not None and this_thread.interview is not None and lang in this_thread.interview.default_title and the_part in this_thread.interview.default_title[lang]:
-            return this_thread.interview.default_title[lang][the_part]
+        if lang is not None and docassemble.base.functions.this_thread.interview is not None and lang in docassemble.base.functions.this_thread.interview.default_title and the_part in docassemble.base.functions.this_thread.interview.default_title[lang]:
+            return docassemble.base.functions.this_thread.interview.default_title[lang][the_part]
     return default_value
 
 
@@ -8114,7 +8114,7 @@ def returning_user(minutes=None, hours=None, days=None):
     keyword arguments minutes, hours, or days.
 
     """
-    if this_thread.current_info['method'] != 'GET':
+    if docassemble.base.functions.this_thread.current_info['method'] != 'GET':
         return False
     if minutes is not None and last_access_minutes() > minutes:
         return True
@@ -8176,7 +8176,7 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
                 exclude_privileges = [exclude_privileges]
     else:
         exclude_privileges = []
-    for user_id, access_time in this_thread.internal['accesstime'].items():
+    for user_id, access_time in docassemble.base.functions.this_thread.internal['accesstime'].items():
         if user_id == -1:
             if 'anonymous' in exclude_privileges:
                 continue
@@ -8212,8 +8212,8 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
 def start_time(timezone=None):
     """Returns the time the interview was started, as a DADateTime object."""
     if timezone is not None:
-        return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
-    return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc))
+        return dd(docassemble.base.functions.this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(docassemble.base.functions.this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc))
 
 
 class LatitudeLongitude(DAObject):
@@ -8240,14 +8240,14 @@ class LatitudeLongitude(DAObject):
 
     def _set_to_current(self):
         # logmessage("set to current")
-        if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and isinstance(this_thread.current_info['user']['location'], dict):
-            if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
-                self.latitude = this_thread.current_info['user']['location']['latitude']
-                self.longitude = this_thread.current_info['user']['location']['longitude']
+        if 'user' in docassemble.base.functions.this_thread.current_info and 'location' in docassemble.base.functions.this_thread.current_info['user'] and isinstance(docassemble.base.functions.this_thread.current_info['user']['location'], dict):
+            if 'latitude' in docassemble.base.functions.this_thread.current_info['user']['location'] and 'longitude' in docassemble.base.functions.this_thread.current_info['user']['location']:
+                self.latitude = docassemble.base.functions.this_thread.current_info['user']['location']['latitude']
+                self.longitude = docassemble.base.functions.this_thread.current_info['user']['location']['longitude']
                 self.known = True
                 # logmessage("known is true")
-            elif 'error' in this_thread.current_info['user']['location']:
-                self.error = this_thread.current_info['user']['location']['error']
+            elif 'error' in docassemble.base.functions.this_thread.current_info['user']['location']:
+                self.error = docassemble.base.functions.this_thread.current_info['user']['location']['error']
                 self.known = False
                 # logmessage("known is false")
             self.gathered = True
@@ -8285,7 +8285,7 @@ class RoleChangeTracker(DAObject):
         active of the interviewee.  Returns True if an e-mail was
         successfully sent.  Otherwise, returns False.  False could
         mean that it was not necessary to send an e-mail."""
-        # logmessage("Current role is " + str(this_thread.global_vars.role))
+        # logmessage("Current role is " + str(docassemble.base.functions.this_thread.global_vars.role))
         for key, val in kwargs.items():  # pylint: disable=unused-variable
             if 'to' in val:
                 need(val['to'].email)
@@ -8655,7 +8655,7 @@ class Address(DAObject):
 
     def block(self, language=None, international=False, show_country=None):
         """Returns the address formatted as a block, as in a mailing."""
-        if this_thread.evaluation_context == 'docx':
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
         else:
             line_breaker = " [NEWLINE] "
@@ -8879,7 +8879,7 @@ class Person(DAObject):
             result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
             if hasattr(self, 'icon'):
                 result['icon'] = self.icon
-            elif self is this_thread.global_vars.user:
+            elif self is docassemble.base.functions.this_thread.global_vars.user:
                 result['icon'] = DEFAULT_BLUE_ICON
             return [result]
         return None
@@ -8951,7 +8951,7 @@ class Person(DAObject):
 
     def address_block(self, language=None, international=False, show_country=False):
         """Returns the person name address as a block, for use in mailings."""
-        if this_thread.evaluation_context == 'docx':
+        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             return self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language, international=international, show_country=show_country)
         return "[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language, international=international, show_country=show_country)
 
@@ -9082,16 +9082,16 @@ class Individual(Person):
         """If the individual is the user and the user is logged in and
         the user has set up a name in the user profile, this returns
         the user's first name.  Otherwise, returns a blank string."""
-        if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
-            return this_thread.current_info['user']['firstname']
+        if self is docassemble.base.functions.this_thread.global_vars.user and docassemble.base.functions.this_thread.current_info['user']['is_authenticated'] and 'firstname' in docassemble.base.functions.this_thread.current_info['user'] and docassemble.base.functions.this_thread.current_info['user']['firstname']:
+            return docassemble.base.functions.this_thread.current_info['user']['firstname']
         return ''
 
     def last_name_hint(self):
         """If the individual is the user and the user is logged in and
         the user has set up a name in the user profile, this returns
         the user's last name.  Otherwise, returns a blank string."""
-        if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
-            return this_thread.current_info['user']['lastname']
+        if self is docassemble.base.functions.this_thread.global_vars.user and docassemble.base.functions.this_thread.current_info['user']['is_authenticated'] and 'lastname' in docassemble.base.functions.this_thread.current_info['user'] and docassemble.base.functions.this_thread.current_info['user']['lastname']:
+            return docassemble.base.functions.this_thread.current_info['user']['lastname']
         return ''
 
     def salutation(self, **kwargs):
@@ -9500,7 +9500,7 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
         if success:
             for the_attachment in attachment_list:
                 if isinstance(the_attachment, DAFile) and the_attachment.ok:
-                    # url = url_start + server.url_for('serve_stored_file', uid=this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
+                    # url = url_start + server.url_for('serve_stored_file', uid=docassemble.base.functions.this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
                     media.append(the_attachment.url_for(_external=True))
                 if isinstance(the_attachment, DAStaticFile):
                     media.append(the_attachment.url_for(_external=True))
@@ -9790,7 +9790,7 @@ def ocr_file_in_background(*pargs, **kwargs):
         arg_W = int_or_none(kwargs.get('W', None))
         arg_H = int_or_none(kwargs.get('H', None))
         the_message = kwargs.get('message', None)
-        args = {'yaml_filename': this_thread.current_info['yaml_filename'], 'user': this_thread.current_info['user'], 'user_code': this_thread.current_info['session'], 'secret': this_thread.current_info['secret'], 'url': this_thread.current_info['url'], 'url_root': this_thread.current_info['url_root'], 'language': language, 'f': arg_f, 'l': arg_l, 'psm': arg_psm, 'x': arg_x, 'y': arg_y, 'W': arg_W, 'H': arg_H, 'extra': ui_notification, 'message': the_message, 'pdf': False, 'preserve_color': False}
+        args = {'yaml_filename': docassemble.base.functions.this_thread.current_info['yaml_filename'], 'user': docassemble.base.functions.this_thread.current_info['user'], 'user_code': docassemble.base.functions.this_thread.current_info['session'], 'secret': docassemble.base.functions.this_thread.current_info['secret'], 'url': docassemble.base.functions.this_thread.current_info['url'], 'url_root': docassemble.base.functions.this_thread.current_info['url_root'], 'language': language, 'f': arg_f, 'l': arg_l, 'psm': arg_psm, 'x': arg_x, 'y': arg_y, 'W': arg_W, 'H': arg_H, 'extra': ui_notification, 'message': the_message, 'pdf': False, 'preserve_color': False}
         collector = server.ocr_finalize.s(**args)
         todo = []
         indexno = 0
@@ -9799,7 +9799,7 @@ def ocr_file_in_background(*pargs, **kwargs):
             indexno += 1
         the_task = server.chord(todo)(collector)  # pylint: disable=assignment-from-none
     if ui_notification is not None:
-        worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
+        worker_key = 'da:worker:uid:' + str(docassemble.base.functions.this_thread.current_info['session']) + ':i:' + str(docassemble.base.functions.this_thread.current_info['yaml_filename']) + ':userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
         # logmessage("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key)
         server.server_redis.rpush(worker_key, the_task.id)
     # logmessage("ocr_file_in_background finished")
@@ -9809,7 +9809,7 @@ def ocr_file_in_background(*pargs, **kwargs):
 #     """Starts optical character recognition on one or more image files or PDF
 #     files and returns an object representing the background task created."""
 #     logmessage("ocr_file_in_background: started")
-#     return server.async_ocr(image_file, ui_notification=ui_notification, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=this_thread.current_info.get('session', None))
+#     return server.async_ocr(image_file, ui_notification=ui_notification, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=docassemble.base.functions.this_thread.current_info.get('session', None))
 
 
 def get_work_bucket():
@@ -10515,45 +10515,45 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
 
 def explain(the_explanation, category='default'):
     """Add a line to the explanations history."""
-    if 'explanations' not in this_thread.internal:
-        this_thread.internal['explanations'] = {}
-    if category not in this_thread.internal['explanations']:
-        this_thread.internal['explanations'][category] = []
-    if the_explanation not in this_thread.internal['explanations'][category]:
-        this_thread.internal['explanations'][category].append(the_explanation)
+    if 'explanations' not in docassemble.base.functions.this_thread.internal:
+        docassemble.base.functions.this_thread.internal['explanations'] = {}
+    if category not in docassemble.base.functions.this_thread.internal['explanations']:
+        docassemble.base.functions.this_thread.internal['explanations'][category] = []
+    if the_explanation not in docassemble.base.functions.this_thread.internal['explanations'][category]:
+        docassemble.base.functions.this_thread.internal['explanations'][category].append(the_explanation)
 
 
 def clear_explanations(category='default'):
     """Erases the history of explanations."""
-    if 'explanations' not in this_thread.internal:
+    if 'explanations' not in docassemble.base.functions.this_thread.internal:
         return
     if category == 'all':
-        this_thread.internal['explanations'] = {}
-    if category not in this_thread.internal['explanations']:
+        docassemble.base.functions.this_thread.internal['explanations'] = {}
+    if category not in docassemble.base.functions.this_thread.internal['explanations']:
         return
-    this_thread.internal['explanations'][category] = []
+    docassemble.base.functions.this_thread.internal['explanations'][category] = []
 
 
 def logic_explanation(category='default'):
     """Returns the list of explanations."""
-    if 'explanations' not in this_thread.internal:
+    if 'explanations' not in docassemble.base.functions.this_thread.internal:
         return []
-    return this_thread.internal['explanations'].get(category, [])
+    return docassemble.base.functions.this_thread.internal['explanations'].get(category, [])
 
 
 def set_status(**kwargs):
     """Sets various settings in the interview session."""
-    if 'misc' not in this_thread.internal:
-        this_thread.internal['misc'] = {}
+    if 'misc' not in docassemble.base.functions.this_thread.internal:
+        docassemble.base.functions.this_thread.internal['misc'] = {}
     for key, val in kwargs.items():
-        this_thread.internal['misc'][key] = val
+        docassemble.base.functions.this_thread.internal['misc'][key] = val
 
 
 def get_status(setting):
     """Retrieves a setting of the interview session."""
-    if 'misc' not in this_thread.internal:
+    if 'misc' not in docassemble.base.functions.this_thread.internal:
         return None
-    return this_thread.internal['misc'].get(setting, None)
+    return docassemble.base.functions.this_thread.internal['misc'].get(setting, None)
 
 
 def prevent_dependency_satisfaction(f):
@@ -10687,7 +10687,7 @@ def get_persistent_task_store(persistent):
     else:
         base = persistent
     if base == 'session':
-        encrypted = this_thread.current_info.get('encrypted', True)
+        encrypted = docassemble.base.functions.this_thread.current_info.get('encrypted', True)
         store = DAStore('store', base=base, encrypted=encrypted)
     else:
         store = DAStore('store', base=base)
@@ -10705,7 +10705,7 @@ def task_performed(task, persistent=False):
         if task in tasks and tasks[task]:  # pylint: disable=unsubscriptable-object,unsupported-membership-test
             return True
         return False
-    if task in this_thread.internal['tasks'] and this_thread.internal['tasks'][task]:
+    if task in docassemble.base.functions.this_thread.internal['tasks'] and docassemble.base.functions.this_thread.internal['tasks'][task]:
         return True
     return False
 
@@ -10729,10 +10729,10 @@ def mark_task_as_performed(task, persistent=False):
         tasks[task] += 1  # pylint: disable=unsupported-assignment-operation
         store.set('tasks', tasks)
         return tasks[task]  # pylint: disable=unsubscriptable-object
-    if task not in this_thread.internal['tasks']:
-        this_thread.internal['tasks'][task] = 0
-    this_thread.internal['tasks'][task] += 1
-    return this_thread.internal['tasks'][task]
+    if task not in docassemble.base.functions.this_thread.internal['tasks']:
+        docassemble.base.functions.this_thread.internal['tasks'][task] = 0
+    docassemble.base.functions.this_thread.internal['tasks'][task] += 1
+    return docassemble.base.functions.this_thread.internal['tasks'][task]
 
 
 def times_task_performed(task, persistent=False):
@@ -10744,9 +10744,9 @@ def times_task_performed(task, persistent=False):
         if task not in tasks:  # pylint: disable=unsupported-membership-test
             return 0
         return tasks[task]  # pylint: disable=unsubscriptable-object
-    if task not in this_thread.internal['tasks']:
+    if task not in docassemble.base.functions.this_thread.internal['tasks']:
         return 0
-    return this_thread.internal['tasks'][task]
+    return docassemble.base.functions.this_thread.internal['tasks'][task]
 
 
 def set_task_counter(task, times, persistent=False):
@@ -10758,7 +10758,7 @@ def set_task_counter(task, times, persistent=False):
         tasks[task] = times  # pylint: disable=unsupported-assignment-operation
         store.set('tasks', tasks)
         return
-    this_thread.internal['tasks'][task] = times
+    docassemble.base.functions.this_thread.internal['tasks'][task] = times
 
 
 def stash_data(data, expire=None):

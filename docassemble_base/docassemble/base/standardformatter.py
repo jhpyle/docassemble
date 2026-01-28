@@ -2427,7 +2427,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                   <div class="card-body">
                     <form aria-labelledby="daheadingOne" action=\"""" + root + """\" id="daemailform" class="form-horizontal" method="POST">
                       <input type="hidden" name="_question_name" value=""" + json.dumps(status.question.name, ensure_ascii=False) + """/>
-                      <div class="da-form-group row"><label for="da_attachment_email_address" class="col-""" + daconfig['grid classes']['label width'] + """ col-form-label da-form-label datext-right">""" + word('E-mail address') + """</label><div class="col-""" + daconfig['grid classes']['field width'] + """"><input alt=""" + fix_double_quote(word("Input box")) + """ class="form-control" type="email" name="_attachment_email_address" id="da_attachment_email_address" value=""" + fix_double_quote(str(default_email)) + """/></div></div>"""
+                      <div class="da-form-group row"><label for="da_attachment_email_address" class="col-""" + daconfig['grid classes']['label width'] + ' col-form-label da-form-label datext-right">' + word('E-mail address') + '</label><div class="col-' + daconfig['grid classes']['field width'] + '"><input alt=' + fix_double_quote(word("Input box")) + ' class="form-control" type="email" name="_attachment_email_address" id="da_attachment_email_address" value=' + fix_double_quote(str(default_email)) + '/></div></div>'
                 if editable_included:
                     if automatically_include_editable:
                         output += """

@@ -53,7 +53,7 @@ bash -c \
 && python3 -m venv --copies /usr/share/docassemble/local3.12 \
 && source /usr/share/docassemble/local3.12/bin/activate \
 && pip install --upgrade pip==25.3 \
-&& pip install --upgrade wheel==0.45.1 \
+&& pip install --upgrade wheel==0.46.2 \
 && pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \
    acme==5.2.2 \

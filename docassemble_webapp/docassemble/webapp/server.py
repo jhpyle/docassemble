@@ -5352,7 +5352,7 @@ def oauth_callback(provider):
         if user and not user.social_id.startswith('local') and not daconfig.get('allow external auth with multiple methods', False) and social_id.split('$')[0] != user.social_id.split('$')[0]:
             flash(word('There is already an account on the system with the e-mail address') + " " + str(email) + ".  " + word("Please log in to that account."), 'error')
             return redirect(url_for('user.login'))
-    if user and user.social_id is not None and user.social_id.startswith('local'):
+    if user and user.social_id is not None and user.social_id.startswith('local') and not daconfig.get('allow external auth to bypass local auth', False):
         flash(word('There is already a username and password on this system with the e-mail address') + " " + str(email) + ".  " + word("Please log in."), 'error')
         return redirect(url_for('user.login'))
     if not user:

@@ -4,7 +4,8 @@ import os
 import json
 import sqlalchemy
 from docassemble.base.logger import logmessage
-from docassemble.base.functions import server, this_thread
+import docassemble.base.functions
+from docassemble.base.functions import server
 from docassemble.base.util import DAList, DAObjectPlusParameters
 from docassemble.base.error import DAAttributeError, DAException
 from alembic.config import Config
@@ -72,8 +73,8 @@ class SQLObject:
 
     @classmethod
     def filter(cls, instance_name, **kwargs):
-        if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = {}
+        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
+            docassemble.base.functions.this_thread.misc['dbcache'] = {}
         listobj = DAList(instance_name, object_type=cls, auto_gather=False)
         filters = []
         for key, val in kwargs.items():
@@ -81,8 +82,8 @@ class SQLObject:
                 raise DAException("filter: class " + cls.__name__ + " does not have column " + key)
             filters.append(getattr(cls._model, key) == val)
         for db_entry in list(cls._session.query(cls._model).filter(*filters).order_by(cls._model.id).all()):
-            if cls._model.__name__ in this_thread.misc['dbcache'] and db_entry.id in this_thread.misc['dbcache'][cls._model.__name__]:
-                listobj.append(this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
+            if cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and db_entry.id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
+                listobj.append(docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
             else:
                 obj = listobj.appendObject()
                 obj.id = db_entry.id
@@ -107,16 +108,16 @@ class SQLObject:
 
     @classmethod
     def all(cls, instance_name=None):
-        if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = {}
+        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
+            docassemble.base.functions.this_thread.misc['dbcache'] = {}
         if instance_name:
             listobj = DAList(instance_name, object_type=cls)
         else:
             listobj = DAList(object_type=cls)
             listobj.set_random_instance_name()
         for db_entry in list(cls._session.query(cls._model).order_by(cls._model.id).all()):
-            if cls._model.__name__ in this_thread.misc['dbcache'] and db_entry.id in this_thread.misc['dbcache'][cls._model.__name__]:
-                listobj.append(this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
+            if cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and db_entry.id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
+                listobj.append(docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
             else:
                 obj = listobj.appendObject()
                 obj.id = db_entry.id
@@ -134,12 +135,12 @@ class SQLObject:
 
     @classmethod
     def by_id(cls, the_id, instance_name=None):
-        if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = {}
-        if cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
+        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
+            docassemble.base.functions.this_thread.misc['dbcache'] = {}
+        if cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and the_id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
             if instance_name is None:
-                return this_thread.misc['dbcache'][cls._model.__name__][the_id]
-            obj = this_thread.misc['dbcache'][cls._model.__name__][the_id]
+                return docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]
+            obj = docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]
             obj.fix_instance_name(obj.instanceName, instance_name)
         if instance_name is None:
             obj = cls(id=the_id)
@@ -169,8 +170,8 @@ class SQLObject:
     def delete_by_id(cls, the_id):
         cls._session.query(cls._model).filter(cls._model.id == the_id).delete()
         cls._session.commit()
-        if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
-            this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
+        if 'dbcache' in docassemble.base.functions.this_thread.misc and cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and the_id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
+            docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
 
     @classmethod
     def delete_by_uid(cls, uid):
@@ -181,8 +182,8 @@ class SQLObject:
             the_id = db_entry.id
             cls._session.query(cls._model).filter(getattr(cls._model, cls._uid) == uid).delete()
             cls._session.commit()
-            if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
-                this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
+            if 'dbcache' in docassemble.base.functions.this_thread.misc and cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and the_id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
+                docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
 
     @classmethod
     def id_exists(cls, the_id):
@@ -201,25 +202,25 @@ class SQLObject:
         return True
 
     def db_from_cache(self, the_id):
-        if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = {}
-        if self._model.__name__ not in this_thread.misc['dbcache']:
-            this_thread.misc['dbcache'][self._model.__name__] = {}
-        if the_id in this_thread.misc['dbcache'][self._model.__name__]:
-            return this_thread.misc['dbcache'][self._model.__name__][the_id]
+        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
+            docassemble.base.functions.this_thread.misc['dbcache'] = {}
+        if self._model.__name__ not in docassemble.base.functions.this_thread.misc['dbcache']:
+            docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__] = {}
+        if the_id in docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__]:
+            return docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__][the_id]
         return None
 
     def db_cache(self):
-        if 'dbcache' not in this_thread.misc:
-            this_thread.misc['dbcache'] = {}
-        if self._model.__name__ not in this_thread.misc['dbcache']:
-            this_thread.misc['dbcache'][self._model.__name__] = {}
+        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
+            docassemble.base.functions.this_thread.misc['dbcache'] = {}
+        if self._model.__name__ not in docassemble.base.functions.this_thread.misc['dbcache']:
+            docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__] = {}
         if hasattr(self, 'id'):
-            this_thread.misc['dbcache'][self._model.__name__][self.id] = self
+            docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__][self.id] = self
 
     def __del__(self):
-        if hasattr(self, 'id') and 'dbcache' in this_thread.misc and self._model.__name__ in this_thread.misc['dbcache'] and self.id in this_thread.misc['dbcache'][self._model.__name__]:
-            del this_thread.misc['dbcache'][self._model.__name__][self.id]
+        if hasattr(self, 'id') and 'dbcache' in docassemble.base.functions.this_thread.misc and self._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and self.id in docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__]:
+            del docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__][self.id]
 
     def db_delete(self):
         self.db_read()
