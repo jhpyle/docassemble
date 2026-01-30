@@ -71,6 +71,13 @@ such as code that looks up information in an on-line database, the
 screen will take a long time to load and the user may think that the
 application has "crashed" when it is actually just working normally.
 
+In addition, code that runs too long in the foreground (four or more
+seconds by default) can get in the way of the [concurrency lock timeout
+system](https://docassemble.org/docs/config.html#locktimeout). This may
+make multiple threads interfere with each other with unexpected
+consequences. For example, it may cause variables to revert to old
+values, including `undefined`.
+
 To get around this problem, **docassemble** allows interview developers
 to run code in "background processes."  While the user is answering
 other questions, or looking at a user-friendly screen that instructs
@@ -555,11 +562,11 @@ code, and the task ends with a call to
 [`background_response_action()`], the "background response action"
 will not run until the interview code is done processing.
 
-This waiting is necessary to prevent concurrent processes from
-stepping on each others' toes.  Note, however, that the waiting will
-"time out" after four seconds.  For this reason, your interview code
-and your "background response actions" should be designed to always
-finish in well under four seconds.
+This waiting is necessary to [prevent concurrent processes from
+stepping on each others' toes](https://docassemble.org/docs/config.html#locktimeout).
+Note, however, that the waiting will "time out" after four seconds.
+For this reason, your interview code and your "background response
+actions" should be designed to always finish in well under four seconds.
 
 This waiting also imposes some limitations on what you can do in your
 interview code.  For example, if you are using
