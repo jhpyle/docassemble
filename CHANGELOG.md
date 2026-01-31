@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.9.3] - 2026-
+
+### Changed
+
+- Downgraded `numpy` to allow Python 3.10 to be used.
+
+### Fixed
+
+- Avoided network error during upgrade process due to overly large log
+  messages.
+
 ## [1.9.2] - 2026-01-27
 
 ### Added

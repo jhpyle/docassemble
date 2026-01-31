@@ -10530,6 +10530,8 @@ def update_package_ajax():
             if the_result.ok:
                 # logmessage("update_package_ajax: success")
                 if (hasattr(the_result, 'restart') and not the_result.restart) or (START_TIME > session['serverstarttime'] and not reset_process_running()):
+                    if len(the_result.logmessages) > 210000:
+                        the_result.logmessages = the_result.logmessages[0:100000] + "\n\nTRUNCATED\n\n" + the_result.logmessages[-100000:]
                     return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
                 return jsonify(success=True, status='waiting')
             if hasattr(the_result, 'error_message'):
