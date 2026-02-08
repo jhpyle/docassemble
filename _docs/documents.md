@@ -104,7 +104,7 @@ spaces, so you can write:
 I
 % if employed:
 have a job.
-% else
+% else:
 am unemployed.
 % endif
 {% endhighlight %}
