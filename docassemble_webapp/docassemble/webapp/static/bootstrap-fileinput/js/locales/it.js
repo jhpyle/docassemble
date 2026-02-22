@@ -1,7 +1,7 @@
 /*!
  * FileInput Italian Translation
  * 
- * Author: Lorenzo Milesi <maxxer@yetopen.it>
+ * Author: Lorenzo Milesi <maxxer@yetopen.it>, Albano Battistella <albanobattistella@gmail.com>
  *
  * This file must be loaded after 'fileinput.js'. Patterns in braces '{}', or
  * any HTML markup tags in the messages must not be converted or translated.
@@ -21,8 +21,8 @@
         removeTitle: 'Rimuovi i file selezionati',
         cancelLabel: 'Annulla',
         cancelTitle: 'Annulla i caricamenti in corso',
-        pauseLabel: 'Pause',
-        pauseTitle: 'Pause ongoing upload',
+        pauseLabel: 'Pausa',
+        pauseTitle: 'Metti in pausa il caricamento in corso',
         uploadLabel: 'Carica',
         uploadTitle: 'Carica i file selezionati',
         msgNo: 'No',
@@ -36,7 +36,7 @@
         msgSizeTooLarge: 'Il file "{name}" (<b>{size} KB</b>) eccede la dimensione massima di caricamento di <b>{maxSize} KB</b>.',
         msgFilesTooLess: 'Devi selezionare almeno <b>{n}</b> {files} da caricare.',
         msgFilesTooMany: 'Il numero di file selezionati per il caricamento <b>({n})</b> eccede il numero massimo di file accettati <b>{m}</b>.',
-        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
+        msgTotalFilesTooMany: 'Puoi caricare un massimo di <b>{m}</b> file (<b>{n}</b> file rilevati).',
         msgFileNotFound: 'File "{name}" non trovato!',
         msgFileSecured: 'Restrizioni di sicurezza impediscono la lettura del file "{name}".',
         msgFileNotReadable: 'Il file "{name}" non è leggibile.',
@@ -46,23 +46,23 @@
         msgInvalidFileType: 'Tipo non valido per il file "{name}". Sono ammessi solo file di tipo "{types}".',
         msgInvalidFileExtension: 'Estensione non valida per il file "{name}". Sono ammessi solo file con estensione "{extensions}".',
         msgFileTypes: {
-            'image': 'image',
+            'image': 'immagine',
             'html': 'HTML',
-            'text': 'text',
+            'text': 'testo',
             'video': 'video',
             'audio': 'audio',
             'flash': 'flash',
             'pdf': 'PDF',
-            'object': 'object'
+            'object': 'oggetto'
         },
         msgUploadAborted: 'Il caricamento del file è stato interrotto',
         msgUploadThreshold: 'In lavorazione &hellip;',
         msgUploadBegin: 'Inizializzazione &hellip;',
         msgUploadEnd: 'Fatto',
-        msgUploadResume: 'Resuming upload &hellip;',
+        msgUploadResume: 'Ripresa del caricamento &hellip;',
         msgUploadEmpty: 'Dati non disponibili',
-        msgUploadError: 'Upload Error',
-        msgDeleteError: 'Delete Error',
+        msgUploadError: 'Errore di caricamento',
+        msgDeleteError: 'Elimina errore',
         msgProgressError: 'Errore',
         msgValidationError: 'Errore di convalida',
         msgLoading: 'Caricamento file {index} di {files} &hellip;',
@@ -76,16 +76,16 @@
         msgImageResizeError: 'Impossibile ottenere le dimensioni dell\'immagine per ridimensionare.',
         msgImageResizeException: 'Errore durante il ridimensionamento dell\'immagine.<pre>{errors}</pre>',
         msgAjaxError: 'Qualcosa non ha funzionato con l\'operazione {operation}. Per favore riprova più tardi!',
-        msgAjaxProgressError: '{operation} failed',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
-        msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
-        msgPendingTime: '{time} remaining',
-        msgCalculatingTime: 'calculating time remaining',
+        msgAjaxProgressError: '{operation} non riuscita',
+        msgDuplicateFile: 'Il file "{name}" della stessa dimensione "{size} KB" è già stato selezionato in precedenza. Ignora la selezione duplicata.',
+        msgResumableUploadRetriesExceeded:  'Caricamento interrotto dopo <b>{max}</b> tentativi per il file <b>{file}</b>! Dettagli errore: <pre>{error}</pre>',
+        msgPendingTime: '{time} rimanente',
+        msgCalculatingTime: 'calcolo del tempo rimanente',
         ajaxOperations: {
             deleteThumb: 'eliminazione file',
             uploadThumb: 'caricamento file',
             uploadBatch: 'caricamento file in batch',
-            uploadExtra: 'upload dati del form'
+            uploadExtra: 'caricamento dati del form'
         },
         dropZoneTitle: 'Trascina i file qui &hellip;',
         dropZoneClickTitle: '<br>(o clicca per selezionare {files})',
@@ -99,16 +99,17 @@
             indicatorNewTitle: 'Non ancora caricato',
             indicatorSuccessTitle: 'Caricati',
             indicatorErrorTitle: 'Carica Errore',
-            indicatorPausedTitle: 'Upload Paused',
+            indicatorPausedTitle: 'Caricamento in pausa',
             indicatorLoadingTitle:  'Caricamento &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Vedi il file precedente',
             next: 'Vedi il file seguente',
             toggleheader: 'Attiva header',
-            fullscreen: 'Attiva full screen',
+            fullscreen: 'Attiva schermo intero',
             borderless: 'Abilita modalità senza bordi',
             close: 'Chiudi'
         }
     };
 })(window.jQuery);
+
