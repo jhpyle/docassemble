@@ -3,6 +3,21 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.3](https://github.com/jhpyle/docassemble/releases/tag/v1.9.3) - 2026-02-01
+
+
+### Changed
+
+- Downgraded `numpy`, `scipy`, and `scikit-learn` to allow Python 3.10
+  to continue to be used.
+- Upgraded `bootstrap-fileinput`.
+- Migrated the websockets interface from `eventlet` to `gevent`.
+
+
+### Fixed
+
+- Truncated `pip` logs to avoid errors during upgrade process.
+
 ## [1.9.2](https://github.com/jhpyle/docassemble/releases/tag/v1.9.2) - 2026-01-27
 
 

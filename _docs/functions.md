@@ -2053,7 +2053,7 @@ All of the arguments to `send_email()` are [keyword arguments]:
   [`DAEmailRecipient`]s, or plain e-mail addresses. It also accepts a
   single item of any of these.
 * `sender` expects a single [`Individual`]. If not set, the
-  `default_sender` information from the [configuration] is used.
+  `default sender` information from the [configuration] is used.
 * `reply_to` expects a single [`Individual`], or `None`. This sets
   the (optional) `Reply-To` header of the e-mail, which determines the
   e-mail address to which replies are directed.

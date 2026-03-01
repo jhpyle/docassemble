@@ -3374,6 +3374,29 @@ modules:
 Any time the OpenAI API is called, the user will see the waiting
 screen.
 
+# <a name="email_lawyer"></a>Launching a side process from a button always on the screen
+
+This interview shows how you can place a button in the navigation bar
+that when pressed will take the user to a side process (launched as an
+action, which is a diversion from the ordinary interview logic) that
+sends an email.
+
+{% include demo-side-by-side.html demo="navbar-button-action" %}
+
+The side process has three steps:
+
+* Show the `question` that defines `question_for_lawyer`;
+* Run the `code` block that defines `question_emailed_to_lawyer`; and
+* Show the `question` that defines `question_for_lawyer_acknowledgment`.
+
+The `force_ask()` function is used to carry out this process because
+the user might need to send several emails throughout the interview,
+and we always want the three parts of the process to be carried out,
+regardless of whether the variables are defined.
+
+Note how `current_context().question_id` is used to omit the button
+from the navigation bar when the side process is ongoing.
+
 [`retrieve_stashed_data()`]: {{ site.baseurl }}/docs/functions.html#retrieve_stashed_data
 [`/api/session/new` GET endpoint]: {{ site.baseurl }}/docs/api.html#session_new
 [`/api/session` POST endpoint]: {{ site.baseurl }}/docs/api.html#session_post
