@@ -3,7 +3,7 @@
       <p>
       {%- assign sorted_pages = site.pages | sort:"order" %}
       {%- for thepage in sorted_pages %}
-      {%- if thepage.url contains '/search.html' or thepage.url == '/' or thepage.url contains '/index.html'%}
+      {%- if thepage.url contains '/search.html' or thepage.url == '/' or thepage.url contains '/index.html' or thepage.nav_exclude %}
 	{%- continue %}
       {%- endif %}
       {%- if thepage.short_title %}
