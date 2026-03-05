@@ -84,12 +84,15 @@ you with a [redwell] and you go back to your desk to add this defense.
 
 Hints:
 * Use `rental_license_defense` as an example.
+* There are two types of Yes/No questions in Docassemble: 
+  * [`yesno`]: User clicks Yes ⇨ variable is true.
+  * [`noyes`]: User clicks Yes ⇨ variable is false.
 * Note that defenses are raised both in the Petition and in the
   Memorandum of Law.
-  * In the *Petition*, the `{% raw %}{%p if ...}{% endraw %}` and 
+  * In the *Petition*, the `{% raw %}{%p if ... %}{% endraw %}` and 
   `{% raw %}{%p endif %}{% endraw %}` syntax is used because raising 
   a defense adds a new "paragraph".
-  * In the *Memorandum of Law*, the `{% raw %}{% if ...}{% endraw %}`
+  * In the *Memorandum of Law*, the `{% raw %}{% if ... %}{% endraw %}`
   and `{% raw %}{% endif %}{% endraw %}` syntax is used because
   raising a defense adds a new sentence.
 
@@ -135,10 +138,10 @@ Hints:
 ## Exercise 5: add a conditional warning screen
 
 Your boss points out that the tenant will have a much easier time
-opening the judgment within ten days of the judgment, because the
-legal standard is more lenient. Therefore, if ten days have not
-elapsed since the judgment was entered, the user should be warned to
-file the Petition To Open by the deadline.
+opening the judgment within ten days of the hearing, because the legal
+standard is more lenient. Therefore, if ten days have not elapsed
+since the hearing, the user should be warned to file the Petition To
+Open by the deadline.
 
 Hints:
 * You will notice that date fields have `datatype: date`. Read the
@@ -172,7 +175,60 @@ have to correct the year. Make this change to the `code` that defines
 `current_year` in `petition-to-open.yml`.
 
 Hints:
+* [Read about](https://www.w3schools.com/python/python_if_else.asp)
+  `if`, `else`, and `==` in Python.
 * Check out the documentation for [`today()`] and [`DADateTime`].
+
+## Exercise 7: give user an example of a document
+
+On the page you created in Exercise 3, it would be helpful if you
+provided an example of a Notice To Quit.
+
+Here are some hyperlinks:
+* [http://docket.philalegal.org/html/Sample_Notice_To_Quit_Page_1.png](http://docket.philalegal.org/html/Sample_Notice_To_Quit_Page_1.png)
+* [http://docket.philalegal.org/html/Sample_Notice_To_Quit.pdf](http://docket.philalegal.org/html/Sample_Notice_To_Quit.pdf)
+
+Tips:
+* See the [Markdown section] of the documentation to learn how to
+  insert images and hyperlinks.
+
+## Exercise 8: use AI differently
+
+Perhaps using AI to ask probing questions of the user constitutes the
+practice of law. However, you could instead use it for a more mundane
+purpose: converting the user's explanation of their excuse from first
+person into third person. Your task: modify the AI prompt so that it
+calls the `conversation_complete` tool immediately and rewrites the
+language to change the tense from first person to third person.
+
+As always when using AI, you need to "iterate": test the responses
+multiple times and refine your prompt, adding instructions to
+fine-tune the responses.
+
+## Exercise 9: use AI to summarize the excuse in one sentence
+
+In the Petition, there is a paragraph that says:
+
+> Defendants’ failure to answer the initial ejectment complaint is
+> excusable. The failure to file a timely Answer was based on an
+> honest confusion and lack of knowledge of the court system.
+
+However, this is making assumptions about what the excuse is; the
+excuse could be anything. It would be good to summarize the excuse in
+one sentence in the Petition, even though it is explained in detail in
+the brief. How would you use AI to do this?
+
+Hints:
+* You can start a second AI process just by specifying the components
+  of, e.g., `ai['excuse_summary']`. Just copy, paste, and change.
+* This will be a non-interactive use of AI, as in the previous
+  exercise, so give instructions to call the `conversation_complete`
+  tool immediately.
+  
+## Exercise 10: make your own exercise
+
+As you use the interview, see if there is something about it that
+doesn't feel optimal. How would you change it?
 
 # Languages used
 
@@ -280,3 +336,4 @@ Jinja2 resources:
 [`date`]: https://docassemble.org/docs/fields.html#date
 [`DADateTime`]: https://docassemble.org/docs/objects.html#DADateTime
 [`today()`]: https://docassemble.org/docs/functions.html#today
+[Markdown section]: https://docassemble.org/docs/markup.html#markdown
