@@ -9,10 +9,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['ar'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'ملف',
         filePlural: 'ملفات',
         browseLabel: 'تصفح &hellip;',
@@ -31,8 +42,9 @@
         msgPlaceholder: 'إختر {files} ...',
         msgZoomModalHeading: 'معاينة تفصيلية',
         msgFileRequired: 'يجب عليك تحديد ملف للتحميل.',
-        msgSizeTooSmall: 'الملف "{name}" (<b>{size} ك ب</b>) صغير جداً ويجب أن يكون أكبر من <b>{minSize} ك ب</b>.',
-        msgSizeTooLarge: 'الملف "{name}" (<b>{size} ك.ب</b>) تعدى الحد الأقصى المسموح للرفع <b>{maxSize} ك.ب</b>.',
+        msgSizeTooSmall: 'الملف "{name}" (<b>{size}</b>) صغير جداً ويجب أن يكون أكبر من <b>{minSize}</b>.',
+        msgSizeTooLarge: 'الملف "{name}" (<b>{size}</b>) تعدى الحد الأقصى المسموح للرفع <b>{maxSize}</b>.',
+        msgMultipleSizeTooLarge: 'الملف "{name}" (<b>{size}</b>) تعدى الحد الأقصى المسموح للرفع <b>{maxSize}</b>.',
         msgFilesTooLess: 'يجب عليك اختيار <b>{n}</b> {files} على الأقل للرفع.',
         msgFilesTooMany: 'عدد الملفات المختارة للرفع <b>({n})</b> تعدت الحد الأقصى المسموح به لعدد <b>{m}</b>.',
         msgTotalFilesTooMany: 'يمكنك تحميل كحد أقصى <b>{m}</b> ملفات (<b>{n}</b> ملفات تم الكشف عنها).',
@@ -67,16 +79,17 @@
         msgLoading: 'تحميل ملف {index} من {files} &hellip;',
         msgProgress: 'تحميل ملف {index} من {files} - {name} - {percent}% منتهي.',
         msgSelected: '{n} {files} مختار(ة)',
+        msgProcessing: 'Processing ...',
         msgFoldersNotAllowed: 'اسحب وأفلت الملفات فقط! تم تخطي {n} مجلد(ات).',
-        msgImageWidthSmall: 'عرض ملف الصورة "{name}" يجب أن يكون على الأقل {size} px.',
-        msgImageHeightSmall: 'طول ملف الصورة "{name}" يجب أن يكون على الأقل {size} px.',
-        msgImageWidthLarge: 'عرض ملف الصورة "{name}" لا يمكن أن يتعدى {size} px.',
-        msgImageHeightLarge: 'طول ملف الصورة "{name}" لا يمكن أن يتعدى {size} px.',
+        msgImageWidthSmall: 'عرض ملف الصورة "{name}" يجب أن يكون على الأقل <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightSmall: 'طول ملف الصورة "{name}" يجب أن يكون على الأقل <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageWidthLarge: 'عرض ملف الصورة "{name}" لا يمكن أن يتعدى <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightLarge: 'طول ملف الصورة "{name}" لا يمكن أن يتعدى <b>{size} px</b> (detected <b>{dimension} px</b>).',
         msgImageResizeError: 'لم يتمكن من معرفة أبعاد الصورة لتغييرها.',
         msgImageResizeException: 'حدث خطأ أثناء تغيير أبعاد الصورة.<pre>{errors}</pre>',
         msgAjaxError: 'حدث خطأ ما في العملية {operation} . الرجاء معاودة المحاولة في وقت لاحق!',
         msgAjaxProgressError: '{operation} فشلت',
-        msgDuplicateFile: 'الملف "{name}" من نفس الحجم "{size} ك ب" تم بالفعل اختياره في وقت سابق. تخطى التحديد المكرر.',
+        msgDuplicateFile: 'الملف "{name}" من نفس الحجم "{size}" ك ب" تم بالفعل اختياره في وقت سابق. تخطى التحديد المكرر.',
         msgResumableUploadRetriesExceeded:  'تم إحباط التحميل بعد <b>{max}</b> محاولات للملف <b>{file}</b>! تفاصيل الخطأ: <pre>{error}</pre>',
         msgPendingTime: '{time} متبقي',
         msgCalculatingTime: 'حساب الوقت المتبقي',
@@ -93,6 +106,7 @@
             uploadTitle: 'رفع الملف',
             uploadRetryTitle: 'إعادة محاولة التحميل',
             downloadTitle: 'تنزيل الملف',
+            rotateTitle: 'Rotate 90 deg. clockwise',
             zoomTitle: 'مشاهدة التفاصيل',
             dragTitle: 'نقل / إعادة ترتيب',
             indicatorNewTitle: 'لم يتم الرفع بعد',
@@ -104,10 +118,11 @@
         previewZoomButtonTitles: {
             prev: 'عرض الملف السابق',
             next: 'عرض الملف التالي',
+            rotate: 'Rotate 90 deg. clockwise',
             toggleheader: 'تبديل الرأسية',
             fullscreen: 'تبديل ملء الشاشة',
             borderless: 'تبديل وضع بلا حدود',
             close: 'إغلاق المعاينة التفصيلية'
         }
     };
-})(window.jQuery);
+}));

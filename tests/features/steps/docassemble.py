@@ -85,8 +85,6 @@ def login(context, username, password):
 @step(r'I upload the file "(?P<value>[^"]*)"')
 def do_upload(context, value):
     time.sleep(2)
-    div = context.browser.find_element(By.CSS_SELECTOR, 'div.file-caption')
-    context.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "none";', div)
     div = context.browser.find_element(By.CSS_SELECTOR, 'div.btn-file')
     context.browser.execute_script('arguments[0].style = ""; arguments[0].style.position = "inherit";', div)
     span = context.browser.find_element(By.CSS_SELECTOR, 'span.hidden-xs')

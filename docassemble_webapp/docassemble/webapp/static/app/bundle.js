@@ -23249,6 +23249,4414 @@ var windowIsDefined =
   }
 })(window.jQuery);
 
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * Modified from https://github.com/feross/buffer to be used standalone on browser based apps.
+ *
+ * Author: Kartik Visweswaran, Krajee.com
+ */
+'use strict';
+
+var KrajeeBase64, KrajeeIeee754, customInspectSymbol, INSPECT_MAX_BYTES = 50, K_MAX_LENGTH = 0x7fffffff;
+KrajeeBase64 = {
+    fromByteArray: function (uint8) {
+        var tmp, len = uint8.length, extraBytes = len % 3, // if we have 1 byte left, pad 2 bytes
+            parts = [], maxChunkLength = 16383; // must be multiple of 3
+
+        // go through the array every three bytes, we'll deal with trailing stuff later
+        for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+            parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)));
+        }
+
+        // pad the end with zeros, but make sure to not forget the extra bytes
+        if (extraBytes === 1) {
+            tmp = uint8[len - 1];
+            parts.push(lookup[tmp >> 2] + lookup[(tmp << 4) & 0x3F] + '==');
+        } else if (extraBytes === 2) {
+            tmp = (uint8[len - 2] << 8) + uint8[len - 1];
+            parts.push(lookup[tmp >> 10] + lookup[(tmp >> 4) & 0x3F] + lookup[(tmp << 2) & 0x3F] + '=');
+        }
+
+        return parts.join('');
+    },
+    toByteArray: function (b64) {
+        var tmp, lens = getLens(b64), validLen = lens[0], placeHoldersLen = lens[1],
+            arr = new Arr(_byteLength(b64, validLen, placeHoldersLen)), curByte = 0, i,
+            // if there are placeholders, only get up to the last complete 4 chars
+            len = placeHoldersLen > 0 ? validLen - 4 : validLen;
+        for (i = 0; i < len; i += 4) {
+            tmp =
+                (revLookup[b64.charCodeAt(i)] << 18) |
+                (revLookup[b64.charCodeAt(i + 1)] << 12) |
+                (revLookup[b64.charCodeAt(i + 2)] << 6) |
+                revLookup[b64.charCodeAt(i + 3)];
+            arr[curByte++] = (tmp >> 16) & 0xFF;
+            arr[curByte++] = (tmp >> 8) & 0xFF;
+            arr[curByte++] = tmp & 0xFF;
+        }
+
+        if (placeHoldersLen === 2) {
+            tmp =
+                (revLookup[b64.charCodeAt(i)] << 2) |
+                (revLookup[b64.charCodeAt(i + 1)] >> 4);
+            arr[curByte++] = tmp & 0xFF;
+        }
+
+        if (placeHoldersLen === 1) {
+            tmp =
+                (revLookup[b64.charCodeAt(i)] << 10) |
+                (revLookup[b64.charCodeAt(i + 1)] << 4) |
+                (revLookup[b64.charCodeAt(i + 2)] >> 2);
+            arr[curByte++] = (tmp >> 8) & 0xFF;
+            arr[curByte++] = tmp & 0xFF;
+        }
+
+        return arr;
+    }
+};
+KrajeeIeee754 = {
+    read: function (buffer, offset, isLE, mLen, nBytes) {
+        var e, m, eLen = (nBytes * 8) - mLen - 1, eMax = (1 << eLen) - 1, eBias = eMax >> 1, nBits = -7,
+            i = isLE ? (nBytes - 1) : 0, d = isLE ? -1 : 1, s = buffer[offset + i];
+
+        i += d;
+        e = s & ((1 << (-nBits)) - 1);
+        s >>= (-nBits);
+        nBits += eLen;
+        for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {
+        }
+
+        m = e & ((1 << (-nBits)) - 1);
+        e >>= (-nBits);
+        nBits += mLen;
+        for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {
+        }
+
+        if (e === 0) {
+            e = 1 - eBias;
+        } else if (e === eMax) {
+            return m ? NaN : ((s ? -1 : 1) * Infinity);
+        } else {
+            m = m + Math.pow(2, mLen);
+            e = e - eBias;
+        }
+        return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
+    },
+    write: function (buffer, value, offset, isLE, mLen, nBytes) {
+        var e, m, c, eLen = (nBytes * 8) - mLen - 1, eMax = (1 << eLen) - 1, eBias = eMax >> 1,
+            rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0), i = isLE ? 0 : (nBytes - 1),
+            d = isLE ? 1 : -1, s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+        value = Math.abs(value);
+
+        if (isNaN(value) || value === Infinity) {
+            m = isNaN(value) ? 1 : 0;
+            e = eMax;
+        } else {
+            e = Math.floor(Math.log(value) / Math.LN2);
+            if (value * (c = Math.pow(2, -e)) < 1) {
+                e--;
+                c *= 2;
+            }
+            if (e + eBias >= 1) {
+                value += rt / c;
+            } else {
+                value += rt * Math.pow(2, 1 - eBias);
+            }
+            if (value * c >= 2) {
+                e++;
+                c /= 2;
+            }
+
+            if (e + eBias >= eMax) {
+                m = 0;
+                e = eMax;
+            } else if (e + eBias >= 1) {
+                m = ((value * c) - 1) * Math.pow(2, mLen);
+                e = e + eBias;
+            } else {
+                m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+                e = 0;
+            }
+        }
+
+        for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {
+        }
+
+        e = (e << mLen) | m;
+        eLen += mLen;
+        for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {
+        }
+
+        buffer[offset + i - d] |= s * 128;
+    }
+};
+customInspectSymbol =
+    (typeof Symbol === 'function' && typeof Symbol['for'] === 'function') // eslint-disable-line dot-notation
+        ? Symbol['for']('nodejs.util.inspect.custom') // eslint-disable-line dot-notation
+        : null;
+
+/**
+ * If `Buffer.TYPED_ARRAY_SUPPORT`:
+ *   === true    Use Uint8Array implementation (fastest)
+ *   === false   Print warning and recommend using `buffer` v4.x which has an Object
+ *               implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * We report that the browser does not support typed arrays if the are not subclassable
+ * using __proto__. Firefox 4-29 lacks support for adding new properties to `Uint8Array`
+ * (See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438). IE 10 lacks support
+ * for __proto__ and has a buggy typed array implementation.
+ */
+Buffer.TYPED_ARRAY_SUPPORT = typedArraySupport();
+
+if (!Buffer.TYPED_ARRAY_SUPPORT && typeof console !== 'undefined' &&
+    typeof console.error === 'function') {
+    console.error(
+        'This browser lacks typed array (Uint8Array) support which is required by ' +
+        '`buffer` v5.x. Use `buffer` v4.x if you require old browser support.'
+    );
+}
+
+function typedArraySupport() {
+    // Can typed array instances can be augmented?
+    try {
+        const arr = new Uint8Array(1);
+        const proto = {
+            foo: function () {
+                return 42;
+            }
+        };
+        Object.setPrototypeOf(proto, Uint8Array.prototype);
+        Object.setPrototypeOf(arr, proto);
+        return arr.foo() === 42;
+    } catch (e) {
+        return false;
+    }
+}
+
+Object.defineProperty(Buffer.prototype, 'parent', {
+    enumerable: true,
+    get: function () {
+        if (!Buffer.isBuffer(this)) return undefined;
+        return this.buffer;
+    }
+});
+
+Object.defineProperty(Buffer.prototype, 'offset', {
+    enumerable: true,
+    get: function () {
+        if (!Buffer.isBuffer(this)) return undefined;
+        return this.byteOffset;
+    }
+});
+
+function createBuffer(length) {
+    if (length > K_MAX_LENGTH) {
+        throw new RangeError('The value "' + length + '" is invalid for option "size"');
+    }
+    // Return an augmented `Uint8Array` instance
+    const buf = new Uint8Array(length);
+    Object.setPrototypeOf(buf, Buffer.prototype);
+    return buf;
+}
+
+/**
+ * The Buffer constructor returns instances of `Uint8Array` that have their
+ * prototype changed to `Buffer.prototype`. Furthermore, `Buffer` is a subclass of
+ * `Uint8Array`, so the returned instances will have all the node `Buffer` methods
+ * and the `Uint8Array` methods. Square bracket notation works as expected -- it
+ * returns a single octet.
+ *
+ * The `Uint8Array` prototype remains unmodified.
+ */
+
+function Buffer(arg, encodingOrOffset, length) {
+    // Common case.
+    if (typeof arg === 'number') {
+        if (typeof encodingOrOffset === 'string') {
+            throw new TypeError(
+                'The "string" argument must be of type string. Received type number'
+            );
+        }
+        return allocUnsafe(arg);
+    }
+    return from(arg, encodingOrOffset, length);
+}
+
+Buffer.poolSize = 8192; // not used by this implementation
+
+function from(value, encodingOrOffset, length) {
+    if (typeof value === 'string') {
+        return fromString(value, encodingOrOffset);
+    }
+
+    if (ArrayBuffer.isView(value)) {
+        return fromArrayView(value);
+    }
+
+    if (value == null) {
+        throw new TypeError(
+            'The first argument must be one of type string, Buffer, ArrayBuffer, Array, ' +
+            'or Array-like Object. Received type ' + (typeof value)
+        );
+    }
+
+    if (isInstance(value, ArrayBuffer) ||
+        (value && isInstance(value.buffer, ArrayBuffer))) {
+        return fromArrayBuffer(value, encodingOrOffset, length);
+    }
+
+    if (typeof SharedArrayBuffer !== 'undefined' &&
+        (isInstance(value, SharedArrayBuffer) ||
+            (value && isInstance(value.buffer, SharedArrayBuffer)))) {
+        return fromArrayBuffer(value, encodingOrOffset, length);
+    }
+
+    if (typeof value === 'number') {
+        throw new TypeError(
+            'The "value" argument must not be of type number. Received type number'
+        );
+    }
+
+    const valueOf = value.valueOf && value.valueOf();
+    if (valueOf != null && valueOf !== value) {
+        return Buffer.from(valueOf, encodingOrOffset, length);
+    }
+
+    const b = fromObject(value);
+    if (b) return b;
+
+    if (typeof Symbol !== 'undefined' && Symbol.toPrimitive != null &&
+        typeof value[Symbol.toPrimitive] === 'function') {
+        return Buffer.from(value[Symbol.toPrimitive]('string'), encodingOrOffset, length);
+    }
+
+    throw new TypeError(
+        'The first argument must be one of type string, Buffer, ArrayBuffer, Array, ' +
+        'or Array-like Object. Received type ' + (typeof value)
+    );
+}
+
+/**
+ * Functionally equivalent to Buffer(arg, encoding) but throws a TypeError
+ * if value is a number.
+ * Buffer.from(str[, encoding])
+ * Buffer.from(array)
+ * Buffer.from(buffer)
+ * Buffer.from(arrayBuffer[, byteOffset[, length]])
+ **/
+Buffer.from = function (value, encodingOrOffset, length) {
+    return from(value, encodingOrOffset, length);
+};
+
+// Note: Change prototype *after* Buffer.from is defined to workaround Chrome bug:
+// https://github.com/feross/buffer/pull/148
+Object.setPrototypeOf(Buffer.prototype, Uint8Array.prototype);
+Object.setPrototypeOf(Buffer, Uint8Array);
+
+function assertSize(size) {
+    if (typeof size !== 'number') {
+        throw new TypeError('"size" argument must be of type number');
+    } else if (size < 0) {
+        throw new RangeError('The value "' + size + '" is invalid for option "size"');
+    }
+}
+
+function alloc(size, fill, encoding) {
+    assertSize(size);
+    if (size <= 0) {
+        return createBuffer(size);
+    }
+    if (fill !== undefined) {
+        // Only pay attention to encoding if it's a string. This
+        // prevents accidentally sending in a number that would
+        // be interpreted as a start offset.
+        return typeof encoding === 'string'
+            ? createBuffer(size).fill(fill, encoding)
+            : createBuffer(size).fill(fill);
+    }
+    return createBuffer(size);
+}
+
+/**
+ * Creates a new filled Buffer instance.
+ * alloc(size[, fill[, encoding]])
+ **/
+Buffer.alloc = function (size, fill, encoding) {
+    return alloc(size, fill, encoding);
+};
+
+function allocUnsafe(size) {
+    assertSize(size);
+    return createBuffer(size < 0 ? 0 : checked(size) | 0);
+}
+
+/**
+ * Equivalent to Buffer(num), by default creates a non-zero-filled Buffer instance.
+ * */
+Buffer.allocUnsafe = function (size) {
+    return allocUnsafe(size);
+};
+/**
+ * Equivalent to SlowBuffer(num), by default creates a non-zero-filled Buffer instance.
+ */
+Buffer.allocUnsafeSlow = function (size) {
+    return allocUnsafe(size);
+};
+
+function fromString(string, encoding) {
+    if (typeof encoding !== 'string' || encoding === '') {
+        encoding = 'utf8';
+    }
+
+    if (!Buffer.isEncoding(encoding)) {
+        throw new TypeError('Unknown encoding: ' + encoding);
+    }
+
+    const length = byteLength(string, encoding) | 0;
+    let buf = createBuffer(length);
+
+    const actual = buf.write(string, encoding);
+
+    if (actual !== length) {
+        // Writing a hex string, for example, that contains invalid characters will
+        // cause everything after the first invalid character to be ignored. (e.g.
+        // 'abxxcd' will be treated as 'ab')
+        buf = buf.slice(0, actual);
+    }
+
+    return buf;
+}
+
+function fromArrayLike(array) {
+    const length = array.length < 0 ? 0 : checked(array.length) | 0;
+    const buf = createBuffer(length);
+    for (let i = 0; i < length; i += 1) {
+        buf[i] = array[i] & 255;
+    }
+    return buf;
+}
+
+function fromArrayView(arrayView) {
+    if (isInstance(arrayView, Uint8Array)) {
+        const copy = new Uint8Array(arrayView);
+        return fromArrayBuffer(copy.buffer, copy.byteOffset, copy.byteLength);
+    }
+    return fromArrayLike(arrayView);
+}
+
+function fromArrayBuffer(array, byteOffset, length) {
+    if (byteOffset < 0 || array.byteLength < byteOffset) {
+        throw new RangeError('"offset" is outside of buffer bounds');
+    }
+
+    if (array.byteLength < byteOffset + (length || 0)) {
+        throw new RangeError('"length" is outside of buffer bounds');
+    }
+
+    let buf;
+    if (byteOffset === undefined && length === undefined) {
+        buf = new Uint8Array(array);
+    } else if (length === undefined) {
+        buf = new Uint8Array(array, byteOffset);
+    } else {
+        buf = new Uint8Array(array, byteOffset, length);
+    }
+
+    // Return an augmented `Uint8Array` instance
+    Object.setPrototypeOf(buf, Buffer.prototype);
+
+    return buf;
+}
+
+function fromObject(obj) {
+    if (Buffer.isBuffer(obj)) {
+        const len = checked(obj.length) | 0;
+        const buf = createBuffer(len);
+
+        if (buf.length === 0) {
+            return buf;
+        }
+
+        obj.copy(buf, 0, 0, len);
+        return buf;
+    }
+
+    if (obj.length !== undefined) {
+        if (typeof obj.length !== 'number' || numberIsNaN(obj.length)) {
+            return createBuffer(0);
+        }
+        return fromArrayLike(obj);
+    }
+
+    if (obj.type === 'Buffer' && Array.isArray(obj.data)) {
+        return fromArrayLike(obj.data);
+    }
+}
+
+function checked(length) {
+    // Note: cannot use `length < K_MAX_LENGTH` here because that fails when
+    // length is NaN (which is otherwise coerced to zero.)
+    if (length >= K_MAX_LENGTH) {
+        throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+            'size: 0x' + K_MAX_LENGTH.toString(16) + ' bytes');
+    }
+    return length | 0;
+}
+
+function SlowBuffer(length) {
+    if (+length != length) { // eslint-disable-line eqeqeq
+        length = 0;
+    }
+    return Buffer.alloc(+length);
+}
+
+Buffer.isBuffer = function isBuffer(b) {
+    return b != null && b._isBuffer === true &&
+        b !== Buffer.prototype; // so Buffer.isBuffer(Buffer.prototype) will be false
+};
+
+Buffer.compare = function compare(a, b) {
+    if (isInstance(a, Uint8Array)) a = Buffer.from(a, a.offset, a.byteLength);
+    if (isInstance(b, Uint8Array)) b = Buffer.from(b, b.offset, b.byteLength);
+    if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
+        throw new TypeError(
+            'The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array'
+        );
+    }
+
+    if (a === b) return 0;
+
+    let x = a.length;
+    let y = b.length;
+
+    for (let i = 0, len = Math.min(x, y); i < len; ++i) {
+        if (a[i] !== b[i]) {
+            x = a[i];
+            y = b[i];
+            break;
+        }
+    }
+
+    if (x < y) return -1;
+    if (y < x) return 1;
+    return 0;
+};
+
+Buffer.isEncoding = function isEncoding(encoding) {
+    switch (String(encoding).toLowerCase()) {
+        case 'hex':
+        case 'utf8':
+        case 'utf-8':
+        case 'ascii':
+        case 'latin1':
+        case 'binary':
+        case 'base64':
+        case 'ucs2':
+        case 'ucs-2':
+        case 'utf16le':
+        case 'utf-16le':
+            return true;
+        default:
+            return false;
+    }
+};
+
+Buffer.concat = function concat(list, length) {
+    if (!Array.isArray(list)) {
+        throw new TypeError('"list" argument must be an Array of Buffers');
+    }
+
+    if (list.length === 0) {
+        return Buffer.alloc(0);
+    }
+
+    let i;
+    if (length === undefined) {
+        length = 0;
+        for (i = 0; i < list.length; ++i) {
+            length += list[i].length;
+        }
+    }
+
+    const buffer = Buffer.allocUnsafe(length);
+    let pos = 0;
+    for (i = 0; i < list.length; ++i) {
+        let buf = list[i];
+        if (isInstance(buf, Uint8Array)) {
+            if (pos + buf.length > buffer.length) {
+                if (!Buffer.isBuffer(buf)) {
+                    buf = Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength);
+                }
+                buf.copy(buffer, pos);
+            } else {
+                Uint8Array.prototype.set.call(
+                    buffer,
+                    buf,
+                    pos
+                );
+            }
+        } else if (!Buffer.isBuffer(buf)) {
+            throw new TypeError('"list" argument must be an Array of Buffers');
+        } else {
+            buf.copy(buffer, pos);
+        }
+        pos += buf.length;
+    }
+    return buffer;
+};
+
+function byteLength(string, encoding) {
+    if (Buffer.isBuffer(string)) {
+        return string.length;
+    }
+    if (ArrayBuffer.isView(string) || isInstance(string, ArrayBuffer)) {
+        return string.byteLength;
+    }
+    if (typeof string !== 'string') {
+        throw new TypeError(
+            'The "string" argument must be one of type string, Buffer, or ArrayBuffer. ' +
+            'Received type ' + typeof string
+        );
+    }
+
+    const len = string.length;
+    const mustMatch = (arguments.length > 2 && arguments[2] === true);
+    if (!mustMatch && len === 0) return 0;
+
+    // Use a for loop to avoid recursion
+    let loweredCase = false;
+    for (; ;) {
+        switch (encoding) {
+            case 'ascii':
+            case 'latin1':
+            case 'binary':
+                return len;
+            case 'utf8':
+            case 'utf-8':
+                return utf8ToBytes(string).length;
+            case 'ucs2':
+            case 'ucs-2':
+            case 'utf16le':
+            case 'utf-16le':
+                return len * 2;
+            case 'hex':
+                return len >>> 1;
+            case 'base64':
+                return base64ToBytes(string).length;
+            default:
+                if (loweredCase) {
+                    return mustMatch ? -1 : utf8ToBytes(string).length; // assume utf8
+                }
+                encoding = ('' + encoding).toLowerCase();
+                loweredCase = true;
+        }
+    }
+}
+
+Buffer.byteLength = byteLength;
+
+function slowToString(encoding, start, end) {
+    let loweredCase = false;
+
+    // No need to verify that "this.length <= MAX_UINT32" since it's a read-only
+    // property of a typed array.
+
+    // This behaves neither like String nor Uint8Array in that we set start/end
+    // to their upper/lower bounds if the value passed is out of range.
+    // undefined is handled specially as per ECMA-262 6th Edition,
+    // Section 13.3.3.7 Runtime Semantics: KeyedBindingInitialization.
+    if (start === undefined || start < 0) {
+        start = 0;
+    }
+    // Return early if start > this.length. Done here to prevent potential uint32
+    // coercion fail below.
+    if (start > this.length) {
+        return '';
+    }
+
+    if (end === undefined || end > this.length) {
+        end = this.length;
+    }
+
+    if (end <= 0) {
+        return '';
+    }
+
+    // Force coercion to uint32. This will also coerce falsey/NaN values to 0.
+    end >>>= 0;
+    start >>>= 0;
+
+    if (end <= start) {
+        return '';
+    }
+
+    if (!encoding) encoding = 'utf8';
+
+    while (true) {
+        switch (encoding) {
+            case 'hex':
+                return hexSlice(this, start, end);
+
+            case 'utf8':
+            case 'utf-8':
+                return utf8Slice(this, start, end);
+
+            case 'ascii':
+                return asciiSlice(this, start, end);
+
+            case 'latin1':
+            case 'binary':
+                return latin1Slice(this, start, end);
+
+            case 'base64':
+                return base64Slice(this, start, end);
+
+            case 'ucs2':
+            case 'ucs-2':
+            case 'utf16le':
+            case 'utf-16le':
+                return utf16leSlice(this, start, end);
+
+            default:
+                if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding);
+                encoding = (encoding + '').toLowerCase();
+                loweredCase = true;
+        }
+    }
+}
+
+// This property is used by `Buffer.isBuffer` (and the `is-buffer` npm package)
+// to detect a Buffer instance. It's not possible to use `instanceof Buffer`
+// reliably in a browserify context because there could be multiple different
+// copies of the 'buffer' package in use. This method works even for Buffer
+// instances that were created from another copy of the `buffer` package.
+// See: https://github.com/feross/buffer/issues/154
+Buffer.prototype._isBuffer = true;
+
+function swap(b, n, m) {
+    const i = b[n];
+    b[n] = b[m];
+    b[m] = i;
+}
+
+Buffer.prototype.swap16 = function swap16() {
+    const len = this.length;
+    if (len % 2 !== 0) {
+        throw new RangeError('Buffer size must be a multiple of 16-bits');
+    }
+    for (let i = 0; i < len; i += 2) {
+        swap(this, i, i + 1);
+    }
+    return this;
+};
+
+Buffer.prototype.swap32 = function swap32() {
+    const len = this.length;
+    if (len % 4 !== 0) {
+        throw new RangeError('Buffer size must be a multiple of 32-bits');
+    }
+    for (let i = 0; i < len; i += 4) {
+        swap(this, i, i + 3);
+        swap(this, i + 1, i + 2);
+    }
+    return this;
+};
+
+Buffer.prototype.swap64 = function swap64() {
+    const len = this.length;
+    if (len % 8 !== 0) {
+        throw new RangeError('Buffer size must be a multiple of 64-bits');
+    }
+    for (let i = 0; i < len; i += 8) {
+        swap(this, i, i + 7);
+        swap(this, i + 1, i + 6);
+        swap(this, i + 2, i + 5);
+        swap(this, i + 3, i + 4);
+    }
+    return this;
+};
+
+Buffer.prototype.toString = function toString() {
+    const length = this.length;
+    if (length === 0) return '';
+    if (arguments.length === 0) return utf8Slice(this, 0, length);
+    return slowToString.apply(this, arguments);
+};
+
+Buffer.prototype.toLocaleString = Buffer.prototype.toString;
+
+Buffer.prototype.equals = function equals(b) {
+    if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer');
+    if (this === b) return true;
+    return Buffer.compare(this, b) === 0;
+};
+
+Buffer.prototype.inspect = function inspect() {
+    let str = '';
+    const max = INSPECT_MAX_BYTES;
+    str = this.toString('hex', 0, max).replace(/(.{2})/g, '$1 ').trim();
+    if (this.length > max) str += ' ... ';
+    return '<Buffer ' + str + '>';
+};
+if (customInspectSymbol) {
+    Buffer.prototype[customInspectSymbol] = Buffer.prototype.inspect;
+}
+
+Buffer.prototype.compare = function compare(target, start, end, thisStart, thisEnd) {
+    if (isInstance(target, Uint8Array)) {
+        target = Buffer.from(target, target.offset, target.byteLength);
+    }
+    if (!Buffer.isBuffer(target)) {
+        throw new TypeError(
+            'The "target" argument must be one of type Buffer or Uint8Array. ' +
+            'Received type ' + (typeof target)
+        );
+    }
+
+    if (start === undefined) {
+        start = 0;
+    }
+    if (end === undefined) {
+        end = target ? target.length : 0;
+    }
+    if (thisStart === undefined) {
+        thisStart = 0;
+    }
+    if (thisEnd === undefined) {
+        thisEnd = this.length;
+    }
+
+    if (start < 0 || end > target.length || thisStart < 0 || thisEnd > this.length) {
+        throw new RangeError('out of range index');
+    }
+
+    if (thisStart >= thisEnd && start >= end) {
+        return 0;
+    }
+    if (thisStart >= thisEnd) {
+        return -1;
+    }
+    if (start >= end) {
+        return 1;
+    }
+
+    start >>>= 0;
+    end >>>= 0;
+    thisStart >>>= 0;
+    thisEnd >>>= 0;
+
+    if (this === target) return 0;
+
+    let x = thisEnd - thisStart;
+    let y = end - start;
+    const len = Math.min(x, y);
+
+    const thisCopy = this.slice(thisStart, thisEnd);
+    const targetCopy = target.slice(start, end);
+
+    for (let i = 0; i < len; ++i) {
+        if (thisCopy[i] !== targetCopy[i]) {
+            x = thisCopy[i];
+            y = targetCopy[i];
+            break;
+        }
+    }
+
+    if (x < y) return -1;
+    if (y < x) return 1;
+    return 0;
+};
+
+// Finds either the first index of `val` in `buffer` at offset >= `byteOffset`,
+// OR the last index of `val` in `buffer` at offset <= `byteOffset`.
+//
+// Arguments:
+// - buffer - a Buffer to search
+// - val - a string, Buffer, or number
+// - byteOffset - an index into `buffer`; will be clamped to an int32
+// - encoding - an optional encoding, relevant is val is a string
+// - dir - true for indexOf, false for lastIndexOf
+function bidirectionalIndexOf(buffer, val, byteOffset, encoding, dir) {
+    // Empty buffer means no match
+    if (buffer.length === 0) return -1;
+
+    // Normalize byteOffset
+    if (typeof byteOffset === 'string') {
+        encoding = byteOffset;
+        byteOffset = 0;
+    } else if (byteOffset > 0x7fffffff) {
+        byteOffset = 0x7fffffff;
+    } else if (byteOffset < -0x80000000) {
+        byteOffset = -0x80000000;
+    }
+    byteOffset = +byteOffset; // Coerce to Number.
+    if (numberIsNaN(byteOffset)) {
+        // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
+        byteOffset = dir ? 0 : (buffer.length - 1);
+    }
+
+    // Normalize byteOffset: negative offsets start from the end of the buffer
+    if (byteOffset < 0) byteOffset = buffer.length + byteOffset;
+    if (byteOffset >= buffer.length) {
+        if (dir) return -1;
+        else byteOffset = buffer.length - 1;
+    } else if (byteOffset < 0) {
+        if (dir) byteOffset = 0;
+        else return -1;
+    }
+
+    // Normalize val
+    if (typeof val === 'string') {
+        val = Buffer.from(val, encoding);
+    }
+
+    // Finally, search either indexOf (if dir is true) or lastIndexOf
+    if (Buffer.isBuffer(val)) {
+        // Special case: looking for empty string/buffer always fails
+        if (val.length === 0) {
+            return -1;
+        }
+        return arrayIndexOf(buffer, val, byteOffset, encoding, dir);
+    } else if (typeof val === 'number') {
+        val = val & 0xFF; // Search for a byte value [0-255]
+        if (typeof Uint8Array.prototype.indexOf === 'function') {
+            if (dir) {
+                return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset);
+            } else {
+                return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset);
+            }
+        }
+        return arrayIndexOf(buffer, [val], byteOffset, encoding, dir);
+    }
+
+    throw new TypeError('val must be string, number or Buffer');
+}
+
+function arrayIndexOf(arr, val, byteOffset, encoding, dir) {
+    let indexSize = 1;
+    let arrLength = arr.length;
+    let valLength = val.length;
+
+    if (encoding !== undefined) {
+        encoding = String(encoding).toLowerCase();
+        if (encoding === 'ucs2' || encoding === 'ucs-2' ||
+            encoding === 'utf16le' || encoding === 'utf-16le') {
+            if (arr.length < 2 || val.length < 2) {
+                return -1;
+            }
+            indexSize = 2;
+            arrLength /= 2;
+            valLength /= 2;
+            byteOffset /= 2;
+        }
+    }
+
+    function read(buf, i) {
+        if (indexSize === 1) {
+            return buf[i];
+        } else {
+            return buf.readUInt16BE(i * indexSize);
+        }
+    }
+
+    let i;
+    if (dir) {
+        let foundIndex = -1;
+        for (i = byteOffset; i < arrLength; i++) {
+            if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+                if (foundIndex === -1) foundIndex = i;
+                if (i - foundIndex + 1 === valLength) return foundIndex * indexSize;
+            } else {
+                if (foundIndex !== -1) i -= i - foundIndex;
+                foundIndex = -1;
+            }
+        }
+    } else {
+        if (byteOffset + valLength > arrLength) byteOffset = arrLength - valLength;
+        for (i = byteOffset; i >= 0; i--) {
+            let found = true;
+            for (let j = 0; j < valLength; j++) {
+                if (read(arr, i + j) !== read(val, j)) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) return i;
+        }
+    }
+
+    return -1;
+}
+
+Buffer.prototype.includes = function includes(val, byteOffset, encoding) {
+    return this.indexOf(val, byteOffset, encoding) !== -1;
+};
+
+Buffer.prototype.indexOf = function indexOf(val, byteOffset, encoding) {
+    return bidirectionalIndexOf(this, val, byteOffset, encoding, true);
+};
+
+Buffer.prototype.lastIndexOf = function lastIndexOf(val, byteOffset, encoding) {
+    return bidirectionalIndexOf(this, val, byteOffset, encoding, false);
+};
+
+function hexWrite(buf, string, offset, length) {
+    offset = Number(offset) || 0;
+    const remaining = buf.length - offset;
+    if (!length) {
+        length = remaining;
+    } else {
+        length = Number(length);
+        if (length > remaining) {
+            length = remaining;
+        }
+    }
+
+    const strLen = string.length;
+
+    if (length > strLen / 2) {
+        length = strLen / 2;
+    }
+    let i;
+    for (i = 0; i < length; ++i) {
+        const parsed = parseInt(string.substr(i * 2, 2), 16);
+        if (numberIsNaN(parsed)) return i;
+        buf[offset + i] = parsed;
+    }
+    return i;
+}
+
+function utf8Write(buf, string, offset, length) {
+    return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length);
+}
+
+function asciiWrite(buf, string, offset, length) {
+    return blitBuffer(asciiToBytes(string), buf, offset, length);
+}
+
+function base64Write(buf, string, offset, length) {
+    return blitBuffer(base64ToBytes(string), buf, offset, length);
+}
+
+function ucs2Write(buf, string, offset, length) {
+    return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length);
+}
+
+Buffer.prototype.write = function write(string, offset, length, encoding) {
+    // Buffer#write(string)
+    if (offset === undefined) {
+        encoding = 'utf8';
+        length = this.length;
+        offset = 0;
+        // Buffer#write(string, encoding)
+    } else if (length === undefined && typeof offset === 'string') {
+        encoding = offset;
+        length = this.length;
+        offset = 0;
+        // Buffer#write(string, offset[, length][, encoding])
+    } else if (isFinite(offset)) {
+        offset = offset >>> 0;
+        if (isFinite(length)) {
+            length = length >>> 0;
+            if (encoding === undefined) encoding = 'utf8';
+        } else {
+            encoding = length;
+            length = undefined;
+        }
+    } else {
+        throw new Error(
+            'Buffer.write(string, encoding, offset[, length]) is no longer supported'
+        );
+    }
+
+    const remaining = this.length - offset;
+    if (length === undefined || length > remaining) length = remaining;
+
+    if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+        throw new RangeError('Attempt to write outside buffer bounds');
+    }
+
+    if (!encoding) encoding = 'utf8';
+
+    let loweredCase = false;
+    for (; ;) {
+        switch (encoding) {
+            case 'hex':
+                return hexWrite(this, string, offset, length);
+
+            case 'utf8':
+            case 'utf-8':
+                return utf8Write(this, string, offset, length);
+
+            case 'ascii':
+            case 'latin1':
+            case 'binary':
+                return asciiWrite(this, string, offset, length);
+
+            case 'base64':
+                // Warning: maxLength not taken into account in base64Write
+                return base64Write(this, string, offset, length);
+
+            case 'ucs2':
+            case 'ucs-2':
+            case 'utf16le':
+            case 'utf-16le':
+                return ucs2Write(this, string, offset, length);
+
+            default:
+                if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding);
+                encoding = ('' + encoding).toLowerCase();
+                loweredCase = true;
+        }
+    }
+};
+
+Buffer.prototype.toJSON = function toJSON() {
+    return {
+        type: 'Buffer',
+        data: Array.prototype.slice.call(this._arr || this, 0)
+    };
+};
+
+function base64Slice(buf, start, end) {
+    if (start === 0 && end === buf.length) {
+        return KrajeeBase64.fromByteArray(buf);
+    } else {
+        return KrajeeBase64.fromByteArray(buf.slice(start, end));
+    }
+}
+
+function utf8Slice(buf, start, end) {
+    end = Math.min(buf.length, end);
+    const res = [];
+
+    let i = start;
+    while (i < end) {
+        const firstByte = buf[i];
+        let codePoint = null;
+        let bytesPerSequence = (firstByte > 0xEF)
+            ? 4
+            : (firstByte > 0xDF)
+                ? 3
+                : (firstByte > 0xBF)
+                    ? 2
+                    : 1;
+
+        if (i + bytesPerSequence <= end) {
+            let secondByte, thirdByte, fourthByte, tempCodePoint;
+
+            switch (bytesPerSequence) {
+                case 1:
+                    if (firstByte < 0x80) {
+                        codePoint = firstByte;
+                    }
+                    break;
+                case 2:
+                    secondByte = buf[i + 1];
+                    if ((secondByte & 0xC0) === 0x80) {
+                        tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F);
+                        if (tempCodePoint > 0x7F) {
+                            codePoint = tempCodePoint;
+                        }
+                    }
+                    break;
+                case 3:
+                    secondByte = buf[i + 1];
+                    thirdByte = buf[i + 2];
+                    if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
+                        tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F);
+                        if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
+                            codePoint = tempCodePoint;
+                        }
+                    }
+                    break;
+                case 4:
+                    secondByte = buf[i + 1];
+                    thirdByte = buf[i + 2];
+                    fourthByte = buf[i + 3];
+                    if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
+                        tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F);
+                        if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
+                            codePoint = tempCodePoint;
+                        }
+                    }
+            }
+        }
+
+        if (codePoint === null) {
+            // we did not generate a valid codePoint so insert a
+            // replacement char (U+FFFD) and advance only 1 byte
+            codePoint = 0xFFFD;
+            bytesPerSequence = 1;
+        } else if (codePoint > 0xFFFF) {
+            // encode to utf16 (surrogate pair dance)
+            codePoint -= 0x10000;
+            res.push(codePoint >>> 10 & 0x3FF | 0xD800);
+            codePoint = 0xDC00 | codePoint & 0x3FF;
+        }
+
+        res.push(codePoint);
+        i += bytesPerSequence;
+    }
+
+    return decodeCodePointsArray(res);
+}
+
+// Based on http://stackoverflow.com/a/22747272/680742, the browser with
+// the lowest limit is Chrome, with 0x10000 args.
+// We go 1 magnitude less, for safety
+const MAX_ARGUMENTS_LENGTH = 0x1000;
+
+function decodeCodePointsArray(codePoints) {
+    const len = codePoints.length;
+    if (len <= MAX_ARGUMENTS_LENGTH) {
+        return String.fromCharCode.apply(String, codePoints); // avoid extra slice()
+    }
+
+    // Decode in chunks to avoid "call stack size exceeded".
+    let res = '';
+    let i = 0;
+    while (i < len) {
+        res += String.fromCharCode.apply(
+            String,
+            codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
+        );
+    }
+    return res;
+}
+
+function asciiSlice(buf, start, end) {
+    let ret = '';
+    end = Math.min(buf.length, end);
+
+    for (let i = start; i < end; ++i) {
+        ret += String.fromCharCode(buf[i] & 0x7F);
+    }
+    return ret;
+}
+
+function latin1Slice(buf, start, end) {
+    let ret = '';
+    end = Math.min(buf.length, end);
+
+    for (let i = start; i < end; ++i) {
+        ret += String.fromCharCode(buf[i]);
+    }
+    return ret;
+}
+
+function hexSlice(buf, start, end) {
+    const len = buf.length;
+
+    if (!start || start < 0) start = 0;
+    if (!end || end < 0 || end > len) end = len;
+
+    let out = '';
+    for (let i = start; i < end; ++i) {
+        out += hexSliceLookupTable[buf[i]];
+    }
+    return out;
+}
+
+function utf16leSlice(buf, start, end) {
+    const bytes = buf.slice(start, end);
+    let res = '';
+    // If bytes.length is odd, the last 8 bits must be ignored (same as node.js)
+    for (let i = 0; i < bytes.length - 1; i += 2) {
+        res += String.fromCharCode(bytes[i] + (bytes[i + 1] * 256));
+    }
+    return res;
+}
+
+Buffer.prototype.slice = function slice(start, end) {
+    const len = this.length;
+    start = ~~start;
+    end = end === undefined ? len : ~~end;
+
+    if (start < 0) {
+        start += len;
+        if (start < 0) start = 0;
+    } else if (start > len) {
+        start = len;
+    }
+
+    if (end < 0) {
+        end += len;
+        if (end < 0) end = 0;
+    } else if (end > len) {
+        end = len;
+    }
+
+    if (end < start) end = start;
+
+    const newBuf = this.subarray(start, end);
+    // Return an augmented `Uint8Array` instance
+    Object.setPrototypeOf(newBuf, Buffer.prototype);
+
+    return newBuf;
+};
+
+/*
+ * Need to make sure that buffer isn't trying to write out of bounds.
+ */
+function checkOffset(offset, ext, length) {
+    if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint');
+    if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length');
+}
+
+Buffer.prototype.readUintLE =
+    Buffer.prototype.readUIntLE = function readUIntLE(offset, byteLength, noAssert) {
+        offset = offset >>> 0;
+        byteLength = byteLength >>> 0;
+        if (!noAssert) checkOffset(offset, byteLength, this.length);
+
+        let val = this[offset];
+        let mul = 1;
+        let i = 0;
+        while (++i < byteLength && (mul *= 0x100)) {
+            val += this[offset + i] * mul;
+        }
+
+        return val;
+    };
+
+Buffer.prototype.readUintBE =
+    Buffer.prototype.readUIntBE = function readUIntBE(offset, byteLength, noAssert) {
+        offset = offset >>> 0;
+        byteLength = byteLength >>> 0;
+        if (!noAssert) {
+            checkOffset(offset, byteLength, this.length);
+        }
+
+        let val = this[offset + --byteLength];
+        let mul = 1;
+        while (byteLength > 0 && (mul *= 0x100)) {
+            val += this[offset + --byteLength] * mul;
+        }
+
+        return val;
+    };
+
+Buffer.prototype.readUint8 =
+    Buffer.prototype.readUInt8 = function readUInt8(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert) checkOffset(offset, 1, this.length);
+        return this[offset];
+    };
+
+Buffer.prototype.readUint16LE =
+    Buffer.prototype.readUInt16LE = function readUInt16LE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert) checkOffset(offset, 2, this.length);
+        return this[offset] | (this[offset + 1] << 8);
+    };
+
+Buffer.prototype.readUint16BE =
+    Buffer.prototype.readUInt16BE = function readUInt16BE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert) checkOffset(offset, 2, this.length);
+        return (this[offset] << 8) | this[offset + 1];
+    };
+
+Buffer.prototype.readUint32LE =
+    Buffer.prototype.readUInt32LE = function readUInt32LE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert) checkOffset(offset, 4, this.length);
+
+        return ((this[offset]) |
+                (this[offset + 1] << 8) |
+                (this[offset + 2] << 16)) +
+            (this[offset + 3] * 0x1000000);
+    };
+
+Buffer.prototype.readUint32BE =
+    Buffer.prototype.readUInt32BE = function readUInt32BE(offset, noAssert) {
+        offset = offset >>> 0;
+        if (!noAssert) checkOffset(offset, 4, this.length);
+
+        return (this[offset] * 0x1000000) +
+            ((this[offset + 1] << 16) |
+                (this[offset + 2] << 8) |
+                this[offset + 3]);
+    };
+
+Buffer.prototype.readBigUInt64LE = defineBigIntMethod(function readBigUInt64LE(offset) {
+    offset = offset >>> 0;
+    validateNumber(offset, 'offset');
+    const first = this[offset];
+    const last = this[offset + 7];
+    if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+    }
+
+    const lo = first +
+        this[++offset] * 2 ** 8 +
+        this[++offset] * 2 ** 16 +
+        this[++offset] * 2 ** 24;
+
+    const hi = this[++offset] +
+        this[++offset] * 2 ** 8 +
+        this[++offset] * 2 ** 16 +
+        last * 2 ** 24;
+
+    return BigInt(lo) + (BigInt(hi) << BigInt(32));
+});
+
+Buffer.prototype.readBigUInt64BE = defineBigIntMethod(function readBigUInt64BE(offset) {
+    offset = offset >>> 0;
+    validateNumber(offset, 'offset');
+    const first = this[offset];
+    const last = this[offset + 7];
+    if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+    }
+
+    const hi = first * 2 ** 24 +
+        this[++offset] * 2 ** 16 +
+        this[++offset] * 2 ** 8 +
+        this[++offset];
+
+    const lo = this[++offset] * 2 ** 24 +
+        this[++offset] * 2 ** 16 +
+        this[++offset] * 2 ** 8 +
+        last;
+
+    return (BigInt(hi) << BigInt(32)) + BigInt(lo);
+});
+
+Buffer.prototype.readIntLE = function readIntLE(offset, byteLength, noAssert) {
+    offset = offset >>> 0;
+    byteLength = byteLength >>> 0;
+    if (!noAssert) checkOffset(offset, byteLength, this.length);
+
+    let val = this[offset];
+    let mul = 1;
+    let i = 0;
+    while (++i < byteLength && (mul *= 0x100)) {
+        val += this[offset + i] * mul;
+    }
+    mul *= 0x80;
+
+    if (val >= mul) val -= Math.pow(2, 8 * byteLength);
+
+    return val;
+};
+
+Buffer.prototype.readIntBE = function readIntBE(offset, byteLength, noAssert) {
+    offset = offset >>> 0;
+    byteLength = byteLength >>> 0;
+    if (!noAssert) checkOffset(offset, byteLength, this.length);
+
+    let i = byteLength;
+    let mul = 1;
+    let val = this[offset + --i];
+    while (i > 0 && (mul *= 0x100)) {
+        val += this[offset + --i] * mul;
+    }
+    mul *= 0x80;
+
+    if (val >= mul) val -= Math.pow(2, 8 * byteLength);
+
+    return val;
+};
+
+Buffer.prototype.readInt8 = function readInt8(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 1, this.length);
+    if (!(this[offset] & 0x80)) return (this[offset]);
+    return ((0xff - this[offset] + 1) * -1);
+};
+
+Buffer.prototype.readInt16LE = function readInt16LE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 2, this.length);
+    const val = this[offset] | (this[offset + 1] << 8);
+    return (val & 0x8000) ? val | 0xFFFF0000 : val;
+};
+
+Buffer.prototype.readInt16BE = function readInt16BE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 2, this.length);
+    const val = this[offset + 1] | (this[offset] << 8);
+    return (val & 0x8000) ? val | 0xFFFF0000 : val;
+};
+
+Buffer.prototype.readInt32LE = function readInt32LE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 4, this.length);
+
+    return (this[offset]) |
+        (this[offset + 1] << 8) |
+        (this[offset + 2] << 16) |
+        (this[offset + 3] << 24);
+};
+
+Buffer.prototype.readInt32BE = function readInt32BE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 4, this.length);
+
+    return (this[offset] << 24) |
+        (this[offset + 1] << 16) |
+        (this[offset + 2] << 8) |
+        (this[offset + 3]);
+};
+
+Buffer.prototype.readBigInt64LE = defineBigIntMethod(function readBigInt64LE(offset) {
+    offset = offset >>> 0;
+    validateNumber(offset, 'offset');
+    const first = this[offset];
+    const last = this[offset + 7];
+    if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+    }
+
+    const val = this[offset + 4] +
+        this[offset + 5] * 2 ** 8 +
+        this[offset + 6] * 2 ** 16 +
+        (last << 24); // Overflow
+
+    return (BigInt(val) << BigInt(32)) +
+        BigInt(first +
+            this[++offset] * 2 ** 8 +
+            this[++offset] * 2 ** 16 +
+            this[++offset] * 2 ** 24);
+});
+
+Buffer.prototype.readBigInt64BE = defineBigIntMethod(function readBigInt64BE(offset) {
+    offset = offset >>> 0;
+    validateNumber(offset, 'offset');
+    const first = this[offset];
+    const last = this[offset + 7];
+    if (first === undefined || last === undefined) {
+        boundsError(offset, this.length - 8);
+    }
+
+    const val = (first << 24) + // Overflow
+        this[++offset] * 2 ** 16 +
+        this[++offset] * 2 ** 8 +
+        this[++offset];
+
+    return (BigInt(val) << BigInt(32)) +
+        BigInt(this[++offset] * 2 ** 24 +
+            this[++offset] * 2 ** 16 +
+            this[++offset] * 2 ** 8 +
+            last);
+});
+
+Buffer.prototype.readFloatLE = function readFloatLE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 4, this.length);
+    return KrajeeIeee754.read(this, offset, true, 23, 4);
+};
+
+Buffer.prototype.readFloatBE = function readFloatBE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 4, this.length);
+    return KrajeeIeee754.read(this, offset, false, 23, 4);
+};
+
+Buffer.prototype.readDoubleLE = function readDoubleLE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 8, this.length);
+    return KrajeeIeee754.read(this, offset, true, 52, 8);
+};
+
+Buffer.prototype.readDoubleBE = function readDoubleBE(offset, noAssert) {
+    offset = offset >>> 0;
+    if (!noAssert) checkOffset(offset, 8, this.length);
+    return KrajeeIeee754.read(this, offset, false, 52, 8);
+};
+
+function checkInt(buf, value, offset, ext, max, min) {
+    if (!Buffer.isBuffer(buf)) throw new TypeError('"buffer" argument must be a Buffer instance');
+    if (value > max || value < min) throw new RangeError('"value" argument is out of bounds');
+    if (offset + ext > buf.length) throw new RangeError('Index out of range');
+}
+
+Buffer.prototype.writeUintLE =
+    Buffer.prototype.writeUIntLE = function writeUIntLE(value, offset, byteLength, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        byteLength = byteLength >>> 0;
+        if (!noAssert) {
+            const maxBytes = Math.pow(2, 8 * byteLength) - 1;
+            checkInt(this, value, offset, byteLength, maxBytes, 0);
+        }
+
+        let mul = 1;
+        let i = 0;
+        this[offset] = value & 0xFF;
+        while (++i < byteLength && (mul *= 0x100)) {
+            this[offset + i] = (value / mul) & 0xFF;
+        }
+
+        return offset + byteLength;
+    };
+
+Buffer.prototype.writeUintBE =
+    Buffer.prototype.writeUIntBE = function writeUIntBE(value, offset, byteLength, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        byteLength = byteLength >>> 0;
+        if (!noAssert) {
+            const maxBytes = Math.pow(2, 8 * byteLength) - 1;
+            checkInt(this, value, offset, byteLength, maxBytes, 0);
+        }
+
+        let i = byteLength - 1;
+        let mul = 1;
+        this[offset + i] = value & 0xFF;
+        while (--i >= 0 && (mul *= 0x100)) {
+            this[offset + i] = (value / mul) & 0xFF;
+        }
+
+        return offset + byteLength;
+    };
+
+Buffer.prototype.writeUint8 =
+    Buffer.prototype.writeUInt8 = function writeUInt8(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0);
+        this[offset] = (value & 0xff);
+        return offset + 1;
+    };
+
+Buffer.prototype.writeUint16LE =
+    Buffer.prototype.writeUInt16LE = function writeUInt16LE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0);
+        this[offset] = (value & 0xff);
+        this[offset + 1] = (value >>> 8);
+        return offset + 2;
+    };
+
+Buffer.prototype.writeUint16BE =
+    Buffer.prototype.writeUInt16BE = function writeUInt16BE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0);
+        this[offset] = (value >>> 8);
+        this[offset + 1] = (value & 0xff);
+        return offset + 2;
+    };
+
+Buffer.prototype.writeUint32LE =
+    Buffer.prototype.writeUInt32LE = function writeUInt32LE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0);
+        this[offset + 3] = (value >>> 24);
+        this[offset + 2] = (value >>> 16);
+        this[offset + 1] = (value >>> 8);
+        this[offset] = (value & 0xff);
+        return offset + 4;
+    };
+
+Buffer.prototype.writeUint32BE =
+    Buffer.prototype.writeUInt32BE = function writeUInt32BE(value, offset, noAssert) {
+        value = +value;
+        offset = offset >>> 0;
+        if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0);
+        this[offset] = (value >>> 24);
+        this[offset + 1] = (value >>> 16);
+        this[offset + 2] = (value >>> 8);
+        this[offset + 3] = (value & 0xff);
+        return offset + 4;
+    };
+
+function wrtBigUInt64LE(buf, value, offset, min, max) {
+    checkIntBI(value, min, max, buf, offset, 7);
+
+    let lo = Number(value & BigInt(0xffffffff));
+    buf[offset++] = lo;
+    lo = lo >> 8;
+    buf[offset++] = lo;
+    lo = lo >> 8;
+    buf[offset++] = lo;
+    lo = lo >> 8;
+    buf[offset++] = lo;
+    let hi = Number(value >> BigInt(32) & BigInt(0xffffffff));
+    buf[offset++] = hi;
+    hi = hi >> 8;
+    buf[offset++] = hi;
+    hi = hi >> 8;
+    buf[offset++] = hi;
+    hi = hi >> 8;
+    buf[offset++] = hi;
+    return offset;
+}
+
+function wrtBigUInt64BE(buf, value, offset, min, max) {
+    checkIntBI(value, min, max, buf, offset, 7);
+
+    let lo = Number(value & BigInt(0xffffffff));
+    buf[offset + 7] = lo;
+    lo = lo >> 8;
+    buf[offset + 6] = lo;
+    lo = lo >> 8;
+    buf[offset + 5] = lo;
+    lo = lo >> 8;
+    buf[offset + 4] = lo;
+    let hi = Number(value >> BigInt(32) & BigInt(0xffffffff));
+    buf[offset + 3] = hi;
+    hi = hi >> 8;
+    buf[offset + 2] = hi;
+    hi = hi >> 8;
+    buf[offset + 1] = hi;
+    hi = hi >> 8;
+    buf[offset] = hi;
+    return offset + 8;
+}
+
+Buffer.prototype.writeBigUInt64LE = defineBigIntMethod(function writeBigUInt64LE(value, offset = 0) {
+    return wrtBigUInt64LE(this, value, offset, BigInt(0), BigInt('0xffffffffffffffff'));
+});
+
+Buffer.prototype.writeBigUInt64BE = defineBigIntMethod(function writeBigUInt64BE(value, offset = 0) {
+    return wrtBigUInt64BE(this, value, offset, BigInt(0), BigInt('0xffffffffffffffff'));
+});
+
+Buffer.prototype.writeIntLE = function writeIntLE(value, offset, byteLength, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) {
+        const limit = Math.pow(2, (8 * byteLength) - 1);
+
+        checkInt(this, value, offset, byteLength, limit - 1, -limit);
+    }
+
+    let i = 0;
+    let mul = 1;
+    let sub = 0;
+    this[offset] = value & 0xFF;
+    while (++i < byteLength && (mul *= 0x100)) {
+        if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
+            sub = 1;
+        }
+        this[offset + i] = ((value / mul) >> 0) - sub & 0xFF;
+    }
+
+    return offset + byteLength;
+};
+
+Buffer.prototype.writeIntBE = function writeIntBE(value, offset, byteLength, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) {
+        const limit = Math.pow(2, (8 * byteLength) - 1);
+
+        checkInt(this, value, offset, byteLength, limit - 1, -limit);
+    }
+
+    let i = byteLength - 1;
+    let mul = 1;
+    let sub = 0;
+    this[offset + i] = value & 0xFF;
+    while (--i >= 0 && (mul *= 0x100)) {
+        if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
+            sub = 1;
+        }
+        this[offset + i] = ((value / mul) >> 0) - sub & 0xFF;
+    }
+
+    return offset + byteLength;
+};
+
+Buffer.prototype.writeInt8 = function writeInt8(value, offset, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80);
+    if (value < 0) value = 0xff + value + 1;
+    this[offset] = (value & 0xff);
+    return offset + 1;
+};
+
+Buffer.prototype.writeInt16LE = function writeInt16LE(value, offset, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000);
+    this[offset] = (value & 0xff);
+    this[offset + 1] = (value >>> 8);
+    return offset + 2;
+};
+
+Buffer.prototype.writeInt16BE = function writeInt16BE(value, offset, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000);
+    this[offset] = (value >>> 8);
+    this[offset + 1] = (value & 0xff);
+    return offset + 2;
+};
+
+Buffer.prototype.writeInt32LE = function writeInt32LE(value, offset, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);
+    this[offset] = (value & 0xff);
+    this[offset + 1] = (value >>> 8);
+    this[offset + 2] = (value >>> 16);
+    this[offset + 3] = (value >>> 24);
+    return offset + 4;
+};
+
+Buffer.prototype.writeInt32BE = function writeInt32BE(value, offset, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);
+    if (value < 0) value = 0xffffffff + value + 1;
+    this[offset] = (value >>> 24);
+    this[offset + 1] = (value >>> 16);
+    this[offset + 2] = (value >>> 8);
+    this[offset + 3] = (value & 0xff);
+    return offset + 4;
+};
+
+Buffer.prototype.writeBigInt64LE = defineBigIntMethod(function writeBigInt64LE(value, offset = 0) {
+    return wrtBigUInt64LE(this, value, offset, -BigInt('0x8000000000000000'), BigInt('0x7fffffffffffffff'));
+});
+
+Buffer.prototype.writeBigInt64BE = defineBigIntMethod(function writeBigInt64BE(value, offset = 0) {
+    return wrtBigUInt64BE(this, value, offset, -BigInt('0x8000000000000000'), BigInt('0x7fffffffffffffff'));
+});
+
+function checkIEEE754(buf, value, offset, ext, max, min) {
+    if (offset + ext > buf.length) throw new RangeError('Index out of range');
+    if (offset < 0) throw new RangeError('Index out of range');
+}
+
+function writeFloat(buf, value, offset, littleEndian, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) {
+        checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38);
+    }
+    KrajeeIeee754.write(buf, value, offset, littleEndian, 23, 4);
+    return offset + 4;
+}
+
+Buffer.prototype.writeFloatLE = function writeFloatLE(value, offset, noAssert) {
+    return writeFloat(this, value, offset, true, noAssert);
+};
+
+Buffer.prototype.writeFloatBE = function writeFloatBE(value, offset, noAssert) {
+    return writeFloat(this, value, offset, false, noAssert);
+};
+
+function writeDouble(buf, value, offset, littleEndian, noAssert) {
+    value = +value;
+    offset = offset >>> 0;
+    if (!noAssert) {
+        checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308);
+    }
+    KrajeeIeee754.write(buf, value, offset, littleEndian, 52, 8);
+    return offset + 8;
+}
+
+Buffer.prototype.writeDoubleLE = function writeDoubleLE(value, offset, noAssert) {
+    return writeDouble(this, value, offset, true, noAssert);
+};
+
+Buffer.prototype.writeDoubleBE = function writeDoubleBE(value, offset, noAssert) {
+    return writeDouble(this, value, offset, false, noAssert);
+};
+
+// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+Buffer.prototype.copy = function copy(target, targetStart, start, end) {
+    if (!Buffer.isBuffer(target)) throw new TypeError('argument should be a Buffer');
+    if (!start) start = 0;
+    if (!end && end !== 0) end = this.length;
+    if (targetStart >= target.length) targetStart = target.length;
+    if (!targetStart) targetStart = 0;
+    if (end > 0 && end < start) end = start;
+
+    // Copy 0 bytes; we're done
+    if (end === start) return 0;
+    if (target.length === 0 || this.length === 0) return 0;
+
+    // Fatal error conditions
+    if (targetStart < 0) {
+        throw new RangeError('targetStart out of bounds');
+    }
+    if (start < 0 || start >= this.length) throw new RangeError('Index out of range');
+    if (end < 0) throw new RangeError('sourceEnd out of bounds');
+
+    // Are we oob?
+    if (end > this.length) end = this.length;
+    if (target.length - targetStart < end - start) {
+        end = target.length - targetStart + start;
+    }
+
+    const len = end - start;
+
+    if (this === target && typeof Uint8Array.prototype.copyWithin === 'function') {
+        // Use built-in when available, missing from IE11
+        this.copyWithin(targetStart, start, end);
+    } else {
+        Uint8Array.prototype.set.call(
+            target,
+            this.subarray(start, end),
+            targetStart
+        );
+    }
+
+    return len;
+};
+
+// Usage:
+//    buffer.fill(number[, offset[, end]])
+//    buffer.fill(buffer[, offset[, end]])
+//    buffer.fill(string[, offset[, end]][, encoding])
+Buffer.prototype.fill = function fill(val, start, end, encoding) {
+    // Handle string cases:
+    if (typeof val === 'string') {
+        if (typeof start === 'string') {
+            encoding = start;
+            start = 0;
+            end = this.length;
+        } else if (typeof end === 'string') {
+            encoding = end;
+            end = this.length;
+        }
+        if (encoding !== undefined && typeof encoding !== 'string') {
+            throw new TypeError('encoding must be a string');
+        }
+        if (typeof encoding === 'string' && !Buffer.isEncoding(encoding)) {
+            throw new TypeError('Unknown encoding: ' + encoding);
+        }
+        if (val.length === 1) {
+            const code = val.charCodeAt(0);
+            if ((encoding === 'utf8' && code < 128) ||
+                encoding === 'latin1') {
+                // Fast path: If `val` fits into a single byte, use that numeric value.
+                val = code;
+            }
+        }
+    } else if (typeof val === 'number') {
+        val = val & 255;
+    } else if (typeof val === 'boolean') {
+        val = Number(val);
+    }
+
+    // Invalid ranges are not set to a default, so can range check early.
+    if (start < 0 || this.length < start || this.length < end) {
+        throw new RangeError('Out of range index');
+    }
+
+    if (end <= start) {
+        return this;
+    }
+
+    start = start >>> 0;
+    end = end === undefined ? this.length : end >>> 0;
+
+    if (!val) val = 0;
+
+    let i;
+    if (typeof val === 'number') {
+        for (i = start; i < end; ++i) {
+            this[i] = val;
+        }
+    } else {
+        const bytes = Buffer.isBuffer(val)
+            ? val
+            : Buffer.from(val, encoding);
+        const len = bytes.length;
+        if (len === 0) {
+            throw new TypeError('The value "' + val +
+                '" is invalid for argument "value"');
+        }
+        for (i = 0; i < end - start; ++i) {
+            this[i + start] = bytes[i % len];
+        }
+    }
+
+    return this;
+};
+
+// CUSTOM ERRORS
+// =============
+
+// Simplified versions from Node, changed for Buffer-only usage
+const errors = {};
+
+function E(sym, getMessage, Base) {
+    errors[sym] = class NodeError extends Base {
+        constructor() {
+            super();
+
+            Object.defineProperty(this, 'message', {
+                value: getMessage.apply(this, arguments),
+                writable: true,
+                configurable: true
+            });
+
+            // Add the error code to the name to include it in the stack trace.
+            this.name = `${this.name} [${sym}]`;
+            // Access the stack to generate the error message including the error code
+            // from the name.
+            this.stack; // eslint-disable-line no-unused-expressions
+            // Reset the name to the actual name.
+            delete this.name;
+        }
+
+        get code() {
+            return sym;
+        }
+
+        set code(value) {
+            Object.defineProperty(this, 'code', {
+                configurable: true,
+                enumerable: true,
+                value,
+                writable: true
+            });
+        }
+
+        toString() {
+            return `${this.name} [${sym}]: ${this.message}`;
+        }
+    };
+}
+
+E('ERR_BUFFER_OUT_OF_BOUNDS',
+    function (name) {
+        if (name) {
+            return `${name} is outside of buffer bounds`;
+        }
+
+        return 'Attempt to access memory outside buffer bounds';
+    }, RangeError);
+E('ERR_INVALID_ARG_TYPE',
+    function (name, actual) {
+        return `The "${name}" argument must be of type number. Received type ${typeof actual}`;
+    }, TypeError);
+E('ERR_OUT_OF_RANGE',
+    function (str, range, input) {
+        let msg = `The value of "${str}" is out of range.`;
+        let received = input;
+        if (Number.isInteger(input) && Math.abs(input) > 2 ** 32) {
+            received = addNumericalSeparator(String(input));
+        } else if (typeof input === 'bigint') {
+            received = String(input);
+            if (input > BigInt(2) ** BigInt(32) || input < -(BigInt(2) ** BigInt(32))) {
+                received = addNumericalSeparator(received);
+            }
+            received += 'n';
+        }
+        msg += ` It must be ${range}. Received ${received}`;
+        return msg;
+    }, RangeError);
+
+function addNumericalSeparator(val) {
+    let res = '';
+    let i = val.length;
+    const start = val[0] === '-' ? 1 : 0;
+    for (; i >= start + 4; i -= 3) {
+        res = `_${val.slice(i - 3, i)}${res}`;
+    }
+    return `${val.slice(0, i)}${res}`;
+}
+
+// CHECK FUNCTIONS
+// ===============
+
+function checkBounds(buf, offset, byteLength) {
+    validateNumber(offset, 'offset');
+    if (buf[offset] === undefined || buf[offset + byteLength] === undefined) {
+        boundsError(offset, buf.length - (byteLength + 1));
+    }
+}
+
+function checkIntBI(value, min, max, buf, offset, byteLength) {
+    if (value > max || value < min) {
+        const n = typeof min === 'bigint' ? 'n' : '';
+        let range;
+        if (byteLength > 3) {
+            if (min === 0 || min === BigInt(0)) {
+                range = `>= 0${n} and < 2${n} ** ${(byteLength + 1) * 8}${n}`;
+            } else {
+                range = `>= -(2${n} ** ${(byteLength + 1) * 8 - 1}${n}) and < 2 ** ` +
+                    `${(byteLength + 1) * 8 - 1}${n}`;
+            }
+        } else {
+            range = `>= ${min}${n} and <= ${max}${n}`;
+        }
+        throw new errors.ERR_OUT_OF_RANGE('value', range, value);
+    }
+    checkBounds(buf, offset, byteLength);
+}
+
+function validateNumber(value, name) {
+    if (typeof value !== 'number') {
+        throw new errors.ERR_INVALID_ARG_TYPE(name, 'number', value);
+    }
+}
+
+function boundsError(value, length, type) {
+    if (Math.floor(value) !== value) {
+        validateNumber(value, type);
+        throw new errors.ERR_OUT_OF_RANGE(type || 'offset', 'an integer', value);
+    }
+
+    if (length < 0) {
+        throw new errors.ERR_BUFFER_OUT_OF_BOUNDS();
+    }
+
+    throw new errors.ERR_OUT_OF_RANGE(type || 'offset',
+        `>= ${type ? 1 : 0} and <= ${length}`,
+        value);
+}
+
+// HELPER FUNCTIONS
+// ================
+
+const INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g;
+
+function base64clean(str) {
+    // Node takes equal signs as end of the Base64 encoding
+    str = str.split('=')[0];
+    // Node strips out invalid characters like \n and \t from the string, base64-js does not
+    str = str.trim().replace(INVALID_BASE64_RE, '');
+    // Node converts strings with length < 2 to ''
+    if (str.length < 2) return '';
+    // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+    while (str.length % 4 !== 0) {
+        str = str + '=';
+    }
+    return str;
+}
+
+function utf8ToBytes(string, units) {
+    units = units || Infinity;
+    let codePoint;
+    const length = string.length;
+    let leadSurrogate = null;
+    const bytes = [];
+
+    for (let i = 0; i < length; ++i) {
+        codePoint = string.charCodeAt(i);
+
+        // is surrogate component
+        if (codePoint > 0xD7FF && codePoint < 0xE000) {
+            // last char was a lead
+            if (!leadSurrogate) {
+                // no lead yet
+                if (codePoint > 0xDBFF) {
+                    // unexpected trail
+                    if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+                    continue;
+                } else if (i + 1 === length) {
+                    // unpaired lead
+                    if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+                    continue;
+                }
+
+                // valid lead
+                leadSurrogate = codePoint;
+
+                continue;
+            }
+
+            // 2 leads in a row
+            if (codePoint < 0xDC00) {
+                if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+                leadSurrogate = codePoint;
+                continue;
+            }
+
+            // valid surrogate pair
+            codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000;
+        } else if (leadSurrogate) {
+            // valid bmp char, but last char was a lead
+            if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+        }
+
+        leadSurrogate = null;
+
+        // encode utf8
+        if (codePoint < 0x80) {
+            if ((units -= 1) < 0) break;
+            bytes.push(codePoint);
+        } else if (codePoint < 0x800) {
+            if ((units -= 2) < 0) break;
+            bytes.push(
+                codePoint >> 0x6 | 0xC0,
+                codePoint & 0x3F | 0x80
+            );
+        } else if (codePoint < 0x10000) {
+            if ((units -= 3) < 0) break;
+            bytes.push(
+                codePoint >> 0xC | 0xE0,
+                codePoint >> 0x6 & 0x3F | 0x80,
+                codePoint & 0x3F | 0x80
+            );
+        } else if (codePoint < 0x110000) {
+            if ((units -= 4) < 0) break;
+            bytes.push(
+                codePoint >> 0x12 | 0xF0,
+                codePoint >> 0xC & 0x3F | 0x80,
+                codePoint >> 0x6 & 0x3F | 0x80,
+                codePoint & 0x3F | 0x80
+            );
+        } else {
+            throw new Error('Invalid code point');
+        }
+    }
+
+    return bytes;
+}
+
+function asciiToBytes(str) {
+    const byteArray = [];
+    for (let i = 0; i < str.length; ++i) {
+        // Node's code seems to be doing this and not & 0x7F..
+        byteArray.push(str.charCodeAt(i) & 0xFF);
+    }
+    return byteArray;
+}
+
+function utf16leToBytes(str, units) {
+    let c, hi, lo;
+    const byteArray = [];
+    for (let i = 0; i < str.length; ++i) {
+        if ((units -= 2) < 0) break;
+
+        c = str.charCodeAt(i);
+        hi = c >> 8;
+        lo = c % 256;
+        byteArray.push(lo);
+        byteArray.push(hi);
+    }
+
+    return byteArray;
+}
+
+function base64ToBytes(str) {
+    return KrajeeBase64.toByteArray(base64clean(str));
+}
+
+function blitBuffer(src, dst, offset, length) {
+    let i;
+    for (i = 0; i < length; ++i) {
+        if ((i + offset >= dst.length) || (i >= src.length)) break;
+        dst[i + offset] = src[i];
+    }
+    return i;
+}
+
+// ArrayBuffer or Uint8Array objects from other contexts (i.e. iframes) do not pass
+// the `instanceof` check but they should be treated as of that type.
+// See: https://github.com/feross/buffer/issues/166
+function isInstance(obj, type) {
+    return obj instanceof type ||
+        (obj != null && obj.constructor != null && obj.constructor.name != null &&
+            obj.constructor.name === type.name);
+}
+
+function numberIsNaN(obj) {
+    // For IE11 support
+    return obj !== obj; // eslint-disable-line no-self-compare
+}
+
+// Create lookup table for `toString('hex')`
+// See: https://github.com/feross/buffer/issues/219
+const hexSliceLookupTable = (function () {
+    const alphabet = '0123456789abcdef';
+    const table = new Array(256);
+    for (let i = 0; i < 16; ++i) {
+        const i16 = i * 16;
+        for (let j = 0; j < 16; ++j) {
+            table[i16 + j] = alphabet[i] + alphabet[j];
+        }
+    }
+    return table;
+})();
+
+// Return not function with Error if BigInt not supported
+function defineBigIntMethod(fn) {
+    return typeof BigInt === 'undefined' ? BufferBigIntNotDefined : fn;
+}
+
+function BufferBigIntNotDefined() {
+    throw new Error('BigInt not supported');
+}
+
+/*!
+ * Library to detect file mime type of a Uint8Array.
+ *
+ * Modified from https://github.com/sindresorhus/file-type to be used standalone on browser based apps.
+ *
+ * This library requires Node "buffer" module as a pre-requisite. The "buffer" module is made available in this repo
+ * for standalone use via the `buffer.js` script which needs to be loaded before this file on the page.
+ *
+ * Author: Kartik Visweswaran, Krajee.com
+ */
+"use strict";
+
+// ES5 POLYFILL HELPERS FOR ES6
+function _typeof(obj) {
+    "@babel/helpers - typeof";
+    return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) {
+        return typeof obj;
+    } : function (obj) {
+        return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    }, _typeof(obj);
+}
+
+function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+}
+
+function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+function _iterableToArray(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+}
+
+function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+}
+
+function _slicedToArray(arr, i) {
+    return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+}
+
+function _nonIterableRest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+
+function _iterableToArrayLimit(arr, i) {
+    var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+    if (_i == null) return;
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _s, _e;
+    try {
+        for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+            _arr.push(_s.value);
+            if (i && _arr.length === i) break;
+        }
+    } catch (err) {
+        _d = true;
+        _e = err;
+    } finally {
+        try {
+            if (!_n && _i["return"] != null) _i["return"]();
+        } finally {
+            if (_d) throw _e;
+        }
+    }
+    return _arr;
+}
+
+function _arrayWithHoles(arr) {
+    if (Array.isArray(arr)) return arr;
+}
+
+function _createForOfIteratorHelper(o, allowArrayLike) {
+    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+    if (!it) {
+        if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+            if (it) o = it;
+            var i = 0;
+            var F = function F() {
+            };
+            return {
+                s: F, n: function n() {
+                    if (i >= o.length) return {done: true};
+                    return {done: false, value: o[i++]};
+                }, e: function e(_e2) {
+                    throw _e2;
+                }, f: F
+            };
+        }
+        throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+    var normalCompletion = true, didErr = false, err;
+    return {
+        s: function s() {
+            it = it.call(o);
+        }, n: function n() {
+            var step = it.next();
+            normalCompletion = step.done;
+            return step;
+        }, e: function e(_e3) {
+            didErr = true;
+            err = _e3;
+        }, f: function f() {
+            try {
+                if (!normalCompletion && it.return != null) it.return();
+            } finally {
+                if (didErr) throw err;
+            }
+        }
+    };
+}
+
+function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+}
+
+function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+    for (var i = 0, arr2 = new Array(len); i < len; i++) {
+        arr2[i] = arr[i];
+    }
+    return arr2;
+}
+
+function _instanceof(left, right) {
+    if (right != null && typeof Symbol !== "undefined" && right[Symbol.hasInstance]) {
+        return !!right[Symbol.hasInstance](left);
+    } else {
+        return left instanceof right;
+    }
+}
+
+function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+    }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    Object.defineProperty(Constructor, "prototype", {writable: false});
+    return Constructor;
+}
+
+function _classCallCheck(instance, Constructor) {
+    if (!_instanceof(instance, Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+    }
+}
+
+function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+        throw new TypeError("Super expression must either be null or a function");
+    }
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+        constructor: {
+            value: subClass,
+            writable: true,
+            configurable: true
+        }
+    });
+    Object.defineProperty(subClass, "prototype", {writable: false});
+    if (superClass) _setPrototypeOf(subClass, superClass);
+}
+
+function _createSuper(Derived) {
+    var hasNativeReflectConstruct = _isNativeReflectConstruct();
+    return function _createSuperInternal() {
+        var Super = _getPrototypeOf(Derived), result;
+        if (hasNativeReflectConstruct) {
+            var NewTarget = _getPrototypeOf(this).constructor;
+            result = Reflect.construct(Super, arguments, NewTarget);
+        } else {
+            result = Super.apply(this, arguments);
+        }
+        return _possibleConstructorReturn(this, result);
+    };
+}
+
+function _possibleConstructorReturn(self, call) {
+    if (call && (_typeof(call) === "object" || typeof call === "function")) {
+        return call;
+    } else if (call !== void 0) {
+        throw new TypeError("Derived constructors may only return object or undefined");
+    }
+    return _assertThisInitialized(self);
+}
+
+function _assertThisInitialized(self) {
+    if (self === void 0) {
+        throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+    return self;
+}
+
+function _wrapNativeSuper(Class) {
+    var _cache = typeof Map === "function" ? new Map() : undefined;
+    _wrapNativeSuper = function _wrapNativeSuper(Class) {
+        if (Class === null || !_isNativeFunction(Class)) return Class;
+        if (typeof Class !== "function") {
+            throw new TypeError("Super expression must either be null or a function");
+        }
+        if (typeof _cache !== "undefined") {
+            if (_cache.has(Class)) return _cache.get(Class);
+            _cache.set(Class, Wrapper);
+        }
+
+        function Wrapper() {
+            return _construct(Class, arguments, _getPrototypeOf(this).constructor);
+        }
+
+        Wrapper.prototype = Object.create(Class.prototype, {
+            constructor: {
+                value: Wrapper,
+                enumerable: false,
+                writable: true,
+                configurable: true
+            }
+        });
+        return _setPrototypeOf(Wrapper, Class);
+    };
+    return _wrapNativeSuper(Class);
+}
+
+function _construct(Parent, args, Class) {
+    if (_isNativeReflectConstruct()) {
+        _construct = Reflect.construct.bind();
+    } else {
+        _construct = function _construct(Parent, args, Class) {
+            var a = [null];
+            a.push.apply(a, args);
+            var Constructor = Function.bind.apply(Parent, a);
+            var instance = new Constructor();
+            if (Class) _setPrototypeOf(instance, Class.prototype);
+            return instance;
+        };
+    }
+    return _construct.apply(null, arguments);
+}
+
+function _isNativeReflectConstruct() {
+    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+    if (Reflect.construct.sham) return false;
+    if (typeof Proxy === "function") return true;
+    try {
+        Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {
+        }));
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+function _isNativeFunction(fn) {
+    return Function.toString.call(fn).indexOf("[native code]") !== -1;
+}
+
+function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) {
+        o.__proto__ = p;
+        return o;
+    };
+    return _setPrototypeOf(o, p);
+}
+
+function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) {
+        return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+}
+
+// MAIN LIBRARY CODE
+var KrajeeFileTypeConfig = {
+    minimumBytes: 4100,
+    // A fair amount of file-types are detectable within this range,
+    defaultMessages: 'End-Of-Stream',
+    tarHeaderChecksumMatches: function tarHeaderChecksumMatches(buffer) {
+        var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var readSum = Number.parseInt(buffer.toString('utf8', 148, 154).replace(/\0.*$/, '').trim(), 8); // Read sum in header
+        if (Number.isNaN(readSum)) {
+            return false;
+        }
+        var sum = 8 * 0x20; // Initialize signed bit sum
+
+        for (var i = offset; i < offset + 148; i++) {
+            sum += buffer[i];
+        }
+        for (var _i = offset + 156; _i < offset + 512; _i++) {
+            sum += buffer[_i];
+        }
+        return readSum === sum;
+    },
+    uint32SyncSafeToken: {
+        get: function get(buffer, offset) {
+            return buffer[offset + 3] & 0x7F | buffer[offset + 2] << 7 | buffer[offset + 1] << 14 | buffer[offset] << 21;
+        },
+        len: 4
+    },
+    dv: function dv(array) {
+        return new DataView(array.buffer, array.byteOffset);
+    },
+    Token: {
+        /**
+         * 8-bit unsigned integer
+         */
+        UINT8: {
+            len: 1,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getUint8(offset);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setUint8(offset, value);
+                return offset + 1;
+            }
+        },
+        /**
+         * 16-bit unsigned integer, Little Endian byte order
+         */
+        UINT16_LE: {
+            len: 2,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getUint16(offset, true);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setUint16(offset, value, true);
+                return offset + 2;
+            }
+        },
+        /**
+         * 16-bit unsigned integer, Big Endian byte order
+         */
+        UINT16_BE: {
+            len: 2,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getUint16(offset);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setUint16(offset, value);
+                return offset + 2;
+            }
+        },
+        /**
+         * 32-bit unsigned integer, Big Endian byte order
+         */
+        INT32_BE: {
+            len: 4,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getInt32(offset);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setInt32(offset, value);
+                return offset + 4;
+            }
+        },
+        /**
+         * 32-bit unsigned integer, Little Endian byte order
+         */
+        UINT32_LE: {
+            len: 4,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getUint32(offset, true);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setUint32(offset, value, true);
+                return offset + 4;
+            }
+        },
+        /**
+         * 32-bit unsigned integer, Big Endian byte order
+         */
+        UINT32_BE: {
+            len: 4,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getUint32(offset);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setUint32(offset, value);
+                return offset + 4;
+            }
+        },
+        /**
+         * 64-bit unsigned integer, Little Endian byte order
+         */
+        UINT64_LE: {
+            len: 8,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getBigUint64(offset, true);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setBigUint64(offset, value, true);
+                return offset + 8;
+            }
+        },
+        /**
+         * 64-bit unsigned integer, Big Endian byte order
+         */
+        UINT64_BE: {
+            len: 8,
+            get: function get(array, offset) {
+                return KrajeeFileTypeConfig.dv(array).getBigUint64(offset);
+            },
+            put: function put(array, offset, value) {
+                KrajeeFileTypeConfig.dv(array).setBigUint64(offset, value);
+                return offset + 8;
+            }
+        }
+    }
+};
+var EndOfStreamError = /*#__PURE__*/function (_Error) {
+    _inherits(EndOfStreamError, _Error);
+    var _super = _createSuper(EndOfStreamError);
+
+    function EndOfStreamError() {
+        _classCallCheck(this, EndOfStreamError);
+        return _super.call(this, KrajeeFileTypeConfig.defaultMessages);
+    }
+
+    return _createClass(EndOfStreamError);
+}( /*#__PURE__*/_wrapNativeSuper(Error));
+var StringType = /*#__PURE__*/function () {
+    function StringType(len, encoding) {
+        _classCallCheck(this, StringType);
+        this.len = len;
+        this.encoding = encoding;
+    }
+
+    _createClass(StringType, [{
+        key: "get",
+        value: function get(uint8Array, offset) {
+            return Buffer.from(uint8Array).toString(this.encoding, offset, offset + this.len);
+        }
+    }]);
+    return StringType;
+}();
+
+async function fileTypeFromTokenizer(tokenizer) {
+    try {
+        return new FileTypeParser().parse(tokenizer);
+    } catch (error) {
+        if (!_instanceof(error, EndOfStreamError)) {
+            throw error;
+        }
+    }
+}
+
+var BufferTokenizer = /*#__PURE__*/function () {
+    /**
+     * Construct BufferTokenizer
+     * @param uint8Array - Uint8Array to tokenize
+     * @param fileInfo - Pass additional file information to the tokenizer
+     */
+    function BufferTokenizer(uint8Array, fileInfo) {
+        _classCallCheck(this, BufferTokenizer);
+        /**
+         * Tokenizer-stream position
+         */
+        this.position = 0;
+        this.numBuffer = new Uint8Array(8);
+        this.fileInfo = fileInfo ? fileInfo : {};
+        this.uint8Array = uint8Array;
+        this.fileInfo.size = this.fileInfo.size ? this.fileInfo.size : uint8Array.length;
+    }
+
+    /**
+     * Read a token from the tokenizer-stream
+     * @param token - The token to read
+     * @param position - If provided, the desired position in the tokenizer-stream
+     * @returns Promise with token data
+     */
+    _createClass(BufferTokenizer, [{
+        key: "readToken",
+        value: async function readToken(token) {
+            var position = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.position;
+            var uint8Array = Buffer.alloc(token.len);
+            var len = await this.readBuffer(uint8Array, {
+                position: position
+            });
+            if (len < token.len) throw new EndOfStreamError();
+            return token.get(uint8Array, 0);
+        }
+
+        /**
+         * Peek a token from the tokenizer-stream.
+         * @param token - Token to peek from the tokenizer-stream.
+         * @param position - Offset where to begin reading within the file. If position is null, data will be read from the current file position.
+         * @returns Promise with token data
+         */
+    }, {
+        key: "peekToken",
+        value: async function peekToken(token) {
+            var position = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.position;
+            var uint8Array = Buffer.alloc(token.len);
+            var len = await this.peekBuffer(uint8Array, {
+                position: position
+            });
+            if (len < token.len) throw new EndOfStreamError();
+            return token.get(uint8Array, 0);
+        }
+
+        /**
+         * Read buffer from tokenizer
+         * @param uint8Array - Uint8Array to tokenize
+         * @param options - Read behaviour options
+         * @returns {Promise<number>}
+         */
+    }, {
+        key: "readBuffer",
+        value: async function readBuffer(uint8Array, options) {
+            if (options && options.position) {
+                if (options.position < this.position) {
+                    throw new Error('`options.position` must be equal or greater than `tokenizer.position`');
+                }
+                this.position = options.position;
+            }
+            var bytesRead = await this.peekBuffer(uint8Array, options);
+            this.position += bytesRead;
+            return bytesRead;
+        }
+
+        /**
+         * Peek (read ahead) buffer from tokenizer
+         * @param uint8Array
+         * @param options - Read behaviour options
+         * @returns {Promise<number>}
+         */
+    }, {
+        key: "peekBuffer",
+        value: async function peekBuffer(uint8Array, options) {
+            var normOptions = this.normalizeOptions(uint8Array, options);
+            var bytes2read = Math.min(this.uint8Array.length - normOptions.position, normOptions.length);
+            if (!normOptions.mayBeLess && bytes2read < normOptions.length) {
+                throw new EndOfStreamError();
+            } else {
+                uint8Array.set(this.uint8Array.subarray(normOptions.position, normOptions.position + bytes2read), normOptions.offset);
+                return bytes2read;
+            }
+        }
+
+        /**
+         * Read a numeric token from the stream
+         * @param token - Numeric token
+         * @returns Promise with number
+         */
+    }, {
+        key: "readNumber",
+        value: async function readNumber(token) {
+            var len = await this.readBuffer(this.numBuffer, {
+                length: token.len
+            });
+            if (len < token.len) throw new EndOfStreamError();
+            return token.get(this.numBuffer, 0);
+        }
+
+        /**
+         * Read a numeric token from the stream
+         * @param token - Numeric token
+         * @returns Promise with number
+         */
+    }, {
+        key: "peekNumber",
+        value: async function peekNumber(token) {
+            var len = await this.peekBuffer(this.numBuffer, {
+                length: token.len
+            });
+            if (len < token.len) throw new EndOfStreamError();
+            return token.get(this.numBuffer, 0);
+        }
+    }, {
+        key: "close",
+        value: async function close() {
+            // empty
+        }
+
+        /**
+         *  Ignore number of bytes, advances the pointer in under tokenizer-stream.
+         * @param length - Number of bytes to ignore
+         * @return resolves the number of bytes ignored, equals length if this available, otherwise the number of bytes available
+         */
+    }, {
+        key: "ignore",
+        value: async function ignore(length) {
+            if (this.fileInfo.size !== undefined) {
+                var bytesLeft = this.fileInfo.size - this.position;
+                if (length > bytesLeft) {
+                    this.position += bytesLeft;
+                    return bytesLeft;
+                }
+            }
+            this.position += length;
+            return length;
+        }
+    }, {
+        key: "normalizeOptions",
+        value: function normalizeOptions(uint8Array, options) {
+            if (options && options.position !== undefined && options.position < this.position) {
+                throw new Error('`options.position` must be equal or greater than `tokenizer.position`');
+            }
+            if (options) {
+                return {
+                    mayBeLess: options.mayBeLess === true,
+                    offset: options.offset ? options.offset : 0,
+                    length: options.length ? options.length : uint8Array.length - (options.offset ? options.offset : 0),
+                    position: options.position ? options.position : this.position
+                };
+            }
+            return {
+                mayBeLess: false,
+                offset: 0,
+                length: uint8Array.length,
+                position: this.position
+            };
+        }
+    }]);
+    return BufferTokenizer;
+}();
+var FileTypeParser = /*#__PURE__*/function () {
+    function FileTypeParser() {
+        _classCallCheck(this, FileTypeParser);
+    }
+
+    _createClass(FileTypeParser, [{
+        key: "_check",
+        value: function _check(buffer, headers, options) {
+            options = {
+                offset: 0,
+                ...options
+            };
+            var _iterator = _createForOfIteratorHelper(headers.entries()),
+                _step;
+            try {
+                for (_iterator.s(); !(_step = _iterator.n()).done;) {
+                    var _step$value = _slicedToArray(_step.value, 2),
+                        index = _step$value[0],
+                        header = _step$value[1];
+                    // If a bitmask is set
+                    if (options.mask) {
+                        // If header doesn't equal `buf` with bits masked off
+                        if (header !== (options.mask[index] & buffer[index + options.offset])) {
+                            return false;
+                        }
+                    } else if (header !== buffer[index + options.offset]) {
+                        return false;
+                    }
+                }
+            } catch (err) {
+                _iterator.e(err);
+            } finally {
+                _iterator.f();
+            }
+            return true;
+        }
+    }, {
+        key: "check",
+        value: function check(header, options) {
+            return this._check(this.buffer, header, options);
+        }
+    }, {
+        key: "stringToBytes",
+        value: function stringToBytes(string) {
+            return _toConsumableArray(string).map(function (character) {
+                return character.charCodeAt(0);
+            });
+        }
+    }, {
+        key: "checkString",
+        value: function checkString(header, options) {
+            return this.check(this.stringToBytes(header), options);
+        }
+    }, {
+        key: "parse",
+        value: async function parse(input) {
+            if (!(_instanceof(input, Uint8Array) || _instanceof(input, ArrayBuffer) || _instanceof(input, BufferTokenizer))) {
+                throw new TypeError("Expected the `input` argument to be of type `Uint8Array` or `Buffer` or `ArrayBuffer`, got `".concat(_typeof(input), "`"));
+            }
+            var tokenizer = input;
+            if (!_instanceof(tokenizer, BufferTokenizer)) {
+                var buffer = _instanceof(input, Uint8Array) ? input : new Uint8Array(input);
+                if (!(buffer && buffer.length > 1)) {
+                    return;
+                }
+                tokenizer = new BufferTokenizer(buffer);
+            }
+            try {
+                return this.parseTokenizer(tokenizer);
+            } catch (error) {
+                if (!_instanceof(error, EndOfStreamError)) {
+                    throw error;
+                }
+            }
+        }
+    }, {
+        key: "parseTokenizer",
+        value: async function parseTokenizer(tokenizer) {
+            var Token = KrajeeFileTypeConfig.Token;
+            this.buffer = Buffer.alloc(KrajeeFileTypeConfig.minimumBytes);
+            // Keep reading until EOF if the file size is unknown.
+            if (tokenizer.fileInfo.size === undefined) {
+                tokenizer.fileInfo.size = Number.MAX_SAFE_INTEGER;
+            }
+            this.tokenizer = tokenizer;
+            await tokenizer.peekBuffer(this.buffer, {
+                length: 12,
+                mayBeLess: true
+            });
+
+            // -- 2-byte signatures --
+
+            if (this.check([0x42, 0x4D])) {
+                return {
+                    ext: 'bmp',
+                    mime: 'image/bmp'
+                };
+            }
+            if (this.check([0x0B, 0x77])) {
+                return {
+                    ext: 'ac3',
+                    mime: 'audio/vnd.dolby.dd-raw'
+                };
+            }
+            if (this.check([0x78, 0x01])) {
+                return {
+                    ext: 'dmg',
+                    mime: 'application/x-apple-diskimage'
+                };
+            }
+            if (this.check([0x4D, 0x5A])) {
+                return {
+                    ext: 'exe',
+                    mime: 'application/x-msdownload'
+                };
+            }
+            if (this.check([0x25, 0x21])) {
+                await tokenizer.peekBuffer(this.buffer, {
+                    length: 24,
+                    mayBeLess: true
+                });
+                if (this.checkString('PS-Adobe-', {
+                    offset: 2
+                }) && this.checkString(' EPSF-', {
+                    offset: 14
+                })) {
+                    return {
+                        ext: 'eps',
+                        mime: 'application/eps'
+                    };
+                }
+                return {
+                    ext: 'ps',
+                    mime: 'application/postscript'
+                };
+            }
+            if (this.check([0x1F, 0xA0]) || this.check([0x1F, 0x9D])) {
+                return {
+                    ext: 'Z',
+                    mime: 'application/x-compress'
+                };
+            }
+
+            // -- 3-byte signatures --
+            if (this.check([0x47, 0x49, 0x46])) {
+                return {
+                    ext: 'gif',
+                    mime: 'image/gif'
+                };
+            }
+            if (this.check([0xFF, 0xD8, 0xFF])) {
+                return {
+                    ext: 'jpg',
+                    mime: 'image/jpeg'
+                };
+            }
+            if (this.check([0x49, 0x49, 0xBC])) {
+                return {
+                    ext: 'jxr',
+                    mime: 'image/vnd.ms-photo'
+                };
+            }
+            if (this.check([0x1F, 0x8B, 0x8])) {
+                return {
+                    ext: 'gz',
+                    mime: 'application/gzip'
+                };
+            }
+            if (this.check([0x42, 0x5A, 0x68])) {
+                return {
+                    ext: 'bz2',
+                    mime: 'application/x-bzip2'
+                };
+            }
+            if (this.checkString('ID3')) {
+                await tokenizer.ignore(6); // Skip ID3 header until the header size
+                var id3HeaderLength = await tokenizer.readToken(KrajeeFileTypeConfig.uint32SyncSafeToken);
+                if (tokenizer.position + id3HeaderLength > tokenizer.fileInfo.size) {
+                    // Guess file type based on ID3 header for backward compatibility
+                    return {
+                        ext: 'mp3',
+                        mime: 'audio/mpeg'
+                    };
+                }
+                await tokenizer.ignore(id3HeaderLength);
+                return fileTypeFromTokenizer(tokenizer); // Skip ID3 header, recursion
+            }
+
+            // Musepack, SV7
+            if (this.checkString('MP+')) {
+                return {
+                    ext: 'mpc',
+                    mime: 'audio/x-musepack'
+                };
+            }
+            if ((this.buffer[0] === 0x43 || this.buffer[0] === 0x46) && this.check([0x57, 0x53], {
+                offset: 1
+            })) {
+                return {
+                    ext: 'swf',
+                    mime: 'application/x-shockwave-flash'
+                };
+            }
+
+            // -- 4-byte signatures --
+
+            if (this.checkString('FLIF')) {
+                return {
+                    ext: 'flif',
+                    mime: 'image/flif'
+                };
+            }
+            if (this.checkString('8BPS')) {
+                return {
+                    ext: 'psd',
+                    mime: 'image/vnd.adobe.photoshop'
+                };
+            }
+            if (this.checkString('WEBP', {
+                offset: 8
+            })) {
+                return {
+                    ext: 'webp',
+                    mime: 'image/webp'
+                };
+            }
+
+            // Musepack, SV8
+            if (this.checkString('MPCK')) {
+                return {
+                    ext: 'mpc',
+                    mime: 'audio/x-musepack'
+                };
+            }
+            if (this.checkString('FORM')) {
+                return {
+                    ext: 'aif',
+                    mime: 'audio/aiff'
+                };
+            }
+            if (this.checkString('icns', {
+                offset: 0
+            })) {
+                return {
+                    ext: 'icns',
+                    mime: 'image/icns'
+                };
+            }
+
+            // Zip-based file formats
+            // Need to be before the `zip` check
+            if (this.check([0x50, 0x4B, 0x3, 0x4])) {
+                // Local file header signature
+                try {
+                    while (tokenizer.position + 30 < tokenizer.fileInfo.size) {
+                        await tokenizer.readBuffer(this.buffer, {
+                            length: 30
+                        });
+
+                        // https://en.wikipedia.org/wiki/Zip_(file_format)#File_headers
+                        var zipHeader = {
+                            compressedSize: this.buffer.readUInt32LE(18),
+                            uncompressedSize: this.buffer.readUInt32LE(22),
+                            filenameLength: this.buffer.readUInt16LE(26),
+                            extraFieldLength: this.buffer.readUInt16LE(28)
+                        };
+                        zipHeader.filename = await tokenizer.readToken(new StringType(zipHeader.filenameLength, 'utf-8'));
+                        await tokenizer.ignore(zipHeader.extraFieldLength);
+
+                        // Assumes signed `.xpi` from addons.mozilla.org
+                        if (zipHeader.filename === 'META-INF/mozilla.rsa') {
+                            return {
+                                ext: 'xpi',
+                                mime: 'application/x-xpinstall'
+                            };
+                        }
+                        if (zipHeader.filename.endsWith('.rels') || zipHeader.filename.endsWith('.xml')) {
+                            var type = zipHeader.filename.split('/')[0];
+                            switch (type) {
+                                case '_rels':
+                                    break;
+                                case 'word':
+                                    return {
+                                        ext: 'docx',
+                                        mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                                    };
+                                case 'ppt':
+                                    return {
+                                        ext: 'pptx',
+                                        mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+                                    };
+                                case 'xl':
+                                    return {
+                                        ext: 'xlsx',
+                                        mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                                    };
+                                default:
+                                    break;
+                            }
+                        }
+                        if (zipHeader.filename.startsWith('xl/')) {
+                            return {
+                                ext: 'xlsx',
+                                mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                            };
+                        }
+                        if (zipHeader.filename.startsWith('3D/') && zipHeader.filename.endsWith('.model')) {
+                            return {
+                                ext: '3mf',
+                                mime: 'model/3mf'
+                            };
+                        }
+
+                        // The docx, xlsx and pptx file types extend the Office Open XML file format:
+                        // https://en.wikipedia.org/wiki/Office_Open_XML_file_formats
+                        // We look for:
+                        // - one entry named '[Content_Types].xml' or '_rels/.rels',
+                        // - one entry indicating specific type of file.
+                        // MS Office, OpenOffice and LibreOffice may put the parts in different order, so the check should not rely on it.
+                        if (zipHeader.filename === 'mimetype' && zipHeader.compressedSize === zipHeader.uncompressedSize) {
+                            var mimeType = (await tokenizer.readToken(new StringType(zipHeader.compressedSize, 'utf-8'))).trim();
+                            switch (mimeType) {
+                                case 'application/epub+zip':
+                                    return {
+                                        ext: 'epub',
+                                        mime: 'application/epub+zip'
+                                    };
+                                case 'application/vnd.oasis.opendocument.text':
+                                    return {
+                                        ext: 'odt',
+                                        mime: 'application/vnd.oasis.opendocument.text'
+                                    };
+                                case 'application/vnd.oasis.opendocument.spreadsheet':
+                                    return {
+                                        ext: 'ods',
+                                        mime: 'application/vnd.oasis.opendocument.spreadsheet'
+                                    };
+                                case 'application/vnd.oasis.opendocument.presentation':
+                                    return {
+                                        ext: 'odp',
+                                        mime: 'application/vnd.oasis.opendocument.presentation'
+                                    };
+                                default:
+                            }
+                        }
+
+                        // Try to find next header manually when current one is corrupted
+                        if (zipHeader.compressedSize === 0) {
+                            var nextHeaderIndex = -1;
+                            while (nextHeaderIndex < 0 && tokenizer.position < tokenizer.fileInfo.size) {
+                                await tokenizer.peekBuffer(this.buffer, {
+                                    mayBeLess: true
+                                });
+                                nextHeaderIndex = this.buffer.indexOf('504B0304', 0, 'hex');
+                                // Move position to the next header if found, skip the whole buffer otherwise
+                                await tokenizer.ignore(nextHeaderIndex >= 0 ? nextHeaderIndex : this.buffer.length);
+                            }
+                        } else {
+                            await tokenizer.ignore(zipHeader.compressedSize);
+                        }
+                    }
+                } catch (error) {
+                    if (!_instanceof(error, EndOfStreamError)) {
+                        throw error;
+                    }
+                }
+                return {
+                    ext: 'zip',
+                    mime: 'application/zip'
+                };
+            }
+            if (this.checkString('OggS')) {
+                // This is an OGG container
+                await tokenizer.ignore(28);
+                var _type = Buffer.alloc(8);
+                await tokenizer.readBuffer(_type);
+
+                // Needs to be before `ogg` check
+                if (this._check(_type, [0x4F, 0x70, 0x75, 0x73, 0x48, 0x65, 0x61, 0x64])) {
+                    return {
+                        ext: 'opus',
+                        mime: 'audio/opus'
+                    };
+                }
+
+                // If ' theora' in header.
+                if (this._check(_type, [0x80, 0x74, 0x68, 0x65, 0x6F, 0x72, 0x61])) {
+                    return {
+                        ext: 'ogv',
+                        mime: 'video/ogg'
+                    };
+                }
+
+                // If '\x01video' in header.
+                if (this._check(_type, [0x01, 0x76, 0x69, 0x64, 0x65, 0x6F, 0x00])) {
+                    return {
+                        ext: 'ogm',
+                        mime: 'video/ogg'
+                    };
+                }
+
+                // If ' FLAC' in header  https://xiph.org/flac/faq.html
+                if (this._check(_type, [0x7F, 0x46, 0x4C, 0x41, 0x43])) {
+                    return {
+                        ext: 'oga',
+                        mime: 'audio/ogg'
+                    };
+                }
+
+                // 'Speex  ' in header https://en.wikipedia.org/wiki/Speex
+                if (this._check(_type, [0x53, 0x70, 0x65, 0x65, 0x78, 0x20, 0x20])) {
+                    return {
+                        ext: 'spx',
+                        mime: 'audio/ogg'
+                    };
+                }
+
+                // If '\x01vorbis' in header
+                if (this._check(_type, [0x01, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73])) {
+                    return {
+                        ext: 'ogg',
+                        mime: 'audio/ogg'
+                    };
+                }
+
+                // Default OGG container https://www.iana.org/assignments/media-types/application/ogg
+                return {
+                    ext: 'ogx',
+                    mime: 'application/ogg'
+                };
+            }
+            if (this.check([0x50, 0x4B]) && (this.buffer[2] === 0x3 || this.buffer[2] === 0x5 || this.buffer[2] === 0x7) && (this.buffer[3] === 0x4 || this.buffer[3] === 0x6 || this.buffer[3] === 0x8)) {
+                return {
+                    ext: 'zip',
+                    mime: 'application/zip'
+                };
+            }
+
+            //
+
+            // File Type Box (https://en.wikipedia.org/wiki/ISO_base_media_file_format)
+            // It's not required to be first, but it's recommended to be. Almost all ISO base media files start with `ftyp` box.
+            // `ftyp` box must contain a brand major identifier, which must consist of ISO 8859-1 printable characters.
+            // Here we check for 8859-1 printable characters (for simplicity, it's a mask which also catches one non-printable character).
+            if (this.checkString('ftyp', {
+                offset: 4
+            }) && (this.buffer[8] & 0x60) !== 0x00 // Brand major, first character ASCII?
+            ) {
+                // They all can have MIME `video/mp4` except `application/mp4` special-case which is hard to detect.
+                // For some cases, we're specific, everything else falls to `video/mp4` with `mp4` extension.
+                var brandMajor = this.buffer.toString('binary', 8, 12).replace('\0', ' ').trim();
+                switch (brandMajor) {
+                    case 'avif':
+                    case 'avis':
+                        return {
+                            ext: 'avif',
+                            mime: 'image/avif'
+                        };
+                    case 'mif1':
+                        return {
+                            ext: 'heic',
+                            mime: 'image/heif'
+                        };
+                    case 'msf1':
+                        return {
+                            ext: 'heic',
+                            mime: 'image/heif-sequence'
+                        };
+                    case 'heic':
+                    case 'heix':
+                        return {
+                            ext: 'heic',
+                            mime: 'image/heic'
+                        };
+                    case 'hevc':
+                    case 'hevx':
+                        return {
+                            ext: 'heic',
+                            mime: 'image/heic-sequence'
+                        };
+                    case 'qt':
+                        return {
+                            ext: 'mov',
+                            mime: 'video/quicktime'
+                        };
+                    case 'M4V':
+                    case 'M4VH':
+                    case 'M4VP':
+                        return {
+                            ext: 'm4v',
+                            mime: 'video/x-m4v'
+                        };
+                    case 'M4P':
+                        return {
+                            ext: 'm4p',
+                            mime: 'video/mp4'
+                        };
+                    case 'M4B':
+                        return {
+                            ext: 'm4b',
+                            mime: 'audio/mp4'
+                        };
+                    case 'M4A':
+                        return {
+                            ext: 'm4a',
+                            mime: 'audio/x-m4a'
+                        };
+                    case 'F4V':
+                        return {
+                            ext: 'f4v',
+                            mime: 'video/mp4'
+                        };
+                    case 'F4P':
+                        return {
+                            ext: 'f4p',
+                            mime: 'video/mp4'
+                        };
+                    case 'F4A':
+                        return {
+                            ext: 'f4a',
+                            mime: 'audio/mp4'
+                        };
+                    case 'F4B':
+                        return {
+                            ext: 'f4b',
+                            mime: 'audio/mp4'
+                        };
+                    case 'crx':
+                        return {
+                            ext: 'cr3',
+                            mime: 'image/x-canon-cr3'
+                        };
+                    default:
+                        if (brandMajor.startsWith('3g')) {
+                            if (brandMajor.startsWith('3g2')) {
+                                return {
+                                    ext: '3g2',
+                                    mime: 'video/3gpp2'
+                                };
+                            }
+                            return {
+                                ext: '3gp',
+                                mime: 'video/3gpp'
+                            };
+                        }
+                        return {
+                            ext: 'mp4',
+                            mime: 'video/mp4'
+                        };
+                }
+            }
+            if (this.checkString('MThd')) {
+                return {
+                    ext: 'mid',
+                    mime: 'audio/midi'
+                };
+            }
+            if (this.checkString('wOFF') && (this.check([0x00, 0x01, 0x00, 0x00], {
+                offset: 4
+            }) || this.checkString('OTTO', {
+                offset: 4
+            }))) {
+                return {
+                    ext: 'woff',
+                    mime: 'font/woff'
+                };
+            }
+            if (this.checkString('wOF2') && (this.check([0x00, 0x01, 0x00, 0x00], {
+                offset: 4
+            }) || this.checkString('OTTO', {
+                offset: 4
+            }))) {
+                return {
+                    ext: 'woff2',
+                    mime: 'font/woff2'
+                };
+            }
+            if (this.check([0xD4, 0xC3, 0xB2, 0xA1]) || this.check([0xA1, 0xB2, 0xC3, 0xD4])) {
+                return {
+                    ext: 'pcap',
+                    mime: 'application/vnd.tcpdump.pcap'
+                };
+            }
+
+            // Sony DSD Stream File (DSF)
+            if (this.checkString('DSD ')) {
+                return {
+                    ext: 'dsf',
+                    mime: 'audio/x-dsf' // Non-standard
+                };
+            }
+
+            if (this.checkString('LZIP')) {
+                return {
+                    ext: 'lz',
+                    mime: 'application/x-lzip'
+                };
+            }
+            if (this.checkString('fLaC')) {
+                return {
+                    ext: 'flac',
+                    mime: 'audio/x-flac'
+                };
+            }
+            if (this.check([0x42, 0x50, 0x47, 0xFB])) {
+                return {
+                    ext: 'bpg',
+                    mime: 'image/bpg'
+                };
+            }
+            if (this.checkString('wvpk')) {
+                return {
+                    ext: 'wv',
+                    mime: 'audio/wavpack'
+                };
+            }
+            if (this.checkString('%PDF')) {
+                await tokenizer.ignore(1350);
+                var maxBufferSize = 10 * 1024 * 1024;
+                var buffer = Buffer.alloc(Math.min(maxBufferSize, tokenizer.fileInfo.size));
+                await tokenizer.readBuffer(buffer, {
+                    mayBeLess: true
+                });
+
+                // Check if this is an Adobe Illustrator file
+                if (buffer.includes(Buffer.from('AIPrivateData'))) {
+                    return {
+                        ext: 'ai',
+                        mime: 'application/postscript'
+                    };
+                }
+
+                // Assume this is just a normal PDF
+                return {
+                    ext: 'pdf',
+                    mime: 'application/pdf'
+                };
+            }
+            if (this.check([0x00, 0x61, 0x73, 0x6D])) {
+                return {
+                    ext: 'wasm',
+                    mime: 'application/wasm'
+                };
+            }
+
+            // TIFF, little-endian type
+            if (this.check([0x49, 0x49])) {
+                var fileType = await this.readTiffHeader(false);
+                if (fileType) {
+                    return fileType;
+                }
+            }
+
+            // TIFF, big-endian type
+            if (this.check([0x4D, 0x4D])) {
+                var _fileType = await this.readTiffHeader(true);
+                if (_fileType) {
+                    return _fileType;
+                }
+            }
+            if (this.checkString('MAC ')) {
+                return {
+                    ext: 'ape',
+                    mime: 'audio/ape'
+                };
+            }
+
+            // https://github.com/threatstack/libmagic/blob/master/magic/Magdir/matroska
+            if (this.check([0x1A, 0x45, 0xDF, 0xA3])) {
+                // Root element: EBML
+                var readField = async function readField() {
+                    var msb = await tokenizer.peekNumber(Token.UINT8);
+                    var mask = 0x80;
+                    var ic = 0; // 0 = A, 1 = B, 2 = C, 3
+                    // = D
+
+                    while ((msb & mask) === 0) {
+                        ++ic;
+                        mask >>= 1;
+                    }
+                    var id = Buffer.alloc(ic + 1);
+                    await tokenizer.readBuffer(id);
+                    return id;
+                };
+                var readElement = async function readElement() {
+                    var id = await readField();
+                    var lengthField = await readField();
+                    lengthField[0] ^= 0x80 >> lengthField.length - 1;
+                    var nrLength = Math.min(6, lengthField.length); // JavaScript can max read 6 bytes integer
+                    return {
+                        id: id.readUIntBE(0, id.length),
+                        len: lengthField.readUIntBE(lengthField.length - nrLength, nrLength)
+                    };
+                };
+                var readChildren = async function readChildren(level, children) {
+                    while (children > 0) {
+                        var element = await readElement();
+                        if (element.id === 0x42_82) {
+                            var rawValue = await tokenizer.readToken(new StringType(element.len, 'utf-8'));
+                            return rawValue.replace(/\00.*$/g, ''); // Return DocType
+                        }
+
+                        await tokenizer.ignore(element.len); // ignore payload
+                        --children;
+                    }
+                };
+                var re = await readElement();
+                var docType = await readChildren(1, re.len);
+                switch (docType) {
+                    case 'webm':
+                        return {
+                            ext: 'webm',
+                            mime: 'video/webm'
+                        };
+                    case 'matroska':
+                        return {
+                            ext: 'mkv',
+                            mime: 'video/x-matroska'
+                        };
+                    default:
+                        return;
+                }
+            }
+
+            // RIFF file format which might be AVI, WAV, QCP, etc
+            if (this.check([0x52, 0x49, 0x46, 0x46])) {
+                if (this.check([0x41, 0x56, 0x49], {
+                    offset: 8
+                })) {
+                    return {
+                        ext: 'avi',
+                        mime: 'video/vnd.avi'
+                    };
+                }
+                if (this.check([0x57, 0x41, 0x56, 0x45], {
+                    offset: 8
+                })) {
+                    return {
+                        ext: 'wav',
+                        mime: 'audio/vnd.wave'
+                    };
+                }
+
+                // QLCM, QCP file
+                if (this.check([0x51, 0x4C, 0x43, 0x4D], {
+                    offset: 8
+                })) {
+                    return {
+                        ext: 'qcp',
+                        mime: 'audio/qcelp'
+                    };
+                }
+            }
+            if (this.checkString('SQLi')) {
+                return {
+                    ext: 'sqlite',
+                    mime: 'application/x-sqlite3'
+                };
+            }
+            if (this.check([0x4E, 0x45, 0x53, 0x1A])) {
+                return {
+                    ext: 'nes',
+                    mime: 'application/x-nintendo-nes-rom'
+                };
+            }
+            if (this.checkString('Cr24')) {
+                return {
+                    ext: 'crx',
+                    mime: 'application/x-google-chrome-extension'
+                };
+            }
+            if (this.checkString('MSCF') || this.checkString('ISc(')) {
+                return {
+                    ext: 'cab',
+                    mime: 'application/vnd.ms-cab-compressed'
+                };
+            }
+            if (this.check([0xED, 0xAB, 0xEE, 0xDB])) {
+                return {
+                    ext: 'rpm',
+                    mime: 'application/x-rpm'
+                };
+            }
+            if (this.check([0xC5, 0xD0, 0xD3, 0xC6])) {
+                return {
+                    ext: 'eps',
+                    mime: 'application/eps'
+                };
+            }
+            if (this.check([0x28, 0xB5, 0x2F, 0xFD])) {
+                return {
+                    ext: 'zst',
+                    mime: 'application/zstd'
+                };
+            }
+            if (this.check([0x7F, 0x45, 0x4C, 0x46])) {
+                return {
+                    ext: 'elf',
+                    mime: 'application/x-elf'
+                };
+            }
+
+            // -- 5-byte signatures --
+
+            if (this.check([0x4F, 0x54, 0x54, 0x4F, 0x00])) {
+                return {
+                    ext: 'otf',
+                    mime: 'font/otf'
+                };
+            }
+            if (this.checkString('#!AMR')) {
+                return {
+                    ext: 'amr',
+                    mime: 'audio/amr'
+                };
+            }
+            if (this.checkString('{\\rtf')) {
+                return {
+                    ext: 'rtf',
+                    mime: 'application/rtf'
+                };
+            }
+            if (this.check([0x46, 0x4C, 0x56, 0x01])) {
+                return {
+                    ext: 'flv',
+                    mime: 'video/x-flv'
+                };
+            }
+            if (this.checkString('IMPM')) {
+                return {
+                    ext: 'it',
+                    mime: 'audio/x-it'
+                };
+            }
+            if (this.checkString('-lh0-', {
+                offset: 2
+            }) || this.checkString('-lh1-', {
+                offset: 2
+            }) || this.checkString('-lh2-', {
+                offset: 2
+            }) || this.checkString('-lh3-', {
+                offset: 2
+            }) || this.checkString('-lh4-', {
+                offset: 2
+            }) || this.checkString('-lh5-', {
+                offset: 2
+            }) || this.checkString('-lh6-', {
+                offset: 2
+            }) || this.checkString('-lh7-', {
+                offset: 2
+            }) || this.checkString('-lzs-', {
+                offset: 2
+            }) || this.checkString('-lz4-', {
+                offset: 2
+            }) || this.checkString('-lz5-', {
+                offset: 2
+            }) || this.checkString('-lhd-', {
+                offset: 2
+            })) {
+                return {
+                    ext: 'lzh',
+                    mime: 'application/x-lzh-compressed'
+                };
+            }
+
+            // MPEG program stream (PS or MPEG-PS)
+            if (this.check([0x00, 0x00, 0x01, 0xBA])) {
+                //  MPEG-PS, MPEG-1 Part 1
+                if (this.check([0x21], {
+                    offset: 4,
+                    mask: [0xF1]
+                })) {
+                    return {
+                        ext: 'mpg',
+                        // May also be .ps, .mpeg
+                        mime: 'video/MP1S'
+                    };
+                }
+
+                // MPEG-PS, MPEG-2 Part 1
+                if (this.check([0x44], {
+                    offset: 4,
+                    mask: [0xC4]
+                })) {
+                    return {
+                        ext: 'mpg',
+                        // May also be .mpg, .m2p, .vob or .sub
+                        mime: 'video/MP2P'
+                    };
+                }
+            }
+            if (this.checkString('ITSF')) {
+                return {
+                    ext: 'chm',
+                    mime: 'application/vnd.ms-htmlhelp'
+                };
+            }
+
+            // -- 6-byte signatures --
+
+            if (this.check([0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00])) {
+                return {
+                    ext: 'xz',
+                    mime: 'application/x-xz'
+                };
+            }
+            if (this.checkString('<?xml ')) {
+                return {
+                    ext: 'xml',
+                    mime: 'application/xml'
+                };
+            }
+            if (this.check([0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C])) {
+                return {
+                    ext: '7z',
+                    mime: 'application/x-7z-compressed'
+                };
+            }
+            if (this.check([0x52, 0x61, 0x72, 0x21, 0x1A, 0x7]) && (this.buffer[6] === 0x0 || this.buffer[6] === 0x1)) {
+                return {
+                    ext: 'rar',
+                    mime: 'application/x-rar-compressed'
+                };
+            }
+            if (this.checkString('solid ')) {
+                return {
+                    ext: 'stl',
+                    mime: 'model/stl'
+                };
+            }
+
+            // -- 7-byte signatures --
+
+            if (this.checkString('BLENDER')) {
+                return {
+                    ext: 'blend',
+                    mime: 'application/x-blender'
+                };
+            }
+            if (this.checkString('!<arch>')) {
+                await tokenizer.ignore(8);
+                var string = await tokenizer.readToken(new StringType(13, 'ascii'));
+                if (string === 'debian-binary') {
+                    return {
+                        ext: 'deb',
+                        mime: 'application/x-deb'
+                    };
+                }
+                return {
+                    ext: 'ar',
+                    mime: 'application/x-unix-archive'
+                };
+            }
+
+            // -- 8-byte signatures --
+
+            if (this.check([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])) {
+                // ignore PNG signature
+                var readChunkHeader = async function readChunkHeader() {
+                    return {
+                        length: await tokenizer.readToken(Token.INT32_BE),
+                        type: await tokenizer.readToken(new StringType(4, 'binary'))
+                    };
+                };
+                // APNG format (https://wiki.mozilla.org/APNG_Specification)
+                // 1. Find the first IDAT (image data) chunk (49 44 41 54)
+                // 2. Check if there is an "acTL" chunk before the IDAT one (61 63 54 4C)
+
+                // Offset calculated as follows:
+                // - 8 bytes: PNG signature
+                // - 4 (length) + 4 (chunk type) + 13 (chunk data) + 4 (CRC): IHDR chunk
+
+                await tokenizer.ignore(8);
+                do {
+                    var chunk = await readChunkHeader();
+                    if (chunk.length < 0) {
+                        return; // Invalid chunk length
+                    }
+
+                    switch (chunk.type) {
+                        case 'IDAT':
+                            return {
+                                ext: 'png',
+                                mime: 'image/png'
+                            };
+                        case 'acTL':
+                            return {
+                                ext: 'apng',
+                                mime: 'image/apng'
+                            };
+                        default:
+                            await tokenizer.ignore(chunk.length + 4);
+                        // Ignore chunk-data + CRC
+                    }
+                } while (tokenizer.position + 8 < tokenizer.fileInfo.size);
+                return {
+                    ext: 'png',
+                    mime: 'image/png'
+                };
+            }
+            if (this.check([0x41, 0x52, 0x52, 0x4F, 0x57, 0x31, 0x00, 0x00])) {
+                return {
+                    ext: 'arrow',
+                    mime: 'application/x-apache-arrow'
+                };
+            }
+            if (this.check([0x67, 0x6C, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00])) {
+                return {
+                    ext: 'glb',
+                    mime: 'model/gltf-binary'
+                };
+            }
+
+            // `mov` format variants
+            if (this.check([0x66, 0x72, 0x65, 0x65], {
+                    offset: 4
+                }) // `free`
+                || this.check([0x6D, 0x64, 0x61, 0x74], {
+                    offset: 4
+                }) // `mdat` MJPEG
+                || this.check([0x6D, 0x6F, 0x6F, 0x76], {
+                    offset: 4
+                }) // `moov`
+                || this.check([0x77, 0x69, 0x64, 0x65], {
+                    offset: 4
+                }) // `wide`
+            ) {
+                return {
+                    ext: 'mov',
+                    mime: 'video/quicktime'
+                };
+            }
+            if (this.check([0xEF, 0xBB, 0xBF]) && this.checkString('<?xml', {
+                offset: 3
+            })) {
+                // UTF-8-BOM
+                return {
+                    ext: 'xml',
+                    mime: 'application/xml'
+                };
+            }
+
+            // -- 9-byte signatures --
+
+            if (this.check([0x49, 0x49, 0x52, 0x4F, 0x08, 0x00, 0x00, 0x00, 0x18])) {
+                return {
+                    ext: 'orf',
+                    mime: 'image/x-olympus-orf'
+                };
+            }
+            if (this.checkString('gimp xcf ')) {
+                return {
+                    ext: 'xcf',
+                    mime: 'image/x-xcf'
+                };
+            }
+
+            // -- 12-byte signatures --
+
+            if (this.check([0x49, 0x49, 0x55, 0x00, 0x18, 0x00, 0x00, 0x00, 0x88, 0xE7, 0x74, 0xD8])) {
+                return {
+                    ext: 'rw2',
+                    mime: 'image/x-panasonic-rw2'
+                };
+            }
+
+            // ASF_Header_Object first 80 bytes
+            if (this.check([0x30, 0x26, 0xB2, 0x75, 0x8E, 0x66, 0xCF, 0x11, 0xA6, 0xD9])) {
+                var readHeader = async function readHeader() {
+                    var guid = Buffer.alloc(16);
+                    await tokenizer.readBuffer(guid);
+                    return {
+                        id: guid,
+                        size: Number(await tokenizer.readToken(Token.UINT64_LE))
+                    };
+                };
+                await tokenizer.ignore(30);
+                // Search for header should be in first 1KB of file.
+                while (tokenizer.position + 24 < tokenizer.fileInfo.size) {
+                    var header = await readHeader();
+                    var payload = header.size - 24;
+                    if (this._check(header.id, [0x91, 0x07, 0xDC, 0xB7, 0xB7, 0xA9, 0xCF, 0x11, 0x8E, 0xE6, 0x00, 0xC0, 0x0C, 0x20, 0x53, 0x65])) {
+                        // Sync on Stream-Properties-Object (B7DC0791-A9B7-11CF-8EE6-00C00C205365)
+                        var typeId = Buffer.alloc(16);
+                        payload -= await tokenizer.readBuffer(typeId);
+                        if (this._check(typeId, [0x40, 0x9E, 0x69, 0xF8, 0x4D, 0x5B, 0xCF, 0x11, 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B])) {
+                            // Found audio:
+                            return {
+                                ext: 'asf',
+                                mime: 'audio/x-ms-asf'
+                            };
+                        }
+                        if (this._check(typeId, [0xC0, 0xEF, 0x19, 0xBC, 0x4D, 0x5B, 0xCF, 0x11, 0xA8, 0xFD, 0x00, 0x80, 0x5F, 0x5C, 0x44, 0x2B])) {
+                            // Found video:
+                            return {
+                                ext: 'asf',
+                                mime: 'video/x-ms-asf'
+                            };
+                        }
+                        break;
+                    }
+                    await tokenizer.ignore(payload);
+                }
+
+                // Default to ASF generic extension
+                return {
+                    ext: 'asf',
+                    mime: 'application/vnd.ms-asf'
+                };
+            }
+            if (this.check([0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A])) {
+                return {
+                    ext: 'ktx',
+                    mime: 'image/ktx'
+                };
+            }
+            if ((this.check([0x7E, 0x10, 0x04]) || this.check([0x7E, 0x18, 0x04])) && this.check([0x30, 0x4D, 0x49, 0x45], {
+                offset: 4
+            })) {
+                return {
+                    ext: 'mie',
+                    mime: 'application/x-mie'
+                };
+            }
+            if (this.check([0x27, 0x0A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], {
+                offset: 2
+            })) {
+                return {
+                    ext: 'shp',
+                    mime: 'application/x-esri-shape'
+                };
+            }
+            if (this.check([0x00, 0x00, 0x00, 0x0C, 0x6A, 0x50, 0x20, 0x20, 0x0D, 0x0A, 0x87, 0x0A])) {
+                // JPEG-2000 family
+
+                await tokenizer.ignore(20);
+                var _type2 = await tokenizer.readToken(new StringType(4, 'ascii'));
+                switch (_type2) {
+                    case 'jp2 ':
+                        return {
+                            ext: 'jp2',
+                            mime: 'image/jp2'
+                        };
+                    case 'jpx ':
+                        return {
+                            ext: 'jpx',
+                            mime: 'image/jpx'
+                        };
+                    case 'jpm ':
+                        return {
+                            ext: 'jpm',
+                            mime: 'image/jpm'
+                        };
+                    case 'mjp2':
+                        return {
+                            ext: 'mj2',
+                            mime: 'image/mj2'
+                        };
+                    default:
+                        return;
+                }
+            }
+            if (this.check([0xFF, 0x0A]) || this.check([0x00, 0x00, 0x00, 0x0C, 0x4A, 0x58, 0x4C, 0x20, 0x0D, 0x0A, 0x87, 0x0A])) {
+                return {
+                    ext: 'jxl',
+                    mime: 'image/jxl'
+                };
+            }
+            if (this.check([0xFE, 0xFF, 0, 60, 0, 63, 0, 120, 0, 109, 0, 108]) // UTF-16-BOM-LE
+                || this.check([0xFF, 0xFE, 60, 0, 63, 0, 120, 0, 109, 0, 108, 0]) // UTF-16-BOM-LE
+            ) {
+                return {
+                    ext: 'xml',
+                    mime: 'application/xml'
+                };
+            }
+
+            // -- Unsafe signatures --
+
+            if (this.check([0x0, 0x0, 0x1, 0xBA]) || this.check([0x0, 0x0, 0x1, 0xB3])) {
+                return {
+                    ext: 'mpg',
+                    mime: 'video/mpeg'
+                };
+            }
+            if (this.check([0x00, 0x01, 0x00, 0x00, 0x00])) {
+                return {
+                    ext: 'ttf',
+                    mime: 'font/ttf'
+                };
+            }
+            if (this.check([0x00, 0x00, 0x01, 0x00])) {
+                return {
+                    ext: 'ico',
+                    mime: 'image/x-icon'
+                };
+            }
+            if (this.check([0x00, 0x00, 0x02, 0x00])) {
+                return {
+                    ext: 'cur',
+                    mime: 'image/x-icon'
+                };
+            }
+            if (this.check([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])) {
+                // Detected Microsoft Compound File Binary File (MS-CFB) Format.
+                return {
+                    ext: 'cfb',
+                    mime: 'application/x-cfb'
+                };
+            }
+
+            // Increase sample size from 12 to 256.
+            await tokenizer.peekBuffer(this.buffer, {
+                length: Math.min(256, tokenizer.fileInfo.size),
+                mayBeLess: true
+            });
+
+            // -- 15-byte signatures --
+
+            if (this.checkString('BEGIN:')) {
+                if (this.checkString('VCARD', {
+                    offset: 6
+                })) {
+                    return {
+                        ext: 'vcf',
+                        mime: 'text/vcard'
+                    };
+                }
+                if (this.checkString('VCALENDAR', {
+                    offset: 6
+                })) {
+                    return {
+                        ext: 'ics',
+                        mime: 'text/calendar'
+                    };
+                }
+            }
+
+            // `raf` is here just to keep all the raw image detectors together.
+            if (this.checkString('FUJIFILMCCD-RAW')) {
+                return {
+                    ext: 'raf',
+                    mime: 'image/x-fujifilm-raf'
+                };
+            }
+            if (this.checkString('Extended Module:')) {
+                return {
+                    ext: 'xm',
+                    mime: 'audio/x-xm'
+                };
+            }
+            if (this.checkString('Creative Voice File')) {
+                return {
+                    ext: 'voc',
+                    mime: 'audio/x-voc'
+                };
+            }
+            if (this.check([0x04, 0x00, 0x00, 0x00]) && this.buffer.length >= 16) {
+                // Rough & quick check Pickle/ASAR
+                var jsonSize = this.buffer.readUInt32LE(12);
+                if (jsonSize > 12 && this.buffer.length >= jsonSize + 16) {
+                    try {
+                        var _header = this.buffer.slice(16, jsonSize + 16).toString();
+                        var json = JSON.parse(_header);
+                        // Check if Pickle is ASAR
+                        if (json.files) {
+                            // Final check, assuring Pickle/ASAR format
+                            return {
+                                ext: 'asar',
+                                mime: 'application/x-asar'
+                            };
+                        }
+                    } catch (err) {
+                        console.log(err);
+                    }
+                }
+            }
+            if (this.check([0x06, 0x0E, 0x2B, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0D, 0x01, 0x02, 0x01, 0x01, 0x02])) {
+                return {
+                    ext: 'mxf',
+                    mime: 'application/mxf'
+                };
+            }
+            if (this.checkString('SCRM', {
+                offset: 44
+            })) {
+                return {
+                    ext: 's3m',
+                    mime: 'audio/x-s3m'
+                };
+            }
+
+            // Raw MPEG-2 transport stream (188-byte packets)
+            if (this.check([0x47]) && this.check([0x47], {
+                offset: 188
+            })) {
+                return {
+                    ext: 'mts',
+                    mime: 'video/mp2t'
+                };
+            }
+
+            // Blu-ray Disc Audio-Video (BDAV) MPEG-2 transport stream has 4-byte TP_extra_header before each 188-byte packet
+            if (this.check([0x47], {
+                offset: 4
+            }) && this.check([0x47], {
+                offset: 196
+            })) {
+                return {
+                    ext: 'mts',
+                    mime: 'video/mp2t'
+                };
+            }
+            if (this.check([0x42, 0x4F, 0x4F, 0x4B, 0x4D, 0x4F, 0x42, 0x49], {
+                offset: 60
+            })) {
+                return {
+                    ext: 'mobi',
+                    mime: 'application/x-mobipocket-ebook'
+                };
+            }
+            if (this.check([0x44, 0x49, 0x43, 0x4D], {
+                offset: 128
+            })) {
+                return {
+                    ext: 'dcm',
+                    mime: 'application/dicom'
+                };
+            }
+            if (this.check([0x4C, 0x00, 0x00, 0x00, 0x01, 0x14, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46])) {
+                return {
+                    ext: 'lnk',
+                    mime: 'application/x.ms.shortcut' // Invented by us
+                };
+            }
+
+            if (this.check([0x62, 0x6F, 0x6F, 0x6B, 0x00, 0x00, 0x00, 0x00, 0x6D, 0x61, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00])) {
+                return {
+                    ext: 'alias',
+                    mime: 'application/x.apple.alias' // Invented by us
+                };
+            }
+
+            if (this.check([0x4C, 0x50], {
+                offset: 34
+            }) && (this.check([0x00, 0x00, 0x01], {
+                offset: 8
+            }) || this.check([0x01, 0x00, 0x02], {
+                offset: 8
+            }) || this.check([0x02, 0x00, 0x02], {
+                offset: 8
+            }))) {
+                return {
+                    ext: 'eot',
+                    mime: 'application/vnd.ms-fontobject'
+                };
+            }
+            if (this.check([0x06, 0x06, 0xED, 0xF5, 0xD8, 0x1D, 0x46, 0xE5, 0xBD, 0x31, 0xEF, 0xE7, 0xFE, 0x74, 0xB7, 0x1D])) {
+                return {
+                    ext: 'indd',
+                    mime: 'application/x-indesign'
+                };
+            }
+
+            // Increase sample size from 256 to 512
+            await tokenizer.peekBuffer(this.buffer, {
+                length: Math.min(512, tokenizer.fileInfo.size),
+                mayBeLess: true
+            });
+
+            // Requires a buffer size of 512 bytes
+            if (KrajeeFileTypeConfig.tarHeaderChecksumMatches(this.buffer)) {
+                return {
+                    ext: 'tar',
+                    mime: 'application/x-tar'
+                };
+            }
+            if (this.check([0xFF, 0xFE, 0xFF, 0x0E, 0x53, 0x00, 0x6B, 0x00, 0x65, 0x00, 0x74, 0x00, 0x63, 0x00, 0x68, 0x00, 0x55, 0x00, 0x70, 0x00, 0x20, 0x00, 0x4D, 0x00, 0x6F, 0x00, 0x64, 0x00, 0x65, 0x00, 0x6C, 0x00])) {
+                return {
+                    ext: 'skp',
+                    mime: 'application/vnd.sketchup.skp'
+                };
+            }
+            if (this.checkString('-----BEGIN PGP MESSAGE-----')) {
+                return {
+                    ext: 'pgp',
+                    mime: 'application/pgp-encrypted'
+                };
+            }
+
+            // Check MPEG 1 or 2 Layer 3 header, or 'layer 0' for ADTS (MPEG sync-word 0xFFE)
+            if (this.buffer.length >= 2 && this.check([0xFF, 0xE0], {
+                offset: 0,
+                mask: [0xFF, 0xE0]
+            })) {
+                if (this.check([0x10], {
+                    offset: 1,
+                    mask: [0x16]
+                })) {
+                    // Check for (ADTS) MPEG-2
+                    if (this.check([0x08], {
+                        offset: 1,
+                        mask: [0x08]
+                    })) {
+                        return {
+                            ext: 'aac',
+                            mime: 'audio/aac'
+                        };
+                    }
+
+                    // Must be (ADTS) MPEG-4
+                    return {
+                        ext: 'aac',
+                        mime: 'audio/aac'
+                    };
+                }
+
+                // MPEG 1 or 2 Layer 3 header
+                // Check for MPEG layer 3
+                if (this.check([0x02], {
+                    offset: 1,
+                    mask: [0x06]
+                })) {
+                    return {
+                        ext: 'mp3',
+                        mime: 'audio/mpeg'
+                    };
+                }
+
+                // Check for MPEG layer 2
+                if (this.check([0x04], {
+                    offset: 1,
+                    mask: [0x06]
+                })) {
+                    return {
+                        ext: 'mp2',
+                        mime: 'audio/mpeg'
+                    };
+                }
+
+                // Check for MPEG layer 1
+                if (this.check([0x06], {
+                    offset: 1,
+                    mask: [0x06]
+                })) {
+                    return {
+                        ext: 'mp1',
+                        mime: 'audio/mpeg'
+                    };
+                }
+            }
+            return {};
+        }
+    }, {
+        key: "readTiffTag",
+        value: async function readTiffTag(bigEndian) {
+            var Token = KrajeeFileTypeConfig.Token;
+            var tagId = null;
+            try {
+                tagId = await this.tokenizer.readToken(bigEndian ? Token.UINT16_BE : Token.UINT16_LE);
+            } catch (error) {
+                if (_instanceof(error, EndOfStreamError)) {
+                    return null;
+                }
+                throw error;
+            }
+            this.tokenizer.ignore(10);
+            switch (tagId) {
+                case 50_341:
+                    return {
+                        ext: 'arw',
+                        mime: 'image/x-sony-arw'
+                    };
+                case 50_706:
+                    return {
+                        ext: 'dng',
+                        mime: 'image/x-adobe-dng'
+                    };
+                default:
+                    return null;
+            }
+        }
+    }, {
+        key: "readTiffIFD",
+        value: async function readTiffIFD(bigEndian) {
+            var Token = KrajeeFileTypeConfig.Token;
+            var numberOfTags = await this.tokenizer.readToken(bigEndian ? Token.UINT16_BE : Token.UINT16_LE);
+            for (var n = 0; n < numberOfTags; ++n) {
+                var fileType = await this.readTiffTag(bigEndian);
+                if (fileType) {
+                    return fileType;
+                }
+            }
+            return null;
+        }
+    }, {
+        key: "readTiffHeader",
+        value: async function readTiffHeader(bigEndian) {
+            var Token = KrajeeFileTypeConfig.Token;
+            var version = (bigEndian ? Token.UINT16_BE : Token.UINT16_LE).get(this.buffer, 2);
+            var ifdOffset = (bigEndian ? Token.UINT32_BE : Token.UINT32_LE).get(this.buffer, 4);
+            var tiff = {
+                ext: 'tif',
+                mime: 'image/tiff'
+            };
+            if (version === 42) {
+                // TIFF file header
+                if (ifdOffset >= 6) {
+                    if (this.checkString('CR', {
+                        offset: 8
+                    })) {
+                        return {
+                            ext: 'cr2',
+                            mime: 'image/x-canon-cr2'
+                        };
+                    }
+                    if (ifdOffset >= 8 && (this.check([0x1C, 0x00, 0xFE, 0x00], {
+                        offset: 8
+                    }) || this.check([0x1F, 0x00, 0x0B, 0x00], {
+                        offset: 8
+                    }))) {
+                        return {
+                            ext: 'nef',
+                            mime: 'image/x-nikon-nef'
+                        };
+                    }
+                }
+                await this.tokenizer.ignore(ifdOffset);
+                var fileType = await this.readTiffIFD(false);
+                return fileType ? fileType : tiff;
+            }
+            if (version === 43) {
+                // Big TIFF file header
+                return tiff;
+            }
+        }
+    }]);
+    return FileTypeParser;
+}();
 /* piexifjs
 
 The MIT License (MIT)
@@ -23277,7 +27685,7 @@ SOFTWARE.
 (function () {
     "use strict";
     var that = {};
-    that.version = "1.03";
+    that.version = "1.0.4";
 
     that.remove = function (jpeg) {
         var b64 = false;
@@ -23286,21 +27694,16 @@ SOFTWARE.
             jpeg = atob(jpeg.split(",")[1]);
             b64 = true;
         } else {
-            throw ("Given data is not jpeg.");
+            throw new Error("Given data is not jpeg.");
         }
         
         var segments = splitIntoSegments(jpeg);
-        if (segments[1].slice(0, 2) == "\xff\xe1" && 
-               segments[1].slice(4, 10) == "Exif\x00\x00") {
-            segments = [segments[0]].concat(segments.slice(2));
-        } else if (segments[2].slice(0, 2) == "\xff\xe1" &&
-                   segments[2].slice(4, 10) == "Exif\x00\x00") {
-            segments = segments.slice(0, 2).concat(segments.slice(3));
-        } else {
-            throw("Exif not found.");
-        }
+        var newSegments = segments.filter(function(seg){
+          return  !(seg.slice(0, 2) == "\xff\xe1" &&
+                   seg.slice(4, 10) == "Exif\x00\x00"); 
+        });
         
-        var new_data = segments.join("");
+        var new_data = newSegments.join("");
         if (b64) {
             new_data = "data:image/jpeg;base64," + btoa(new_data);
         }
@@ -23312,14 +27715,14 @@ SOFTWARE.
     that.insert = function (exif, jpeg) {
         var b64 = false;
         if (exif.slice(0, 6) != "\x45\x78\x69\x66\x00\x00") {
-            throw ("Given data is not exif.");
+            throw new Error("Given data is not exif.");
         }
         if (jpeg.slice(0, 2) == "\xff\xd8") {
         } else if (jpeg.slice(0, 23) == "data:image/jpeg;base64," || jpeg.slice(0, 22) == "data:image/jpg;base64,") {
             jpeg = atob(jpeg.split(",")[1]);
             b64 = true;
         } else {
-            throw ("Given data is not jpeg.");
+            throw new Error("Given data is not jpeg.");
         }
 
         var exifStr = "\xff\xe1" + pack(">H", [exif.length + 2]) + exif;
@@ -23343,10 +27746,10 @@ SOFTWARE.
             } else if (data.slice(0, 4) == "Exif") {
                 input_data = data.slice(6);
             } else {
-                throw ("'load' gots invalid file data.");
+                throw new Error("'load' gots invalid file data.");
             }
         } else {
-            throw ("'load' gots invalid type argument.");
+            throw new Error("'load' gots invalid type argument.");
         }
 
         var exifDict = {};
@@ -23494,7 +27897,7 @@ SOFTWARE.
             first_set = _dict_to_bytes(first_ifd, "1st", offset);
             thumbnail = _get_thumbnail(exif_dict["thumbnail"]);
             if (thumbnail.length > 64000) {
-                throw ("Given thumbnail is too large. max 64kB");
+                throw new Error("Given thumbnail is too large. max 64kB");
             }
         }
 
@@ -23744,7 +28147,7 @@ SOFTWARE.
         } else if (data.slice(0, 4) == "Exif") { // Exif
             this.tiftag = data.slice(6);
         } else {
-            throw ("Given file is neither JPEG nor TIFF.");
+            throw new Error("Given file is neither JPEG nor TIFF.");
         }
     }
 
@@ -23850,6 +28253,15 @@ SOFTWARE.
                 } else {
                     data = value.slice(0, length);
                 }
+            } else if (t == 9) { // SLONG
+                if (length > 1) {
+                    pointer = unpack(this.endian_mark + "L", value)[0];
+                    data = unpack(this.endian_mark + nStr("l", length),
+                        this.tiftag.slice(pointer, pointer + length * 4));
+                } else {
+                    data = unpack(this.endian_mark + nStr("l", length),
+                        value);
+                }
             } else if (t == 10) { // SRATIONAL
                 pointer = unpack(this.endian_mark + "L", value)[0];
                 if (length > 1) {
@@ -23869,7 +28281,7 @@ SOFTWARE.
                            ];
                 }
             } else {
-                throw ("Exif might be wrong. Got incorrect value " +
+                throw new Error("Exif might be wrong. Got incorrect value " +
                     "type to decode. type:" + t);
             }
 
@@ -23980,10 +28392,10 @@ SOFTWARE.
 
     function pack(mark, array) {
         if (!(array instanceof Array)) {
-            throw ("'pack' error. Got invalid type argument.");
+            throw new Error("'pack' error. Got invalid type argument.");
         }
         if ((mark.length - 1) != array.length) {
-            throw ("'pack' error. " + (mark.length - 1) + " marks, " + array.length + " elements.");
+            throw new Error("'pack' error. " + (mark.length - 1) + " marks, " + array.length + " elements.");
         }
 
         var littleEndian;
@@ -23992,7 +28404,7 @@ SOFTWARE.
         } else if (mark[0] == ">") {
             littleEndian = false;
         } else {
-            throw ("");
+            throw new Error("");
         }
         var packed = "";
         var p = 1;
@@ -24007,14 +28419,14 @@ SOFTWARE.
                     val += 0x100;
                 }
                 if ((val > 0xff) || (val < 0)) {
-                    throw ("'pack' error.");
+                    throw new Error("'pack' error.");
                 } else {
                     valStr = String.fromCharCode(val);
                 }
             } else if (c == "H") {
                 val = array[p - 1];
                 if ((val > 0xffff) || (val < 0)) {
-                    throw ("'pack' error.");
+                    throw new Error("'pack' error.");
                 } else {
                     valStr = String.fromCharCode(Math.floor((val % 0x10000) / 0x100)) +
                         String.fromCharCode(val % 0x100);
@@ -24028,7 +28440,7 @@ SOFTWARE.
                     val += 0x100000000;
                 }
                 if ((val > 0xffffffff) || (val < 0)) {
-                    throw ("'pack' error.");
+                    throw new Error("'pack' error.");
                 } else {
                     valStr = String.fromCharCode(Math.floor(val / 0x1000000)) +
                         String.fromCharCode(Math.floor((val % 0x1000000) / 0x10000)) +
@@ -24039,7 +28451,7 @@ SOFTWARE.
                     }
                 }
             } else {
-                throw ("'pack' error.");
+                throw new Error("'pack' error.");
             }
 
             packed += valStr;
@@ -24051,7 +28463,7 @@ SOFTWARE.
 
     function unpack(mark, str) {
         if (typeof (str) != "string") {
-            throw ("'unpack' error. Got invalid type argument.");
+            throw new Error("'unpack' error. Got invalid type argument.");
         }
         var l = 0;
         for (var markPointer = 1; markPointer < mark.length; markPointer++) {
@@ -24062,12 +28474,12 @@ SOFTWARE.
             } else if (mark[markPointer].toLowerCase() == "l") {
                 l += 4;
             } else {
-                throw ("'unpack' error. Got invalid mark.");
+                throw new Error("'unpack' error. Got invalid mark.");
             }
         }
 
         if (l != str.length) {
-            throw ("'unpack' error. Mismatch between symbol and string length. " + l + ":" + str.length);
+            throw new Error("'unpack' error. Mismatch between symbol and string length. " + l + ":" + str.length);
         }
 
         var littleEndian;
@@ -24076,7 +28488,7 @@ SOFTWARE.
         } else if (mark[0] == ">") {
             littleEndian = false;
         } else {
-            throw ("'unpack' error.");
+            throw new Error("'unpack' error.");
         }
         var unpacked = [];
         var strPointer = 0;
@@ -24116,7 +28528,7 @@ SOFTWARE.
                     val -= 0x100000000;
                 }
             } else {
-                throw ("'unpack' error. " + c);
+                throw new Error("'unpack' error. " + c);
             }
 
             unpacked.push(val);
@@ -24137,7 +28549,7 @@ SOFTWARE.
 
     function splitIntoSegments(data) {
         if (data.slice(0, 2) != "\xff\xd8") {
-            throw ("Given data isn't JPEG.");
+            throw new Error("Given data isn't JPEG.");
         }
 
         var head = 2;
@@ -24154,7 +28566,7 @@ SOFTWARE.
             }
 
             if (head >= data.length) {
-                throw ("Wrong JPEG data.");
+                throw new Error("Wrong JPEG data.");
             }
         }
         return segments;
@@ -24175,35 +28587,32 @@ SOFTWARE.
 
 
     function mergeSegments(segments, exif) {
-        
-        if (segments[1].slice(0, 2) == "\xff\xe0" &&
-            (segments[2].slice(0, 2) == "\xff\xe1" &&
-             segments[2].slice(4, 10) == "Exif\x00\x00")) {
-            if (exif) {
-                segments[2] = exif;
-                segments = ["\xff\xd8"].concat(segments.slice(2));
-            } else if (exif == null) {
-                segments = segments.slice(0, 2).concat(segments.slice(3));
-            } else {
-                segments = segments.slice(0).concat(segments.slice(2));
+        var hasExifSegment = false;
+        var additionalAPP1ExifSegments = [];
+
+        segments.forEach(function(segment, i) {
+            // Replace first occurence of APP1:Exif segment
+            if (segment.slice(0, 2) == "\xff\xe1" &&
+                segment.slice(4, 10) == "Exif\x00\x00"
+            ) {
+                if (!hasExifSegment) {
+                    segments[i] = exif;
+                    hasExifSegment = true;
+                } else {
+                    additionalAPP1ExifSegments.unshift(i);
+                }
             }
-        } else if (segments[1].slice(0, 2) == "\xff\xe0") {
-            if (exif) {
-                segments[1] = exif;
-            }
-        } else if (segments[1].slice(0, 2) == "\xff\xe1" &&
-                   segments[1].slice(4, 10) == "Exif\x00\x00") {
-            if (exif) {
-                segments[1] = exif;
-            } else if (exif == null) {
-                segments = segments.slice(0).concat(segments.slice(2));
-            }
-        } else {
-            if (exif) {
-                segments = [segments[0], exif].concat(segments.slice(1));
-            }
+        });
+
+        // Remove additional occurences of APP1:Exif segment
+        additionalAPP1ExifSegments.forEach(function(segmentIndex) {
+            segments.splice(segmentIndex, 1);
+        });
+
+        if (!hasExifSegment && exif) {
+            segments = [segments[0], exif].concat(segments.slice(1));
         }
-        
+
         return segments.join("");
     }
 
@@ -25699,13 +30108,23 @@ SOFTWARE.
 
     that.GPSHelper = {
         degToDmsRational:function (degFloat) {
-            var minFloat = degFloat % 1 * 60;
+            var degAbs = Math.abs(degFloat);
+            var minFloat = degAbs % 1 * 60;
             var secFloat = minFloat % 1 * 60;
-            var deg = Math.floor(degFloat);
+            var deg = Math.floor(degAbs);
             var min = Math.floor(minFloat);
             var sec = Math.round(secFloat * 100);
 
             return [[deg, 1], [min, 1], [sec, 100]];
+        },
+
+        dmsRationalToDeg:function (dmsArray, ref) {
+            var sign = (ref === 'S' || ref === 'W') ? -1.0 : 1.0;
+            var deg = dmsArray[0][0] / dmsArray[0][1] +
+                      dmsArray[1][0] / dmsArray[1][1] / 60.0 +
+                      dmsArray[2][0] / dmsArray[2][1] / 3600.0;
+
+            return deg * sign;
         }
     };
     
@@ -25721,12 +30140,3796 @@ SOFTWARE.
 
 })();
 
+/**!
+ * Sortable 1.14.0
+ * @author	RubaXa   <trash@rubaxa.org>
+ * @author	owenm    <owen23355@gmail.com>
+ * @license MIT
+ */
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global = global || self, global.Sortable = factory());
+}(this, (function () { 'use strict';
+
+  function ownKeys(object, enumerableOnly) {
+    var keys = Object.keys(object);
+
+    if (Object.getOwnPropertySymbols) {
+      var symbols = Object.getOwnPropertySymbols(object);
+
+      if (enumerableOnly) {
+        symbols = symbols.filter(function (sym) {
+          return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+        });
+      }
+
+      keys.push.apply(keys, symbols);
+    }
+
+    return keys;
+  }
+
+  function _objectSpread2(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i] != null ? arguments[i] : {};
+
+      if (i % 2) {
+        ownKeys(Object(source), true).forEach(function (key) {
+          _defineProperty(target, key, source[key]);
+        });
+      } else if (Object.getOwnPropertyDescriptors) {
+        Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+      } else {
+        ownKeys(Object(source)).forEach(function (key) {
+          Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+        });
+      }
+    }
+
+    return target;
+  }
+
+  function _typeof(obj) {
+    "@babel/helpers - typeof";
+
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function (obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _defineProperty(obj, key, value) {
+    if (key in obj) {
+      Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: true,
+        configurable: true,
+        writable: true
+      });
+    } else {
+      obj[key] = value;
+    }
+
+    return obj;
+  }
+
+  function _extends() {
+    _extends = Object.assign || function (target) {
+      for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];
+
+        for (var key in source) {
+          if (Object.prototype.hasOwnProperty.call(source, key)) {
+            target[key] = source[key];
+          }
+        }
+      }
+
+      return target;
+    };
+
+    return _extends.apply(this, arguments);
+  }
+
+  function _objectWithoutPropertiesLoose(source, excluded) {
+    if (source == null) return {};
+    var target = {};
+    var sourceKeys = Object.keys(source);
+    var key, i;
+
+    for (i = 0; i < sourceKeys.length; i++) {
+      key = sourceKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      target[key] = source[key];
+    }
+
+    return target;
+  }
+
+  function _objectWithoutProperties(source, excluded) {
+    if (source == null) return {};
+
+    var target = _objectWithoutPropertiesLoose(source, excluded);
+
+    var key, i;
+
+    if (Object.getOwnPropertySymbols) {
+      var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+      for (i = 0; i < sourceSymbolKeys.length; i++) {
+        key = sourceSymbolKeys[i];
+        if (excluded.indexOf(key) >= 0) continue;
+        if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+        target[key] = source[key];
+      }
+    }
+
+    return target;
+  }
+
+  function _toConsumableArray(arr) {
+    return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread();
+  }
+
+  function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) return _arrayLikeToArray(arr);
+  }
+
+  function _iterableToArray(iter) {
+    if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
+  }
+
+  function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+  }
+
+  function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+
+    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+    return arr2;
+  }
+
+  function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+  }
+
+  var version = "1.14.0";
+
+  function userAgent(pattern) {
+    if (typeof window !== 'undefined' && window.navigator) {
+      return !! /*@__PURE__*/navigator.userAgent.match(pattern);
+    }
+  }
+
+  var IE11OrLess = userAgent(/(?:Trident.*rv[ :]?11\.|msie|iemobile|Windows Phone)/i);
+  var Edge = userAgent(/Edge/i);
+  var FireFox = userAgent(/firefox/i);
+  var Safari = userAgent(/safari/i) && !userAgent(/chrome/i) && !userAgent(/android/i);
+  var IOS = userAgent(/iP(ad|od|hone)/i);
+  var ChromeForAndroid = userAgent(/chrome/i) && userAgent(/android/i);
+
+  var captureMode = {
+    capture: false,
+    passive: false
+  };
+
+  function on(el, event, fn) {
+    el.addEventListener(event, fn, !IE11OrLess && captureMode);
+  }
+
+  function off(el, event, fn) {
+    el.removeEventListener(event, fn, !IE11OrLess && captureMode);
+  }
+
+  function matches(
+  /**HTMLElement*/
+  el,
+  /**String*/
+  selector) {
+    if (!selector) return;
+    selector[0] === '>' && (selector = selector.substring(1));
+
+    if (el) {
+      try {
+        if (el.matches) {
+          return el.matches(selector);
+        } else if (el.msMatchesSelector) {
+          return el.msMatchesSelector(selector);
+        } else if (el.webkitMatchesSelector) {
+          return el.webkitMatchesSelector(selector);
+        }
+      } catch (_) {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  function getParentOrHost(el) {
+    return el.host && el !== document && el.host.nodeType ? el.host : el.parentNode;
+  }
+
+  function closest(
+  /**HTMLElement*/
+  el,
+  /**String*/
+  selector,
+  /**HTMLElement*/
+  ctx, includeCTX) {
+    if (el) {
+      ctx = ctx || document;
+
+      do {
+        if (selector != null && (selector[0] === '>' ? el.parentNode === ctx && matches(el, selector) : matches(el, selector)) || includeCTX && el === ctx) {
+          return el;
+        }
+
+        if (el === ctx) break;
+        /* jshint boss:true */
+      } while (el = getParentOrHost(el));
+    }
+
+    return null;
+  }
+
+  var R_SPACE = /\s+/g;
+
+  function toggleClass(el, name, state) {
+    if (el && name) {
+      if (el.classList) {
+        el.classList[state ? 'add' : 'remove'](name);
+      } else {
+        var className = (' ' + el.className + ' ').replace(R_SPACE, ' ').replace(' ' + name + ' ', ' ');
+        el.className = (className + (state ? ' ' + name : '')).replace(R_SPACE, ' ');
+      }
+    }
+  }
+
+  function css(el, prop, val) {
+    var style = el && el.style;
+
+    if (style) {
+      if (val === void 0) {
+        if (document.defaultView && document.defaultView.getComputedStyle) {
+          val = document.defaultView.getComputedStyle(el, '');
+        } else if (el.currentStyle) {
+          val = el.currentStyle;
+        }
+
+        return prop === void 0 ? val : val[prop];
+      } else {
+        if (!(prop in style) && prop.indexOf('webkit') === -1) {
+          prop = '-webkit-' + prop;
+        }
+
+        style[prop] = val + (typeof val === 'string' ? '' : 'px');
+      }
+    }
+  }
+
+  function matrix(el, selfOnly) {
+    var appliedTransforms = '';
+
+    if (typeof el === 'string') {
+      appliedTransforms = el;
+    } else {
+      do {
+        var transform = css(el, 'transform');
+
+        if (transform && transform !== 'none') {
+          appliedTransforms = transform + ' ' + appliedTransforms;
+        }
+        /* jshint boss:true */
+
+      } while (!selfOnly && (el = el.parentNode));
+    }
+
+    var matrixFn = window.DOMMatrix || window.WebKitCSSMatrix || window.CSSMatrix || window.MSCSSMatrix;
+    /*jshint -W056 */
+
+    return matrixFn && new matrixFn(appliedTransforms);
+  }
+
+  function find(ctx, tagName, iterator) {
+    if (ctx) {
+      var list = ctx.getElementsByTagName(tagName),
+          i = 0,
+          n = list.length;
+
+      if (iterator) {
+        for (; i < n; i++) {
+          iterator(list[i], i);
+        }
+      }
+
+      return list;
+    }
+
+    return [];
+  }
+
+  function getWindowScrollingElement() {
+    var scrollingElement = document.scrollingElement;
+
+    if (scrollingElement) {
+      return scrollingElement;
+    } else {
+      return document.documentElement;
+    }
+  }
+  /**
+   * Returns the "bounding client rect" of given element
+   * @param  {HTMLElement} el                       The element whose boundingClientRect is wanted
+   * @param  {[Boolean]} relativeToContainingBlock  Whether the rect should be relative to the containing block of (including) the container
+   * @param  {[Boolean]} relativeToNonStaticParent  Whether the rect should be relative to the relative parent of (including) the contaienr
+   * @param  {[Boolean]} undoScale                  Whether the container's scale() should be undone
+   * @param  {[HTMLElement]} container              The parent the element will be placed in
+   * @return {Object}                               The boundingClientRect of el, with specified adjustments
+   */
+
+
+  function getRect(el, relativeToContainingBlock, relativeToNonStaticParent, undoScale, container) {
+    if (!el.getBoundingClientRect && el !== window) return;
+    var elRect, top, left, bottom, right, height, width;
+
+    if (el !== window && el.parentNode && el !== getWindowScrollingElement()) {
+      elRect = el.getBoundingClientRect();
+      top = elRect.top;
+      left = elRect.left;
+      bottom = elRect.bottom;
+      right = elRect.right;
+      height = elRect.height;
+      width = elRect.width;
+    } else {
+      top = 0;
+      left = 0;
+      bottom = window.innerHeight;
+      right = window.innerWidth;
+      height = window.innerHeight;
+      width = window.innerWidth;
+    }
+
+    if ((relativeToContainingBlock || relativeToNonStaticParent) && el !== window) {
+      // Adjust for translate()
+      container = container || el.parentNode; // solves #1123 (see: https://stackoverflow.com/a/37953806/6088312)
+      // Not needed on <= IE11
+
+      if (!IE11OrLess) {
+        do {
+          if (container && container.getBoundingClientRect && (css(container, 'transform') !== 'none' || relativeToNonStaticParent && css(container, 'position') !== 'static')) {
+            var containerRect = container.getBoundingClientRect(); // Set relative to edges of padding box of container
+
+            top -= containerRect.top + parseInt(css(container, 'border-top-width'));
+            left -= containerRect.left + parseInt(css(container, 'border-left-width'));
+            bottom = top + elRect.height;
+            right = left + elRect.width;
+            break;
+          }
+          /* jshint boss:true */
+
+        } while (container = container.parentNode);
+      }
+    }
+
+    if (undoScale && el !== window) {
+      // Adjust for scale()
+      var elMatrix = matrix(container || el),
+          scaleX = elMatrix && elMatrix.a,
+          scaleY = elMatrix && elMatrix.d;
+
+      if (elMatrix) {
+        top /= scaleY;
+        left /= scaleX;
+        width /= scaleX;
+        height /= scaleY;
+        bottom = top + height;
+        right = left + width;
+      }
+    }
+
+    return {
+      top: top,
+      left: left,
+      bottom: bottom,
+      right: right,
+      width: width,
+      height: height
+    };
+  }
+  /**
+   * Checks if a side of an element is scrolled past a side of its parents
+   * @param  {HTMLElement}  el           The element who's side being scrolled out of view is in question
+   * @param  {String}       elSide       Side of the element in question ('top', 'left', 'right', 'bottom')
+   * @param  {String}       parentSide   Side of the parent in question ('top', 'left', 'right', 'bottom')
+   * @return {HTMLElement}               The parent scroll element that the el's side is scrolled past, or null if there is no such element
+   */
+
+
+  function isScrolledPast(el, elSide, parentSide) {
+    var parent = getParentAutoScrollElement(el, true),
+        elSideVal = getRect(el)[elSide];
+    /* jshint boss:true */
+
+    while (parent) {
+      var parentSideVal = getRect(parent)[parentSide],
+          visible = void 0;
+
+      if (parentSide === 'top' || parentSide === 'left') {
+        visible = elSideVal >= parentSideVal;
+      } else {
+        visible = elSideVal <= parentSideVal;
+      }
+
+      if (!visible) return parent;
+      if (parent === getWindowScrollingElement()) break;
+      parent = getParentAutoScrollElement(parent, false);
+    }
+
+    return false;
+  }
+  /**
+   * Gets nth child of el, ignoring hidden children, sortable's elements (does not ignore clone if it's visible)
+   * and non-draggable elements
+   * @param  {HTMLElement} el       The parent element
+   * @param  {Number} childNum      The index of the child
+   * @param  {Object} options       Parent Sortable's options
+   * @return {HTMLElement}          The child at index childNum, or null if not found
+   */
+
+
+  function getChild(el, childNum, options, includeDragEl) {
+    var currentChild = 0,
+        i = 0,
+        children = el.children;
+
+    while (i < children.length) {
+      if (children[i].style.display !== 'none' && children[i] !== Sortable.ghost && (includeDragEl || children[i] !== Sortable.dragged) && closest(children[i], options.draggable, el, false)) {
+        if (currentChild === childNum) {
+          return children[i];
+        }
+
+        currentChild++;
+      }
+
+      i++;
+    }
+
+    return null;
+  }
+  /**
+   * Gets the last child in the el, ignoring ghostEl or invisible elements (clones)
+   * @param  {HTMLElement} el       Parent element
+   * @param  {selector} selector    Any other elements that should be ignored
+   * @return {HTMLElement}          The last child, ignoring ghostEl
+   */
+
+
+  function lastChild(el, selector) {
+    var last = el.lastElementChild;
+
+    while (last && (last === Sortable.ghost || css(last, 'display') === 'none' || selector && !matches(last, selector))) {
+      last = last.previousElementSibling;
+    }
+
+    return last || null;
+  }
+  /**
+   * Returns the index of an element within its parent for a selected set of
+   * elements
+   * @param  {HTMLElement} el
+   * @param  {selector} selector
+   * @return {number}
+   */
+
+
+  function index(el, selector) {
+    var index = 0;
+
+    if (!el || !el.parentNode) {
+      return -1;
+    }
+    /* jshint boss:true */
+
+
+    while (el = el.previousElementSibling) {
+      if (el.nodeName.toUpperCase() !== 'TEMPLATE' && el !== Sortable.clone && (!selector || matches(el, selector))) {
+        index++;
+      }
+    }
+
+    return index;
+  }
+  /**
+   * Returns the scroll offset of the given element, added with all the scroll offsets of parent elements.
+   * The value is returned in real pixels.
+   * @param  {HTMLElement} el
+   * @return {Array}             Offsets in the format of [left, top]
+   */
+
+
+  function getRelativeScrollOffset(el) {
+    var offsetLeft = 0,
+        offsetTop = 0,
+        winScroller = getWindowScrollingElement();
+
+    if (el) {
+      do {
+        var elMatrix = matrix(el),
+            scaleX = elMatrix.a,
+            scaleY = elMatrix.d;
+        offsetLeft += el.scrollLeft * scaleX;
+        offsetTop += el.scrollTop * scaleY;
+      } while (el !== winScroller && (el = el.parentNode));
+    }
+
+    return [offsetLeft, offsetTop];
+  }
+  /**
+   * Returns the index of the object within the given array
+   * @param  {Array} arr   Array that may or may not hold the object
+   * @param  {Object} obj  An object that has a key-value pair unique to and identical to a key-value pair in the object you want to find
+   * @return {Number}      The index of the object in the array, or -1
+   */
+
+
+  function indexOfObject(arr, obj) {
+    for (var i in arr) {
+      if (!arr.hasOwnProperty(i)) continue;
+
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key) && obj[key] === arr[i][key]) return Number(i);
+      }
+    }
+
+    return -1;
+  }
+
+  function getParentAutoScrollElement(el, includeSelf) {
+    // skip to window
+    if (!el || !el.getBoundingClientRect) return getWindowScrollingElement();
+    var elem = el;
+    var gotSelf = false;
+
+    do {
+      // we don't need to get elem css if it isn't even overflowing in the first place (performance)
+      if (elem.clientWidth < elem.scrollWidth || elem.clientHeight < elem.scrollHeight) {
+        var elemCSS = css(elem);
+
+        if (elem.clientWidth < elem.scrollWidth && (elemCSS.overflowX == 'auto' || elemCSS.overflowX == 'scroll') || elem.clientHeight < elem.scrollHeight && (elemCSS.overflowY == 'auto' || elemCSS.overflowY == 'scroll')) {
+          if (!elem.getBoundingClientRect || elem === document.body) return getWindowScrollingElement();
+          if (gotSelf || includeSelf) return elem;
+          gotSelf = true;
+        }
+      }
+      /* jshint boss:true */
+
+    } while (elem = elem.parentNode);
+
+    return getWindowScrollingElement();
+  }
+
+  function extend(dst, src) {
+    if (dst && src) {
+      for (var key in src) {
+        if (src.hasOwnProperty(key)) {
+          dst[key] = src[key];
+        }
+      }
+    }
+
+    return dst;
+  }
+
+  function isRectEqual(rect1, rect2) {
+    return Math.round(rect1.top) === Math.round(rect2.top) && Math.round(rect1.left) === Math.round(rect2.left) && Math.round(rect1.height) === Math.round(rect2.height) && Math.round(rect1.width) === Math.round(rect2.width);
+  }
+
+  var _throttleTimeout;
+
+  function throttle(callback, ms) {
+    return function () {
+      if (!_throttleTimeout) {
+        var args = arguments,
+            _this = this;
+
+        if (args.length === 1) {
+          callback.call(_this, args[0]);
+        } else {
+          callback.apply(_this, args);
+        }
+
+        _throttleTimeout = setTimeout(function () {
+          _throttleTimeout = void 0;
+        }, ms);
+      }
+    };
+  }
+
+  function cancelThrottle() {
+    clearTimeout(_throttleTimeout);
+    _throttleTimeout = void 0;
+  }
+
+  function scrollBy(el, x, y) {
+    el.scrollLeft += x;
+    el.scrollTop += y;
+  }
+
+  function clone(el) {
+    var Polymer = window.Polymer;
+    var $ = window.jQuery || window.Zepto;
+
+    if (Polymer && Polymer.dom) {
+      return Polymer.dom(el).cloneNode(true);
+    } else if ($) {
+      return $(el).clone(true)[0];
+    } else {
+      return el.cloneNode(true);
+    }
+  }
+
+  function setRect(el, rect) {
+    css(el, 'position', 'absolute');
+    css(el, 'top', rect.top);
+    css(el, 'left', rect.left);
+    css(el, 'width', rect.width);
+    css(el, 'height', rect.height);
+  }
+
+  function unsetRect(el) {
+    css(el, 'position', '');
+    css(el, 'top', '');
+    css(el, 'left', '');
+    css(el, 'width', '');
+    css(el, 'height', '');
+  }
+
+  var expando = 'Sortable' + new Date().getTime();
+
+  function AnimationStateManager() {
+    var animationStates = [],
+        animationCallbackId;
+    return {
+      captureAnimationState: function captureAnimationState() {
+        animationStates = [];
+        if (!this.options.animation) return;
+        var children = [].slice.call(this.el.children);
+        children.forEach(function (child) {
+          if (css(child, 'display') === 'none' || child === Sortable.ghost) return;
+          animationStates.push({
+            target: child,
+            rect: getRect(child)
+          });
+
+          var fromRect = _objectSpread2({}, animationStates[animationStates.length - 1].rect); // If animating: compensate for current animation
+
+
+          if (child.thisAnimationDuration) {
+            var childMatrix = matrix(child, true);
+
+            if (childMatrix) {
+              fromRect.top -= childMatrix.f;
+              fromRect.left -= childMatrix.e;
+            }
+          }
+
+          child.fromRect = fromRect;
+        });
+      },
+      addAnimationState: function addAnimationState(state) {
+        animationStates.push(state);
+      },
+      removeAnimationState: function removeAnimationState(target) {
+        animationStates.splice(indexOfObject(animationStates, {
+          target: target
+        }), 1);
+      },
+      animateAll: function animateAll(callback) {
+        var _this = this;
+
+        if (!this.options.animation) {
+          clearTimeout(animationCallbackId);
+          if (typeof callback === 'function') callback();
+          return;
+        }
+
+        var animating = false,
+            animationTime = 0;
+        animationStates.forEach(function (state) {
+          var time = 0,
+              target = state.target,
+              fromRect = target.fromRect,
+              toRect = getRect(target),
+              prevFromRect = target.prevFromRect,
+              prevToRect = target.prevToRect,
+              animatingRect = state.rect,
+              targetMatrix = matrix(target, true);
+
+          if (targetMatrix) {
+            // Compensate for current animation
+            toRect.top -= targetMatrix.f;
+            toRect.left -= targetMatrix.e;
+          }
+
+          target.toRect = toRect;
+
+          if (target.thisAnimationDuration) {
+            // Could also check if animatingRect is between fromRect and toRect
+            if (isRectEqual(prevFromRect, toRect) && !isRectEqual(fromRect, toRect) && // Make sure animatingRect is on line between toRect & fromRect
+            (animatingRect.top - toRect.top) / (animatingRect.left - toRect.left) === (fromRect.top - toRect.top) / (fromRect.left - toRect.left)) {
+              // If returning to same place as started from animation and on same axis
+              time = calculateRealTime(animatingRect, prevFromRect, prevToRect, _this.options);
+            }
+          } // if fromRect != toRect: animate
+
+
+          if (!isRectEqual(toRect, fromRect)) {
+            target.prevFromRect = fromRect;
+            target.prevToRect = toRect;
+
+            if (!time) {
+              time = _this.options.animation;
+            }
+
+            _this.animate(target, animatingRect, toRect, time);
+          }
+
+          if (time) {
+            animating = true;
+            animationTime = Math.max(animationTime, time);
+            clearTimeout(target.animationResetTimer);
+            target.animationResetTimer = setTimeout(function () {
+              target.animationTime = 0;
+              target.prevFromRect = null;
+              target.fromRect = null;
+              target.prevToRect = null;
+              target.thisAnimationDuration = null;
+            }, time);
+            target.thisAnimationDuration = time;
+          }
+        });
+        clearTimeout(animationCallbackId);
+
+        if (!animating) {
+          if (typeof callback === 'function') callback();
+        } else {
+          animationCallbackId = setTimeout(function () {
+            if (typeof callback === 'function') callback();
+          }, animationTime);
+        }
+
+        animationStates = [];
+      },
+      animate: function animate(target, currentRect, toRect, duration) {
+        if (duration) {
+          css(target, 'transition', '');
+          css(target, 'transform', '');
+          var elMatrix = matrix(this.el),
+              scaleX = elMatrix && elMatrix.a,
+              scaleY = elMatrix && elMatrix.d,
+              translateX = (currentRect.left - toRect.left) / (scaleX || 1),
+              translateY = (currentRect.top - toRect.top) / (scaleY || 1);
+          target.animatingX = !!translateX;
+          target.animatingY = !!translateY;
+          css(target, 'transform', 'translate3d(' + translateX + 'px,' + translateY + 'px,0)');
+          this.forRepaintDummy = repaint(target); // repaint
+
+          css(target, 'transition', 'transform ' + duration + 'ms' + (this.options.easing ? ' ' + this.options.easing : ''));
+          css(target, 'transform', 'translate3d(0,0,0)');
+          typeof target.animated === 'number' && clearTimeout(target.animated);
+          target.animated = setTimeout(function () {
+            css(target, 'transition', '');
+            css(target, 'transform', '');
+            target.animated = false;
+            target.animatingX = false;
+            target.animatingY = false;
+          }, duration);
+        }
+      }
+    };
+  }
+
+  function repaint(target) {
+    return target.offsetWidth;
+  }
+
+  function calculateRealTime(animatingRect, fromRect, toRect, options) {
+    return Math.sqrt(Math.pow(fromRect.top - animatingRect.top, 2) + Math.pow(fromRect.left - animatingRect.left, 2)) / Math.sqrt(Math.pow(fromRect.top - toRect.top, 2) + Math.pow(fromRect.left - toRect.left, 2)) * options.animation;
+  }
+
+  var plugins = [];
+  var defaults = {
+    initializeByDefault: true
+  };
+  var PluginManager = {
+    mount: function mount(plugin) {
+      // Set default static properties
+      for (var option in defaults) {
+        if (defaults.hasOwnProperty(option) && !(option in plugin)) {
+          plugin[option] = defaults[option];
+        }
+      }
+
+      plugins.forEach(function (p) {
+        if (p.pluginName === plugin.pluginName) {
+          throw "Sortable: Cannot mount plugin ".concat(plugin.pluginName, " more than once");
+        }
+      });
+      plugins.push(plugin);
+    },
+    pluginEvent: function pluginEvent(eventName, sortable, evt) {
+      var _this = this;
+
+      this.eventCanceled = false;
+
+      evt.cancel = function () {
+        _this.eventCanceled = true;
+      };
+
+      var eventNameGlobal = eventName + 'Global';
+      plugins.forEach(function (plugin) {
+        if (!sortable[plugin.pluginName]) return; // Fire global events if it exists in this sortable
+
+        if (sortable[plugin.pluginName][eventNameGlobal]) {
+          sortable[plugin.pluginName][eventNameGlobal](_objectSpread2({
+            sortable: sortable
+          }, evt));
+        } // Only fire plugin event if plugin is enabled in this sortable,
+        // and plugin has event defined
+
+
+        if (sortable.options[plugin.pluginName] && sortable[plugin.pluginName][eventName]) {
+          sortable[plugin.pluginName][eventName](_objectSpread2({
+            sortable: sortable
+          }, evt));
+        }
+      });
+    },
+    initializePlugins: function initializePlugins(sortable, el, defaults, options) {
+      plugins.forEach(function (plugin) {
+        var pluginName = plugin.pluginName;
+        if (!sortable.options[pluginName] && !plugin.initializeByDefault) return;
+        var initialized = new plugin(sortable, el, sortable.options);
+        initialized.sortable = sortable;
+        initialized.options = sortable.options;
+        sortable[pluginName] = initialized; // Add default options from plugin
+
+        _extends(defaults, initialized.defaults);
+      });
+
+      for (var option in sortable.options) {
+        if (!sortable.options.hasOwnProperty(option)) continue;
+        var modified = this.modifyOption(sortable, option, sortable.options[option]);
+
+        if (typeof modified !== 'undefined') {
+          sortable.options[option] = modified;
+        }
+      }
+    },
+    getEventProperties: function getEventProperties(name, sortable) {
+      var eventProperties = {};
+      plugins.forEach(function (plugin) {
+        if (typeof plugin.eventProperties !== 'function') return;
+
+        _extends(eventProperties, plugin.eventProperties.call(sortable[plugin.pluginName], name));
+      });
+      return eventProperties;
+    },
+    modifyOption: function modifyOption(sortable, name, value) {
+      var modifiedValue;
+      plugins.forEach(function (plugin) {
+        // Plugin must exist on the Sortable
+        if (!sortable[plugin.pluginName]) return; // If static option listener exists for this option, call in the context of the Sortable's instance of this plugin
+
+        if (plugin.optionListeners && typeof plugin.optionListeners[name] === 'function') {
+          modifiedValue = plugin.optionListeners[name].call(sortable[plugin.pluginName], value);
+        }
+      });
+      return modifiedValue;
+    }
+  };
+
+  function dispatchEvent(_ref) {
+    var sortable = _ref.sortable,
+        rootEl = _ref.rootEl,
+        name = _ref.name,
+        targetEl = _ref.targetEl,
+        cloneEl = _ref.cloneEl,
+        toEl = _ref.toEl,
+        fromEl = _ref.fromEl,
+        oldIndex = _ref.oldIndex,
+        newIndex = _ref.newIndex,
+        oldDraggableIndex = _ref.oldDraggableIndex,
+        newDraggableIndex = _ref.newDraggableIndex,
+        originalEvent = _ref.originalEvent,
+        putSortable = _ref.putSortable,
+        extraEventProperties = _ref.extraEventProperties;
+    sortable = sortable || rootEl && rootEl[expando];
+    if (!sortable) return;
+    var evt,
+        options = sortable.options,
+        onName = 'on' + name.charAt(0).toUpperCase() + name.substr(1); // Support for new CustomEvent feature
+
+    if (window.CustomEvent && !IE11OrLess && !Edge) {
+      evt = new CustomEvent(name, {
+        bubbles: true,
+        cancelable: true
+      });
+    } else {
+      evt = document.createEvent('Event');
+      evt.initEvent(name, true, true);
+    }
+
+    evt.to = toEl || rootEl;
+    evt.from = fromEl || rootEl;
+    evt.item = targetEl || rootEl;
+    evt.clone = cloneEl;
+    evt.oldIndex = oldIndex;
+    evt.newIndex = newIndex;
+    evt.oldDraggableIndex = oldDraggableIndex;
+    evt.newDraggableIndex = newDraggableIndex;
+    evt.originalEvent = originalEvent;
+    evt.pullMode = putSortable ? putSortable.lastPutMode : undefined;
+
+    var allEventProperties = _objectSpread2(_objectSpread2({}, extraEventProperties), PluginManager.getEventProperties(name, sortable));
+
+    for (var option in allEventProperties) {
+      evt[option] = allEventProperties[option];
+    }
+
+    if (rootEl) {
+      rootEl.dispatchEvent(evt);
+    }
+
+    if (options[onName]) {
+      options[onName].call(sortable, evt);
+    }
+  }
+
+  var _excluded = ["evt"];
+
+  var pluginEvent = function pluginEvent(eventName, sortable) {
+    var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+        originalEvent = _ref.evt,
+        data = _objectWithoutProperties(_ref, _excluded);
+
+    PluginManager.pluginEvent.bind(Sortable)(eventName, sortable, _objectSpread2({
+      dragEl: dragEl,
+      parentEl: parentEl,
+      ghostEl: ghostEl,
+      rootEl: rootEl,
+      nextEl: nextEl,
+      lastDownEl: lastDownEl,
+      cloneEl: cloneEl,
+      cloneHidden: cloneHidden,
+      dragStarted: moved,
+      putSortable: putSortable,
+      activeSortable: Sortable.active,
+      originalEvent: originalEvent,
+      oldIndex: oldIndex,
+      oldDraggableIndex: oldDraggableIndex,
+      newIndex: newIndex,
+      newDraggableIndex: newDraggableIndex,
+      hideGhostForTarget: _hideGhostForTarget,
+      unhideGhostForTarget: _unhideGhostForTarget,
+      cloneNowHidden: function cloneNowHidden() {
+        cloneHidden = true;
+      },
+      cloneNowShown: function cloneNowShown() {
+        cloneHidden = false;
+      },
+      dispatchSortableEvent: function dispatchSortableEvent(name) {
+        _dispatchEvent({
+          sortable: sortable,
+          name: name,
+          originalEvent: originalEvent
+        });
+      }
+    }, data));
+  };
+
+  function _dispatchEvent(info) {
+    dispatchEvent(_objectSpread2({
+      putSortable: putSortable,
+      cloneEl: cloneEl,
+      targetEl: dragEl,
+      rootEl: rootEl,
+      oldIndex: oldIndex,
+      oldDraggableIndex: oldDraggableIndex,
+      newIndex: newIndex,
+      newDraggableIndex: newDraggableIndex
+    }, info));
+  }
+
+  var dragEl,
+      parentEl,
+      ghostEl,
+      rootEl,
+      nextEl,
+      lastDownEl,
+      cloneEl,
+      cloneHidden,
+      oldIndex,
+      newIndex,
+      oldDraggableIndex,
+      newDraggableIndex,
+      activeGroup,
+      putSortable,
+      awaitingDragStarted = false,
+      ignoreNextClick = false,
+      sortables = [],
+      tapEvt,
+      touchEvt,
+      lastDx,
+      lastDy,
+      tapDistanceLeft,
+      tapDistanceTop,
+      moved,
+      lastTarget,
+      lastDirection,
+      pastFirstInvertThresh = false,
+      isCircumstantialInvert = false,
+      targetMoveDistance,
+      // For positioning ghost absolutely
+  ghostRelativeParent,
+      ghostRelativeParentInitialScroll = [],
+      // (left, top)
+  _silent = false,
+      savedInputChecked = [];
+  /** @const */
+
+  var documentExists = typeof document !== 'undefined',
+      PositionGhostAbsolutely = IOS,
+      CSSFloatProperty = Edge || IE11OrLess ? 'cssFloat' : 'float',
+      // This will not pass for IE9, because IE9 DnD only works on anchors
+  supportDraggable = documentExists && !ChromeForAndroid && !IOS && 'draggable' in document.createElement('div'),
+      supportCssPointerEvents = function () {
+    if (!documentExists) return; // false when <= IE11
+
+    if (IE11OrLess) {
+      return false;
+    }
+
+    var el = document.createElement('x');
+    el.style.cssText = 'pointer-events:auto';
+    return el.style.pointerEvents === 'auto';
+  }(),
+      _detectDirection = function _detectDirection(el, options) {
+    var elCSS = css(el),
+        elWidth = parseInt(elCSS.width) - parseInt(elCSS.paddingLeft) - parseInt(elCSS.paddingRight) - parseInt(elCSS.borderLeftWidth) - parseInt(elCSS.borderRightWidth),
+        child1 = getChild(el, 0, options),
+        child2 = getChild(el, 1, options),
+        firstChildCSS = child1 && css(child1),
+        secondChildCSS = child2 && css(child2),
+        firstChildWidth = firstChildCSS && parseInt(firstChildCSS.marginLeft) + parseInt(firstChildCSS.marginRight) + getRect(child1).width,
+        secondChildWidth = secondChildCSS && parseInt(secondChildCSS.marginLeft) + parseInt(secondChildCSS.marginRight) + getRect(child2).width;
+
+    if (elCSS.display === 'flex') {
+      return elCSS.flexDirection === 'column' || elCSS.flexDirection === 'column-reverse' ? 'vertical' : 'horizontal';
+    }
+
+    if (elCSS.display === 'grid') {
+      return elCSS.gridTemplateColumns.split(' ').length <= 1 ? 'vertical' : 'horizontal';
+    }
+
+    if (child1 && firstChildCSS["float"] && firstChildCSS["float"] !== 'none') {
+      var touchingSideChild2 = firstChildCSS["float"] === 'left' ? 'left' : 'right';
+      return child2 && (secondChildCSS.clear === 'both' || secondChildCSS.clear === touchingSideChild2) ? 'vertical' : 'horizontal';
+    }
+
+    return child1 && (firstChildCSS.display === 'block' || firstChildCSS.display === 'flex' || firstChildCSS.display === 'table' || firstChildCSS.display === 'grid' || firstChildWidth >= elWidth && elCSS[CSSFloatProperty] === 'none' || child2 && elCSS[CSSFloatProperty] === 'none' && firstChildWidth + secondChildWidth > elWidth) ? 'vertical' : 'horizontal';
+  },
+      _dragElInRowColumn = function _dragElInRowColumn(dragRect, targetRect, vertical) {
+    var dragElS1Opp = vertical ? dragRect.left : dragRect.top,
+        dragElS2Opp = vertical ? dragRect.right : dragRect.bottom,
+        dragElOppLength = vertical ? dragRect.width : dragRect.height,
+        targetS1Opp = vertical ? targetRect.left : targetRect.top,
+        targetS2Opp = vertical ? targetRect.right : targetRect.bottom,
+        targetOppLength = vertical ? targetRect.width : targetRect.height;
+    return dragElS1Opp === targetS1Opp || dragElS2Opp === targetS2Opp || dragElS1Opp + dragElOppLength / 2 === targetS1Opp + targetOppLength / 2;
+  },
+
+  /**
+   * Detects first nearest empty sortable to X and Y position using emptyInsertThreshold.
+   * @param  {Number} x      X position
+   * @param  {Number} y      Y position
+   * @return {HTMLElement}   Element of the first found nearest Sortable
+   */
+  _detectNearestEmptySortable = function _detectNearestEmptySortable(x, y) {
+    var ret;
+    sortables.some(function (sortable) {
+      var threshold = sortable[expando].options.emptyInsertThreshold;
+      if (!threshold || lastChild(sortable)) return;
+      var rect = getRect(sortable),
+          insideHorizontally = x >= rect.left - threshold && x <= rect.right + threshold,
+          insideVertically = y >= rect.top - threshold && y <= rect.bottom + threshold;
+
+      if (insideHorizontally && insideVertically) {
+        return ret = sortable;
+      }
+    });
+    return ret;
+  },
+      _prepareGroup = function _prepareGroup(options) {
+    function toFn(value, pull) {
+      return function (to, from, dragEl, evt) {
+        var sameGroup = to.options.group.name && from.options.group.name && to.options.group.name === from.options.group.name;
+
+        if (value == null && (pull || sameGroup)) {
+          // Default pull value
+          // Default pull and put value if same group
+          return true;
+        } else if (value == null || value === false) {
+          return false;
+        } else if (pull && value === 'clone') {
+          return value;
+        } else if (typeof value === 'function') {
+          return toFn(value(to, from, dragEl, evt), pull)(to, from, dragEl, evt);
+        } else {
+          var otherGroup = (pull ? to : from).options.group.name;
+          return value === true || typeof value === 'string' && value === otherGroup || value.join && value.indexOf(otherGroup) > -1;
+        }
+      };
+    }
+
+    var group = {};
+    var originalGroup = options.group;
+
+    if (!originalGroup || _typeof(originalGroup) != 'object') {
+      originalGroup = {
+        name: originalGroup
+      };
+    }
+
+    group.name = originalGroup.name;
+    group.checkPull = toFn(originalGroup.pull, true);
+    group.checkPut = toFn(originalGroup.put);
+    group.revertClone = originalGroup.revertClone;
+    options.group = group;
+  },
+      _hideGhostForTarget = function _hideGhostForTarget() {
+    if (!supportCssPointerEvents && ghostEl) {
+      css(ghostEl, 'display', 'none');
+    }
+  },
+      _unhideGhostForTarget = function _unhideGhostForTarget() {
+    if (!supportCssPointerEvents && ghostEl) {
+      css(ghostEl, 'display', '');
+    }
+  }; // #1184 fix - Prevent click event on fallback if dragged but item not changed position
+
+
+  if (documentExists) {
+    document.addEventListener('click', function (evt) {
+      if (ignoreNextClick) {
+        evt.preventDefault();
+        evt.stopPropagation && evt.stopPropagation();
+        evt.stopImmediatePropagation && evt.stopImmediatePropagation();
+        ignoreNextClick = false;
+        return false;
+      }
+    }, true);
+  }
+
+  var nearestEmptyInsertDetectEvent = function nearestEmptyInsertDetectEvent(evt) {
+    if (dragEl) {
+      evt = evt.touches ? evt.touches[0] : evt;
+
+      var nearest = _detectNearestEmptySortable(evt.clientX, evt.clientY);
+
+      if (nearest) {
+        // Create imitation event
+        var event = {};
+
+        for (var i in evt) {
+          if (evt.hasOwnProperty(i)) {
+            event[i] = evt[i];
+          }
+        }
+
+        event.target = event.rootEl = nearest;
+        event.preventDefault = void 0;
+        event.stopPropagation = void 0;
+
+        nearest[expando]._onDragOver(event);
+      }
+    }
+  };
+
+  var _checkOutsideTargetEl = function _checkOutsideTargetEl(evt) {
+    if (dragEl) {
+      dragEl.parentNode[expando]._isOutsideThisEl(evt.target);
+    }
+  };
+  /**
+   * @class  Sortable
+   * @param  {HTMLElement}  el
+   * @param  {Object}       [options]
+   */
+
+
+  function Sortable(el, options) {
+    if (!(el && el.nodeType && el.nodeType === 1)) {
+      throw "Sortable: `el` must be an HTMLElement, not ".concat({}.toString.call(el));
+    }
+
+    this.el = el; // root element
+
+    this.options = options = _extends({}, options); // Export instance
+
+    el[expando] = this;
+    var defaults = {
+      group: null,
+      sort: true,
+      disabled: false,
+      store: null,
+      handle: null,
+      draggable: /^[uo]l$/i.test(el.nodeName) ? '>li' : '>*',
+      swapThreshold: 1,
+      // percentage; 0 <= x <= 1
+      invertSwap: false,
+      // invert always
+      invertedSwapThreshold: null,
+      // will be set to same as swapThreshold if default
+      removeCloneOnHide: true,
+      direction: function direction() {
+        return _detectDirection(el, this.options);
+      },
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      dragClass: 'sortable-drag',
+      ignore: 'a, img',
+      filter: null,
+      preventOnFilter: true,
+      animation: 0,
+      easing: null,
+      setData: function setData(dataTransfer, dragEl) {
+        dataTransfer.setData('Text', dragEl.textContent);
+      },
+      dropBubble: false,
+      dragoverBubble: false,
+      dataIdAttr: 'data-id',
+      delay: 0,
+      delayOnTouchOnly: false,
+      touchStartThreshold: (Number.parseInt ? Number : window).parseInt(window.devicePixelRatio, 10) || 1,
+      forceFallback: false,
+      fallbackClass: 'sortable-fallback',
+      fallbackOnBody: false,
+      fallbackTolerance: 0,
+      fallbackOffset: {
+        x: 0,
+        y: 0
+      },
+      supportPointer: Sortable.supportPointer !== false && 'PointerEvent' in window && !Safari,
+      emptyInsertThreshold: 5
+    };
+    PluginManager.initializePlugins(this, el, defaults); // Set default options
+
+    for (var name in defaults) {
+      !(name in options) && (options[name] = defaults[name]);
+    }
+
+    _prepareGroup(options); // Bind all private methods
+
+
+    for (var fn in this) {
+      if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+        this[fn] = this[fn].bind(this);
+      }
+    } // Setup drag mode
+
+
+    this.nativeDraggable = options.forceFallback ? false : supportDraggable;
+
+    if (this.nativeDraggable) {
+      // Touch start threshold cannot be greater than the native dragstart threshold
+      this.options.touchStartThreshold = 1;
+    } // Bind events
+
+
+    if (options.supportPointer) {
+      on(el, 'pointerdown', this._onTapStart);
+    } else {
+      on(el, 'mousedown', this._onTapStart);
+      on(el, 'touchstart', this._onTapStart);
+    }
+
+    if (this.nativeDraggable) {
+      on(el, 'dragover', this);
+      on(el, 'dragenter', this);
+    }
+
+    sortables.push(this.el); // Restore sorting
+
+    options.store && options.store.get && this.sort(options.store.get(this) || []); // Add animation state manager
+
+    _extends(this, AnimationStateManager());
+  }
+
+  Sortable.prototype =
+  /** @lends Sortable.prototype */
+  {
+    constructor: Sortable,
+    _isOutsideThisEl: function _isOutsideThisEl(target) {
+      if (!this.el.contains(target) && target !== this.el) {
+        lastTarget = null;
+      }
+    },
+    _getDirection: function _getDirection(evt, target) {
+      return typeof this.options.direction === 'function' ? this.options.direction.call(this, evt, target, dragEl) : this.options.direction;
+    },
+    _onTapStart: function _onTapStart(
+    /** Event|TouchEvent */
+    evt) {
+      if (!evt.cancelable) return;
+
+      var _this = this,
+          el = this.el,
+          options = this.options,
+          preventOnFilter = options.preventOnFilter,
+          type = evt.type,
+          touch = evt.touches && evt.touches[0] || evt.pointerType && evt.pointerType === 'touch' && evt,
+          target = (touch || evt).target,
+          originalTarget = evt.target.shadowRoot && (evt.path && evt.path[0] || evt.composedPath && evt.composedPath()[0]) || target,
+          filter = options.filter;
+
+      _saveInputCheckedState(el); // Don't trigger start event when an element is been dragged, otherwise the evt.oldindex always wrong when set option.group.
+
+
+      if (dragEl) {
+        return;
+      }
+
+      if (/mousedown|pointerdown/.test(type) && evt.button !== 0 || options.disabled) {
+        return; // only left button and enabled
+      } // cancel dnd if original target is content editable
+
+
+      if (originalTarget.isContentEditable) {
+        return;
+      } // Safari ignores further event handling after mousedown
+
+
+      if (!this.nativeDraggable && Safari && target && target.tagName.toUpperCase() === 'SELECT') {
+        return;
+      }
+
+      target = closest(target, options.draggable, el, false);
+
+      if (target && target.animated) {
+        return;
+      }
+
+      if (lastDownEl === target) {
+        // Ignoring duplicate `down`
+        return;
+      } // Get the index of the dragged element within its parent
+
+
+      oldIndex = index(target);
+      oldDraggableIndex = index(target, options.draggable); // Check filter
+
+      if (typeof filter === 'function') {
+        if (filter.call(this, evt, target, this)) {
+          _dispatchEvent({
+            sortable: _this,
+            rootEl: originalTarget,
+            name: 'filter',
+            targetEl: target,
+            toEl: el,
+            fromEl: el
+          });
+
+          pluginEvent('filter', _this, {
+            evt: evt
+          });
+          preventOnFilter && evt.cancelable && evt.preventDefault();
+          return; // cancel dnd
+        }
+      } else if (filter) {
+        filter = filter.split(',').some(function (criteria) {
+          criteria = closest(originalTarget, criteria.trim(), el, false);
+
+          if (criteria) {
+            _dispatchEvent({
+              sortable: _this,
+              rootEl: criteria,
+              name: 'filter',
+              targetEl: target,
+              fromEl: el,
+              toEl: el
+            });
+
+            pluginEvent('filter', _this, {
+              evt: evt
+            });
+            return true;
+          }
+        });
+
+        if (filter) {
+          preventOnFilter && evt.cancelable && evt.preventDefault();
+          return; // cancel dnd
+        }
+      }
+
+      if (options.handle && !closest(originalTarget, options.handle, el, false)) {
+        return;
+      } // Prepare `dragstart`
+
+
+      this._prepareDragStart(evt, touch, target);
+    },
+    _prepareDragStart: function _prepareDragStart(
+    /** Event */
+    evt,
+    /** Touch */
+    touch,
+    /** HTMLElement */
+    target) {
+      var _this = this,
+          el = _this.el,
+          options = _this.options,
+          ownerDocument = el.ownerDocument,
+          dragStartFn;
+
+      if (target && !dragEl && target.parentNode === el) {
+        var dragRect = getRect(target);
+        rootEl = el;
+        dragEl = target;
+        parentEl = dragEl.parentNode;
+        nextEl = dragEl.nextSibling;
+        lastDownEl = target;
+        activeGroup = options.group;
+        Sortable.dragged = dragEl;
+        tapEvt = {
+          target: dragEl,
+          clientX: (touch || evt).clientX,
+          clientY: (touch || evt).clientY
+        };
+        tapDistanceLeft = tapEvt.clientX - dragRect.left;
+        tapDistanceTop = tapEvt.clientY - dragRect.top;
+        this._lastX = (touch || evt).clientX;
+        this._lastY = (touch || evt).clientY;
+        dragEl.style['will-change'] = 'all';
+
+        dragStartFn = function dragStartFn() {
+          pluginEvent('delayEnded', _this, {
+            evt: evt
+          });
+
+          if (Sortable.eventCanceled) {
+            _this._onDrop();
+
+            return;
+          } // Delayed drag has been triggered
+          // we can re-enable the events: touchmove/mousemove
+
+
+          _this._disableDelayedDragEvents();
+
+          if (!FireFox && _this.nativeDraggable) {
+            dragEl.draggable = true;
+          } // Bind the events: dragstart/dragend
+
+
+          _this._triggerDragStart(evt, touch); // Drag start event
+
+
+          _dispatchEvent({
+            sortable: _this,
+            name: 'choose',
+            originalEvent: evt
+          }); // Chosen item
+
+
+          toggleClass(dragEl, options.chosenClass, true);
+        }; // Disable "draggable"
+
+
+        options.ignore.split(',').forEach(function (criteria) {
+          find(dragEl, criteria.trim(), _disableDraggable);
+        });
+        on(ownerDocument, 'dragover', nearestEmptyInsertDetectEvent);
+        on(ownerDocument, 'mousemove', nearestEmptyInsertDetectEvent);
+        on(ownerDocument, 'touchmove', nearestEmptyInsertDetectEvent);
+        on(ownerDocument, 'mouseup', _this._onDrop);
+        on(ownerDocument, 'touchend', _this._onDrop);
+        on(ownerDocument, 'touchcancel', _this._onDrop); // Make dragEl draggable (must be before delay for FireFox)
+
+        if (FireFox && this.nativeDraggable) {
+          this.options.touchStartThreshold = 4;
+          dragEl.draggable = true;
+        }
+
+        pluginEvent('delayStart', this, {
+          evt: evt
+        }); // Delay is impossible for native DnD in Edge or IE
+
+        if (options.delay && (!options.delayOnTouchOnly || touch) && (!this.nativeDraggable || !(Edge || IE11OrLess))) {
+          if (Sortable.eventCanceled) {
+            this._onDrop();
+
+            return;
+          } // If the user moves the pointer or let go the click or touch
+          // before the delay has been reached:
+          // disable the delayed drag
+
+
+          on(ownerDocument, 'mouseup', _this._disableDelayedDrag);
+          on(ownerDocument, 'touchend', _this._disableDelayedDrag);
+          on(ownerDocument, 'touchcancel', _this._disableDelayedDrag);
+          on(ownerDocument, 'mousemove', _this._delayedDragTouchMoveHandler);
+          on(ownerDocument, 'touchmove', _this._delayedDragTouchMoveHandler);
+          options.supportPointer && on(ownerDocument, 'pointermove', _this._delayedDragTouchMoveHandler);
+          _this._dragStartTimer = setTimeout(dragStartFn, options.delay);
+        } else {
+          dragStartFn();
+        }
+      }
+    },
+    _delayedDragTouchMoveHandler: function _delayedDragTouchMoveHandler(
+    /** TouchEvent|PointerEvent **/
+    e) {
+      var touch = e.touches ? e.touches[0] : e;
+
+      if (Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) >= Math.floor(this.options.touchStartThreshold / (this.nativeDraggable && window.devicePixelRatio || 1))) {
+        this._disableDelayedDrag();
+      }
+    },
+    _disableDelayedDrag: function _disableDelayedDrag() {
+      dragEl && _disableDraggable(dragEl);
+      clearTimeout(this._dragStartTimer);
+
+      this._disableDelayedDragEvents();
+    },
+    _disableDelayedDragEvents: function _disableDelayedDragEvents() {
+      var ownerDocument = this.el.ownerDocument;
+      off(ownerDocument, 'mouseup', this._disableDelayedDrag);
+      off(ownerDocument, 'touchend', this._disableDelayedDrag);
+      off(ownerDocument, 'touchcancel', this._disableDelayedDrag);
+      off(ownerDocument, 'mousemove', this._delayedDragTouchMoveHandler);
+      off(ownerDocument, 'touchmove', this._delayedDragTouchMoveHandler);
+      off(ownerDocument, 'pointermove', this._delayedDragTouchMoveHandler);
+    },
+    _triggerDragStart: function _triggerDragStart(
+    /** Event */
+    evt,
+    /** Touch */
+    touch) {
+      touch = touch || evt.pointerType == 'touch' && evt;
+
+      if (!this.nativeDraggable || touch) {
+        if (this.options.supportPointer) {
+          on(document, 'pointermove', this._onTouchMove);
+        } else if (touch) {
+          on(document, 'touchmove', this._onTouchMove);
+        } else {
+          on(document, 'mousemove', this._onTouchMove);
+        }
+      } else {
+        on(dragEl, 'dragend', this);
+        on(rootEl, 'dragstart', this._onDragStart);
+      }
+
+      try {
+        if (document.selection) {
+          // Timeout neccessary for IE9
+          _nextTick(function () {
+            document.selection.empty();
+          });
+        } else {
+          window.getSelection().removeAllRanges();
+        }
+      } catch (err) {}
+    },
+    _dragStarted: function _dragStarted(fallback, evt) {
+
+      awaitingDragStarted = false;
+
+      if (rootEl && dragEl) {
+        pluginEvent('dragStarted', this, {
+          evt: evt
+        });
+
+        if (this.nativeDraggable) {
+          on(document, 'dragover', _checkOutsideTargetEl);
+        }
+
+        var options = this.options; // Apply effect
+
+        !fallback && toggleClass(dragEl, options.dragClass, false);
+        toggleClass(dragEl, options.ghostClass, true);
+        Sortable.active = this;
+        fallback && this._appendGhost(); // Drag start event
+
+        _dispatchEvent({
+          sortable: this,
+          name: 'start',
+          originalEvent: evt
+        });
+      } else {
+        this._nulling();
+      }
+    },
+    _emulateDragOver: function _emulateDragOver() {
+      if (touchEvt) {
+        this._lastX = touchEvt.clientX;
+        this._lastY = touchEvt.clientY;
+
+        _hideGhostForTarget();
+
+        var target = document.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
+        var parent = target;
+
+        while (target && target.shadowRoot) {
+          target = target.shadowRoot.elementFromPoint(touchEvt.clientX, touchEvt.clientY);
+          if (target === parent) break;
+          parent = target;
+        }
+
+        dragEl.parentNode[expando]._isOutsideThisEl(target);
+
+        if (parent) {
+          do {
+            if (parent[expando]) {
+              var inserted = void 0;
+              inserted = parent[expando]._onDragOver({
+                clientX: touchEvt.clientX,
+                clientY: touchEvt.clientY,
+                target: target,
+                rootEl: parent
+              });
+
+              if (inserted && !this.options.dragoverBubble) {
+                break;
+              }
+            }
+
+            target = parent; // store last element
+          }
+          /* jshint boss:true */
+          while (parent = parent.parentNode);
+        }
+
+        _unhideGhostForTarget();
+      }
+    },
+    _onTouchMove: function _onTouchMove(
+    /**TouchEvent*/
+    evt) {
+      if (tapEvt) {
+        var options = this.options,
+            fallbackTolerance = options.fallbackTolerance,
+            fallbackOffset = options.fallbackOffset,
+            touch = evt.touches ? evt.touches[0] : evt,
+            ghostMatrix = ghostEl && matrix(ghostEl, true),
+            scaleX = ghostEl && ghostMatrix && ghostMatrix.a,
+            scaleY = ghostEl && ghostMatrix && ghostMatrix.d,
+            relativeScrollOffset = PositionGhostAbsolutely && ghostRelativeParent && getRelativeScrollOffset(ghostRelativeParent),
+            dx = (touch.clientX - tapEvt.clientX + fallbackOffset.x) / (scaleX || 1) + (relativeScrollOffset ? relativeScrollOffset[0] - ghostRelativeParentInitialScroll[0] : 0) / (scaleX || 1),
+            dy = (touch.clientY - tapEvt.clientY + fallbackOffset.y) / (scaleY || 1) + (relativeScrollOffset ? relativeScrollOffset[1] - ghostRelativeParentInitialScroll[1] : 0) / (scaleY || 1); // only set the status to dragging, when we are actually dragging
+
+        if (!Sortable.active && !awaitingDragStarted) {
+          if (fallbackTolerance && Math.max(Math.abs(touch.clientX - this._lastX), Math.abs(touch.clientY - this._lastY)) < fallbackTolerance) {
+            return;
+          }
+
+          this._onDragStart(evt, true);
+        }
+
+        if (ghostEl) {
+          if (ghostMatrix) {
+            ghostMatrix.e += dx - (lastDx || 0);
+            ghostMatrix.f += dy - (lastDy || 0);
+          } else {
+            ghostMatrix = {
+              a: 1,
+              b: 0,
+              c: 0,
+              d: 1,
+              e: dx,
+              f: dy
+            };
+          }
+
+          var cssMatrix = "matrix(".concat(ghostMatrix.a, ",").concat(ghostMatrix.b, ",").concat(ghostMatrix.c, ",").concat(ghostMatrix.d, ",").concat(ghostMatrix.e, ",").concat(ghostMatrix.f, ")");
+          css(ghostEl, 'webkitTransform', cssMatrix);
+          css(ghostEl, 'mozTransform', cssMatrix);
+          css(ghostEl, 'msTransform', cssMatrix);
+          css(ghostEl, 'transform', cssMatrix);
+          lastDx = dx;
+          lastDy = dy;
+          touchEvt = touch;
+        }
+
+        evt.cancelable && evt.preventDefault();
+      }
+    },
+    _appendGhost: function _appendGhost() {
+      // Bug if using scale(): https://stackoverflow.com/questions/2637058
+      // Not being adjusted for
+      if (!ghostEl) {
+        var container = this.options.fallbackOnBody ? document.body : rootEl,
+            rect = getRect(dragEl, true, PositionGhostAbsolutely, true, container),
+            options = this.options; // Position absolutely
+
+        if (PositionGhostAbsolutely) {
+          // Get relatively positioned parent
+          ghostRelativeParent = container;
+
+          while (css(ghostRelativeParent, 'position') === 'static' && css(ghostRelativeParent, 'transform') === 'none' && ghostRelativeParent !== document) {
+            ghostRelativeParent = ghostRelativeParent.parentNode;
+          }
+
+          if (ghostRelativeParent !== document.body && ghostRelativeParent !== document.documentElement) {
+            if (ghostRelativeParent === document) ghostRelativeParent = getWindowScrollingElement();
+            rect.top += ghostRelativeParent.scrollTop;
+            rect.left += ghostRelativeParent.scrollLeft;
+          } else {
+            ghostRelativeParent = getWindowScrollingElement();
+          }
+
+          ghostRelativeParentInitialScroll = getRelativeScrollOffset(ghostRelativeParent);
+        }
+
+        ghostEl = dragEl.cloneNode(true);
+        toggleClass(ghostEl, options.ghostClass, false);
+        toggleClass(ghostEl, options.fallbackClass, true);
+        toggleClass(ghostEl, options.dragClass, true);
+        css(ghostEl, 'transition', '');
+        css(ghostEl, 'transform', '');
+        css(ghostEl, 'box-sizing', 'border-box');
+        css(ghostEl, 'margin', 0);
+        css(ghostEl, 'top', rect.top);
+        css(ghostEl, 'left', rect.left);
+        css(ghostEl, 'width', rect.width);
+        css(ghostEl, 'height', rect.height);
+        css(ghostEl, 'opacity', '0.8');
+        css(ghostEl, 'position', PositionGhostAbsolutely ? 'absolute' : 'fixed');
+        css(ghostEl, 'zIndex', '100000');
+        css(ghostEl, 'pointerEvents', 'none');
+        Sortable.ghost = ghostEl;
+        container.appendChild(ghostEl); // Set transform-origin
+
+        css(ghostEl, 'transform-origin', tapDistanceLeft / parseInt(ghostEl.style.width) * 100 + '% ' + tapDistanceTop / parseInt(ghostEl.style.height) * 100 + '%');
+      }
+    },
+    _onDragStart: function _onDragStart(
+    /**Event*/
+    evt,
+    /**boolean*/
+    fallback) {
+      var _this = this;
+
+      var dataTransfer = evt.dataTransfer;
+      var options = _this.options;
+      pluginEvent('dragStart', this, {
+        evt: evt
+      });
+
+      if (Sortable.eventCanceled) {
+        this._onDrop();
+
+        return;
+      }
+
+      pluginEvent('setupClone', this);
+
+      if (!Sortable.eventCanceled) {
+        cloneEl = clone(dragEl);
+        cloneEl.draggable = false;
+        cloneEl.style['will-change'] = '';
+
+        this._hideClone();
+
+        toggleClass(cloneEl, this.options.chosenClass, false);
+        Sortable.clone = cloneEl;
+      } // #1143: IFrame support workaround
+
+
+      _this.cloneId = _nextTick(function () {
+        pluginEvent('clone', _this);
+        if (Sortable.eventCanceled) return;
+
+        if (!_this.options.removeCloneOnHide) {
+          rootEl.insertBefore(cloneEl, dragEl);
+        }
+
+        _this._hideClone();
+
+        _dispatchEvent({
+          sortable: _this,
+          name: 'clone'
+        });
+      });
+      !fallback && toggleClass(dragEl, options.dragClass, true); // Set proper drop events
+
+      if (fallback) {
+        ignoreNextClick = true;
+        _this._loopId = setInterval(_this._emulateDragOver, 50);
+      } else {
+        // Undo what was set in _prepareDragStart before drag started
+        off(document, 'mouseup', _this._onDrop);
+        off(document, 'touchend', _this._onDrop);
+        off(document, 'touchcancel', _this._onDrop);
+
+        if (dataTransfer) {
+          dataTransfer.effectAllowed = 'move';
+          options.setData && options.setData.call(_this, dataTransfer, dragEl);
+        }
+
+        on(document, 'drop', _this); // #1276 fix:
+
+        css(dragEl, 'transform', 'translateZ(0)');
+      }
+
+      awaitingDragStarted = true;
+      _this._dragStartId = _nextTick(_this._dragStarted.bind(_this, fallback, evt));
+      on(document, 'selectstart', _this);
+      moved = true;
+
+      if (Safari) {
+        css(document.body, 'user-select', 'none');
+      }
+    },
+    // Returns true - if no further action is needed (either inserted or another condition)
+    _onDragOver: function _onDragOver(
+    /**Event*/
+    evt) {
+      var el = this.el,
+          target = evt.target,
+          dragRect,
+          targetRect,
+          revert,
+          options = this.options,
+          group = options.group,
+          activeSortable = Sortable.active,
+          isOwner = activeGroup === group,
+          canSort = options.sort,
+          fromSortable = putSortable || activeSortable,
+          vertical,
+          _this = this,
+          completedFired = false;
+
+      if (_silent) return;
+
+      function dragOverEvent(name, extra) {
+        pluginEvent(name, _this, _objectSpread2({
+          evt: evt,
+          isOwner: isOwner,
+          axis: vertical ? 'vertical' : 'horizontal',
+          revert: revert,
+          dragRect: dragRect,
+          targetRect: targetRect,
+          canSort: canSort,
+          fromSortable: fromSortable,
+          target: target,
+          completed: completed,
+          onMove: function onMove(target, after) {
+            return _onMove(rootEl, el, dragEl, dragRect, target, getRect(target), evt, after);
+          },
+          changed: changed
+        }, extra));
+      } // Capture animation state
+
+
+      function capture() {
+        dragOverEvent('dragOverAnimationCapture');
+
+        _this.captureAnimationState();
+
+        if (_this !== fromSortable) {
+          fromSortable.captureAnimationState();
+        }
+      } // Return invocation when dragEl is inserted (or completed)
+
+
+      function completed(insertion) {
+        dragOverEvent('dragOverCompleted', {
+          insertion: insertion
+        });
+
+        if (insertion) {
+          // Clones must be hidden before folding animation to capture dragRectAbsolute properly
+          if (isOwner) {
+            activeSortable._hideClone();
+          } else {
+            activeSortable._showClone(_this);
+          }
+
+          if (_this !== fromSortable) {
+            // Set ghost class to new sortable's ghost class
+            toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : activeSortable.options.ghostClass, false);
+            toggleClass(dragEl, options.ghostClass, true);
+          }
+
+          if (putSortable !== _this && _this !== Sortable.active) {
+            putSortable = _this;
+          } else if (_this === Sortable.active && putSortable) {
+            putSortable = null;
+          } // Animation
+
+
+          if (fromSortable === _this) {
+            _this._ignoreWhileAnimating = target;
+          }
+
+          _this.animateAll(function () {
+            dragOverEvent('dragOverAnimationComplete');
+            _this._ignoreWhileAnimating = null;
+          });
+
+          if (_this !== fromSortable) {
+            fromSortable.animateAll();
+            fromSortable._ignoreWhileAnimating = null;
+          }
+        } // Null lastTarget if it is not inside a previously swapped element
+
+
+        if (target === dragEl && !dragEl.animated || target === el && !target.animated) {
+          lastTarget = null;
+        } // no bubbling and not fallback
+
+
+        if (!options.dragoverBubble && !evt.rootEl && target !== document) {
+          dragEl.parentNode[expando]._isOutsideThisEl(evt.target); // Do not detect for empty insert if already inserted
+
+
+          !insertion && nearestEmptyInsertDetectEvent(evt);
+        }
+
+        !options.dragoverBubble && evt.stopPropagation && evt.stopPropagation();
+        return completedFired = true;
+      } // Call when dragEl has been inserted
+
+
+      function changed() {
+        newIndex = index(dragEl);
+        newDraggableIndex = index(dragEl, options.draggable);
+
+        _dispatchEvent({
+          sortable: _this,
+          name: 'change',
+          toEl: el,
+          newIndex: newIndex,
+          newDraggableIndex: newDraggableIndex,
+          originalEvent: evt
+        });
+      }
+
+      if (evt.preventDefault !== void 0) {
+        evt.cancelable && evt.preventDefault();
+      }
+
+      target = closest(target, options.draggable, el, true);
+      dragOverEvent('dragOver');
+      if (Sortable.eventCanceled) return completedFired;
+
+      if (dragEl.contains(evt.target) || target.animated && target.animatingX && target.animatingY || _this._ignoreWhileAnimating === target) {
+        return completed(false);
+      }
+
+      ignoreNextClick = false;
+
+      if (activeSortable && !options.disabled && (isOwner ? canSort || (revert = parentEl !== rootEl) // Reverting item into the original list
+      : putSortable === this || (this.lastPutMode = activeGroup.checkPull(this, activeSortable, dragEl, evt)) && group.checkPut(this, activeSortable, dragEl, evt))) {
+        vertical = this._getDirection(evt, target) === 'vertical';
+        dragRect = getRect(dragEl);
+        dragOverEvent('dragOverValid');
+        if (Sortable.eventCanceled) return completedFired;
+
+        if (revert) {
+          parentEl = rootEl; // actualization
+
+          capture();
+
+          this._hideClone();
+
+          dragOverEvent('revert');
+
+          if (!Sortable.eventCanceled) {
+            if (nextEl) {
+              rootEl.insertBefore(dragEl, nextEl);
+            } else {
+              rootEl.appendChild(dragEl);
+            }
+          }
+
+          return completed(true);
+        }
+
+        var elLastChild = lastChild(el, options.draggable);
+
+        if (!elLastChild || _ghostIsLast(evt, vertical, this) && !elLastChild.animated) {
+          // Insert to end of list
+          // If already at end of list: Do not insert
+          if (elLastChild === dragEl) {
+            return completed(false);
+          } // if there is a last element, it is the target
+
+
+          if (elLastChild && el === evt.target) {
+            target = elLastChild;
+          }
+
+          if (target) {
+            targetRect = getRect(target);
+          }
+
+          if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, !!target) !== false) {
+            capture();
+            el.appendChild(dragEl);
+            parentEl = el; // actualization
+
+            changed();
+            return completed(true);
+          }
+        } else if (elLastChild && _ghostIsFirst(evt, vertical, this)) {
+          // Insert to start of list
+          var firstChild = getChild(el, 0, options, true);
+
+          if (firstChild === dragEl) {
+            return completed(false);
+          }
+
+          target = firstChild;
+          targetRect = getRect(target);
+
+          if (_onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, false) !== false) {
+            capture();
+            el.insertBefore(dragEl, firstChild);
+            parentEl = el; // actualization
+
+            changed();
+            return completed(true);
+          }
+        } else if (target.parentNode === el) {
+          targetRect = getRect(target);
+          var direction = 0,
+              targetBeforeFirstSwap,
+              differentLevel = dragEl.parentNode !== el,
+              differentRowCol = !_dragElInRowColumn(dragEl.animated && dragEl.toRect || dragRect, target.animated && target.toRect || targetRect, vertical),
+              side1 = vertical ? 'top' : 'left',
+              scrolledPastTop = isScrolledPast(target, 'top', 'top') || isScrolledPast(dragEl, 'top', 'top'),
+              scrollBefore = scrolledPastTop ? scrolledPastTop.scrollTop : void 0;
+
+          if (lastTarget !== target) {
+            targetBeforeFirstSwap = targetRect[side1];
+            pastFirstInvertThresh = false;
+            isCircumstantialInvert = !differentRowCol && options.invertSwap || differentLevel;
+          }
+
+          direction = _getSwapDirection(evt, target, targetRect, vertical, differentRowCol ? 1 : options.swapThreshold, options.invertedSwapThreshold == null ? options.swapThreshold : options.invertedSwapThreshold, isCircumstantialInvert, lastTarget === target);
+          var sibling;
+
+          if (direction !== 0) {
+            // Check if target is beside dragEl in respective direction (ignoring hidden elements)
+            var dragIndex = index(dragEl);
+
+            do {
+              dragIndex -= direction;
+              sibling = parentEl.children[dragIndex];
+            } while (sibling && (css(sibling, 'display') === 'none' || sibling === ghostEl));
+          } // If dragEl is already beside target: Do not insert
+
+
+          if (direction === 0 || sibling === target) {
+            return completed(false);
+          }
+
+          lastTarget = target;
+          lastDirection = direction;
+          var nextSibling = target.nextElementSibling,
+              after = false;
+          after = direction === 1;
+
+          var moveVector = _onMove(rootEl, el, dragEl, dragRect, target, targetRect, evt, after);
+
+          if (moveVector !== false) {
+            if (moveVector === 1 || moveVector === -1) {
+              after = moveVector === 1;
+            }
+
+            _silent = true;
+            setTimeout(_unsilent, 30);
+            capture();
+
+            if (after && !nextSibling) {
+              el.appendChild(dragEl);
+            } else {
+              target.parentNode.insertBefore(dragEl, after ? nextSibling : target);
+            } // Undo chrome's scroll adjustment (has no effect on other browsers)
+
+
+            if (scrolledPastTop) {
+              scrollBy(scrolledPastTop, 0, scrollBefore - scrolledPastTop.scrollTop);
+            }
+
+            parentEl = dragEl.parentNode; // actualization
+            // must be done before animation
+
+            if (targetBeforeFirstSwap !== undefined && !isCircumstantialInvert) {
+              targetMoveDistance = Math.abs(targetBeforeFirstSwap - getRect(target)[side1]);
+            }
+
+            changed();
+            return completed(true);
+          }
+        }
+
+        if (el.contains(dragEl)) {
+          return completed(false);
+        }
+      }
+
+      return false;
+    },
+    _ignoreWhileAnimating: null,
+    _offMoveEvents: function _offMoveEvents() {
+      off(document, 'mousemove', this._onTouchMove);
+      off(document, 'touchmove', this._onTouchMove);
+      off(document, 'pointermove', this._onTouchMove);
+      off(document, 'dragover', nearestEmptyInsertDetectEvent);
+      off(document, 'mousemove', nearestEmptyInsertDetectEvent);
+      off(document, 'touchmove', nearestEmptyInsertDetectEvent);
+    },
+    _offUpEvents: function _offUpEvents() {
+      var ownerDocument = this.el.ownerDocument;
+      off(ownerDocument, 'mouseup', this._onDrop);
+      off(ownerDocument, 'touchend', this._onDrop);
+      off(ownerDocument, 'pointerup', this._onDrop);
+      off(ownerDocument, 'touchcancel', this._onDrop);
+      off(document, 'selectstart', this);
+    },
+    _onDrop: function _onDrop(
+    /**Event*/
+    evt) {
+      var el = this.el,
+          options = this.options; // Get the index of the dragged element within its parent
+
+      newIndex = index(dragEl);
+      newDraggableIndex = index(dragEl, options.draggable);
+      pluginEvent('drop', this, {
+        evt: evt
+      });
+      parentEl = dragEl && dragEl.parentNode; // Get again after plugin event
+
+      newIndex = index(dragEl);
+      newDraggableIndex = index(dragEl, options.draggable);
+
+      if (Sortable.eventCanceled) {
+        this._nulling();
+
+        return;
+      }
+
+      awaitingDragStarted = false;
+      isCircumstantialInvert = false;
+      pastFirstInvertThresh = false;
+      clearInterval(this._loopId);
+      clearTimeout(this._dragStartTimer);
+
+      _cancelNextTick(this.cloneId);
+
+      _cancelNextTick(this._dragStartId); // Unbind events
+
+
+      if (this.nativeDraggable) {
+        off(document, 'drop', this);
+        off(el, 'dragstart', this._onDragStart);
+      }
+
+      this._offMoveEvents();
+
+      this._offUpEvents();
+
+      if (Safari) {
+        css(document.body, 'user-select', '');
+      }
+
+      css(dragEl, 'transform', '');
+
+      if (evt) {
+        if (moved) {
+          evt.cancelable && evt.preventDefault();
+          !options.dropBubble && evt.stopPropagation();
+        }
+
+        ghostEl && ghostEl.parentNode && ghostEl.parentNode.removeChild(ghostEl);
+
+        if (rootEl === parentEl || putSortable && putSortable.lastPutMode !== 'clone') {
+          // Remove clone(s)
+          cloneEl && cloneEl.parentNode && cloneEl.parentNode.removeChild(cloneEl);
+        }
+
+        if (dragEl) {
+          if (this.nativeDraggable) {
+            off(dragEl, 'dragend', this);
+          }
+
+          _disableDraggable(dragEl);
+
+          dragEl.style['will-change'] = ''; // Remove classes
+          // ghostClass is added in dragStarted
+
+          if (moved && !awaitingDragStarted) {
+            toggleClass(dragEl, putSortable ? putSortable.options.ghostClass : this.options.ghostClass, false);
+          }
+
+          toggleClass(dragEl, this.options.chosenClass, false); // Drag stop event
+
+          _dispatchEvent({
+            sortable: this,
+            name: 'unchoose',
+            toEl: parentEl,
+            newIndex: null,
+            newDraggableIndex: null,
+            originalEvent: evt
+          });
+
+          if (rootEl !== parentEl) {
+            if (newIndex >= 0) {
+              // Add event
+              _dispatchEvent({
+                rootEl: parentEl,
+                name: 'add',
+                toEl: parentEl,
+                fromEl: rootEl,
+                originalEvent: evt
+              }); // Remove event
+
+
+              _dispatchEvent({
+                sortable: this,
+                name: 'remove',
+                toEl: parentEl,
+                originalEvent: evt
+              }); // drag from one list and drop into another
+
+
+              _dispatchEvent({
+                rootEl: parentEl,
+                name: 'sort',
+                toEl: parentEl,
+                fromEl: rootEl,
+                originalEvent: evt
+              });
+
+              _dispatchEvent({
+                sortable: this,
+                name: 'sort',
+                toEl: parentEl,
+                originalEvent: evt
+              });
+            }
+
+            putSortable && putSortable.save();
+          } else {
+            if (newIndex !== oldIndex) {
+              if (newIndex >= 0) {
+                // drag & drop within the same list
+                _dispatchEvent({
+                  sortable: this,
+                  name: 'update',
+                  toEl: parentEl,
+                  originalEvent: evt
+                });
+
+                _dispatchEvent({
+                  sortable: this,
+                  name: 'sort',
+                  toEl: parentEl,
+                  originalEvent: evt
+                });
+              }
+            }
+          }
+
+          if (Sortable.active) {
+            /* jshint eqnull:true */
+            if (newIndex == null || newIndex === -1) {
+              newIndex = oldIndex;
+              newDraggableIndex = oldDraggableIndex;
+            }
+
+            _dispatchEvent({
+              sortable: this,
+              name: 'end',
+              toEl: parentEl,
+              originalEvent: evt
+            }); // Save sorting
+
+
+            this.save();
+          }
+        }
+      }
+
+      this._nulling();
+    },
+    _nulling: function _nulling() {
+      pluginEvent('nulling', this);
+      rootEl = dragEl = parentEl = ghostEl = nextEl = cloneEl = lastDownEl = cloneHidden = tapEvt = touchEvt = moved = newIndex = newDraggableIndex = oldIndex = oldDraggableIndex = lastTarget = lastDirection = putSortable = activeGroup = Sortable.dragged = Sortable.ghost = Sortable.clone = Sortable.active = null;
+      savedInputChecked.forEach(function (el) {
+        el.checked = true;
+      });
+      savedInputChecked.length = lastDx = lastDy = 0;
+    },
+    handleEvent: function handleEvent(
+    /**Event*/
+    evt) {
+      switch (evt.type) {
+        case 'drop':
+        case 'dragend':
+          this._onDrop(evt);
+
+          break;
+
+        case 'dragenter':
+        case 'dragover':
+          if (dragEl) {
+            this._onDragOver(evt);
+
+            _globalDragOver(evt);
+          }
+
+          break;
+
+        case 'selectstart':
+          evt.preventDefault();
+          break;
+      }
+    },
+
+    /**
+     * Serializes the item into an array of string.
+     * @returns {String[]}
+     */
+    toArray: function toArray() {
+      var order = [],
+          el,
+          children = this.el.children,
+          i = 0,
+          n = children.length,
+          options = this.options;
+
+      for (; i < n; i++) {
+        el = children[i];
+
+        if (closest(el, options.draggable, this.el, false)) {
+          order.push(el.getAttribute(options.dataIdAttr) || _generateId(el));
+        }
+      }
+
+      return order;
+    },
+
+    /**
+     * Sorts the elements according to the array.
+     * @param  {String[]}  order  order of the items
+     */
+    sort: function sort(order, useAnimation) {
+      var items = {},
+          rootEl = this.el;
+      this.toArray().forEach(function (id, i) {
+        var el = rootEl.children[i];
+
+        if (closest(el, this.options.draggable, rootEl, false)) {
+          items[id] = el;
+        }
+      }, this);
+      useAnimation && this.captureAnimationState();
+      order.forEach(function (id) {
+        if (items[id]) {
+          rootEl.removeChild(items[id]);
+          rootEl.appendChild(items[id]);
+        }
+      });
+      useAnimation && this.animateAll();
+    },
+
+    /**
+     * Save the current sorting
+     */
+    save: function save() {
+      var store = this.options.store;
+      store && store.set && store.set(this);
+    },
+
+    /**
+     * For each element in the set, get the first element that matches the selector by testing the element itself and traversing up through its ancestors in the DOM tree.
+     * @param   {HTMLElement}  el
+     * @param   {String}       [selector]  default: `options.draggable`
+     * @returns {HTMLElement|null}
+     */
+    closest: function closest$1(el, selector) {
+      return closest(el, selector || this.options.draggable, this.el, false);
+    },
+
+    /**
+     * Set/get option
+     * @param   {string} name
+     * @param   {*}      [value]
+     * @returns {*}
+     */
+    option: function option(name, value) {
+      var options = this.options;
+
+      if (value === void 0) {
+        return options[name];
+      } else {
+        var modifiedValue = PluginManager.modifyOption(this, name, value);
+
+        if (typeof modifiedValue !== 'undefined') {
+          options[name] = modifiedValue;
+        } else {
+          options[name] = value;
+        }
+
+        if (name === 'group') {
+          _prepareGroup(options);
+        }
+      }
+    },
+
+    /**
+     * Destroy
+     */
+    destroy: function destroy() {
+      pluginEvent('destroy', this);
+      var el = this.el;
+      el[expando] = null;
+      off(el, 'mousedown', this._onTapStart);
+      off(el, 'touchstart', this._onTapStart);
+      off(el, 'pointerdown', this._onTapStart);
+
+      if (this.nativeDraggable) {
+        off(el, 'dragover', this);
+        off(el, 'dragenter', this);
+      } // Remove draggable attributes
+
+
+      Array.prototype.forEach.call(el.querySelectorAll('[draggable]'), function (el) {
+        el.removeAttribute('draggable');
+      });
+
+      this._onDrop();
+
+      this._disableDelayedDragEvents();
+
+      sortables.splice(sortables.indexOf(this.el), 1);
+      this.el = el = null;
+    },
+    _hideClone: function _hideClone() {
+      if (!cloneHidden) {
+        pluginEvent('hideClone', this);
+        if (Sortable.eventCanceled) return;
+        css(cloneEl, 'display', 'none');
+
+        if (this.options.removeCloneOnHide && cloneEl.parentNode) {
+          cloneEl.parentNode.removeChild(cloneEl);
+        }
+
+        cloneHidden = true;
+      }
+    },
+    _showClone: function _showClone(putSortable) {
+      if (putSortable.lastPutMode !== 'clone') {
+        this._hideClone();
+
+        return;
+      }
+
+      if (cloneHidden) {
+        pluginEvent('showClone', this);
+        if (Sortable.eventCanceled) return; // show clone at dragEl or original position
+
+        if (dragEl.parentNode == rootEl && !this.options.group.revertClone) {
+          rootEl.insertBefore(cloneEl, dragEl);
+        } else if (nextEl) {
+          rootEl.insertBefore(cloneEl, nextEl);
+        } else {
+          rootEl.appendChild(cloneEl);
+        }
+
+        if (this.options.group.revertClone) {
+          this.animate(dragEl, cloneEl);
+        }
+
+        css(cloneEl, 'display', '');
+        cloneHidden = false;
+      }
+    }
+  };
+
+  function _globalDragOver(
+  /**Event*/
+  evt) {
+    if (evt.dataTransfer) {
+      evt.dataTransfer.dropEffect = 'move';
+    }
+
+    evt.cancelable && evt.preventDefault();
+  }
+
+  function _onMove(fromEl, toEl, dragEl, dragRect, targetEl, targetRect, originalEvent, willInsertAfter) {
+    var evt,
+        sortable = fromEl[expando],
+        onMoveFn = sortable.options.onMove,
+        retVal; // Support for new CustomEvent feature
+
+    if (window.CustomEvent && !IE11OrLess && !Edge) {
+      evt = new CustomEvent('move', {
+        bubbles: true,
+        cancelable: true
+      });
+    } else {
+      evt = document.createEvent('Event');
+      evt.initEvent('move', true, true);
+    }
+
+    evt.to = toEl;
+    evt.from = fromEl;
+    evt.dragged = dragEl;
+    evt.draggedRect = dragRect;
+    evt.related = targetEl || toEl;
+    evt.relatedRect = targetRect || getRect(toEl);
+    evt.willInsertAfter = willInsertAfter;
+    evt.originalEvent = originalEvent;
+    fromEl.dispatchEvent(evt);
+
+    if (onMoveFn) {
+      retVal = onMoveFn.call(sortable, evt, originalEvent);
+    }
+
+    return retVal;
+  }
+
+  function _disableDraggable(el) {
+    el.draggable = false;
+  }
+
+  function _unsilent() {
+    _silent = false;
+  }
+
+  function _ghostIsFirst(evt, vertical, sortable) {
+    var rect = getRect(getChild(sortable.el, 0, sortable.options, true));
+    var spacer = 10;
+    return vertical ? evt.clientX < rect.left - spacer || evt.clientY < rect.top && evt.clientX < rect.right : evt.clientY < rect.top - spacer || evt.clientY < rect.bottom && evt.clientX < rect.left;
+  }
+
+  function _ghostIsLast(evt, vertical, sortable) {
+    var rect = getRect(lastChild(sortable.el, sortable.options.draggable));
+    var spacer = 10;
+    return vertical ? evt.clientX > rect.right + spacer || evt.clientX <= rect.right && evt.clientY > rect.bottom && evt.clientX >= rect.left : evt.clientX > rect.right && evt.clientY > rect.top || evt.clientX <= rect.right && evt.clientY > rect.bottom + spacer;
+  }
+
+  function _getSwapDirection(evt, target, targetRect, vertical, swapThreshold, invertedSwapThreshold, invertSwap, isLastTarget) {
+    var mouseOnAxis = vertical ? evt.clientY : evt.clientX,
+        targetLength = vertical ? targetRect.height : targetRect.width,
+        targetS1 = vertical ? targetRect.top : targetRect.left,
+        targetS2 = vertical ? targetRect.bottom : targetRect.right,
+        invert = false;
+
+    if (!invertSwap) {
+      // Never invert or create dragEl shadow when target movemenet causes mouse to move past the end of regular swapThreshold
+      if (isLastTarget && targetMoveDistance < targetLength * swapThreshold) {
+        // multiplied only by swapThreshold because mouse will already be inside target by (1 - threshold) * targetLength / 2
+        // check if past first invert threshold on side opposite of lastDirection
+        if (!pastFirstInvertThresh && (lastDirection === 1 ? mouseOnAxis > targetS1 + targetLength * invertedSwapThreshold / 2 : mouseOnAxis < targetS2 - targetLength * invertedSwapThreshold / 2)) {
+          // past first invert threshold, do not restrict inverted threshold to dragEl shadow
+          pastFirstInvertThresh = true;
+        }
+
+        if (!pastFirstInvertThresh) {
+          // dragEl shadow (target move distance shadow)
+          if (lastDirection === 1 ? mouseOnAxis < targetS1 + targetMoveDistance // over dragEl shadow
+          : mouseOnAxis > targetS2 - targetMoveDistance) {
+            return -lastDirection;
+          }
+        } else {
+          invert = true;
+        }
+      } else {
+        // Regular
+        if (mouseOnAxis > targetS1 + targetLength * (1 - swapThreshold) / 2 && mouseOnAxis < targetS2 - targetLength * (1 - swapThreshold) / 2) {
+          return _getInsertDirection(target);
+        }
+      }
+    }
+
+    invert = invert || invertSwap;
+
+    if (invert) {
+      // Invert of regular
+      if (mouseOnAxis < targetS1 + targetLength * invertedSwapThreshold / 2 || mouseOnAxis > targetS2 - targetLength * invertedSwapThreshold / 2) {
+        return mouseOnAxis > targetS1 + targetLength / 2 ? 1 : -1;
+      }
+    }
+
+    return 0;
+  }
+  /**
+   * Gets the direction dragEl must be swapped relative to target in order to make it
+   * seem that dragEl has been "inserted" into that element's position
+   * @param  {HTMLElement} target       The target whose position dragEl is being inserted at
+   * @return {Number}                   Direction dragEl must be swapped
+   */
+
+
+  function _getInsertDirection(target) {
+    if (index(dragEl) < index(target)) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  /**
+   * Generate id
+   * @param   {HTMLElement} el
+   * @returns {String}
+   * @private
+   */
+
+
+  function _generateId(el) {
+    var str = el.tagName + el.className + el.src + el.href + el.textContent,
+        i = str.length,
+        sum = 0;
+
+    while (i--) {
+      sum += str.charCodeAt(i);
+    }
+
+    return sum.toString(36);
+  }
+
+  function _saveInputCheckedState(root) {
+    savedInputChecked.length = 0;
+    var inputs = root.getElementsByTagName('input');
+    var idx = inputs.length;
+
+    while (idx--) {
+      var el = inputs[idx];
+      el.checked && savedInputChecked.push(el);
+    }
+  }
+
+  function _nextTick(fn) {
+    return setTimeout(fn, 0);
+  }
+
+  function _cancelNextTick(id) {
+    return clearTimeout(id);
+  } // Fixed #973:
+
+
+  if (documentExists) {
+    on(document, 'touchmove', function (evt) {
+      if ((Sortable.active || awaitingDragStarted) && evt.cancelable) {
+        evt.preventDefault();
+      }
+    });
+  } // Export utils
+
+
+  Sortable.utils = {
+    on: on,
+    off: off,
+    css: css,
+    find: find,
+    is: function is(el, selector) {
+      return !!closest(el, selector, el, false);
+    },
+    extend: extend,
+    throttle: throttle,
+    closest: closest,
+    toggleClass: toggleClass,
+    clone: clone,
+    index: index,
+    nextTick: _nextTick,
+    cancelNextTick: _cancelNextTick,
+    detectDirection: _detectDirection,
+    getChild: getChild
+  };
+  /**
+   * Get the Sortable instance of an element
+   * @param  {HTMLElement} element The element
+   * @return {Sortable|undefined}         The instance of Sortable
+   */
+
+  Sortable.get = function (element) {
+    return element[expando];
+  };
+  /**
+   * Mount a plugin to Sortable
+   * @param  {...SortablePlugin|SortablePlugin[]} plugins       Plugins being mounted
+   */
+
+
+  Sortable.mount = function () {
+    for (var _len = arguments.length, plugins = new Array(_len), _key = 0; _key < _len; _key++) {
+      plugins[_key] = arguments[_key];
+    }
+
+    if (plugins[0].constructor === Array) plugins = plugins[0];
+    plugins.forEach(function (plugin) {
+      if (!plugin.prototype || !plugin.prototype.constructor) {
+        throw "Sortable: Mounted plugin must be a constructor function, not ".concat({}.toString.call(plugin));
+      }
+
+      if (plugin.utils) Sortable.utils = _objectSpread2(_objectSpread2({}, Sortable.utils), plugin.utils);
+      PluginManager.mount(plugin);
+    });
+  };
+  /**
+   * Create sortable instance
+   * @param {HTMLElement}  el
+   * @param {Object}      [options]
+   */
+
+
+  Sortable.create = function (el, options) {
+    return new Sortable(el, options);
+  }; // Export
+
+
+  Sortable.version = version;
+
+  var autoScrolls = [],
+      scrollEl,
+      scrollRootEl,
+      scrolling = false,
+      lastAutoScrollX,
+      lastAutoScrollY,
+      touchEvt$1,
+      pointerElemChangedInterval;
+
+  function AutoScrollPlugin() {
+    function AutoScroll() {
+      this.defaults = {
+        scroll: true,
+        forceAutoScrollFallback: false,
+        scrollSensitivity: 30,
+        scrollSpeed: 10,
+        bubbleScroll: true
+      }; // Bind all private methods
+
+      for (var fn in this) {
+        if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+          this[fn] = this[fn].bind(this);
+        }
+      }
+    }
+
+    AutoScroll.prototype = {
+      dragStarted: function dragStarted(_ref) {
+        var originalEvent = _ref.originalEvent;
+
+        if (this.sortable.nativeDraggable) {
+          on(document, 'dragover', this._handleAutoScroll);
+        } else {
+          if (this.options.supportPointer) {
+            on(document, 'pointermove', this._handleFallbackAutoScroll);
+          } else if (originalEvent.touches) {
+            on(document, 'touchmove', this._handleFallbackAutoScroll);
+          } else {
+            on(document, 'mousemove', this._handleFallbackAutoScroll);
+          }
+        }
+      },
+      dragOverCompleted: function dragOverCompleted(_ref2) {
+        var originalEvent = _ref2.originalEvent;
+
+        // For when bubbling is canceled and using fallback (fallback 'touchmove' always reached)
+        if (!this.options.dragOverBubble && !originalEvent.rootEl) {
+          this._handleAutoScroll(originalEvent);
+        }
+      },
+      drop: function drop() {
+        if (this.sortable.nativeDraggable) {
+          off(document, 'dragover', this._handleAutoScroll);
+        } else {
+          off(document, 'pointermove', this._handleFallbackAutoScroll);
+          off(document, 'touchmove', this._handleFallbackAutoScroll);
+          off(document, 'mousemove', this._handleFallbackAutoScroll);
+        }
+
+        clearPointerElemChangedInterval();
+        clearAutoScrolls();
+        cancelThrottle();
+      },
+      nulling: function nulling() {
+        touchEvt$1 = scrollRootEl = scrollEl = scrolling = pointerElemChangedInterval = lastAutoScrollX = lastAutoScrollY = null;
+        autoScrolls.length = 0;
+      },
+      _handleFallbackAutoScroll: function _handleFallbackAutoScroll(evt) {
+        this._handleAutoScroll(evt, true);
+      },
+      _handleAutoScroll: function _handleAutoScroll(evt, fallback) {
+        var _this = this;
+
+        var x = (evt.touches ? evt.touches[0] : evt).clientX,
+            y = (evt.touches ? evt.touches[0] : evt).clientY,
+            elem = document.elementFromPoint(x, y);
+        touchEvt$1 = evt; // IE does not seem to have native autoscroll,
+        // Edge's autoscroll seems too conditional,
+        // MACOS Safari does not have autoscroll,
+        // Firefox and Chrome are good
+
+        if (fallback || this.options.forceAutoScrollFallback || Edge || IE11OrLess || Safari) {
+          autoScroll(evt, this.options, elem, fallback); // Listener for pointer element change
+
+          var ogElemScroller = getParentAutoScrollElement(elem, true);
+
+          if (scrolling && (!pointerElemChangedInterval || x !== lastAutoScrollX || y !== lastAutoScrollY)) {
+            pointerElemChangedInterval && clearPointerElemChangedInterval(); // Detect for pointer elem change, emulating native DnD behaviour
+
+            pointerElemChangedInterval = setInterval(function () {
+              var newElem = getParentAutoScrollElement(document.elementFromPoint(x, y), true);
+
+              if (newElem !== ogElemScroller) {
+                ogElemScroller = newElem;
+                clearAutoScrolls();
+              }
+
+              autoScroll(evt, _this.options, newElem, fallback);
+            }, 10);
+            lastAutoScrollX = x;
+            lastAutoScrollY = y;
+          }
+        } else {
+          // if DnD is enabled (and browser has good autoscrolling), first autoscroll will already scroll, so get parent autoscroll of first autoscroll
+          if (!this.options.bubbleScroll || getParentAutoScrollElement(elem, true) === getWindowScrollingElement()) {
+            clearAutoScrolls();
+            return;
+          }
+
+          autoScroll(evt, this.options, getParentAutoScrollElement(elem, false), false);
+        }
+      }
+    };
+    return _extends(AutoScroll, {
+      pluginName: 'scroll',
+      initializeByDefault: true
+    });
+  }
+
+  function clearAutoScrolls() {
+    autoScrolls.forEach(function (autoScroll) {
+      clearInterval(autoScroll.pid);
+    });
+    autoScrolls = [];
+  }
+
+  function clearPointerElemChangedInterval() {
+    clearInterval(pointerElemChangedInterval);
+  }
+
+  var autoScroll = throttle(function (evt, options, rootEl, isFallback) {
+    // Bug: https://bugzilla.mozilla.org/show_bug.cgi?id=505521
+    if (!options.scroll) return;
+    var x = (evt.touches ? evt.touches[0] : evt).clientX,
+        y = (evt.touches ? evt.touches[0] : evt).clientY,
+        sens = options.scrollSensitivity,
+        speed = options.scrollSpeed,
+        winScroller = getWindowScrollingElement();
+    var scrollThisInstance = false,
+        scrollCustomFn; // New scroll root, set scrollEl
+
+    if (scrollRootEl !== rootEl) {
+      scrollRootEl = rootEl;
+      clearAutoScrolls();
+      scrollEl = options.scroll;
+      scrollCustomFn = options.scrollFn;
+
+      if (scrollEl === true) {
+        scrollEl = getParentAutoScrollElement(rootEl, true);
+      }
+    }
+
+    var layersOut = 0;
+    var currentParent = scrollEl;
+
+    do {
+      var el = currentParent,
+          rect = getRect(el),
+          top = rect.top,
+          bottom = rect.bottom,
+          left = rect.left,
+          right = rect.right,
+          width = rect.width,
+          height = rect.height,
+          canScrollX = void 0,
+          canScrollY = void 0,
+          scrollWidth = el.scrollWidth,
+          scrollHeight = el.scrollHeight,
+          elCSS = css(el),
+          scrollPosX = el.scrollLeft,
+          scrollPosY = el.scrollTop;
+
+      if (el === winScroller) {
+        canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll' || elCSS.overflowX === 'visible');
+        canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll' || elCSS.overflowY === 'visible');
+      } else {
+        canScrollX = width < scrollWidth && (elCSS.overflowX === 'auto' || elCSS.overflowX === 'scroll');
+        canScrollY = height < scrollHeight && (elCSS.overflowY === 'auto' || elCSS.overflowY === 'scroll');
+      }
+
+      var vx = canScrollX && (Math.abs(right - x) <= sens && scrollPosX + width < scrollWidth) - (Math.abs(left - x) <= sens && !!scrollPosX);
+      var vy = canScrollY && (Math.abs(bottom - y) <= sens && scrollPosY + height < scrollHeight) - (Math.abs(top - y) <= sens && !!scrollPosY);
+
+      if (!autoScrolls[layersOut]) {
+        for (var i = 0; i <= layersOut; i++) {
+          if (!autoScrolls[i]) {
+            autoScrolls[i] = {};
+          }
+        }
+      }
+
+      if (autoScrolls[layersOut].vx != vx || autoScrolls[layersOut].vy != vy || autoScrolls[layersOut].el !== el) {
+        autoScrolls[layersOut].el = el;
+        autoScrolls[layersOut].vx = vx;
+        autoScrolls[layersOut].vy = vy;
+        clearInterval(autoScrolls[layersOut].pid);
+
+        if (vx != 0 || vy != 0) {
+          scrollThisInstance = true;
+          /* jshint loopfunc:true */
+
+          autoScrolls[layersOut].pid = setInterval(function () {
+            // emulate drag over during autoscroll (fallback), emulating native DnD behaviour
+            if (isFallback && this.layer === 0) {
+              Sortable.active._onTouchMove(touchEvt$1); // To move ghost if it is positioned absolutely
+
+            }
+
+            var scrollOffsetY = autoScrolls[this.layer].vy ? autoScrolls[this.layer].vy * speed : 0;
+            var scrollOffsetX = autoScrolls[this.layer].vx ? autoScrolls[this.layer].vx * speed : 0;
+
+            if (typeof scrollCustomFn === 'function') {
+              if (scrollCustomFn.call(Sortable.dragged.parentNode[expando], scrollOffsetX, scrollOffsetY, evt, touchEvt$1, autoScrolls[this.layer].el) !== 'continue') {
+                return;
+              }
+            }
+
+            scrollBy(autoScrolls[this.layer].el, scrollOffsetX, scrollOffsetY);
+          }.bind({
+            layer: layersOut
+          }), 24);
+        }
+      }
+
+      layersOut++;
+    } while (options.bubbleScroll && currentParent !== winScroller && (currentParent = getParentAutoScrollElement(currentParent, false)));
+
+    scrolling = scrollThisInstance; // in case another function catches scrolling as false in between when it is not
+  }, 30);
+
+  var drop = function drop(_ref) {
+    var originalEvent = _ref.originalEvent,
+        putSortable = _ref.putSortable,
+        dragEl = _ref.dragEl,
+        activeSortable = _ref.activeSortable,
+        dispatchSortableEvent = _ref.dispatchSortableEvent,
+        hideGhostForTarget = _ref.hideGhostForTarget,
+        unhideGhostForTarget = _ref.unhideGhostForTarget;
+    if (!originalEvent) return;
+    var toSortable = putSortable || activeSortable;
+    hideGhostForTarget();
+    var touch = originalEvent.changedTouches && originalEvent.changedTouches.length ? originalEvent.changedTouches[0] : originalEvent;
+    var target = document.elementFromPoint(touch.clientX, touch.clientY);
+    unhideGhostForTarget();
+
+    if (toSortable && !toSortable.el.contains(target)) {
+      dispatchSortableEvent('spill');
+      this.onSpill({
+        dragEl: dragEl,
+        putSortable: putSortable
+      });
+    }
+  };
+
+  function Revert() {}
+
+  Revert.prototype = {
+    startIndex: null,
+    dragStart: function dragStart(_ref2) {
+      var oldDraggableIndex = _ref2.oldDraggableIndex;
+      this.startIndex = oldDraggableIndex;
+    },
+    onSpill: function onSpill(_ref3) {
+      var dragEl = _ref3.dragEl,
+          putSortable = _ref3.putSortable;
+      this.sortable.captureAnimationState();
+
+      if (putSortable) {
+        putSortable.captureAnimationState();
+      }
+
+      var nextSibling = getChild(this.sortable.el, this.startIndex, this.options);
+
+      if (nextSibling) {
+        this.sortable.el.insertBefore(dragEl, nextSibling);
+      } else {
+        this.sortable.el.appendChild(dragEl);
+      }
+
+      this.sortable.animateAll();
+
+      if (putSortable) {
+        putSortable.animateAll();
+      }
+    },
+    drop: drop
+  };
+
+  _extends(Revert, {
+    pluginName: 'revertOnSpill'
+  });
+
+  function Remove() {}
+
+  Remove.prototype = {
+    onSpill: function onSpill(_ref4) {
+      var dragEl = _ref4.dragEl,
+          putSortable = _ref4.putSortable;
+      var parentSortable = putSortable || this.sortable;
+      parentSortable.captureAnimationState();
+      dragEl.parentNode && dragEl.parentNode.removeChild(dragEl);
+      parentSortable.animateAll();
+    },
+    drop: drop
+  };
+
+  _extends(Remove, {
+    pluginName: 'removeOnSpill'
+  });
+
+  var lastSwapEl;
+
+  function SwapPlugin() {
+    function Swap() {
+      this.defaults = {
+        swapClass: 'sortable-swap-highlight'
+      };
+    }
+
+    Swap.prototype = {
+      dragStart: function dragStart(_ref) {
+        var dragEl = _ref.dragEl;
+        lastSwapEl = dragEl;
+      },
+      dragOverValid: function dragOverValid(_ref2) {
+        var completed = _ref2.completed,
+            target = _ref2.target,
+            onMove = _ref2.onMove,
+            activeSortable = _ref2.activeSortable,
+            changed = _ref2.changed,
+            cancel = _ref2.cancel;
+        if (!activeSortable.options.swap) return;
+        var el = this.sortable.el,
+            options = this.options;
+
+        if (target && target !== el) {
+          var prevSwapEl = lastSwapEl;
+
+          if (onMove(target) !== false) {
+            toggleClass(target, options.swapClass, true);
+            lastSwapEl = target;
+          } else {
+            lastSwapEl = null;
+          }
+
+          if (prevSwapEl && prevSwapEl !== lastSwapEl) {
+            toggleClass(prevSwapEl, options.swapClass, false);
+          }
+        }
+
+        changed();
+        completed(true);
+        cancel();
+      },
+      drop: function drop(_ref3) {
+        var activeSortable = _ref3.activeSortable,
+            putSortable = _ref3.putSortable,
+            dragEl = _ref3.dragEl;
+        var toSortable = putSortable || this.sortable;
+        var options = this.options;
+        lastSwapEl && toggleClass(lastSwapEl, options.swapClass, false);
+
+        if (lastSwapEl && (options.swap || putSortable && putSortable.options.swap)) {
+          if (dragEl !== lastSwapEl) {
+            toSortable.captureAnimationState();
+            if (toSortable !== activeSortable) activeSortable.captureAnimationState();
+            swapNodes(dragEl, lastSwapEl);
+            toSortable.animateAll();
+            if (toSortable !== activeSortable) activeSortable.animateAll();
+          }
+        }
+      },
+      nulling: function nulling() {
+        lastSwapEl = null;
+      }
+    };
+    return _extends(Swap, {
+      pluginName: 'swap',
+      eventProperties: function eventProperties() {
+        return {
+          swapItem: lastSwapEl
+        };
+      }
+    });
+  }
+
+  function swapNodes(n1, n2) {
+    var p1 = n1.parentNode,
+        p2 = n2.parentNode,
+        i1,
+        i2;
+    if (!p1 || !p2 || p1.isEqualNode(n2) || p2.isEqualNode(n1)) return;
+    i1 = index(n1);
+    i2 = index(n2);
+
+    if (p1.isEqualNode(p2) && i1 < i2) {
+      i2++;
+    }
+
+    p1.insertBefore(n2, p1.children[i1]);
+    p2.insertBefore(n1, p2.children[i2]);
+  }
+
+  var multiDragElements = [],
+      multiDragClones = [],
+      lastMultiDragSelect,
+      // for selection with modifier key down (SHIFT)
+  multiDragSortable,
+      initialFolding = false,
+      // Initial multi-drag fold when drag started
+  folding = false,
+      // Folding any other time
+  dragStarted = false,
+      dragEl$1,
+      clonesFromRect,
+      clonesHidden;
+
+  function MultiDragPlugin() {
+    function MultiDrag(sortable) {
+      // Bind all private methods
+      for (var fn in this) {
+        if (fn.charAt(0) === '_' && typeof this[fn] === 'function') {
+          this[fn] = this[fn].bind(this);
+        }
+      }
+
+      if (sortable.options.supportPointer) {
+        on(document, 'pointerup', this._deselectMultiDrag);
+      } else {
+        on(document, 'mouseup', this._deselectMultiDrag);
+        on(document, 'touchend', this._deselectMultiDrag);
+      }
+
+      on(document, 'keydown', this._checkKeyDown);
+      on(document, 'keyup', this._checkKeyUp);
+      this.defaults = {
+        selectedClass: 'sortable-selected',
+        multiDragKey: null,
+        setData: function setData(dataTransfer, dragEl) {
+          var data = '';
+
+          if (multiDragElements.length && multiDragSortable === sortable) {
+            multiDragElements.forEach(function (multiDragElement, i) {
+              data += (!i ? '' : ', ') + multiDragElement.textContent;
+            });
+          } else {
+            data = dragEl.textContent;
+          }
+
+          dataTransfer.setData('Text', data);
+        }
+      };
+    }
+
+    MultiDrag.prototype = {
+      multiDragKeyDown: false,
+      isMultiDrag: false,
+      delayStartGlobal: function delayStartGlobal(_ref) {
+        var dragged = _ref.dragEl;
+        dragEl$1 = dragged;
+      },
+      delayEnded: function delayEnded() {
+        this.isMultiDrag = ~multiDragElements.indexOf(dragEl$1);
+      },
+      setupClone: function setupClone(_ref2) {
+        var sortable = _ref2.sortable,
+            cancel = _ref2.cancel;
+        if (!this.isMultiDrag) return;
+
+        for (var i = 0; i < multiDragElements.length; i++) {
+          multiDragClones.push(clone(multiDragElements[i]));
+          multiDragClones[i].sortableIndex = multiDragElements[i].sortableIndex;
+          multiDragClones[i].draggable = false;
+          multiDragClones[i].style['will-change'] = '';
+          toggleClass(multiDragClones[i], this.options.selectedClass, false);
+          multiDragElements[i] === dragEl$1 && toggleClass(multiDragClones[i], this.options.chosenClass, false);
+        }
+
+        sortable._hideClone();
+
+        cancel();
+      },
+      clone: function clone(_ref3) {
+        var sortable = _ref3.sortable,
+            rootEl = _ref3.rootEl,
+            dispatchSortableEvent = _ref3.dispatchSortableEvent,
+            cancel = _ref3.cancel;
+        if (!this.isMultiDrag) return;
+
+        if (!this.options.removeCloneOnHide) {
+          if (multiDragElements.length && multiDragSortable === sortable) {
+            insertMultiDragClones(true, rootEl);
+            dispatchSortableEvent('clone');
+            cancel();
+          }
+        }
+      },
+      showClone: function showClone(_ref4) {
+        var cloneNowShown = _ref4.cloneNowShown,
+            rootEl = _ref4.rootEl,
+            cancel = _ref4.cancel;
+        if (!this.isMultiDrag) return;
+        insertMultiDragClones(false, rootEl);
+        multiDragClones.forEach(function (clone) {
+          css(clone, 'display', '');
+        });
+        cloneNowShown();
+        clonesHidden = false;
+        cancel();
+      },
+      hideClone: function hideClone(_ref5) {
+        var _this = this;
+
+        var sortable = _ref5.sortable,
+            cloneNowHidden = _ref5.cloneNowHidden,
+            cancel = _ref5.cancel;
+        if (!this.isMultiDrag) return;
+        multiDragClones.forEach(function (clone) {
+          css(clone, 'display', 'none');
+
+          if (_this.options.removeCloneOnHide && clone.parentNode) {
+            clone.parentNode.removeChild(clone);
+          }
+        });
+        cloneNowHidden();
+        clonesHidden = true;
+        cancel();
+      },
+      dragStartGlobal: function dragStartGlobal(_ref6) {
+        var sortable = _ref6.sortable;
+
+        if (!this.isMultiDrag && multiDragSortable) {
+          multiDragSortable.multiDrag._deselectMultiDrag();
+        }
+
+        multiDragElements.forEach(function (multiDragElement) {
+          multiDragElement.sortableIndex = index(multiDragElement);
+        }); // Sort multi-drag elements
+
+        multiDragElements = multiDragElements.sort(function (a, b) {
+          return a.sortableIndex - b.sortableIndex;
+        });
+        dragStarted = true;
+      },
+      dragStarted: function dragStarted(_ref7) {
+        var _this2 = this;
+
+        var sortable = _ref7.sortable;
+        if (!this.isMultiDrag) return;
+
+        if (this.options.sort) {
+          // Capture rects,
+          // hide multi drag elements (by positioning them absolute),
+          // set multi drag elements rects to dragRect,
+          // show multi drag elements,
+          // animate to rects,
+          // unset rects & remove from DOM
+          sortable.captureAnimationState();
+
+          if (this.options.animation) {
+            multiDragElements.forEach(function (multiDragElement) {
+              if (multiDragElement === dragEl$1) return;
+              css(multiDragElement, 'position', 'absolute');
+            });
+            var dragRect = getRect(dragEl$1, false, true, true);
+            multiDragElements.forEach(function (multiDragElement) {
+              if (multiDragElement === dragEl$1) return;
+              setRect(multiDragElement, dragRect);
+            });
+            folding = true;
+            initialFolding = true;
+          }
+        }
+
+        sortable.animateAll(function () {
+          folding = false;
+          initialFolding = false;
+
+          if (_this2.options.animation) {
+            multiDragElements.forEach(function (multiDragElement) {
+              unsetRect(multiDragElement);
+            });
+          } // Remove all auxiliary multidrag items from el, if sorting enabled
+
+
+          if (_this2.options.sort) {
+            removeMultiDragElements();
+          }
+        });
+      },
+      dragOver: function dragOver(_ref8) {
+        var target = _ref8.target,
+            completed = _ref8.completed,
+            cancel = _ref8.cancel;
+
+        if (folding && ~multiDragElements.indexOf(target)) {
+          completed(false);
+          cancel();
+        }
+      },
+      revert: function revert(_ref9) {
+        var fromSortable = _ref9.fromSortable,
+            rootEl = _ref9.rootEl,
+            sortable = _ref9.sortable,
+            dragRect = _ref9.dragRect;
+
+        if (multiDragElements.length > 1) {
+          // Setup unfold animation
+          multiDragElements.forEach(function (multiDragElement) {
+            sortable.addAnimationState({
+              target: multiDragElement,
+              rect: folding ? getRect(multiDragElement) : dragRect
+            });
+            unsetRect(multiDragElement);
+            multiDragElement.fromRect = dragRect;
+            fromSortable.removeAnimationState(multiDragElement);
+          });
+          folding = false;
+          insertMultiDragElements(!this.options.removeCloneOnHide, rootEl);
+        }
+      },
+      dragOverCompleted: function dragOverCompleted(_ref10) {
+        var sortable = _ref10.sortable,
+            isOwner = _ref10.isOwner,
+            insertion = _ref10.insertion,
+            activeSortable = _ref10.activeSortable,
+            parentEl = _ref10.parentEl,
+            putSortable = _ref10.putSortable;
+        var options = this.options;
+
+        if (insertion) {
+          // Clones must be hidden before folding animation to capture dragRectAbsolute properly
+          if (isOwner) {
+            activeSortable._hideClone();
+          }
+
+          initialFolding = false; // If leaving sort:false root, or already folding - Fold to new location
+
+          if (options.animation && multiDragElements.length > 1 && (folding || !isOwner && !activeSortable.options.sort && !putSortable)) {
+            // Fold: Set all multi drag elements's rects to dragEl's rect when multi-drag elements are invisible
+            var dragRectAbsolute = getRect(dragEl$1, false, true, true);
+            multiDragElements.forEach(function (multiDragElement) {
+              if (multiDragElement === dragEl$1) return;
+              setRect(multiDragElement, dragRectAbsolute); // Move element(s) to end of parentEl so that it does not interfere with multi-drag clones insertion if they are inserted
+              // while folding, and so that we can capture them again because old sortable will no longer be fromSortable
+
+              parentEl.appendChild(multiDragElement);
+            });
+            folding = true;
+          } // Clones must be shown (and check to remove multi drags) after folding when interfering multiDragElements are moved out
+
+
+          if (!isOwner) {
+            // Only remove if not folding (folding will remove them anyways)
+            if (!folding) {
+              removeMultiDragElements();
+            }
+
+            if (multiDragElements.length > 1) {
+              var clonesHiddenBefore = clonesHidden;
+
+              activeSortable._showClone(sortable); // Unfold animation for clones if showing from hidden
+
+
+              if (activeSortable.options.animation && !clonesHidden && clonesHiddenBefore) {
+                multiDragClones.forEach(function (clone) {
+                  activeSortable.addAnimationState({
+                    target: clone,
+                    rect: clonesFromRect
+                  });
+                  clone.fromRect = clonesFromRect;
+                  clone.thisAnimationDuration = null;
+                });
+              }
+            } else {
+              activeSortable._showClone(sortable);
+            }
+          }
+        }
+      },
+      dragOverAnimationCapture: function dragOverAnimationCapture(_ref11) {
+        var dragRect = _ref11.dragRect,
+            isOwner = _ref11.isOwner,
+            activeSortable = _ref11.activeSortable;
+        multiDragElements.forEach(function (multiDragElement) {
+          multiDragElement.thisAnimationDuration = null;
+        });
+
+        if (activeSortable.options.animation && !isOwner && activeSortable.multiDrag.isMultiDrag) {
+          clonesFromRect = _extends({}, dragRect);
+          var dragMatrix = matrix(dragEl$1, true);
+          clonesFromRect.top -= dragMatrix.f;
+          clonesFromRect.left -= dragMatrix.e;
+        }
+      },
+      dragOverAnimationComplete: function dragOverAnimationComplete() {
+        if (folding) {
+          folding = false;
+          removeMultiDragElements();
+        }
+      },
+      drop: function drop(_ref12) {
+        var evt = _ref12.originalEvent,
+            rootEl = _ref12.rootEl,
+            parentEl = _ref12.parentEl,
+            sortable = _ref12.sortable,
+            dispatchSortableEvent = _ref12.dispatchSortableEvent,
+            oldIndex = _ref12.oldIndex,
+            putSortable = _ref12.putSortable;
+        var toSortable = putSortable || this.sortable;
+        if (!evt) return;
+        var options = this.options,
+            children = parentEl.children; // Multi-drag selection
+
+        if (!dragStarted) {
+          if (options.multiDragKey && !this.multiDragKeyDown) {
+            this._deselectMultiDrag();
+          }
+
+          toggleClass(dragEl$1, options.selectedClass, !~multiDragElements.indexOf(dragEl$1));
+
+          if (!~multiDragElements.indexOf(dragEl$1)) {
+            multiDragElements.push(dragEl$1);
+            dispatchEvent({
+              sortable: sortable,
+              rootEl: rootEl,
+              name: 'select',
+              targetEl: dragEl$1,
+              originalEvt: evt
+            }); // Modifier activated, select from last to dragEl
+
+            if (evt.shiftKey && lastMultiDragSelect && sortable.el.contains(lastMultiDragSelect)) {
+              var lastIndex = index(lastMultiDragSelect),
+                  currentIndex = index(dragEl$1);
+
+              if (~lastIndex && ~currentIndex && lastIndex !== currentIndex) {
+                // Must include lastMultiDragSelect (select it), in case modified selection from no selection
+                // (but previous selection existed)
+                var n, i;
+
+                if (currentIndex > lastIndex) {
+                  i = lastIndex;
+                  n = currentIndex;
+                } else {
+                  i = currentIndex;
+                  n = lastIndex + 1;
+                }
+
+                for (; i < n; i++) {
+                  if (~multiDragElements.indexOf(children[i])) continue;
+                  toggleClass(children[i], options.selectedClass, true);
+                  multiDragElements.push(children[i]);
+                  dispatchEvent({
+                    sortable: sortable,
+                    rootEl: rootEl,
+                    name: 'select',
+                    targetEl: children[i],
+                    originalEvt: evt
+                  });
+                }
+              }
+            } else {
+              lastMultiDragSelect = dragEl$1;
+            }
+
+            multiDragSortable = toSortable;
+          } else {
+            multiDragElements.splice(multiDragElements.indexOf(dragEl$1), 1);
+            lastMultiDragSelect = null;
+            dispatchEvent({
+              sortable: sortable,
+              rootEl: rootEl,
+              name: 'deselect',
+              targetEl: dragEl$1,
+              originalEvt: evt
+            });
+          }
+        } // Multi-drag drop
+
+
+        if (dragStarted && this.isMultiDrag) {
+          folding = false; // Do not "unfold" after around dragEl if reverted
+
+          if ((parentEl[expando].options.sort || parentEl !== rootEl) && multiDragElements.length > 1) {
+            var dragRect = getRect(dragEl$1),
+                multiDragIndex = index(dragEl$1, ':not(.' + this.options.selectedClass + ')');
+            if (!initialFolding && options.animation) dragEl$1.thisAnimationDuration = null;
+            toSortable.captureAnimationState();
+
+            if (!initialFolding) {
+              if (options.animation) {
+                dragEl$1.fromRect = dragRect;
+                multiDragElements.forEach(function (multiDragElement) {
+                  multiDragElement.thisAnimationDuration = null;
+
+                  if (multiDragElement !== dragEl$1) {
+                    var rect = folding ? getRect(multiDragElement) : dragRect;
+                    multiDragElement.fromRect = rect; // Prepare unfold animation
+
+                    toSortable.addAnimationState({
+                      target: multiDragElement,
+                      rect: rect
+                    });
+                  }
+                });
+              } // Multi drag elements are not necessarily removed from the DOM on drop, so to reinsert
+              // properly they must all be removed
+
+
+              removeMultiDragElements();
+              multiDragElements.forEach(function (multiDragElement) {
+                if (children[multiDragIndex]) {
+                  parentEl.insertBefore(multiDragElement, children[multiDragIndex]);
+                } else {
+                  parentEl.appendChild(multiDragElement);
+                }
+
+                multiDragIndex++;
+              }); // If initial folding is done, the elements may have changed position because they are now
+              // unfolding around dragEl, even though dragEl may not have his index changed, so update event
+              // must be fired here as Sortable will not.
+
+              if (oldIndex === index(dragEl$1)) {
+                var update = false;
+                multiDragElements.forEach(function (multiDragElement) {
+                  if (multiDragElement.sortableIndex !== index(multiDragElement)) {
+                    update = true;
+                    return;
+                  }
+                });
+
+                if (update) {
+                  dispatchSortableEvent('update');
+                }
+              }
+            } // Must be done after capturing individual rects (scroll bar)
+
+
+            multiDragElements.forEach(function (multiDragElement) {
+              unsetRect(multiDragElement);
+            });
+            toSortable.animateAll();
+          }
+
+          multiDragSortable = toSortable;
+        } // Remove clones if necessary
+
+
+        if (rootEl === parentEl || putSortable && putSortable.lastPutMode !== 'clone') {
+          multiDragClones.forEach(function (clone) {
+            clone.parentNode && clone.parentNode.removeChild(clone);
+          });
+        }
+      },
+      nullingGlobal: function nullingGlobal() {
+        this.isMultiDrag = dragStarted = false;
+        multiDragClones.length = 0;
+      },
+      destroyGlobal: function destroyGlobal() {
+        this._deselectMultiDrag();
+
+        off(document, 'pointerup', this._deselectMultiDrag);
+        off(document, 'mouseup', this._deselectMultiDrag);
+        off(document, 'touchend', this._deselectMultiDrag);
+        off(document, 'keydown', this._checkKeyDown);
+        off(document, 'keyup', this._checkKeyUp);
+      },
+      _deselectMultiDrag: function _deselectMultiDrag(evt) {
+        if (typeof dragStarted !== "undefined" && dragStarted) return; // Only deselect if selection is in this sortable
+
+        if (multiDragSortable !== this.sortable) return; // Only deselect if target is not item in this sortable
+
+        if (evt && closest(evt.target, this.options.draggable, this.sortable.el, false)) return; // Only deselect if left click
+
+        if (evt && evt.button !== 0) return;
+
+        while (multiDragElements.length) {
+          var el = multiDragElements[0];
+          toggleClass(el, this.options.selectedClass, false);
+          multiDragElements.shift();
+          dispatchEvent({
+            sortable: this.sortable,
+            rootEl: this.sortable.el,
+            name: 'deselect',
+            targetEl: el,
+            originalEvt: evt
+          });
+        }
+      },
+      _checkKeyDown: function _checkKeyDown(evt) {
+        if (evt.key === this.options.multiDragKey) {
+          this.multiDragKeyDown = true;
+        }
+      },
+      _checkKeyUp: function _checkKeyUp(evt) {
+        if (evt.key === this.options.multiDragKey) {
+          this.multiDragKeyDown = false;
+        }
+      }
+    };
+    return _extends(MultiDrag, {
+      // Static methods & properties
+      pluginName: 'multiDrag',
+      utils: {
+        /**
+         * Selects the provided multi-drag item
+         * @param  {HTMLElement} el    The element to be selected
+         */
+        select: function select(el) {
+          var sortable = el.parentNode[expando];
+          if (!sortable || !sortable.options.multiDrag || ~multiDragElements.indexOf(el)) return;
+
+          if (multiDragSortable && multiDragSortable !== sortable) {
+            multiDragSortable.multiDrag._deselectMultiDrag();
+
+            multiDragSortable = sortable;
+          }
+
+          toggleClass(el, sortable.options.selectedClass, true);
+          multiDragElements.push(el);
+        },
+
+        /**
+         * Deselects the provided multi-drag item
+         * @param  {HTMLElement} el    The element to be deselected
+         */
+        deselect: function deselect(el) {
+          var sortable = el.parentNode[expando],
+              index = multiDragElements.indexOf(el);
+          if (!sortable || !sortable.options.multiDrag || !~index) return;
+          toggleClass(el, sortable.options.selectedClass, false);
+          multiDragElements.splice(index, 1);
+        }
+      },
+      eventProperties: function eventProperties() {
+        var _this3 = this;
+
+        var oldIndicies = [],
+            newIndicies = [];
+        multiDragElements.forEach(function (multiDragElement) {
+          oldIndicies.push({
+            multiDragElement: multiDragElement,
+            index: multiDragElement.sortableIndex
+          }); // multiDragElements will already be sorted if folding
+
+          var newIndex;
+
+          if (folding && multiDragElement !== dragEl$1) {
+            newIndex = -1;
+          } else if (folding) {
+            newIndex = index(multiDragElement, ':not(.' + _this3.options.selectedClass + ')');
+          } else {
+            newIndex = index(multiDragElement);
+          }
+
+          newIndicies.push({
+            multiDragElement: multiDragElement,
+            index: newIndex
+          });
+        });
+        return {
+          items: _toConsumableArray(multiDragElements),
+          clones: [].concat(multiDragClones),
+          oldIndicies: oldIndicies,
+          newIndicies: newIndicies
+        };
+      },
+      optionListeners: {
+        multiDragKey: function multiDragKey(key) {
+          key = key.toLowerCase();
+
+          if (key === 'ctrl') {
+            key = 'Control';
+          } else if (key.length > 1) {
+            key = key.charAt(0).toUpperCase() + key.substr(1);
+          }
+
+          return key;
+        }
+      }
+    });
+  }
+
+  function insertMultiDragElements(clonesInserted, rootEl) {
+    multiDragElements.forEach(function (multiDragElement, i) {
+      var target = rootEl.children[multiDragElement.sortableIndex + (clonesInserted ? Number(i) : 0)];
+
+      if (target) {
+        rootEl.insertBefore(multiDragElement, target);
+      } else {
+        rootEl.appendChild(multiDragElement);
+      }
+    });
+  }
+  /**
+   * Insert multi-drag clones
+   * @param  {[Boolean]} elementsInserted  Whether the multi-drag elements are inserted
+   * @param  {HTMLElement} rootEl
+   */
+
+
+  function insertMultiDragClones(elementsInserted, rootEl) {
+    multiDragClones.forEach(function (clone, i) {
+      var target = rootEl.children[clone.sortableIndex + (elementsInserted ? Number(i) : 0)];
+
+      if (target) {
+        rootEl.insertBefore(clone, target);
+      } else {
+        rootEl.appendChild(clone);
+      }
+    });
+  }
+
+  function removeMultiDragElements() {
+    multiDragElements.forEach(function (multiDragElement) {
+      if (multiDragElement === dragEl$1) return;
+      multiDragElement.parentNode && multiDragElement.parentNode.removeChild(multiDragElement);
+    });
+  }
+
+  Sortable.mount(new AutoScrollPlugin());
+  Sortable.mount(Remove, Revert);
+
+  Sortable.mount(new SwapPlugin());
+  Sortable.mount(new MultiDragPlugin());
+
+  return Sortable;
+
+})));
+
 /*!
- * bootstrap-fileinput v5.1.3
+ * bootstrap-fileinput v5.5.5
  * http://plugins.krajee.com/file-input
  *
  * Author: Kartik Visweswaran
- * Copyright: 2014 - 2020, Kartik Visweswaran, Krajee.com
+ * Copyright: 2014 - 2024, Kartik Visweswaran, Krajee.com
  *
  * Licensed under the BSD-3-Clause
  * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
@@ -25735,19 +33938,23 @@ SOFTWARE.
   "use strict";
   if (typeof define === "function" && define.amd) {
     define(["jquery"], factory);
+  } else if (typeof module === "object" && typeof module.exports === "object") {
+    factory(require("jquery"));
   } else {
-    if (typeof module === "object" && module.exports) {
-      //noinspection NpmUsedModulesInstalled
-      module.exports = factory(require("jquery"));
-    } else {
-      factory(window.jQuery);
-    }
+    factory(window.jQuery);
   }
 })(function ($) {
   "use strict";
 
   $.fn.fileinputLocales = {};
   $.fn.fileinputThemes = {};
+
+  if (!$.fn.fileinputBsVersion) {
+    $.fn.fileinputBsVersion =
+      (window.bootstrap && window.bootstrap.Alert && window.bootstrap.Alert.VERSION) ||
+      (window.Alert && window.Alert.VERSION) ||
+      "3.x.x";
+  }
 
   String.prototype.setTokens = function (replacePairs) {
     var str = this.toString(),
@@ -25776,6 +33983,7 @@ SOFTWARE.
     FRAMES: ".kv-preview-thumb",
     SORT_CSS: "file-sortable",
     INIT_FLAG: "init-",
+    SCRIPT_SRC: (document && document.currentScript && document.currentScript.src) || null,
     OBJECT_PARAMS:
       '<param name="controller" value="true" />\n' +
       '<param name="allowFullScreen" value="true" />\n' +
@@ -25793,29 +34001,56 @@ SOFTWARE.
       ajaxError: "{status}: {error}. Error Details: {text}.",
       badDroppedFiles: "Error scanning dropped files!",
       badExifParser: "Error loading the piexif.js library. {details}",
-      badInputType:
-        'The input "type" must be set to "file" for initializing the "bootstrap-fileinput" plugin.',
+      badInputType: 'The input "type" must be set to "file" for initializing the "bootstrap-fileinput" plugin.',
       exifWarning:
         'To avoid this warning, either set "autoOrientImage" to "false" OR ensure you have loaded ' +
         'the "piexif.js" library correctly on your page before the "fileinput.js" script.',
-      invalidChunkSize:
-        'Invalid upload chunk size: "{chunkSize}". Resumable uploads are disabled.',
+      invalidChunkSize: 'Invalid upload chunk size: "{chunkSize}". Resumable uploads are disabled.',
       invalidThumb: 'Invalid thumb frame with id: "{id}".',
-      noResumableSupport:
-        "The browser does not support resumable or chunk uploads.",
-      noUploadUrl:
-        'The "uploadUrl" is not set. Ajax uploads and resumable uploads have been disabled.',
-      retryStatus:
-        "Retrying upload for chunk # {chunk} for {filename}... retry # {retry}.",
-      chunkQueueError:
-        "Could not push task to ajax pool for chunk index # {index}.",
-      resumableMaxRetriesReached:
-        "Maximum resumable ajax retries ({n}) reached.",
-      resumableRetryError:
-        "Could not retry the resumable request (try # {n})... aborting.",
+      noResumableSupport: "The browser does not support resumable or chunk uploads.",
+      noUploadUrl: 'The "uploadUrl" is not set. Ajax uploads and resumable uploads have been disabled.',
+      retryStatus: "Retrying upload for chunk # {chunk} for {filename}... retry # {retry}.",
+      chunkQueueError: "Could not push task to ajax pool for chunk index # {index}.",
+      resumableMaxRetriesReached: "Maximum resumable ajax retries ({n}) reached.",
+      resumableRetryError: "Could not retry the resumable request (try # {n})... aborting.",
       resumableAborting: "Aborting / cancelling the resumable request.",
+      resumableRequestError: "Error processing resumable request. {msg}",
     },
     objUrl: window.URL || window.webkitURL,
+    getZoomPlaceholder: function () {
+      // used to prevent 404 errors in URL parsing
+      var src = $h.SCRIPT_SRC,
+        srcPath,
+        zoomVar = "?kvTemp__2873389129__=";
+      if (!src) {
+        return zoomVar;
+      }
+      srcPath = src.substring(0, src.lastIndexOf("/"));
+      return srcPath.substring(0, srcPath.lastIndexOf("/") + 1) + "img/loading.gif" + zoomVar;
+    },
+    defaultButtonCss: function (fill) {
+      return "btn-default btn-" + (fill ? "" : "outline-") + "secondary";
+    },
+    isBs: function (ver) {
+      var chk = $h.trim(($.fn.fileinputBsVersion || "") + "");
+      ver = parseInt(ver, 10);
+      if (!chk) {
+        return ver === 4;
+      }
+      return ver === parseInt(chk.charAt(0), 10);
+    },
+    isNumeric: function (n) {
+      if (n === undefined) {
+        return false;
+      }
+      return !isNaN(parseFloat(n)) && isFinite(n);
+    },
+    trim: function (val) {
+      if (val === undefined) {
+        return "";
+      }
+      return val.toString().trim();
+    },
     now: function () {
       return new Date().getTime();
     },
@@ -25835,13 +34070,7 @@ SOFTWARE.
     getFileRelativePath: function (file) {
       /** @namespace file.relativePath */
       /** @namespace file.webkitRelativePath */
-      return String(
-        file.newPath ||
-          file.relativePath ||
-          file.webkitRelativePath ||
-          $h.getFileName(file) ||
-          null
-      );
+      return String(file.newPath || file.relativePath || file.webkitRelativePath || $h.getFileName(file) || null);
     },
     getFileId: function (file, generateFileId) {
       var relativePath = $h.getFileRelativePath(file);
@@ -25854,9 +34083,7 @@ SOFTWARE.
       if (!relativePath) {
         return null;
       }
-      return (
-        file.size + "_" + encodeURIComponent(relativePath).replace(/%/g, "_")
-      );
+      return file.size + "_" + encodeURIComponent(relativePath).replace(/%/g, "_");
     },
     getFrameSelector: function (id, selector) {
       selector = selector || "";
@@ -25945,9 +34172,7 @@ SOFTWARE.
       return status;
     },
     canOrientImage: function ($el) {
-      var $img = $(document.createElement("img"))
-          .css({ width: "1px", height: "1px" })
-          .insertAfter($el),
+      var $img = $(document.createElement("img")).css({ width: "1px", height: "1px" }).insertAfter($el),
         flag = $img.css("image-orientation");
       $img.remove();
       return !!flag;
@@ -25987,24 +34212,29 @@ SOFTWARE.
       return typeof v === "function";
     },
     isEmpty: function (value, trim) {
-      return (
-        value === undefined ||
-        value === null ||
-        (!$h.isFunction(value) &&
-          (value.length === 0 || (trim && $.trim(value) === "")))
-      );
+      if (value === undefined || value === null || value === "") {
+        return true;
+      }
+      if ($h.isString(value) && trim) {
+        return $h.trim(value) === "";
+      }
+      if ($h.isArray(value)) {
+        return value.length === 0;
+      }
+      if ($.isPlainObject(value) && $.isEmptyObject(value)) {
+        return true;
+      }
+      return false;
     },
     isArray: function (a) {
-      return (
-        Array.isArray(a) ||
-        Object.prototype.toString.call(a) === "[object Array]"
-      );
+      return Array.isArray(a) || Object.prototype.toString.call(a) === "[object Array]";
+    },
+    isString: function (a) {
+      return Object.prototype.toString.call(a) === "[object String]";
     },
     ifSet: function (needle, haystack, def) {
       def = def || "";
-      return haystack && typeof haystack === "object" && needle in haystack
-        ? haystack[needle]
-        : def;
+      return haystack && typeof haystack === "object" && needle in haystack ? haystack[needle] : def;
     },
     cleanArray: function (arr) {
       if (!(arr instanceof Array)) {
@@ -26056,9 +34286,7 @@ SOFTWARE.
       /** @namespace div.ondragstart */
       /** @namespace div.ondrop */
       return (
-        !$h.isIE(9) &&
-        (div.draggable !== undefined ||
-          (div.ondragstart !== undefined && div.ondrop !== undefined))
+        !$h.isIE(9) && (div.draggable !== undefined || (div.ondragstart !== undefined && div.ondrop !== undefined))
       );
     },
     hasFileUploadSupport: function () {
@@ -26085,18 +34313,11 @@ SOFTWARE.
         $h.hasFileUploadSupport() &&
         $h.hasBlobSupport() &&
         $h.hasArrayBufferViewSupport() &&
-        (!!Blob.prototype.webkitSlice ||
-          !!Blob.prototype.mozSlice ||
-          !!Blob.prototype.slice ||
-          false)
+        (!!Blob.prototype.webkitSlice || !!Blob.prototype.mozSlice || !!Blob.prototype.slice || false)
       );
     },
     dataURI2Blob: function (dataURI) {
-      var BlobBuilder =
-          window.BlobBuilder ||
-          window.WebKitBlobBuilder ||
-          window.MozBlobBuilder ||
-          window.MSBlobBuilder,
+      var BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder || window.MSBlobBuilder,
         canBlob = $h.hasBlobSupport(),
         byteStr,
         arrayBuffer,
@@ -26104,11 +34325,7 @@ SOFTWARE.
         i,
         mimeStr,
         bb,
-        canProceed =
-          (canBlob || BlobBuilder) &&
-          window.atob &&
-          window.ArrayBuffer &&
-          window.Uint8Array;
+        canProceed = (canBlob || BlobBuilder) && window.atob && window.ArrayBuffer && window.Uint8Array;
       if (!canProceed) {
         return null;
       }
@@ -26124,10 +34341,7 @@ SOFTWARE.
       }
       mimeStr = dataURI.split(",")[0].split(":")[1].split(";")[0];
       if (canBlob) {
-        return new Blob(
-          [$h.hasArrayBufferViewSupport() ? intArray : arrayBuffer],
-          { type: mimeStr }
-        );
+        return new Blob([$h.hasArrayBufferViewSupport() ? intArray : arrayBuffer], { type: mimeStr });
       }
       bb = new BlobBuilder();
       bb.append(arrayBuffer);
@@ -26181,23 +34395,18 @@ SOFTWARE.
       }
       return out;
     },
-    isHtml: function (str) {
-      var a = document.createElement("div");
-      a.innerHTML = str;
-      for (var c = a.childNodes, i = c.length; i--; ) {
-        if (c[i].nodeType === 1) {
-          return true;
-        }
-      }
-      return false;
-    },
     isSvg: function (str) {
-      return (
-        str.match(/^\s*<\?xml/i) &&
-        (str.match(/<!DOCTYPE svg/i) || str.match(/<svg/i))
-      );
+      if ($h.isEmpty(str)) {
+        return false;
+      }
+      str = $h.trim(str).replace(/\n/g, " ");
+      if (str.length === 0) {
+        return false;
+      }
+      return str.match(/^\s*<\?xml/i) && (str.match(/<!DOCTYPE svg/i) || str.match(/<svg/i));
     },
-    getMimeType: function (signature, contents, type) {
+    getMimeType: function (sign, contents, type) {
+      var signature = sign || "";
       switch (signature) {
         case "ffd8ffe0":
         case "ffd8ffe1":
@@ -26211,6 +34420,8 @@ SOFTWARE.
           return "image/tiff";
         case "52494646":
           return "image/webp";
+        case "41433130":
+          return "image/vnd.dwg";
         case "66747970":
           return "video/3gp";
         case "4f676753":
@@ -26258,9 +34469,7 @@ SOFTWARE.
                 case "1f8b":
                   return "application/gzip";
                 default:
-                  return contents && !contents.match(/[^\u0000-\u007f]/)
-                    ? "application/text-plain"
-                    : type;
+                  return contents && !contents.match(/[^\u0000-\u007f]/) ? "application/text-plain" : type;
               }
           }
       }
@@ -26269,18 +34478,17 @@ SOFTWARE.
       $el.removeClass(css).addClass(css);
     },
     getElement: function (options, param, value) {
-      return $h.isEmpty(options) || $h.isEmpty(options[param])
-        ? value
-        : $(options[param]);
+      return $h.isEmpty(options) || $h.isEmpty(options[param]) ? value : $(options[param]);
+    },
+    createDiv: function () {
+      return $(document.createElement("div"));
     },
     createElement: function (str, tag) {
       tag = tag || "div";
       return $($.parseHTML("<" + tag + ">" + str + "</" + tag + ">"));
     },
     uniqId: function () {
-      return (
-        new Date().getTime() + Math.floor(Math.random() * Math.pow(10, 15))
-      ).toString(36);
+      return (new Date().getTime() + Math.floor(Math.random() * Math.pow(10, 15))).toString(36);
     },
     cspBuffer: {
       CSP_ATTRIB: "data-csp-01928735", // a randomly named temporary attribute to store the CSP elem id
@@ -26291,22 +34499,13 @@ SOFTWARE.
           $el = $(outerDom);
         $el.find("[style]").each(function (key, elem) {
           var $elem = $(elem),
-            styleString = $elem.attr("style"),
+            styleDeclaration = $elem[0].style,
             id = $h.uniqId(),
             styles = {};
-          if (styleString && styleString.length) {
-            if (styleString.indexOf(";") === -1) {
-              styleString += ";";
-            }
-            styleString
-              .slice(0, styleString.length - 1)
-              .split(";")
-              .map(function (str) {
-                str = str.split(":");
-                if (str[0]) {
-                  styles[str[0]] = str[1] ? str[1] : "";
-                }
-              });
+          if (styleDeclaration && styleDeclaration.length) {
+            $(styleDeclaration).each(function () {
+              styles[this] = styleDeclaration[this];
+            });
             self.domElementsStyles[id] = styles;
             $elem.removeAttr("style").attr(self.CSP_ATTRIB, id);
           }
@@ -26369,9 +34568,7 @@ SOFTWARE.
       return out;
     },
     cleanMemory: function ($thumb) {
-      var data = $thumb.is("img")
-        ? $thumb.attr("src")
-        : $thumb.find("source").attr("src");
+      var data = $thumb.is("img") ? $thumb.attr("src") : $thumb.find("source").attr("src");
       $h.revokeObjectURL(data);
     },
     findFileName: function (filePath) {
@@ -26447,9 +34644,13 @@ SOFTWARE.
       return newArr;
     },
     closeButton: function (css) {
-      css = css ? "btn-close " + css : "btn-close";
+      css = ($h.isBs(5) ? "btn-close" : "close") + (css ? " " + css : "");
       return (
-        '<button type="button" class="' + css + '" aria-label="Close"></button>'
+        '<button type="button" class="' +
+        css +
+        '" aria-label="Close">\n' +
+        ($h.isBs(5) ? "" : '  <span aria-hidden="true">&times;</span>\n') +
+        "</button>"
       );
     },
     getRotation: function (value) {
@@ -26500,10 +34701,7 @@ SOFTWARE.
      */
     whenAll: function (array) {
       var s = [].slice,
-        resolveValues =
-          arguments.length === 1 && $h.isArray(array)
-            ? array
-            : s.call(arguments),
+        resolveValues = arguments.length === 1 && $h.isArray(array) ? array : s.call(arguments),
         deferred = $.Deferred(),
         i,
         failed = 0,
@@ -26520,20 +34718,14 @@ SOFTWARE.
           if (values !== resolveValues) {
             failed++;
           }
-          deferred.notifyWith(
-            (contexts[index] = this),
-            (values[index] = s.call(arguments))
-          );
+          deferred.notifyWith((contexts[index] = this), (values[index] = s.call(arguments)));
           if (!--remaining) {
-            deferred[(!failed ? "resolve" : "reject") + "With"](
-              contexts,
-              values
-            );
+            deferred[(!failed ? "resolve" : "reject") + "With"](contexts, values);
           }
         };
       };
       for (i = 0; i < length; i++) {
-        if ((value = resolveValues[i]) && $.isFunction(value.promise)) {
+        if ((value = resolveValues[i]) && $h.isFunction(value.promise)) {
           value
             .promise()
             .done(updateFunc(i, resolveContexts, resolveValues))
@@ -26629,11 +34821,9 @@ SOFTWARE.
               }
               // if run all at once
               if (!maxThreads) {
-                var tasksDeferredList = $h
-                  .getObjectKeys(tp.tasks)
-                  .map(function (key) {
-                    return tp.tasks[key].deferred;
-                  });
+                var tasksDeferredList = $h.getObjectKeys(tp.tasks).map(function (key) {
+                  return tp.tasks[key].deferred;
+                });
                 // when all are done
                 $h.whenAll(tasksDeferredList)
                   .done(function () {
@@ -26727,6 +34917,7 @@ SOFTWARE.
         });
       self.ajaxQueue = [];
       self.ajaxRequests = [];
+      self.ajaxPool = null;
       self.ajaxAborted = false;
     },
     _init: function (options, refreshMode) {
@@ -26737,6 +34928,7 @@ SOFTWARE.
         t,
         tmp;
       self.options = options;
+      self.zoomPlaceholder = $h.getZoomPlaceholder();
       self.canOrientImage = $h.canOrientImage($el);
       $.each(options, function (key, value) {
         switch (key) {
@@ -26745,8 +34937,9 @@ SOFTWARE.
           case "maxTotalFileCount":
           case "minFileSize":
           case "maxFileSize":
+          case "maxMultipleFileSize":
           case "maxFilePreviewSize":
-          case "resizeImageQuality":
+          case "resizeQuality":
           case "resizeIfSizeMoreThan":
           case "progressUploadThreshold":
           case "initialPreviewCount":
@@ -26755,6 +34948,7 @@ SOFTWARE.
           case "maxImageHeight":
           case "minImageWidth":
           case "maxImageWidth":
+          case "bytesToKB":
             self[key] = $h.getNum(value);
             break;
           default:
@@ -26762,10 +34956,13 @@ SOFTWARE.
             break;
         }
       });
-      if (
-        self.maxTotalFileCount > 0 &&
-        self.maxTotalFileCount < self.maxFileCount
-      ) {
+      if (!self.bytesToKB || self.bytesToKB <= 0) {
+        self.bytesToKB = 1024;
+      }
+      if (self.errorCloseButton === undefined) {
+        self.errorCloseButton = $h.closeButton("kv-error-close" + ($h.isBs(5) ? "  float-end" : ""));
+      }
+      if (self.maxTotalFileCount > 0 && self.maxTotalFileCount < self.maxFileCount) {
         self.maxTotalFileCount = self.maxFileCount;
       }
       if (self.rtl) {
@@ -26775,10 +34972,7 @@ SOFTWARE.
         self.previewZoomButtonIcons.next = tmp;
       }
       // validate chunk threads to not exceed maxAjaxThreads
-      if (
-        !isNaN(self.maxAjaxThreads) &&
-        self.maxAjaxThreads < self.resumableUploadOptions.maxThreads
-      ) {
+      if (!isNaN(self.maxAjaxThreads) && self.maxAjaxThreads < self.resumableUploadOptions.maxThreads) {
         self.resumableUploadOptions.maxThreads = self.maxAjaxThreads;
       }
       self._initFileManager();
@@ -26794,53 +34988,29 @@ SOFTWARE.
       self.duplicateErrors = [];
       self.$form = $el.closest("form");
       self._initTemplateDefaults();
-      self.uploadFileAttr = !$h.isEmpty($el.attr("name"))
-        ? $el.attr("name")
-        : "file_data";
+      self.uploadFileAttr = !$h.isEmpty($el.attr("name")) ? $el.attr("name") : "file_data";
       t = self._getLayoutTemplate("progress");
       self.progressTemplate = t.replace("{class}", self.progressClass);
       self.progressInfoTemplate = t.replace("{class}", self.progressInfoClass);
-      self.progressPauseTemplate = t.replace(
-        "{class}",
-        self.progressPauseClass
-      );
-      self.progressCompleteTemplate = t.replace(
-        "{class}",
-        self.progressCompleteClass
-      );
-      self.progressErrorTemplate = t.replace(
-        "{class}",
-        self.progressErrorClass
-      );
+      self.progressPauseTemplate = t.replace("{class}", self.progressPauseClass);
+      self.progressCompleteTemplate = t.replace("{class}", self.progressCompleteClass);
+      self.progressErrorTemplate = t.replace("{class}", self.progressErrorClass);
       self.isDisabled = $el.attr("disabled") || $el.attr("readonly");
       if (self.isDisabled) {
         $el.attr("disabled", true);
       }
       self.isClickable =
-        self.browseOnZoneClick &&
-        self.showPreview &&
-        (self.dropZoneEnabled || !$h.isEmpty(self.defaultPreviewContent));
-      self.isAjaxUpload =
-        $h.hasFileUploadSupport() && !$h.isEmpty(self.uploadUrl);
+        self.browseOnZoneClick && self.showPreview && (self.dropZoneEnabled || !$h.isEmpty(self.defaultPreviewContent));
+      self.isAjaxUpload = $h.hasFileUploadSupport() && !$h.isEmpty(self.uploadUrl);
       self.dropZoneEnabled = $h.hasDragDropSupport() && self.dropZoneEnabled;
       if (!self.isAjaxUpload) {
-        self.dropZoneEnabled =
-          self.dropZoneEnabled && $h.canAssignFilesToInput();
+        self.dropZoneEnabled = self.dropZoneEnabled && $h.canAssignFilesToInput();
       }
-      self.slug =
-        typeof options.slugCallback === "function"
-          ? options.slugCallback
-          : self._slugDefault;
-      self.mainTemplate = self.showCaption
-        ? self._getLayoutTemplate("main1")
-        : self._getLayoutTemplate("main2");
+      self.slug = typeof options.slugCallback === "function" ? options.slugCallback : self._slugDefault;
+      self.mainTemplate = self.showCaption ? self._getLayoutTemplate("main1") : self._getLayoutTemplate("main2");
       self.captionTemplate = self._getLayoutTemplate("caption");
       self.previewGenericTemplate = self._getPreviewTemplate("generic");
-      if (
-        !self.imageCanvas &&
-        self.resizeImage &&
-        (self.maxImageWidth || self.maxImageHeight)
-      ) {
+      if (!self.imageCanvas && self.resizeImage && (self.maxImageWidth || self.maxImageHeight)) {
         self.imageCanvas = document.createElement("canvas");
         self.imageCanvasContext = self.imageCanvas.getContext("2d");
       }
@@ -26857,52 +35027,16 @@ SOFTWARE.
       self.$dropZone = $cont.find(".file-drop-zone");
       self.$progress = $cont.find(".kv-upload-progress");
       self.$btnUpload = $cont.find(".fileinput-upload");
-      self.$captionContainer = $h.getElement(
-        options,
-        "elCaptionContainer",
-        $cont.find(".file-caption")
-      );
-      self.$caption = $h.getElement(
-        options,
-        "elCaptionText",
-        $cont.find(".file-caption-name")
-      );
-      self.$captionLabel = $h.getElement(
-        options,
-        "elCaptionLabelText",
-        $cont.find(".file-caption-label")
-      );
+      self.$captionContainer = $h.getElement(options, "elCaptionContainer", $cont.find(".file-caption"));
+      self.$caption = $h.getElement(options, "elCaptionText", $cont.find(".file-caption-name"));
       if (!$h.isEmpty(self.msgPlaceholder)) {
         f = $el.attr("multiple") ? self.filePlural : self.fileSingle;
-        self.$caption.attr(
-          "placeholder",
-          self.msgPlaceholder.replace("{files}", f)
-        );
+        self.$caption.attr("placeholder", self.msgPlaceholder.replace("{files}", f));
       }
-      self.$caption.attr("id", "fileinput-" + $el.attr("id"));
-      var origLabel = document.querySelector(
-        'label[for="' + $el.attr("id") + '"]'
-      );
-      if (origLabel !== null) {
-        self.$captionLabel.html(origLabel.innerHTML);
-      }
-      self.$captionLabel.attr("for", "fileinput-" + $el.attr("id"));
       self.$captionIcon = self.$captionContainer.find(".file-caption-icon");
-      self.$previewContainer = $h.getElement(
-        options,
-        "elPreviewContainer",
-        $cont.find(".file-preview")
-      );
-      self.$preview = $h.getElement(
-        options,
-        "elPreviewImage",
-        $cont.find(".file-preview-thumbnails")
-      );
-      self.$previewStatus = $h.getElement(
-        options,
-        "elPreviewStatus",
-        $cont.find(".file-preview-status")
-      );
+      self.$previewContainer = $h.getElement(options, "elPreviewContainer", $cont.find(".file-preview"));
+      self.$preview = $h.getElement(options, "elPreviewImage", $cont.find(".file-preview-thumbnails"));
+      self.$previewStatus = $h.getElement(options, "elPreviewStatus", $cont.find(".file-preview-status"));
       self.$errorContainer = $h.getElement(
         options,
         "elErrorContainer",
@@ -26950,6 +35084,8 @@ SOFTWARE.
         totalSize: null,
         uploadedSize: 0,
         stats: {},
+        bpsLog: [],
+        bps: 0,
         initStats: function (id) {
           var data = { started: $h.now() };
           if (id) {
@@ -26960,34 +35096,40 @@ SOFTWARE.
         },
         getUploadStats: function (id, loaded, total) {
           var fm = self.fileManager,
-            started = id
-              ? (fm.stats[id] && fm.stats[id].started) || $h.now()
-              : self.uploadStartTime;
-          var elapsed = ($h.now() - started) / 1000,
-            speeds = [
-              "B/s",
-              "KB/s",
-              "MB/s",
-              "GB/s",
-              "TB/s",
-              "PB/s",
-              "EB/s",
-              "ZB/s",
-              "YB/s",
-            ],
-            bps = elapsed ? loaded / elapsed : 0,
-            bitrate = self._getSize(bps, speeds),
+            started = id ? (fm.stats[id] && fm.stats[id].started) || $h.now() : self.uploadStartTime,
+            elapsed = ($h.now() - started) / 1000,
+            bps = Math.ceil(elapsed ? loaded / elapsed : 0),
             pendingBytes = total - loaded,
-            out = {
-              fileId: id,
-              started: started,
-              elapsed: elapsed,
-              loaded: loaded,
-              total: total,
-              bps: bps,
-              bitrate: bitrate,
-              pendingBytes: pendingBytes,
-            };
+            out,
+            delay = fm.bpsLog.length ? self.bitrateUpdateDelay : 0;
+          setTimeout(function () {
+            var i,
+              j = 0,
+              n = 0,
+              len,
+              beg;
+            fm.bpsLog.push(bps);
+            fm.bpsLog.sort(function (a, b) {
+              return a - b;
+            });
+            len = fm.bpsLog.length;
+            beg = len > 10 ? len - 10 : Math.ceil(len / 2);
+            for (i = len; i > beg; i--) {
+              n = parseFloat(fm.bpsLog[i]);
+              j++;
+            }
+            fm.bps = (j > 0 ? n / j : 0) * 64;
+          }, delay);
+          out = {
+            fileId: id,
+            started: started,
+            elapsed: elapsed,
+            loaded: loaded,
+            total: total,
+            bps: fm.bps,
+            bitrate: self._getSize(fm.bps, false, self.bitRateUnits),
+            pendingBytes: pendingBytes,
+          };
           if (id) {
             fm.stats[id] = out;
           } else {
@@ -27014,7 +35156,7 @@ SOFTWARE.
             return fm.totalSize;
           }
           fm.totalSize = 0;
-          $.each(self.fileManager.stack, function (id, f) {
+          $.each(self.getFileStack(), function (id, f) {
             var size = parseFloat(f.size);
             fm.totalSize += isNaN(size) ? 0 : size;
           });
@@ -27037,14 +35179,16 @@ SOFTWARE.
           };
         },
         remove: function ($thumb) {
-          var id = $thumb.attr("data-fileid");
-          if (id) {
-            self.fileManager.removeFile(id);
-          }
+          var id = self._getThumbFileId($thumb);
+          self.fileManager.removeFile(id);
         },
         removeFile: function (id) {
-          delete self.fileManager.stack[id];
-          delete self.fileManager.loadedImages[id];
+          var fm = self.fileManager;
+          if (!id) {
+            return;
+          }
+          delete fm.stack[id];
+          delete fm.loadedImages[id];
         },
         move: function (idFrom, idTo) {
           var result = {},
@@ -27064,7 +35208,7 @@ SOFTWARE.
         },
         list: function () {
           var files = [];
-          $.each(self.fileManager.stack, function (k, v) {
+          $.each(self.getFileStack(), function (k, v) {
             if (v && v.file) {
               files.push(v.file);
             }
@@ -27072,15 +35216,12 @@ SOFTWARE.
           return files;
         },
         isPending: function (id) {
-          return (
-            $.inArray(id, self.fileManager.filesProcessed) === -1 &&
-            self.fileManager.exists(id)
-          );
+          return $.inArray(id, self.fileManager.filesProcessed) === -1 && self.fileManager.exists(id);
         },
         isProcessed: function () {
           var filesProcessed = true,
             fm = self.fileManager;
-          $.each(fm.stack, function (id) {
+          $.each(self.getFileStack(), function (id) {
             if (fm.isPending(id)) {
               filesProcessed = false;
             }
@@ -27098,6 +35239,8 @@ SOFTWARE.
           fm.errors = [];
           fm.filesProcessed = [];
           fm.stats = {};
+          fm.bpsLog = [];
+          fm.bps = 0;
           fm.clearImages();
         },
         clearImages: function () {
@@ -27126,14 +35269,14 @@ SOFTWARE.
           var $thumb = null;
           self._getThumbs().each(function () {
             var $t = $(this);
-            if ($t.attr("data-fileid") === id) {
+            if (self._getThumbFileId($t) === id) {
               $thumb = $t;
             }
           });
           return $thumb;
         },
         getThumbIndex: function ($thumb) {
-          var id = $thumb.attr("data-fileid");
+          var id = self._getThumbFileId($thumb);
           return self.fileManager.getIndex(id);
         },
         getIdList: function () {
@@ -27240,7 +35383,7 @@ SOFTWARE.
               rm.$btnDelete = rm.$thumb.find(".kv-file-remove");
             }
           }
-          rm.chunkSize = opts.chunkSize * 1024;
+          rm.chunkSize = opts.chunkSize * self.bytesToKB;
           rm.chunkCount = rm.getTotalChunks();
         },
         setAjaxError: function (jqXHR, textStatus, errorThrown, isTest) {
@@ -27268,11 +35411,9 @@ SOFTWARE.
             $thumb = rm.$thumb,
             $prog = rm.$progress,
             hasThumb = $thumb && $thumb.length,
-            params = {
-              id: hasThumb ? $thumb.attr("id") : "",
-              index: fm.getIndex(id),
-              fileId: id,
-            };
+            params = { id: hasThumb ? $thumb.attr("id") : "", index: fm.getIndex(id), fileId: id },
+            tokens,
+            skipErrorsAndProceed = self.resumableUploadOptions.skipErrorsAndProceed;
           rm.completed = true;
           rm.lastProgress = 0;
           if (hasThumb) {
@@ -27287,11 +35428,7 @@ SOFTWARE.
             }
             fm.removeFile(id);
             delete rm.chunksProcessed[id];
-            self._raise("fileuploaded", [
-              params.id,
-              params.index,
-              params.fileId,
-            ]);
+            self._raise("fileuploaded", [params.id, params.index, params.fileId]);
             if (fm.isProcessed()) {
               self._setProgress(101);
             }
@@ -27302,19 +35439,20 @@ SOFTWARE.
                 self._setPreviewError($thumb, true);
                 self._setProgress(101, $prog, self.msgProgressError);
                 self._setProgress(101, self.$progress, self.msgProgressError);
-                self.cancelling = true;
+                self.cancelling = !skipErrorsAndProceed;
               }
-              if (
-                !self.$errorContainer.find(
-                  'li[data-file-id="' + params.fileId + '"]'
-                ).length
-              ) {
-                msg = self.msgResumableUploadRetriesExceeded.setTokens({
-                  file: rm.fileName,
-                  max: opts.maxRetries,
-                  error: rm.error,
-                });
-                self._showFileError(msg, params);
+              if (!self.$errorContainer.find('li[data-file-id="' + params.fileId + '"]').length) {
+                tokens = { file: rm.fileName, max: opts.maxRetries, error: rm.error };
+                msg = self.msgResumableUploadRetriesExceeded.setTokens(tokens);
+                $.extend(params, tokens);
+                self._showFileError(msg, params, "filemaxretries");
+                if (skipErrorsAndProceed) {
+                  fm.removeFile(id);
+                  delete rm.chunksProcessed[id];
+                  if (fm.isProcessed()) {
+                    self._setProgress(101);
+                  }
+                }
               }
             }
           }
@@ -27423,9 +35561,7 @@ SOFTWARE.
             total = rm.chunkCount;
           pool = tm.addPool(rm.id);
           for (i = 0; i < total; i++) {
-            rm.logs[i] = !!(
-              rm.chunksProcessed[rm.id] && rm.chunksProcessed[rm.id][i]
-            );
+            rm.logs[i] = !!(rm.chunksProcessed[rm.id] && rm.chunksProcessed[rm.id][i]);
             if (!rm.logs[i]) {
               rm.pushAjax(i, 0);
             }
@@ -27495,16 +35631,7 @@ SOFTWARE.
           fnComplete = function () {
             self._raise("filetestcomplete", [id, fm, rm, self._getOutData(fd)]);
           };
-          self._ajaxSubmit(
-            fnBefore,
-            fnSuccess,
-            fnComplete,
-            fnError,
-            fd,
-            id,
-            rm.fileIndex,
-            opts.testUrl
-          );
+          self._ajaxSubmit(fnBefore, fnSuccess, fnComplete, fnError, fd, id, rm.fileIndex, opts.testUrl);
         },
         pushAjax: function (index, retry) {
           var tm = self.taskManager,
@@ -27514,10 +35641,7 @@ SOFTWARE.
             var arr = rm.stack.shift(),
               index;
             index = arr[0];
-            if (
-              !rm.chunksProcessed[rm.id] ||
-              !rm.chunksProcessed[rm.id][index]
-            ) {
+            if (!rm.chunksProcessed[rm.id] || !rm.chunksProcessed[rm.id][index]) {
               rm.sendAjax(index, arr[1], deferrer);
             } else {
               self._log(logs.chunkQueueError, { index: index });
@@ -27537,7 +35661,7 @@ SOFTWARE.
               if (tokens) {
                 msg = msg.setTokens(tokens);
               }
-              msg = "Error processing resumable ajax request. " + msg;
+              msg = msgs.resumableRequestError.setTokens({ msg: msg });
               self._log(msg);
               deferrer.reject(msg);
             };
@@ -27555,13 +35679,7 @@ SOFTWARE.
             fnSuccess,
             fnError,
             fnComplete,
-            slice = file.slice
-              ? "slice"
-              : file.mozSlice
-              ? "mozSlice"
-              : file.webkitSlice
-              ? "webkitSlice"
-              : "slice",
+            slice = file.slice ? "slice" : file.mozSlice ? "mozSlice" : file.webkitSlice ? "webkitSlice" : "slice",
             blob = file[slice](chunkSize * index, chunkSize * (index + 1));
           fd = new FormData();
           f = fm.stack[id];
@@ -27589,14 +35707,7 @@ SOFTWARE.
               }
               $btnDelete.attr("disabled", true);
             }
-            self._raise("filechunkbeforesend", [
-              id,
-              index,
-              retry,
-              fm,
-              rm,
-              outData,
-            ]);
+            self._raise("filechunkbeforesend", [id, index, retry, fm, rm, outData]);
           };
           fnSuccess = function (data, textStatus, jqXHR) {
             if (self._isAborted()) {
@@ -27615,9 +35726,10 @@ SOFTWARE.
                   chunk: index,
                 });
               }
+              self._raise("filechunkerror", params);
               rm.pushAjax(index, retry + 1);
               rm.error = data.error;
-              self._raise("filechunkerror", params);
+              logError(data.error);
             } else {
               rm.logs[data[chunkIndex]] = true;
               if (!rm.chunksProcessed[id]) {
@@ -27637,38 +35749,16 @@ SOFTWARE.
             }
             outData = self._getOutData(fd, jqXHR);
             rm.setAjaxError(jqXHR, textStatus, errorThrown);
-            self._raise("filechunkajaxerror", [
-              id,
-              index,
-              retry,
-              fm,
-              rm,
-              outData,
-            ]);
+            self._raise("filechunkajaxerror", [id, index, retry, fm, rm, outData]);
             rm.pushAjax(index, retry + 1); // push another task
             logError(msgs.resumableRetryError, { n: retry - 1 }); // resolve the current task
           };
           fnComplete = function () {
             if (!self._isAborted()) {
-              self._raise("filechunkcomplete", [
-                id,
-                index,
-                retry,
-                fm,
-                rm,
-                self._getOutData(fd),
-              ]);
+              self._raise("filechunkcomplete", [id, index, retry, fm, rm, self._getOutData(fd)]);
             }
           };
-          self._ajaxSubmit(
-            fnBefore,
-            fnSuccess,
-            fnComplete,
-            fnError,
-            fd,
-            id,
-            rm.fileIndex
-          );
+          self._ajaxSubmit(fnBefore, fnSuccess, fnComplete, fnError, fd, id, rm.fileIndex);
         },
       };
       rm.reset();
@@ -27715,8 +35805,10 @@ SOFTWARE.
         tStyle,
         tZoomCache,
         vDefaultDim,
+        tActionRotate,
         tStats,
         tModalLabel,
+        tDescClose,
         renderObject = function (type, mime) {
           return (
             '<object class="kv-preview-data file-preview-' +
@@ -27730,21 +35822,26 @@ SOFTWARE.
             $h.DEFAULT_PREVIEW +
             "\n</object>\n"
           );
-        };
+        },
+        defBtnCss1 = "btn btn-sm btn-kv " + $h.defaultButtonCss();
       tMain1 =
         "{preview}\n" +
         '<div class="kv-upload-progress kv-hidden"></div><div class="clearfix"></div>\n' +
-        '<div class="input-group {class}">\n' +
-        "  {caption}\n" +
-        "  {remove}\n" +
-        "  {cancel}\n" +
-        "  {pause}\n" +
-        "  {upload}\n" +
-        "  {browse}\n" +
-        "</div>";
+        '<div class="file-caption {class}">\n' +
+        '  <div class="input-group {inputGroupClass}">\n' +
+        '      {caption}\n<span class="file-caption-icon"></span>\n' +
+        ($h.isBs(5) ? "" : '<div class="input-group-btn input-group-append">\n') +
+        "      {remove}\n" +
+        "      {cancel}\n" +
+        "      {pause}\n" +
+        "      {upload}\n" +
+        "      {browse}\n" +
+        ($h.isBs(5) ? "" : "    </div>\n") +
+        "  </div>";
+      ("</div>");
       tMain2 =
         '{preview}\n<div class="kv-upload-progress kv-hidden"></div>\n<div class="clearfix"></div>\n' +
-        "{remove}\n{cancel}\n{upload}\n{browse}\n";
+        '<span class="{class}">{remove}\n{cancel}\n{upload}\n{browse}\n</span>';
       tPreview =
         '<div class="file-preview {class}">\n' +
         "  {close}" +
@@ -27756,49 +35853,40 @@ SOFTWARE.
         "  </div>\n" +
         "</div>";
       tClose = $h.closeButton("fileinput-remove");
-      tFileIcon = '<i class="glyphicon glyphicon-file"></i>';
+      tFileIcon = '<i class="bi-file-earmark-arrow-up"></i>';
       // noinspection HtmlUnknownAttribute
-      tCaption =
-        '<div class="file-caption form-control {class}">\n' +
-        '  <span class="file-caption-icon"></span>\n' +
-        '  <label class="visually-hidden file-caption-label"></label>\n' +
-        '  <input class="file-caption-name">\n' +
-        "</div>";
+      tCaption = '<input readonly class="file-caption-name form-control {class}">\n';
       //noinspection HtmlUnknownAttribute
       tBtnDefault =
-        '<button type="{type}" tabindex="0" title="{title}" class="{css}" ' +
-        "{status}>{icon} {label}</button>";
+        '<button type="{type}" title="{title}" class="{css}" ' + "{status} {tabIndexConfig}>{icon} {label}</button>";
       //noinspection HtmlUnknownTarget,HtmlUnknownAttribute
-      tBtnLink =
-        '<a href="{href}" tabindex="0" title="{title}" class="{css}" {status}>{icon} {label}</a>';
+      tBtnLink = '<a href="{href}" title="{title}" class="{css}" {status} {tabIndexConfig}>{icon} {label}</a>';
       //noinspection HtmlUnknownAttribute
-      tBtnBrowse =
-        '<div tabindex="0" class="{css}" {status}>{icon} {label}</div>';
+      tBtnBrowse = '<div class="{css}" {status} {tabIndexConfig}>{icon} {label}</div>';
       tModalLabel = $h.MODAL_ID + "Label";
       tModalMain =
         '<div id="' +
         $h.MODAL_ID +
         '" class="file-zoom-dialog modal fade" ' +
-        'tabindex="-1" aria-labelledby="' +
+        'aria-labelledby="' +
         tModalLabel +
-        '"></div>';
+        '" {tabIndexConfig}></div>';
       tModal =
         '<div class="modal-dialog modal-lg{rtl}" role="document">\n' +
         '  <div class="modal-content">\n' +
-        '    <div class="modal-header">\n' +
-        '      <h5 class="modal-title" id="' +
+        '    <div class="modal-header kv-zoom-header">\n' +
+        '      <h6 class="modal-title kv-zoom-title" id="' +
         tModalLabel +
-        '">{heading}</h5>\n' +
-        '      <span class="kv-zoom-title"></span>\n' +
-        '      <div class="kv-zoom-actions">{toggleheader}{fullscreen}{borderless}{close}</div>\n' +
+        '"><span class="kv-zoom-caption"></span> <span class="kv-zoom-size"></span></h6>\n' +
+        '      <div class="kv-zoom-actions">{rotate}{toggleheader}{fullscreen}{borderless}{close}</div>\n' +
         "    </div>\n" +
-        '    <div class="modal-body">\n' +
-        '      <div class="floating-buttons"></div>\n' +
-        '      <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
+        '    <div class="floating-buttons"></div>\n' +
+        '    <div class="kv-zoom-body file-zoom-content {zoomFrameClass}"></div>\n' +
         "{prev} {next}\n" +
-        "    </div>\n" +
+        '    <div class="kv-zoom-description"></div>\n' +
         "  </div>\n" +
         "</div>\n";
+      tDescClose = '<button type="button" class="kv-desc-hide" aria-label="Close">{closeIcon}</button>';
       tProgress =
         '<div class="progress">\n' +
         '    <div class="{class}" role="progressbar"' +
@@ -27807,7 +35895,7 @@ SOFTWARE.
         "     </div>\n" +
         "</div>{stats}";
       tStats =
-        '<div class="text-info file-upload-stats">' +
+        '<div class="text-primary file-upload-stats">' +
         '<span class="pending-time">{pendingTime}</span> ' +
         '<span class="upload-speed">{uploadSpeed}</span>' +
         "</div>";
@@ -27823,7 +35911,7 @@ SOFTWARE.
       tActions =
         '<div class="file-actions">\n' +
         '    <div class="file-footer-buttons">\n' +
-        "        {download} {upload} {delete} {zoom} {other}" +
+        "        {rotate} {download} {upload} {delete} {zoom} {other}" +
         "    </div>\n" +
         "</div>\n" +
         "{drag}\n" +
@@ -27833,21 +35921,19 @@ SOFTWARE.
         '<button type="button" class="kv-file-remove {removeClass}" ' +
         'title="{removeTitle}" {dataUrl}{dataKey}>{removeIcon}</button>\n';
       tActionUpload =
-        '<button type="button" class="kv-file-upload {uploadClass}" title="{uploadTitle}">' +
-        "{uploadIcon}</button>";
+        '<button type="button" class="kv-file-upload {uploadClass}" title="{uploadTitle}">' + "{uploadIcon}</button>";
+      tActionRotate =
+        '<button type="button" class="kv-file-rotate {rotateClass}" title="{rotateTitle}">' + "{rotateIcon}</button>";
       tActionDownload =
         '<a class="kv-file-download {downloadClass}" title="{downloadTitle}" ' +
         'href="{downloadUrl}" download="{caption}" target="_blank">{downloadIcon}</a>';
       tActionZoom =
-        '<button type="button" class="kv-file-zoom {zoomClass}" ' +
-        'title="{zoomTitle}">{zoomIcon}</button>';
-      tActionDrag =
-        '<span class="file-drag-handle {dragClass}" title="{dragTitle}">{dragIcon}</span>';
-      tIndicator =
-        '<div class="file-upload-indicator" title="{indicatorTitle}">{indicator}</div>';
+        '<button type="button" class="kv-file-zoom {zoomClass}" ' + 'title="{zoomTitle}">{zoomIcon}</button>';
+      tActionDrag = '<span class="file-drag-handle {dragClass}" title="{dragTitle}">{dragIcon}</span>';
+      tIndicator = '<div class="file-upload-indicator" title="{indicatorTitle}">{indicator}</div>';
       tTagBef =
         '<div class="file-preview-frame {frameClass}" id="{previewId}" data-fileindex="{fileindex}"' +
-        ' data-fileid="{fileid}" data-template="{template}"';
+        ' data-fileid="{fileid}" data-filename="{filename}" data-template="{template}" data-zoom="{zoomData}"';
       tTagBef1 = tTagBef + '><div class="kv-file-content">\n';
       tTagBef2 = tTagBef + ' title="{caption}"><div class="kv-file-content">\n';
       tTagAft = "</div>{footer}\n{zoomCache}</div>\n";
@@ -27857,9 +35943,7 @@ SOFTWARE.
       tText = renderObject("text", "text/plain;charset=UTF-8");
       tPdf = renderObject("pdf", "application/pdf");
       tImage =
-        '<img src="{data}" class="file-preview-image kv-preview-data" title="{title}" alt="{alt}"' +
-        tStyle +
-        ">\n";
+        '<img src="{data}" class="file-preview-image kv-preview-data" title="{title}" alt="{alt}"' + tStyle + ">\n";
       tOffice =
         '<iframe class="kv-preview-data file-preview-office" ' +
         'src="https://view.officeapps.live.com/op/embed.aspx?src={data}"' +
@@ -27899,18 +35983,11 @@ SOFTWARE.
         $h.DEFAULT_PREVIEW +
         "\n</object>\n";
       tOther =
-        '<div class="kv-preview-data file-preview-other-frame"' +
-        tStyle +
-        ">\n" +
-        $h.DEFAULT_PREVIEW +
-        "\n</div>\n";
+        '<div class="kv-preview-data file-preview-other-frame"' + tStyle + ">\n" + $h.DEFAULT_PREVIEW + "\n</div>\n";
       tZoomCache = '<div class="kv-zoom-cache">{zoomContent}</div>';
       vDefaultDim = { width: "100%", height: "100%", "min-height": "480px" };
       if (self._isPdfRendered()) {
-        tPdf = self.pdfRendererTemplate.replace(
-          "{renderer}",
-          self._encodeURI(self.pdfRendererUrl)
-        );
+        tPdf = self.pdfRendererTemplate.replace("{renderer}", self._encodeURI(self.pdfRendererUrl));
       }
       self.defaults = {
         layoutTemplates: {
@@ -27922,6 +35999,7 @@ SOFTWARE.
           caption: tCaption,
           modalMain: tModalMain,
           modal: tModal,
+          descriptionClose: tDescClose,
           progress: tProgress,
           stats: tStats,
           size: tSize,
@@ -27929,6 +36007,7 @@ SOFTWARE.
           indicator: tIndicator,
           actions: tActions,
           actionDelete: tActionDelete,
+          actionRotate: tActionRotate,
           actionUpload: tActionUpload,
           actionDownload: tActionDownload,
           actionZoom: tActionZoom,
@@ -27957,24 +36036,10 @@ SOFTWARE.
           pdf: tPdf,
           other: tOther,
         },
-        allowedPreviewTypes: [
-          "image",
-          "html",
-          "text",
-          "video",
-          "audio",
-          "flash",
-          "pdf",
-          "object",
-        ],
+        allowedPreviewTypes: ["image", "html", "text", "video", "audio", "flash", "pdf", "object"],
         previewTemplates: {},
         previewSettings: {
-          image: {
-            width: "auto",
-            height: "auto",
-            "max-width": "100%",
-            "max-height": "100%",
-          },
+          image: { width: "auto", height: "auto", "max-width": "100%", "max-height": "100%" },
           html: { width: "213px", height: "160px" },
           text: { width: "213px", height: "160px" },
           office: { width: "213px", height: "160px" },
@@ -27987,12 +36052,7 @@ SOFTWARE.
           other: { width: "213px", height: "160px" },
         },
         previewSettingsSmall: {
-          image: {
-            width: "auto",
-            height: "auto",
-            "max-width": "100%",
-            "max-height": "100%",
-          },
+          image: { width: "auto", height: "auto", "max-width": "100%", "max-height": "100%" },
           html: { width: "100%", height: "160px" },
           text: { width: "100%", height: "160px" },
           office: { width: "100%", height: "160px" },
@@ -28005,35 +36065,15 @@ SOFTWARE.
           other: { width: "100%", height: "160px" },
         },
         previewZoomSettings: {
-          image: {
-            width: "auto",
-            height: "auto",
-            "max-width": "100%",
-            "max-height": "100%",
-          },
+          image: { width: "auto", height: "auto", "max-width": "100%", "max-height": "100%" },
           html: vDefaultDim,
           text: vDefaultDim,
-          office: {
-            width: "100%",
-            height: "100%",
-            "max-width": "100%",
-            "min-height": "480px",
-          },
-          gdocs: {
-            width: "100%",
-            height: "100%",
-            "max-width": "100%",
-            "min-height": "480px",
-          },
+          office: { width: "100%", height: "100%", "max-width": "100%", "min-height": "480px" },
+          gdocs: { width: "100%", height: "100%", "max-width": "100%", "min-height": "480px" },
           video: { width: "auto", height: "100%", "max-width": "100%" },
           audio: { width: "100%", height: "30px" },
           flash: { width: "auto", height: "480px" },
-          object: {
-            width: "auto",
-            height: "100%",
-            "max-width": "100%",
-            "min-height": "480px",
-          },
+          object: { width: "auto", height: "100%", "max-width": "100%", "min-height": "480px" },
           pdf: vDefaultDim,
           other: { width: "auto", height: "100%", "min-height": "480px" },
         },
@@ -28043,16 +36083,12 @@ SOFTWARE.
         fileTypeSettings: {
           image: function (vType, vName) {
             return (
-              ($h.compare(vType, "image.*") &&
-                !$h.compare(vType, /(tiff?|wmf)$/i)) ||
+              ($h.compare(vType, "image.*") && !$h.compare(vType, /(tiff?|wmf)$/i)) ||
               $h.compare(vName, /\.(gif|png|jpe?g)$/i)
             );
           },
           html: function (vType, vName) {
-            return (
-              $h.compare(vType, "text/html") ||
-              $h.compare(vName, /\.(htm|html)$/i)
-            );
+            return $h.compare(vType, "text/html") || $h.compare(vName, /\.(htm|html)$/i);
           },
           office: function (vType, vName) {
             return (
@@ -28062,14 +36098,8 @@ SOFTWARE.
           },
           gdocs: function (vType, vName) {
             return (
-              $h.compare(
-                vType,
-                /(word|excel|powerpoint|office|iwork-pages|tiff?)$/i
-              ) ||
-              $h.compare(
-                vName,
-                /\.(docx?|xlsx?|pptx?|pps|potx?|rtf|ods|odt|pages|ai|dxf|ttf|tiff?|wmf|e?ps)$/i
-              )
+              $h.compare(vType, /(word|excel|powerpoint|office|iwork-pages|tiff?)$/i) ||
+              $h.compare(vName, /\.(docx?|xlsx?|pptx?|pps|potx?|rtf|ods|odt|pages|ai|dxf|ttf|tiff?|wmf|e?ps)$/i)
             );
           },
           text: function (vType, vName) {
@@ -28089,21 +36119,14 @@ SOFTWARE.
           audio: function (vType, vName) {
             return (
               $h.compare(vType, "audio.*") &&
-              ($h.compare(vName, /(ogg|mp3|mp?g|wav)$/i) ||
-                $h.compare(vName, /\.(og?|mp3|mp?g|wav)$/i))
+              ($h.compare(vName, /(ogg|mp3|mp?g|wav)$/i) || $h.compare(vName, /\.(og?|mp3|mp?g|wav)$/i))
             );
           },
           flash: function (vType, vName) {
-            return (
-              $h.compare(vType, "application/x-shockwave-flash", true) ||
-              $h.compare(vName, /\.(swf)$/i)
-            );
+            return $h.compare(vType, "application/x-shockwave-flash", true) || $h.compare(vName, /\.(swf)$/i);
           },
           pdf: function (vType, vName) {
-            return (
-              $h.compare(vType, "application/pdf", true) ||
-              $h.compare(vName, /\.(pdf)$/i)
-            );
+            return $h.compare(vType, "application/pdf", true) || $h.compare(vName, /\.(pdf)$/i);
           },
           object: function () {
             return true;
@@ -28118,35 +36141,34 @@ SOFTWARE.
           showDownload: true,
           showZoom: true,
           showDrag: true,
-          removeIcon: '<i class="glyphicon glyphicon-trash"></i>',
-          removeClass: "btn btn-sm btn-kv btn-default btn-outline-secondary",
+          showRotate: true,
+          removeIcon: '<i class="bi-trash"></i>',
+          removeClass: defBtnCss1,
           removeErrorClass: "btn btn-sm btn-kv btn-danger",
           removeTitle: "Remove file",
-          uploadIcon: '<i class="glyphicon glyphicon-upload"></i>',
-          uploadClass: "btn btn-sm btn-kv btn-default btn-outline-secondary",
+          uploadIcon: '<i class="bi-upload"></i>',
+          uploadClass: defBtnCss1,
           uploadTitle: "Upload file",
-          uploadRetryIcon: '<i class="glyphicon glyphicon-repeat"></i>',
+          uploadRetryIcon: '<i class="bi-cloud-arrow-up-fill"></i>',
           uploadRetryTitle: "Retry upload",
-          downloadIcon: '<i class="glyphicon glyphicon-download"></i>',
-          downloadClass: "btn btn-sm btn-kv btn-default btn-outline-secondary",
+          downloadIcon: '<i class="bi-download"></i>',
+          downloadClass: defBtnCss1,
           downloadTitle: "Download file",
-          zoomIcon: '<i class="glyphicon glyphicon-zoom-in"></i>',
-          zoomClass: "btn btn-sm btn-kv btn-default btn-outline-secondary",
+          rotateIcon: '<i class="bi-arrow-clockwise"></i>',
+          rotateClass: defBtnCss1,
+          rotateTitle: "Rotate 90 deg. clockwise",
+          zoomIcon: '<i class="bi-zoom-in"></i>',
+          zoomClass: defBtnCss1,
           zoomTitle: "View Details",
-          dragIcon: '<i class="glyphicon glyphicon-move"></i>',
-          dragClass: "text-info",
+          dragIcon: '<i class="bi-arrows-move"></i>',
+          dragClass: "text-primary",
           dragTitle: "Move / Rearrange",
           dragSettings: {},
-          indicatorNew:
-            '<i class="glyphicon glyphicon-plus-sign text-warning"></i>',
-          indicatorSuccess:
-            '<i class="glyphicon glyphicon-ok-sign text-success"></i>',
-          indicatorError:
-            '<i class="glyphicon glyphicon-exclamation-sign text-danger"></i>',
-          indicatorLoading:
-            '<i class="glyphicon glyphicon-hourglass text-body-secondary"></i>',
-          indicatorPaused:
-            '<i class="glyphicon glyphicon-pause text-primary"></i>',
+          indicatorNew: '<i class="bi-plus-lg text-warning"></i>',
+          indicatorSuccess: '<i class="bi-check-lg text-success"></i>',
+          indicatorError: '<i class="bi-exclamation-lg text-danger"></i>',
+          indicatorLoading: '<i class="bi-hourglass-bottom text-muted"></i>',
+          indicatorPaused: '<i class="bi-pause-fill text-primary"></i>',
           indicatorNewTitle: "Not uploaded yet",
           indicatorSuccessTitle: "Uploaded",
           indicatorErrorTitle: "Upload Error",
@@ -28177,10 +36199,7 @@ SOFTWARE.
             tagBef = tags.tagBefore1;
           }
           if (self._isPdfRendered() && key === "pdf") {
-            tagBef = tagBef.replace(
-              "kv-file-content",
-              "kv-file-content kv-pdf-rendered"
-            );
+            tagBef = tagBef.replace("kv-file-content", "kv-file-content kv-pdf-rendered");
           }
           self.previewTemplates[key] = tagBef + value + tagAft;
         }
@@ -28225,28 +36244,10 @@ SOFTWARE.
             fname,
             ftype,
             frameClass,
-            asData = $h.ifSet(
-              "previewAsData",
-              config,
-              self.initialPreviewAsData
-            ),
-            a = config
-              ? { title: config.title || null, alt: config.alt || null }
-              : { title: null, alt: null },
-            parseTemplate = function (
-              cat,
-              dat,
-              fname,
-              ftype,
-              ftr,
-              ind,
-              fclass,
-              t
-            ) {
-              var fc =
-                  " file-preview-initial " +
-                  $h.SORT_CSS +
-                  (fclass ? " " + fclass : ""),
+            asData = $h.ifSet("previewAsData", config, self.initialPreviewAsData),
+            a = config ? { title: config.title || null, alt: config.alt || null } : { title: null, alt: null },
+            parseTemplate = function (cat, dat, fname, ftype, ftr, ind, fclass, t) {
+              var fc = " file-preview-initial " + $h.SORT_CSS + (fclass ? " " + fclass : ""),
                 id = self.previewInitId + "-" + ind,
                 fileId = (config && config.fileId) || id;
               /** @namespace config.zoomData */
@@ -28258,6 +36259,7 @@ SOFTWARE.
                 id,
                 fileId,
                 false,
+                null,
                 null,
                 fc,
                 ftr,
@@ -28271,47 +36273,25 @@ SOFTWARE.
             return "";
           }
           isDisabled = isDisabled === undefined ? true : isDisabled;
-          cat = $h.ifSet(
-            "type",
-            config,
-            self.initialPreviewFileType || "generic"
-          );
+          cat = $h.ifSet("type", config, self.initialPreviewFileType || "generic");
           fname = $h.ifSet("filename", config, $h.ifSet("caption", config));
           ftype = $h.ifSet("filetype", config, cat);
-          ftr = self.previewCache.footer(
-            i,
-            isDisabled,
-            (config && config.size) || null
-          );
+          ftr = self.previewCache.footer(i, isDisabled, (config && config.size) || null);
           frameClass = $h.ifSet("frameClass", config);
           if (asData) {
-            out = parseTemplate(
-              cat,
-              content,
-              fname,
-              ftype,
-              ftr,
-              ind,
-              frameClass
-            );
+            out = parseTemplate(cat, content, fname, ftype, ftr, ind, frameClass);
           } else {
-            out = parseTemplate(
-              "generic",
-              content,
-              fname,
-              ftype,
-              ftr,
-              ind,
-              frameClass,
-              cat
-            ).setTokens({ content: data.content[i] });
+            out = parseTemplate("generic", content, fname, ftype, ftr, ind, frameClass, cat).setTokens({
+              content: data.content[i],
+            });
           }
           if (data.tags.length && data.tags[i]) {
             out = $h.replaceTags(out, data.tags[i]);
           }
           /** @namespace config.frameAttr */
           if (!$h.isEmpty(config) && !$h.isEmpty(config.frameAttr)) {
-            $tmp = $h.createElement(out);
+            $tmp = $h.createDiv();
+            $h.setHtml($tmp, out);
             $tmp.find(".file-preview-initial").attr(config.frameAttr);
             out = $tmp.html();
             $tmp.remove();
@@ -28409,21 +36389,9 @@ SOFTWARE.
             self.initialPreviewThumbTags = [];
             return;
           }
-          self.previewCache.data.content = $h.spliceArray(
-            self.previewCache.data.content,
-            index,
-            rev
-          );
-          self.previewCache.data.config = $h.spliceArray(
-            self.previewCache.data.config,
-            index,
-            rev
-          );
-          self.previewCache.data.tags = $h.spliceArray(
-            self.previewCache.data.tags,
-            index,
-            rev
-          );
+          self.previewCache.data.content = $h.spliceArray(self.previewCache.data.content, index, rev);
+          self.previewCache.data.config = $h.spliceArray(self.previewCache.data.config, index, rev);
+          self.previewCache.data.tags = $h.spliceArray(self.previewCache.data.tags, index, rev);
           var data = $.extend(true, {}, self.previewCache.data);
           self.previewCache.clean(data);
         },
@@ -28463,37 +36431,18 @@ SOFTWARE.
             initPreviewShowDel = self.initialPreviewShowDelete || false,
             downloadInitialUrl = !self.initialPreviewDownloadUrl
               ? ""
-              : self.initialPreviewDownloadUrl +
-                "?key=" +
-                key +
-                (fileId ? "&fileId=" + fileId : ""),
+              : self.initialPreviewDownloadUrl + "?key=" + key + (fileId ? "&fileId=" + fileId : ""),
             dUrl = config.downloadUrl || downloadInitialUrl,
             dFil = config.filename || config.caption || "",
             initPreviewShowDwl = !!dUrl,
             sDel = $h.ifSet("showRemove", config, initPreviewShowDel),
-            sDwl = $h.ifSet(
-              "showDownload",
-              config,
-              $h.ifSet("showDownload", fs, initPreviewShowDwl)
-            ),
+            sRot = $h.ifSet("showRotate", config, $h.ifSet("showRotate", fs, true)),
+            sDwl = $h.ifSet("showDownload", config, $h.ifSet("showDownload", fs, initPreviewShowDwl)),
             sZm = $h.ifSet("showZoom", config, $h.ifSet("showZoom", fs, true)),
             sDrg = $h.ifSet("showDrag", config, $h.ifSet("showDrag", fs, true)),
             dis = url === false && isDisabled;
           sDwl = sDwl && config.downloadUrl !== false && !!dUrl;
-          a = self._renderFileActions(
-            config,
-            false,
-            sDwl,
-            sDel,
-            sZm,
-            sDrg,
-            dis,
-            url,
-            key,
-            true,
-            dUrl,
-            dFil
-          );
+          a = self._renderFileActions(config, false, sDwl, sDel, sRot, sZm, sDrg, dis, url, key, true, dUrl, dFil);
           return self._getLayoutTemplate("footer").setTokens({
             progress: self._renderThumbProgress(),
             actions: a,
@@ -28559,10 +36508,11 @@ SOFTWARE.
       if ($errList.length) {
         return true;
       }
-      $err = $h.createElement(self.$errorContainer.html());
+      $err = $h.createDiv();
+      $h.setHtml($err, self.$errorContainer.html());
       $err.find(".kv-error-close").remove();
       $err.find("ul").remove();
-      return !!$.trim($err.text()).length;
+      return !!$h.trim($err.text()).length;
     },
     _errorHandler: function (evt, caption) {
       var self = this,
@@ -28610,17 +36560,19 @@ SOFTWARE.
       var self = this;
       css = (css ? css + " " : "") + "has-error";
       self.$container.removeClass(css).addClass("has-error");
-      $h.addCss(self.$captionContainer, "is-invalid");
+      $h.addCss(self.$caption, "is-invalid");
     },
     _resetErrors: function (fade) {
       var self = this,
-        $error = self.$errorContainer;
-      if (self.isPersistentError) {
+        $error = self.$errorContainer,
+        history = self.resumableUploadOptions.retainErrorHistory;
+      if (self.isPersistentError || (self.enableResumableUpload && history && !self.clearInput)) {
         return;
       }
+      self.clearInput = false;
       self.isError = false;
       self.$container.removeClass("has-error");
-      self.$captionContainer.removeClass("is-invalid");
+      self.$caption.removeClass("is-invalid is-valid file-processing");
       $error.html("");
       if (fade) {
         $error.fadeOut("slow");
@@ -28644,6 +36596,27 @@ SOFTWARE.
       $error.fadeIn(self.fadeDelay);
       self._raise("filefoldererror", [folders, msg]);
     },
+    showUserError: function (msg, params, retainErrorHistory) {
+      var self = this,
+        fileName;
+      if (!self.uploadInitiated) {
+        return;
+      }
+      if (!params || !params.fileId) {
+        if (!retainErrorHistory) {
+          self.$errorContainer.html("");
+        }
+      } else {
+        if (!retainErrorHistory) {
+          self.$errorContainer.find('[data-file-id="' + params.fileId + '"]').remove();
+        }
+        fileName = self.fileManager.getFileName(params.fileId);
+        if (fileName) {
+          msg = "<b>" + fileName + ":</b> " + msg;
+        }
+      }
+      self._showFileError(msg, params, "fileusererror");
+    },
     _showFileError: function (msg, params, event) {
       var self = this,
         $error = self.$errorContainer,
@@ -28651,19 +36624,14 @@ SOFTWARE.
         fId = (params && params.fileId) || "",
         e =
           params && params.id
-            ? '<li data-thumb-id="' +
-              params.id +
-              '" data-file-id="' +
-              fId +
-              '">' +
-              msg +
-              "</li>"
+            ? '<li data-thumb-id="' + params.id + '" data-file-id="' + fId + '">' + msg + "</li>"
             : "<li>" + msg + "</li>";
 
       if ($error.find("ul").length === 0) {
         self._addError("<ul>" + e + "</ul>");
       } else {
-        $error.find("ul").append(e);
+        $error.find("ul").append($h.cspBuffer.stash(e));
+        $h.cspBuffer.apply($error);
       }
       $error.fadeIn(self.fadeDelay);
       self._raise(ev, [params, msg]);
@@ -28689,9 +36657,7 @@ SOFTWARE.
     _noFilesError: function (params) {
       var self = this,
         label = self.minFileCount > 1 ? self.filePlural : self.fileSingle,
-        msg = self.msgFilesTooLess
-          .replace("{n}", self.minFileCount)
-          .replace("{files}", label),
+        msg = self.msgFilesTooLess.replace("{n}", self.minFileCount).replace("{files}", label),
         $error = self.$errorContainer;
       msg = "<li>" + msg + "</li>";
       if ($error.find("ul").length === 0) {
@@ -28709,23 +36675,20 @@ SOFTWARE.
     _parseError: function (operation, jqXHR, errorThrown, fileName) {
       /** @namespace jqXHR.responseJSON */
       var self = this,
-        errMsg = $.trim(errorThrown + ""),
+        errMsg = $h.trim(errorThrown + ""),
         textPre,
         errText,
         text;
-      errText =
-        jqXHR.responseJSON && jqXHR.responseJSON.error
-          ? jqXHR.responseJSON.error.toString()
-          : "";
+      errText = jqXHR.responseJSON && jqXHR.responseJSON.error ? jqXHR.responseJSON.error.toString() : "";
       text = errText ? errText : jqXHR.responseText;
       if (self.cancelling && self.msgUploadAborted) {
         errMsg = self.msgUploadAborted;
       }
       if (self.showAjaxErrorDetails && text) {
         if (errText) {
-          errMsg = $.trim(errText + "");
+          errMsg = $h.trim(errText + "");
         } else {
-          text = $.trim(text.replace(/\n\s*\n/g, "\n"));
+          text = $h.trim(text.replace(/\n\s*\n/g, "\n"));
           textPre = text.length ? "<pre>" + text + "</pre>" : "";
           errMsg += errMsg ? textPre : text;
         }
@@ -28763,10 +36726,7 @@ SOFTWARE.
       if (fname && fname.indexOf(".") > -1) {
         ext = fname.split(".").pop();
         if (self.previewFileIconSettings) {
-          out =
-            self.previewFileIconSettings[ext] ||
-            self.previewFileIconSettings[ext.toLowerCase()] ||
-            null;
+          out = self.previewFileIconSettings[ext] || self.previewFileIconSettings[ext.toLowerCase()] || null;
         }
         if (self.previewFileExtSettings) {
           $.each(self.previewFileExtSettings, function (key, func) {
@@ -28785,10 +36745,7 @@ SOFTWARE.
         icn = self._getPreviewIcon(fname),
         out = content;
       if (out.indexOf("{previewFileIcon}") > -1) {
-        out = out.setTokens({
-          previewFileIconClass: self.previewFileIconClass,
-          previewFileIcon: icn,
-        });
+        out = out.setTokens({ previewFileIconClass: self.previewFileIconClass, previewFileIcon: icn });
       }
       return out;
     },
@@ -28800,7 +36757,13 @@ SOFTWARE.
       } else {
         self.$element.trigger(e);
       }
-      if (e.isDefaultPrevented() || e.result === false) {
+      var out = e.result,
+        isAborted = out === false;
+      if (e.isDefaultPrevented() || isAborted) {
+        return false;
+      }
+      if (e.type === "filebatchpreupload" && (out || isAborted)) {
+        self.ajaxAborted = out;
         return false;
       }
       switch (event) {
@@ -28813,16 +36776,13 @@ SOFTWARE.
         case "filereset":
         case "fileerror":
         case "filefoldererror":
-        case "fileuploaderror":
-        case "filebatchuploaderror":
-        case "filedeleteerror":
         case "filecustomerror":
         case "filesuccessremove":
           break;
         // receive data response via `filecustomerror` event`
         default:
           if (!self.ajaxAborted) {
-            self.ajaxAborted = e.result;
+            self.ajaxAborted = out;
           }
           break;
       }
@@ -28836,8 +36796,8 @@ SOFTWARE.
       if (!$modal || !$modal.length) {
         return;
       }
-      $btnFull = $modal && $modal.find(".btn-fullscreen");
-      $btnBord = $modal && $modal.find(".btn-borderless");
+      $btnFull = $modal && $modal.find(".btn-kv-fullscreen");
+      $btnBord = $modal && $modal.find(".btn-kv-borderless");
       if (!$btnFull.length || !$btnBord.length) {
         return;
       }
@@ -28863,11 +36823,9 @@ SOFTWARE.
         $el = self.$element,
         $form = self.$form,
         $cont = self.$container,
-        fullScreenEv,
-        $cap,
-        fn,
-        pastefn;
+        fullScreenEv;
       self._handler($el, "click", function (e) {
+        self._initFileSelected();
         if ($el.hasClass("file-no-browse")) {
           if ($el.data("zoneClicked")) {
             $el.data("zoneClicked", false);
@@ -28877,63 +36835,42 @@ SOFTWARE.
         }
       });
       self._handler($el, "change", $.proxy(self._change, self));
+      self._handler(self.$caption, "paste", $.proxy(self.paste, self));
       if (self.showBrowse) {
         self._handler(self.$btnFile, "click", $.proxy(self._browse, self));
+        self._handler(self.$btnFile, "keypress", function (e) {
+          var keycode = e.keyCode || e.which;
+          if (keycode === 13) {
+            $el.trigger("click");
+            self._browse(e);
+          }
+        });
       }
-      $cap = $cont.find(".file-caption-name");
-      fn = function (event) {
-        return daIgnoreAllButTab(event);
-      };
-      pastefn = function () {
-        return false;
-      };
-      self._handler(
-        $cont.find(".fileinput-remove:not([disabled])"),
-        "click",
-        $.proxy(self.clear, self)
-      );
-      self._handler(
-        $cont.find(".fileinput-cancel"),
-        "click",
-        $.proxy(self.cancel, self)
-      );
-      self._handler(
-        $cont.find(".fileinput-pause"),
-        "click",
-        $.proxy(self.pause, self)
-      );
-      self._handler($cap, "keydown", fn);
-      self._handler($cap, "paste", pastefn);
+      self._handler($cont.find(".fileinput-remove:not([disabled])"), "click", $.proxy(self.clear, self));
+      self._handler($cont.find(".fileinput-cancel"), "click", $.proxy(self.cancel, self));
+      self._handler($cont.find(".fileinput-pause"), "click", $.proxy(self.pause, self));
       self._initDragDrop();
       self._handler($form, "reset", $.proxy(self.clear, self));
       if (!self.isAjaxUpload) {
         self._handler($form, "submit", $.proxy(self._submitForm, self));
       }
-      self._handler(
-        self.$container.find(".fileinput-upload"),
-        "click",
-        $.proxy(self._uploadClick, self)
-      );
+      self._handler(self.$container.find(".fileinput-upload"), "click", $.proxy(self._uploadClick, self));
       self._handler($(window), "resize", function () {
-        self._listenFullScreen(
-          screen.width === window.innerWidth &&
-            screen.height === window.innerHeight
-        );
+        self._listenFullScreen(screen.width === window.innerWidth && screen.height === window.innerHeight);
       });
-      fullScreenEv =
-        "webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange";
+      fullScreenEv = "webkitfullscreenchange mozfullscreenchange fullscreenchange MSFullscreenChange";
       self._handler($(document), fullScreenEv, function () {
         self._listenFullScreen($h.checkFullScreen());
+      });
+      self.$caption.on("focus", function () {
+        self.$captionContainer.focus();
       });
       self._autoFitContent();
       self._initClickable();
       self._refreshPreview();
     },
     _autoFitContent: function () {
-      var width =
-          window.innerWidth ||
-          document.documentElement.clientWidth ||
-          document.body.clientWidth,
+      var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
         self = this,
         config =
           width < 400
@@ -28942,9 +36879,7 @@ SOFTWARE.
         sel;
       $.each(config, function (cat, settings) {
         sel = ".file-preview-frame .file-preview-" + cat;
-        self.$preview
-          .find(sel + ".kv-preview-data," + sel + " .kv-preview-data")
-          .css(settings);
+        self.$preview.find(sel + ".kv-preview-data," + sel + " .kv-preview-data").css(settings);
       });
     },
     _scanDroppedItems: function (item, files, path) {
@@ -28971,11 +36906,7 @@ SOFTWARE.
             dirReader.readEntries(function (entries) {
               if (entries && entries.length > 0) {
                 for (i = 0; i < entries.length; i++) {
-                  self._scanDroppedItems(
-                    entries[i],
-                    files,
-                    path + item.name + "/"
-                  );
+                  self._scanDroppedItems(entries[i], files, path + item.name + "/");
                 }
                 // recursively call readDir() again, since browser can only handle first 100 entries.
                 readDir();
@@ -28991,18 +36922,10 @@ SOFTWARE.
       var self = this,
         $zone = self.$dropZone;
       if (self.dropZoneEnabled && self.showPreview) {
-        self._handler(
-          $zone,
-          "dragenter dragover",
-          $.proxy(self._zoneDragEnter, self)
-        );
+        self._handler($zone, "dragenter dragover", $.proxy(self._zoneDragEnter, self));
         self._handler($zone, "dragleave", $.proxy(self._zoneDragLeave, self));
         self._handler($zone, "drop", $.proxy(self._zoneDrop, self));
-        self._handler(
-          $(document),
-          "dragenter dragover drop",
-          self._zoneDragDropInit
-        );
+        self._handler($(document), "dragenter dragover drop", self._zoneDragDropInit);
       }
     },
     _zoneDragDropInit: function (e) {
@@ -29020,9 +36943,7 @@ SOFTWARE.
         return;
       }
       dt.dropEffect = "copy";
-      if (
-        self._raise("fileDragEnter", { sourceEvent: e, files: dt.types.Files })
-      ) {
+      if (self._raise("fileDragEnter", { sourceEvent: e, files: dt.types.Files })) {
         $h.addCss(self.$dropZone, "file-highlighted");
       }
     },
@@ -29036,33 +36957,33 @@ SOFTWARE.
         self.$dropZone.removeClass("file-highlighted");
       }
     },
-    _zoneDrop: function (e) {
-      /** @namespace e.originalEvent.dataTransfer */
+    _dropFiles: function (e, files) {
+      var self = this,
+        $el = self.$element;
+      if (!self.isAjaxUpload) {
+        self.changeTriggered = true;
+        $el.get(0).files = files;
+        setTimeout(function () {
+          self.changeTriggered = false;
+          $el.trigger("change" + self.namespace);
+        }, self.processDelay);
+      } else {
+        self._change(e, files);
+      }
+      self.$dropZone.removeClass("file-highlighted");
+    },
+    _addFilesFromSystem: function (e, dt, type) {
       var self = this,
         i,
-        $el = self.$element,
-        dt = e.originalEvent.dataTransfer,
         files = dt.files,
         items = dt.items,
-        folders = $h.getDragDropFolders(items),
-        processFiles = function () {
-          if (!self.isAjaxUpload) {
-            self.changeTriggered = true;
-            $el.get(0).files = files;
-            setTimeout(function () {
-              self.changeTriggered = false;
-              $el.trigger("change" + self.namespace);
-            }, self.processDelay);
-          } else {
-            self._change(e, files);
-          }
-          self.$dropZone.removeClass("file-highlighted");
-        };
+        folders = $h.getDragDropFolders(items);
       e.preventDefault();
-      if (self.isDisabled || $h.isEmpty(files)) {
+      if (self.isDisabled || $h.isEmpty(files) || !files.length) {
+        console.log("No valid copied files found in clipboard for pasting.");
         return;
       }
-      if (!self._raise("fileDragDrop", { sourceEvent: e, files: files })) {
+      if (!self._raise(type, { sourceEvent: e, files: files })) {
         return;
       }
       if (folders > 0) {
@@ -29078,29 +36999,36 @@ SOFTWARE.
           }
         }
         setTimeout(function () {
-          processFiles();
+          self._dropFiles(e, files);
         }, 500);
       } else {
-        processFiles();
+        self._dropFiles(e, files);
       }
+    },
+    _zoneDrop: function (e) {
+      /** @namespace e.originalEvent.dataTransfer */
+      var self = this,
+        i,
+        $el = self.$element,
+        dt = e.originalEvent.dataTransfer;
+      self._addFilesFromSystem(e, dt, "fileDragDrop");
     },
     _uploadClick: function (e) {
       var self = this,
         $btn = self.$container.find(".fileinput-upload"),
         $form,
-        isEnabled =
-          !$btn.hasClass("disabled") && $h.isEmpty($btn.attr("disabled"));
+        isEnabled = !$btn.hasClass("disabled") && $h.isEmpty($btn.attr("disabled"));
       if (e && e.isDefaultPrevented()) {
         return;
       }
       if (!self.isAjaxUpload) {
         if (isEnabled && $btn.attr("type") !== "submit") {
+          e.preventDefault();
           $form = $btn.closest("form");
           // downgrade to normal form submit if possible
           if ($form.length) {
             $form.trigger("submit");
           }
-          e.preventDefault();
         }
         return;
       }
@@ -29115,9 +37043,7 @@ SOFTWARE.
     },
     _clearPreview: function () {
       var self = this,
-        $thumbs = self.showUploadedThumbs
-          ? self.getFrames(":not(.file-preview-success)")
-          : self.getFrames();
+        $thumbs = self.showUploadedThumbs ? self.getFrames(":not(.file-preview-success)") : self.getFrames();
       $thumbs.each(function () {
         var $thumb = $(this);
         $thumb.remove();
@@ -29171,18 +37097,8 @@ SOFTWARE.
           if (exceedsLast) {
             newIndex = len - 1;
           }
-          self.initialPreview = $h.moveArray(
-            self.initialPreview,
-            oldIndex,
-            newIndex,
-            rev
-          );
-          self.initialPreviewConfig = $h.moveArray(
-            self.initialPreviewConfig,
-            oldIndex,
-            newIndex,
-            rev
-          );
+          self.initialPreview = $h.moveArray(self.initialPreview, oldIndex, newIndex, rev);
+          self.initialPreviewConfig = $h.moveArray(self.initialPreviewConfig, oldIndex, newIndex, rev);
           self.previewCache.init();
           self.getFrames(".file-preview-initial").each(function () {
             $(this).attr("data-fileindex", $h.INIT_FLAG + i);
@@ -29234,17 +37150,9 @@ SOFTWARE.
           $img = $thumb.find(">.kv-file-content img");
           $zoomImg = self._getZoom(id, " >.kv-file-content img");
           if (canOrientImage) {
-            $img.css(
-              "image-orientation",
-              self.autoOrientImageInitial ? "from-image" : "none"
-            );
+            $img.css("image-orientation", self.autoOrientImageInitial ? "from-image" : "none");
           } else {
-            self.setImageOrientation(
-              $img,
-              $zoomImg,
-              config.exif.Orientation,
-              $thumb
-            );
+            self.setImageOrientation($img, $zoomImg, config.exif.Orientation, $thumb);
           }
         }
         i++;
@@ -29279,37 +37187,21 @@ SOFTWARE.
         label = self.previewZoomButtonIcons[type],
         css = self.previewZoomButtonClasses[type],
         title = ' title="' + (self.previewZoomButtonTitles[type] || "") + '" ',
-        params =
-          title +
-          (type === "close" ? ' data-dismiss="modal" aria-hidden="true"' : "");
-      if (
-        type === "fullscreen" ||
-        type === "borderless" ||
-        type === "toggleheader"
-      ) {
-        params +=
-          ' data-toggle="button" aria-pressed="false" autocomplete="off"';
+        tag = $h.isBs(5) ? "bs-" : "",
+        params = title + (type === "close" ? " data-" + tag + 'dismiss="modal" aria-hidden="true"' : "");
+      if (type === "fullscreen" || type === "borderless" || type === "toggleheader") {
+        params += ' data-toggle="button" aria-pressed="false"';
       }
-      return (
-        '<button type="button" class="' +
-        css +
-        " btn-" +
-        type +
-        '"' +
-        params +
-        ">" +
-        label +
-        "</button>"
-      );
+      return '<button type="button" class="' + css + " btn-kv-" + type + '"' + params + ">" + label + "</button>";
     },
     _getModalContent: function () {
       var self = this;
       return self._getLayoutTemplate("modal").setTokens({
         rtl: self.rtl ? " kv-rtl" : "",
         zoomFrameClass: self.frameClass,
-        heading: self.msgZoomModalHeading,
         prev: self._getZoomButton("prev"),
         next: self._getZoomButton("next"),
+        rotate: self._getZoomButton("rotate"),
         toggleheader: self._getZoomButton("toggleheader"),
         fullscreen: self._getZoomButton("fullscreen"),
         borderless: self._getZoomButton("borderless"),
@@ -29327,12 +37219,19 @@ SOFTWARE.
           };
         };
       $modal.on(event + ".bs.modal", function (e) {
+        if (e.namespace !== "bs.modal") {
+          return;
+        }
+		if (event == "hide") {
+			$modal.data('angle', 0);
+		}
         var $btnFull = $modal.find(".btn-fullscreen"),
           $btnBord = $modal.find(".btn-borderless");
         if ($modal.data("fileinputPluginId") === self.$element.attr("id")) {
           self._raise("filezoom" + event, getParams(e));
         }
         if (event === "shown") {
+          self._handleRotation($modal, $modal.find(".file-zoom-detail"), $modal.data("angle"));
           $btnBord.removeClass("active").attr("aria-pressed", "false");
           $btnFull.removeClass("active").attr("aria-pressed", "false");
           if ($modal.hasClass("file-zoom-fullscreen")) {
@@ -29351,14 +37250,13 @@ SOFTWARE.
         $dialog,
         modalMain = self._getLayoutTemplate("modalMain"),
         modalId = "#" + $h.MODAL_ID;
+      modalMain = self._setTabIndex("modal", modalMain);
       if (!self.showPreview) {
         return;
       }
       self.$modal = $(modalId);
       if (!self.$modal || !self.$modal.length) {
-        $dialog = $h
-          .createElement($h.cspBuffer.stash(modalMain))
-          .insertAfter(self.$container);
+        $dialog = $h.createElement($h.cspBuffer.stash(modalMain)).insertAfter(self.$container);
         self.$modal = $(modalId).insertBefore($dialog);
         $h.cspBuffer.apply(self.$modal);
         $dialog.remove();
@@ -29372,13 +37270,15 @@ SOFTWARE.
     },
     _initZoomButtons: function () {
       var self = this,
-        previewId = self.$modal.data("previewId") || "",
+        $modal = self.$modal,
+        previewId = $modal.data("previewId") || "",
         $first,
         $last,
         thumbs = self.getFrames().toArray(),
         len = thumbs.length,
-        $prev = self.$modal.find(".btn-prev"),
-        $next = self.$modal.find(".btn-next");
+        $prev = $modal.find(".btn-kv-prev"),
+        $next = $modal.find(".btn-kv-next"),
+        $rotate = $modal.find(".btn-kv-rotate");
       if (thumbs.length < 2) {
         $prev.hide();
         $next.hide();
@@ -29394,6 +37294,9 @@ SOFTWARE.
       $last = $(thumbs[len - 1]);
       $prev.removeAttr("disabled");
       $next.removeAttr("disabled");
+      if (self.reversePreviewOrder) {
+        [$prev, $next] = [$next, $prev]; // swap
+      }
       if ($first.length && $first.attr("id") === previewId) {
         $prev.attr("disabled", true);
       }
@@ -29406,7 +37309,7 @@ SOFTWARE.
         $modal = self.$modal,
         $head = $modal.find(".modal-header:visible"),
         $foot = $modal.find(".modal-footer:visible"),
-        $body = $modal.find(".modal-body"),
+        $body = $modal.find(".kv-zoom-body"),
         h = $(window).height(),
         diff = 0;
       $modal.addClass("file-zoom-fullscreen");
@@ -29425,16 +37328,14 @@ SOFTWARE.
     _resizeZoomDialog: function (fullScreen) {
       var self = this,
         $modal = self.$modal,
-        $btnFull = $modal.find(".btn-fullscreen"),
-        $btnBord = $modal.find(".btn-borderless");
+        $btnFull = $modal.find(".btn-kv-fullscreen"),
+        $btnBord = $modal.find(".btn-kv-borderless");
       if ($modal.hasClass("file-zoom-fullscreen")) {
         $h.toggleFullScreen(false);
         if (!fullScreen) {
           if (!$btnFull.hasClass("active")) {
             $modal.removeClass("file-zoom-fullscreen");
-            self.$modal
-              .find(".kv-zoom-body")
-              .css("height", self.zoomModalHeight);
+            self.$modal.find(".kv-zoom-body").css("height", self.zoomModalHeight);
           } else {
             $btnFull.removeClass("active").attr("aria-pressed", "false");
           }
@@ -29456,12 +37357,11 @@ SOFTWARE.
       }
       $modal.focus();
     },
-    _setZoomContent: function ($frame, animate) {
+    _setZoomContent: function ($frame, navigate) {
       var self = this,
         $content,
         tmplt,
         body,
-        title,
         $body,
         $dataEl,
         config,
@@ -29469,24 +37369,54 @@ SOFTWARE.
         $zoomPreview = self._getZoom(previewId),
         $modal = self.$modal,
         $tmp,
-        $btnFull = $modal.find(".btn-fullscreen"),
-        $btnBord = $modal.find(".btn-borderless"),
+        desc,
+        $desc,
+        $btnFull = $modal.find(".btn-kv-fullscreen"),
+        $btnBord = $modal.find(".btn-kv-borderless"),
         cap,
         size,
-        $btnTogh = $modal.find(".btn-toggleheader");
+        $btnTogh = $modal.find(".btn-kv-toggleheader"),
+        parsed,
+        zoomData = $frame.data("zoom");
+      if (zoomData) {
+        zoomData = decodeURIComponent(zoomData);
+        parsed = $zoomPreview.html().replace(self.zoomPlaceholder, "").setTokens({ zoomData: zoomData });
+        $h.setHtml($zoomPreview, parsed);
+        $frame.data("zoom", "");
+        $zoomPreview.attr("data-zoom", zoomData);
+      }
       tmplt = $zoomPreview.attr("data-template") || "generic";
       $content = $zoomPreview.find(".kv-file-content");
       body = $content.length ? $content.html() : "";
-      cap = $frame.data("caption") || "";
+      cap = $frame.data("caption") || self.msgZoomModalHeading;
       size = $frame.data("size") || "";
-      title = cap + " " + size;
-      $modal
-        .find(".kv-zoom-title")
-        .attr("title", $("<div/>").html(title).text())
-        .html(title);
+      desc = $frame.data("description") || "";
+      $h.setHtml($modal.find(".kv-zoom-caption").attr("title", cap), cap);
+      $h.setHtml($modal.find(".kv-zoom-size"), size);
+      $desc = $modal.find(".kv-zoom-description").hide();
+      if (desc) {
+        if (self.showDescriptionClose) {
+          desc =
+            self._getLayoutTemplate("descriptionClose").setTokens({
+              closeIcon: self.previewZoomButtonIcons.close,
+            }) +
+            "</button>" +
+            desc;
+        }
+        $h.setHtml($desc, desc).show();
+        if (self.showDescriptionClose) {
+          self._handler($modal.find(".kv-desc-hide"), "click", function () {
+            $(this)
+              .parent()
+              .fadeOut("fast", function () {
+                $modal.focus();
+              });
+          });
+        }
+      }
       $body = $modal.find(".kv-zoom-body");
       $modal.removeClass("kv-single-content");
-      if (animate) {
+      if (navigate) {
         $tmp = $body.addClass("file-thumb-loading").clone().insertAfter($body);
         $h.setHtml($body, body).hide();
         $tmp.fadeOut("fast", function () {
@@ -29504,19 +37434,16 @@ SOFTWARE.
         $h.addCss($dataEl, "file-zoom-detail");
         $.each(config, function (key, value) {
           $dataEl.css(key, value);
-          if (
-            ($dataEl.attr("width") && key === "width") ||
-            ($dataEl.attr("height") && key === "height")
-          ) {
+          if (($dataEl.attr("width") && key === "width") || ($dataEl.attr("height") && key === "height")) {
             $dataEl.removeAttr(key);
           }
         });
       }
       $modal.data("previewId", previewId);
-      self._handler($modal.find(".btn-prev"), "click", function () {
+      self._handler($modal.find(".btn-kv-prev"), "click", function () {
         self._zoomSlideShow("prev", previewId);
       });
-      self._handler($modal.find(".btn-next"), "click", function () {
+      self._handler($modal.find(".btn-kv-next"), "click", function () {
         self._zoomSlideShow("next", previewId);
       });
       self._handler($btnFull, "click", function () {
@@ -29527,7 +37454,7 @@ SOFTWARE.
       });
       self._handler($btnTogh, "click", function () {
         var $header = $modal.find(".modal-header"),
-          $floatBar = $modal.find(".modal-body .floating-buttons"),
+          $floatBar = $modal.find(".floating-buttons"),
           ht,
           $actions = $header.find(".kv-zoom-actions"),
           resize = function (height) {
@@ -29557,31 +37484,66 @@ SOFTWARE.
       });
       self._handler($modal, "keydown", function (e) {
         var key = e.which || e.keyCode,
-          $prev = $(this).find(".btn-prev"),
-          $next = $(this).find(".btn-next"),
+          delay = self.processDelay + 1,
+          $prev = $(this).find(".btn-kv-prev"),
+          $next = $(this).find(".btn-kv-next"),
           vId = $(this).data("previewId"),
-          vPrevKey = self.rtl ? 39 : 37,
-          vNextKey = self.rtl ? 37 : 39;
-        if (key === vPrevKey && $prev.length && !$prev.attr("disabled")) {
-          self._zoomSlideShow("prev", vId);
-        }
-        if (key === vNextKey && $next.length && !$next.attr("disabled")) {
-          self._zoomSlideShow("next", vId);
-        }
+          vPrevKey,
+          vNextKey;
+        [vPrevKey, vNextKey] = self.rtl ? [39, 37] : [37, 39];
+        $.each({ prev: [$prev, vPrevKey], next: [$next, vNextKey] }, function (direction, config) {
+          var $btn = config[0],
+            vKey = config[1];
+          if (key === vKey && $btn.length) {
+            $modal.focus();
+            if (!$btn.attr("disabled")) {
+              $btn.blur();
+              setTimeout(function () {
+                $btn.focus();
+                self._zoomSlideShow(direction, vId);
+                setTimeout(function () {
+                  if ($btn.attr("disabled")) {
+                    $modal.focus();
+                  }
+                }, delay);
+              }, delay);
+            }
+          }
+        });
       });
     },
     _showModal: function ($frame) {
       var self = this,
-        $modal = self.$modal;
+        $modal = self.$modal,
+        $content,
+        css,
+        angle;
       if (!$frame || !$frame.length) {
         return;
       }
       $h.initModal($modal);
       $h.setHtml($modal, self._getModalContent());
       self._setZoomContent($frame);
-      $modal.data("fileinputPluginId", self.$element.attr("id"));
+      $modal.removeClass("rotatable");
+      $modal.data({ backdrop: false, fileinputPluginId: self.$element.attr("id") });
+      $modal.find(".kv-zoom-body").css("height", self.zoomModalHeight);
+      $content = $frame.find(".kv-file-content > :first-child");
+      if ($content.length) {
+        css = $content.css("transform");
+        if (css) {
+          $modal.find(".file-zoom-detail").css("transform", css);
+        }
+      }
+      if ($frame.hasClass("rotatable")) {
+        $modal.addClass("rotatable");
+      }
+      if ($frame.data("angle")) {
+        $modal.data("angle", $frame.data("angle"));
+      }
+      angle = $frame.data("angle") || 0;
       $modal.modal("show");
       self._initZoomButtons();
+      self._initRotateZoom($frame, $content);
     },
     _zoomPreview: function ($btn) {
       var self = this,
@@ -29594,24 +37556,26 @@ SOFTWARE.
     },
     _zoomSlideShow: function (dir, previewId) {
       var self = this,
-        $btn = self.$modal.find(".kv-zoom-actions .btn-" + dir),
+        $modal = self.$modal,
+        $btn = $modal.find(".kv-zoom-actions .btn-kv-" + dir),
         $targFrame,
         i,
         $thumb,
         thumbsData = self.getFrames().toArray(),
         thumbs = [],
         len = thumbsData.length,
-        out;
+        out,
+        angle,
+        $content;
+      if (self.reversePreviewOrder) {
+        dir = dir === "prev" ? "next" : "prev";
+      }
       if ($btn.attr("disabled")) {
         return;
       }
       for (i = 0; i < len; i++) {
         $thumb = $(thumbsData[i]);
-        if (
-          $thumb &&
-          $thumb.length &&
-          $thumb.find(".kv-file-zoom:visible").length
-        ) {
+        if ($thumb && $thumb.length && $thumb.find(".kv-file-zoom:visible").length) {
           thumbs.push(thumbsData[i]);
         }
       }
@@ -29627,13 +37591,18 @@ SOFTWARE.
       }
       $targFrame = $(thumbs[out]);
       if ($targFrame.length) {
-        self._setZoomContent($targFrame, true);
+        self._setZoomContent($targFrame, dir);
       }
       self._initZoomButtons();
-      self._raise("filezoom" + dir, {
-        previewId: previewId,
-        modal: self.$modal,
-      });
+      if ($targFrame.length && $targFrame.hasClass("rotatable")) {
+        angle = $targFrame.data("angle") || 0;
+        $modal.addClass("rotatable").data("angle", angle);
+        $content = $targFrame.find(".kv-file-content > :first-child");
+        self._initRotateZoom($targFrame, $content);
+      } else {
+        $modal.removeClass("rotatable").removeData("angle");
+      }
+      self._raise("filezoom" + dir, { previewId: previewId, modal: self.$modal });
     },
     _initZoomButton: function () {
       var self = this;
@@ -29650,16 +37619,12 @@ SOFTWARE.
     _refreshPreview: function () {
       var self = this,
         files;
-      if (
-        (!self._inputFileCount() && !self.isAjaxUpload) ||
-        !self.showPreview ||
-        !self.isPreviewable
-      ) {
+      if ((!self._inputFileCount() && !self.isAjaxUpload) || !self.showPreview || !self.isPreviewable) {
         return;
       }
       if (self.isAjaxUpload) {
         if (self.fileManager.count() > 0) {
-          files = $.extend(true, {}, self.fileManager.stack);
+          files = $.extend(true, [], self.getFileList());
           self.fileManager.clear();
           self._clearFileInput();
         } else {
@@ -29670,7 +37635,6 @@ SOFTWARE.
       }
       if (files && files.length) {
         self.readFiles(files);
-        self._setFileDropZoneTitle();
       }
     },
     _clearObjects: function ($el) {
@@ -29706,6 +37670,7 @@ SOFTWARE.
     },
     _resetUpload: function () {
       var self = this;
+      self.uploadInitiated = false;
       self.uploadStartTime = $h.now();
       self.uploadCache = [];
       self.$btnUpload.removeAttr("disabled");
@@ -29728,13 +37693,8 @@ SOFTWARE.
     },
     _resetCanvas: function () {
       var self = this;
-      if (self.canvas && self.imageCanvasContext) {
-        self.imageCanvasContext.clearRect(
-          0,
-          0,
-          self.canvas.width,
-          self.canvas.height
-        );
+      if (self.imageCanvas && self.imageCanvasContext) {
+        self.imageCanvasContext.clearRect(0, 0, self.imageCanvas.width, self.imageCanvas.height);
       }
     },
     _hasInitialPreview: function () {
@@ -29752,7 +37712,7 @@ SOFTWARE.
       if (self.previewCache.count(true)) {
         out = self.previewCache.out();
         if (includeProcessed) {
-          $div = $h.createElement("").insertAfter(self.$container);
+          $div = $h.createDiv().insertAfter(self.$container);
           self.getFrames().each(function () {
             var $thumb = $(this);
             if (
@@ -29790,11 +37750,7 @@ SOFTWARE.
       if (!self.showPreview || $h.isEmpty(self.defaultPreviewContent)) {
         return;
       }
-      self._setPreviewContent(
-        '<div class="file-default-preview">' +
-          self.defaultPreviewContent +
-          "</div>"
-      );
+      self._setPreviewContent('<div class="file-default-preview">' + self.defaultPreviewContent + "</div>");
       self.$container.removeClass("file-input-new");
       self._initClickable();
     },
@@ -29849,11 +37805,13 @@ SOFTWARE.
         jqXHR: jqXHR,
       };
     },
-    _getMsgSelected: function (n) {
+    _getMsgSelected: function (n, processing) {
       var self = this,
         strFiles = n === 1 ? self.fileSingle : self.filePlural;
       return n > 0
         ? self.msgSelected.replace("{n}", n).replace("{files}", strFiles)
+        : processing
+        ? self.msgProcessing
         : self.msgNoFilesSelected;
     },
     _getFrame: function (id, skipWarning) {
@@ -29946,33 +37904,18 @@ SOFTWARE.
         settings[funcName] = srcFunc;
       }
     },
-    _ajaxSubmit: function (
-      fnBefore,
-      fnSuccess,
-      fnComplete,
-      fnError,
-      formdata,
-      fileId,
-      index,
-      vUrl
-    ) {
+    _ajaxSubmit: function (fnBefore, fnSuccess, fnComplete, fnError, formdata, fileId, index, vUrl) {
       var self = this,
         settings,
         defaults,
         data,
-        ajaxTask;
+        tm = self.taskManager;
       if (!self._raise("filepreajax", [formdata, fileId, index])) {
         return;
       }
       formdata.append("initialPreview", JSON.stringify(self.initialPreview));
-      formdata.append(
-        "initialPreviewConfig",
-        JSON.stringify(self.initialPreviewConfig)
-      );
-      formdata.append(
-        "initialPreviewThumbTags",
-        JSON.stringify(self.initialPreviewThumbTags)
-      );
+      formdata.append("initialPreviewConfig", JSON.stringify(self.initialPreviewConfig));
+      formdata.append("initialPreviewThumbTags", JSON.stringify(self.initialPreviewThumbTags));
       self._initAjaxSettings();
       self._mergeAjaxCallback("beforeSend", fnBefore);
       self._mergeAjaxCallback("success", fnSuccess);
@@ -30002,16 +37945,15 @@ SOFTWARE.
         contentType: false,
       };
       settings = $.extend(true, {}, defaults, self._ajaxSettings);
-      ajaxTask = self.taskManager.addTask(fileId + "-" + index, function () {
+      self.ajaxQueue.push(settings);
+      tm.addTask(fileId + "-" + index, function () {
         var self = this.self,
           config,
           xhr;
         config = self.ajaxQueue.shift();
         xhr = $.ajax(config);
         self.ajaxRequests.push(xhr);
-      });
-      self.ajaxQueue.push(settings);
-      ajaxTask.runWithContext({ self: self });
+      }).runWithContext({ self: self });
     },
     _mergeArray: function (prop, content) {
       var self = this,
@@ -30025,17 +37967,12 @@ SOFTWARE.
         data,
         index,
         $div,
-        $newCache,
         content,
         config,
         tags,
         id,
         i;
-      if (
-        !self.showPreview ||
-        typeof out !== "object" ||
-        $.isEmptyObject(out)
-      ) {
+      if (!self.showPreview || typeof out !== "object" || $.isEmptyObject(out)) {
         self._resetCaption();
         return;
       }
@@ -30055,25 +37992,14 @@ SOFTWARE.
         }
         if ($thumb !== undefined) {
           if (!allFiles) {
-            index = self.previewCache.add(
-              content[0],
-              config[0],
-              tags[0],
-              append
-            );
+            index = self.previewCache.add(content[0], config[0], tags[0], append);
             data = self.previewCache.get(index, false);
-            $div = $h.createElement(data).hide().appendTo($thumb);
-            $newCache = $div.find(".kv-zoom-cache");
-            if ($newCache && $newCache.length) {
-              $newCache.appendTo($thumb);
-            }
+            $div = $h.createElement($h.cspBuffer.stash(data)).hide().appendTo($thumb);
+            $h.cspBuffer.apply($thumb);
             $thumb.fadeOut("slow", function () {
-              var $newThumb = $div.find(".file-preview-frame");
+              var $newThumb = $div.find("> .file-preview-frame");
               if ($newThumb && $newThumb.length) {
-                $newThumb
-                  .insertBefore($thumb)
-                  .fadeIn("slow")
-                  .css("display:inline-block");
+                $newThumb.insertBefore($thumb).fadeIn("slow").css("display:inline-block");
               }
               self._initPreviewActions();
               self._clearFileInput();
@@ -30120,40 +38046,36 @@ SOFTWARE.
       if (!self.showPreview) {
         return;
       }
-      self._getThumbs($h.FRAMES + ".file-preview-success").each(function () {
-        var $thumb = $(this),
-          $remove = $thumb.find(".kv-file-remove");
-        $remove.removeAttr("disabled");
-        self._handler($remove, "click", function () {
-          var id = $thumb.attr("id"),
-            out = self._raise("filesuccessremove", [
-              id,
-              $thumb.attr("data-fileindex"),
-            ]);
-          $h.cleanMemory($thumb);
-          if (out === false) {
-            return;
-          }
-          $thumb.fadeOut("slow", function () {
-            $thumb.remove();
-            if (!self.getFrames().length) {
-              self.reset();
+      setTimeout(function () {
+        self._getThumbs($h.FRAMES + ".file-preview-success").each(function () {
+          var $thumb = $(this),
+            $remove = $thumb.find(".kv-file-remove");
+          $remove.removeAttr("disabled");
+          self._handler($remove, "click", function () {
+            var id = $thumb.attr("id"),
+              out = self._raise("filesuccessremove", [id, $thumb.attr("data-fileindex")]);
+            $h.cleanMemory($thumb);
+            if (out === false) {
+              return;
             }
+            self.$caption.attr("title", "");
+            $thumb.fadeOut("slow", function () {
+              var fm = self.fileManager;
+              $thumb.remove();
+              if (!self.getFrames().length) {
+                self.reset();
+              }
+            });
           });
         });
-      });
+      }, self.processDelay);
     },
     _updateInitialPreview: function () {
       var self = this,
         u = self.uploadCache;
       if (self.showPreview) {
         $.each(u, function (key, setting) {
-          self.previewCache.add(
-            setting.content,
-            setting.config,
-            setting.tags,
-            setting.append
-          );
+          self.previewCache.add(setting.content, setting.config, setting.tags, setting.append);
         });
         if (self.hasInitData) {
           self._initPreview();
@@ -30161,7 +38083,19 @@ SOFTWARE.
         }
       }
     },
-    _uploadSingle: function (i, id, isBatch) {
+    _getThumbFileId: function ($thumb) {
+      var self = this;
+      if (self.showPreview && $thumb !== undefined) {
+        return $thumb.attr("data-fileid");
+      }
+      return null;
+    },
+    _getThumbFile: function ($thumb) {
+      var self = this,
+        id = self._getThumbFileId($thumb);
+      return id ? self.fileManager.getFile(id) : null;
+    },
+    _uploadSingle: function (i, id, isBatch, deferrer) {
       var self = this,
         fm = self.fileManager,
         count = fm.count(),
@@ -30184,13 +38118,24 @@ SOFTWARE.
         op = self.ajaxOperations.uploadThumb,
         fileObj = fm.getFile(id),
         params = { id: previewId, index: i, fileId: id },
-        fileName = self.fileManager.getFileName(id, true);
+        fileName = self.fileManager.getFileName(id, true),
+        resolve = function () {
+          if (deferrer && deferrer.resolve) {
+            deferrer.resolve();
+          }
+        },
+        reject = function () {
+          if (deferrer && deferrer.reject) {
+            deferrer.reject();
+          }
+        };
       if (self.enableResumableUpload) {
         // not enabled for resumable uploads
         return;
       }
+      self.uploadInitiated = true;
       if (self.showPreview) {
-        $thumb = self.fileManager.getThumb(id);
+        $thumb = fm.getThumb(id);
         $prog = $thumb.find(".file-thumb-progress");
         $btnUpload = $thumb.find(".kv-file-upload");
         $btnDelete = $thumb.find(".kv-file-remove");
@@ -30234,15 +38179,13 @@ SOFTWARE.
             $h.addCss($initThumbs, $h.SORT_CSS);
             self._initSortable();
           }
-          self._raise("filebatchuploadcomplete", [
-            fm.stack,
-            self._getExtraData(),
-          ]);
+          self._raise("filebatchuploadcomplete", [fm.stack, self._getExtraData()]);
           if (!self.retryErrorUploads || errCount === 0) {
             fm.clear();
           }
           self._setProgress(101);
           self.ajaxAborted = false;
+          self.uploadInitiated = false;
         }, self.processDelay);
       };
       fnBefore = function (jqXHR) {
@@ -30266,23 +38209,22 @@ SOFTWARE.
         if (fm.errors.indexOf(id) !== -1) {
           delete fm.errors[id];
         }
-        self._raise("filepreupload", [outData, previewId, i]);
+        self._raise("filepreupload", [outData, previewId, i, self._getThumbFileId($thumb)]);
         $.extend(true, params, outData);
         if (self._abort(params)) {
           jqXHR.abort();
+
           if (!isBatch) {
             self._setThumbStatus($thumb, "New");
             $thumb.removeClass("file-uploading");
             $btnUpload.removeAttr("disabled");
             $btnDelete.removeAttr("disabled");
-            self.unlock();
           }
           self._setProgressCancelled();
         }
       };
       fnSuccess = function (data, textStatus, jqXHR) {
-        var pid =
-          self.showPreview && $thumb.attr("id") ? $thumb.attr("id") : previewId;
+        var pid = self.showPreview && $thumb.attr("id") ? $thumb.attr("id") : previewId;
         outData = self._getOutData(formdata, jqXHR, data);
         $.extend(true, params, outData);
         setTimeout(function () {
@@ -30293,20 +38235,16 @@ SOFTWARE.
               self._initUploadSuccess(data, $thumb, isBatch);
               self._setProgress(101, $prog);
             }
-            self._raise("fileuploaded", [outData, pid, i]);
+            self._raise("fileuploaded", [outData, pid, i, self._getThumbFileId($thumb)]);
             if (!isBatch) {
               self.fileManager.remove($thumb);
             } else {
               updateUploadLog();
+              resolve();
             }
           } else {
             uploadFailed = true;
-            errMsg = self._parseError(
-              op,
-              jqXHR,
-              self.msgUploadError,
-              self.fileManager.getFileName(id)
-            );
+            errMsg = self._parseError(op, jqXHR, self.msgUploadError, self.fileManager.getFileName(id));
             self._showFileError(errMsg, params);
             self._setPreviewError($thumb, true);
             if (!self.retryErrorUploads) {
@@ -30314,12 +38252,9 @@ SOFTWARE.
             }
             if (isBatch) {
               updateUploadLog();
+              resolve();
             }
-            self._setProgress(
-              101,
-              self._getFrame(pid).find(".file-thumb-progress"),
-              self.msgUploadError
-            );
+            self._setProgress(101, self._getFrame(pid).find(".file-thumb-progress"), self.msgUploadError);
           }
         }, self.processDelay);
       };
@@ -30338,17 +38273,13 @@ SOFTWARE.
         self._initSuccessThumbs();
       };
       fnError = function (jqXHR, textStatus, errorThrown) {
-        errMsg = self._parseError(
-          op,
-          jqXHR,
-          errorThrown,
-          self.fileManager.getFileName(id)
-        );
+        errMsg = self._parseError(op, jqXHR, errorThrown, self.fileManager.getFileName(id));
         uploadFailed = true;
         setTimeout(function () {
           var $prog;
           if (isBatch) {
             updateUploadLog();
+            reject();
           }
           self.fileManager.setProgress(id, 100);
           self._setPreviewError($thumb, true);
@@ -30356,30 +38287,15 @@ SOFTWARE.
             $btnUpload.hide();
           }
           $.extend(true, params, self._getOutData(formdata, jqXHR));
-          self._setProgress(
-            101,
-            self.$progress,
-            self.msgAjaxProgressError.replace("{operation}", op)
-          );
-          $prog =
-            self.showPreview && $thumb
-              ? $thumb.find(".file-thumb-progress")
-              : "";
+          self._setProgress(101, self.$progress, self.msgAjaxProgressError.replace("{operation}", op));
+          $prog = self.showPreview && $thumb ? $thumb.find(".file-thumb-progress") : "";
           self._setProgress(101, $prog, self.msgUploadError);
           self._showFileError(errMsg, params);
         }, self.processDelay);
       };
       self._setFileData(formdata, fileObj.file, fileName, id);
       self._setUploadData(formdata, { fileId: id });
-      self._ajaxSubmit(
-        fnBefore,
-        fnSuccess,
-        fnComplete,
-        fnError,
-        formdata,
-        id,
-        i
-      );
+      self._ajaxSubmit(fnBefore, fnSuccess, fnComplete, fnError, formdata, id, i);
     },
     _setFileData: function (formdata, file, fileName, fileId) {
       var self = this,
@@ -30389,6 +38305,30 @@ SOFTWARE.
       } else {
         formdata.append(self.uploadFileAttr, file, fileName);
       }
+    },
+    _checkBatchPreupload: function (outData, jqXHR) {
+      var self = this,
+        out = self._raise("filebatchpreupload", [outData]);
+      if (out) {
+        return true;
+      }
+      self._abort(outData);
+      if (jqXHR) {
+        jqXHR.abort();
+      }
+      self._getThumbs().each(function () {
+        var $thumb = $(this),
+          $btnUpload = $thumb.find(".kv-file-upload"),
+          $btnDelete = $thumb.find(".kv-file-remove");
+        if ($thumb.hasClass("file-preview-loading")) {
+          self._setThumbStatus($thumb, "New");
+          $thumb.removeClass("file-uploading");
+        }
+        $btnUpload.removeAttr("disabled");
+        $btnDelete.removeAttr("disabled");
+      });
+      self._setProgressCancelled();
+      return false;
     },
     _uploadBatch: function () {
       var self = this,
@@ -30429,32 +38369,14 @@ SOFTWARE.
             $btnDelete.attr("disabled", true);
           });
         }
-        self._raise("filebatchpreupload", [outData]);
-        if (self._abort(outData)) {
-          jqXHR.abort();
-          self._getThumbs().each(function () {
-            var $thumb = $(this),
-              $btnUpload = $thumb.find(".kv-file-upload"),
-              $btnDelete = $thumb.find(".kv-file-remove");
-            if ($thumb.hasClass("file-preview-loading")) {
-              self._setThumbStatus($thumb, "New");
-              $thumb.removeClass("file-uploading");
-            }
-            $btnUpload.removeAttr("disabled");
-            $btnDelete.removeAttr("disabled");
-          });
-          self._setProgressCancelled();
-        }
+        self._checkBatchPreupload(outData, jqXHR);
       };
       fnSuccess = function (data, textStatus, jqXHR) {
         /** @namespace data.errorkeys */
         var outData = self._getOutData(formdata, jqXHR, data),
           key = 0,
           $thumbs = self._getThumbs(":not(.file-preview-success)"),
-          keys =
-            $h.isEmpty(data) || $h.isEmpty(data.errorkeys)
-              ? []
-              : data.errorkeys;
+          keys = $h.isEmpty(data) || $h.isEmpty(data.errorkeys) ? [] : data.errorkeys;
 
         if ($h.isEmpty(data) || $h.isEmpty(data.error)) {
           self._raise("filebatchuploadsuccess", [outData]);
@@ -30489,10 +38411,7 @@ SOFTWARE.
                 self._setThumbStatus($thumb, "Success");
                 self.fileManager.remove($thumb);
               }
-              if (
-                !$thumb.hasClass("file-preview-error") ||
-                self.retryErrorUploads
-              ) {
+              if (!$thumb.hasClass("file-preview-error") || self.retryErrorUploads) {
                 key++;
               }
             });
@@ -30507,10 +38426,7 @@ SOFTWARE.
         self.unlock();
         self._initSuccessThumbs();
         self._clearFileInput();
-        self._raise("filebatchuploadcomplete", [
-          self.fileManager.stack,
-          self._getExtraData(),
-        ]);
+        self._raise("filebatchuploadcomplete", [self.fileManager.stack, self._getExtraData()]);
       };
       fnError = function (jqXHR, textStatus, errorThrown) {
         var outData = self._getOutData(formdata, jqXHR);
@@ -30523,28 +38439,19 @@ SOFTWARE.
         self._getThumbs().each(function () {
           var $thumb = $(this);
           $thumb.removeClass("file-uploading");
-          if (self.fileManager.getFile($thumb.attr("data-fileid"))) {
+          if (self._getThumbFile($thumb)) {
             self._setPreviewError($thumb);
           }
         });
         self._getThumbs().removeClass("file-uploading");
         self._getThumbs(" .kv-file-upload").removeAttr("disabled");
         self._getThumbs(" .kv-file-delete").removeAttr("disabled");
-        self._setProgress(
-          101,
-          self.$progress,
-          self.msgAjaxProgressError.replace("{operation}", op)
-        );
+        self._setProgress(101, self.$progress, self.msgAjaxProgressError.replace("{operation}", op));
       };
       var ctr = 0;
       $.each(self.fileManager.stack, function (key, data) {
         if (!$h.isEmpty(data.file)) {
-          self._setFileData(
-            formdata,
-            data.file,
-            data.nameFmt || "untitled_" + ctr,
-            key
-          );
+          self._setFileData(formdata, data.file, data.nameFmt || "untitled_" + ctr, key);
         }
         ctr++;
       });
@@ -30560,20 +38467,13 @@ SOFTWARE.
         formdata = new FormData(),
         errMsg,
         op = self.ajaxOperations.uploadExtra;
-      if (self._abort(params)) {
-        return;
-      }
       fnBefore = function (jqXHR) {
         self.lock();
         var outData = self._getOutData(formdata, jqXHR);
-        self._raise("filebatchpreupload", [outData]);
         self._setProgress(50);
         params.data = outData;
         params.xhr = jqXHR;
-        if (self._abort(params)) {
-          jqXHR.abort();
-          self._setProgressCancelled();
-        }
+        self._checkBatchPreupload(outData, jqXHR);
       };
       fnSuccess = function (data, textStatus, jqXHR) {
         var outData = self._getOutData(formdata, jqXHR, data);
@@ -30590,21 +38490,14 @@ SOFTWARE.
       fnComplete = function () {
         self.unlock();
         self._clearFileInput();
-        self._raise("filebatchuploadcomplete", [
-          self.fileManager.stack,
-          self._getExtraData(),
-        ]);
+        self._raise("filebatchuploadcomplete", [self.fileManager.stack, self._getExtraData()]);
       };
       fnError = function (jqXHR, textStatus, errorThrown) {
         var outData = self._getOutData(formdata, jqXHR);
         errMsg = self._parseError(op, jqXHR, errorThrown);
         params.data = outData;
         self._showFileError(errMsg, outData, "filebatchuploaderror");
-        self._setProgress(
-          101,
-          self.$progress,
-          self.msgAjaxProgressError.replace("{operation}", op)
-        );
+        self._setProgress(101, self.$progress, self.msgAjaxProgressError.replace("{operation}", op));
       };
       self._ajaxSubmit(fnBefore, fnSuccess, fnComplete, fnError, formdata);
     },
@@ -30615,16 +38508,8 @@ SOFTWARE.
       if (ind.substring(0, 5) === $h.INIT_FLAG) {
         ind = parseInt(ind.replace($h.INIT_FLAG, ""));
         self.initialPreview = $h.spliceArray(self.initialPreview, ind, rev);
-        self.initialPreviewConfig = $h.spliceArray(
-          self.initialPreviewConfig,
-          ind,
-          rev
-        );
-        self.initialPreviewThumbTags = $h.spliceArray(
-          self.initialPreviewThumbTags,
-          ind,
-          rev
-        );
+        self.initialPreviewConfig = $h.spliceArray(self.initialPreviewConfig, ind, rev);
+        self.initialPreviewThumbTags = $h.spliceArray(self.initialPreviewThumbTags, ind, rev);
         self.getFrames().each(function () {
           var $nFrame = $(this),
             nInd = $nFrame.attr("data-fileindex");
@@ -30641,12 +38526,13 @@ SOFTWARE.
     _resetCaption: function () {
       var self = this;
       setTimeout(function () {
-        var cap,
+        var cap = "",
           n,
           chk = self.previewCache.count(true),
           len = self.fileManager.count(),
           file,
           incomplete = ":not(.file-preview-success):not(.file-preview-error)",
+          cfg,
           hasThumb = self.showPreview && self.getFrames(incomplete).length;
         if (len === 0 && chk === 0 && !hasThumb) {
           self.reset();
@@ -30655,12 +38541,119 @@ SOFTWARE.
           if (n > 1) {
             cap = self._getMsgSelected(n);
           } else {
-            file = self.fileManager.getFirstFile();
-            cap = file ? file.nameFmt : "_";
+            if (len === 0) {
+              cfg = self.initialPreviewConfig[0];
+              cap = "";
+              if (cfg) {
+                cap = cfg.caption || cfg.filename || "";
+              }
+              if (!cap) {
+                cap = self._getMsgSelected(n);
+              }
+            } else {
+              file = self.fileManager.getFirstFile();
+              cap = file ? file.nameFmt : "_";
+            }
           }
           self._setCaption(cap);
         }
       }, self.processDelay);
+    },
+    _handleRotation: function ($el, $content, angle) {
+      var self = this,
+        css,
+        newCss,
+        addCss = "",
+        scale = 1,
+        elContent = $content[0],
+        quadrant,
+        transform,
+        h,
+        w,
+        wNew,
+        $parent = $content.parent(),
+        hParent,
+        wParent,
+        $body = $("body"),
+        bodyExists = !!$body.length;
+      if (bodyExists) {
+        $body.addClass("kv-overflow-hidden");
+      }
+      if (!$content.length || $el.hasClass("hide-rotate")) {
+        if (bodyExists) {
+          $body.removeClass("kv-overflow-hidden");
+        }
+        return;
+      }
+      transform = $content.css("transform");
+      if (transform) {
+        $content.css("transform", "none");
+      }
+      if (transform) {
+        $content.css("transform", transform);
+      }
+      angle = angle || 0;
+      quadrant = angle % 360;
+      css = "rotate(" + angle + "deg)";
+      newCss = "rotate(" + quadrant + "deg)";
+      addCss = "";
+      if (quadrant === 90 || quadrant === 270) {
+        w = elContent.naturalWidth || $content.outerWidth() || 0;
+        h = elContent.naturalHeight || $content.outerHeight() || 0;
+        scale = w > h && w != 0 ? (h / w).toFixed(2) : 1;
+        if ($parent.length) {
+          hParent = $parent.height();
+          wParent = $parent.width();
+          wNew = Math.min(w, wParent);
+          if (hParent > scale * wNew) {
+            scale = wNew > hParent && wNew != 0 ? (hParent / wNew).toFixed(2) : 1;
+          }
+        }
+        if (scale !== 1) {
+          addCss = " scale(" + scale + ")";
+        }
+      }
+      $content.addClass("rotate-animate").css("transform", css + addCss);
+      setTimeout(function () {
+        $content.removeClass("rotate-animate").css("transform", newCss + addCss);
+        if (bodyExists) {
+          $body.removeClass("kv-overflow-hidden");
+        }
+        $el.data("angle", quadrant);
+      }, self.fadeDelay);
+    },
+    _initRotateButton: function () {
+      var self = this;
+      self.getFrames(".rotatable .kv-file-rotate").each(function () {
+        var $el = $(this),
+          $frame = $el.closest($h.FRAMES),
+          $content = $frame.find(".kv-file-content > :first-child");
+        self._handler($el, "click", function () {
+          var angle = ($frame.data("angle") || 0) + 90;
+          self._handleRotation($frame, $content, angle);
+        });
+      });
+    },
+    _initRotateZoom: function ($frame, $content) {
+      var self = this,
+        $modal = self.$modal,
+        $rotate = $modal.find(".btn-kv-rotate"),
+        angle = $frame.data("angle");
+      $modal.data("angle", angle);
+      if ($rotate.length) {
+        $rotate.off("click");
+        if ($modal.hasClass("rotatable")) {
+          $rotate.on("click", function () {
+            angle = ($modal.data("angle") || 0) + 90;
+            $modal.data("angle", angle);
+            self._handleRotation($modal, $modal.find(".file-zoom-detail"), angle);
+            self._handleRotation($frame, $content, angle);
+            if ($frame.hasClass("hide-rotate")) {
+              $frame.data("angle", angle);
+            }
+          });
+        }
+      }
     },
     _initFileActions: function () {
       var self = this;
@@ -30668,13 +38661,15 @@ SOFTWARE.
         return;
       }
       self._initZoomButton();
+      self._initRotateButton();
       self.getFrames(" .kv-file-remove").each(function () {
         var $el = $(this),
           $frame = $el.closest($h.FRAMES),
           hasError,
           id = $frame.attr("id"),
           ind = $frame.attr("data-fileindex"),
-          status;
+          status,
+          fm = self.fileManager;
         self._handler($el, "click", function () {
           status = self._raise("filepreremove", [id, ind]);
           if (status === false || !self._validateMinCount()) {
@@ -30687,14 +38682,12 @@ SOFTWARE.
             self._clearObjects($frame);
             $frame.remove();
             if (id && hasError) {
-              self.$errorContainer
-                .find('li[data-thumb-id="' + id + '"]')
-                .fadeOut("fast", function () {
-                  $(this).remove();
-                  if (!self._errorsExist()) {
-                    self._resetErrors();
-                  }
-                });
+              self.$errorContainer.find('li[data-thumb-id="' + id + '"]').fadeOut("fast", function () {
+                $(this).remove();
+                if (!self._errorsExist()) {
+                  self._resetErrors();
+                }
+              });
             }
             self._clearFileInput();
             self._resetCaption();
@@ -30706,12 +38699,9 @@ SOFTWARE.
         var $el = $(this);
         self._handler($el, "click", function () {
           var $frame = $el.closest($h.FRAMES),
-            fileId = $frame.attr("data-fileid");
+            fileId = self._getThumbFileId($frame);
           self._hideProgress();
-          if (
-            $frame.hasClass("file-preview-error") &&
-            !self.retryErrorUploads
-          ) {
+          if ($frame.hasClass("file-preview-error") && !self.retryErrorUploads) {
             return;
           }
           self._uploadSingle(self.fileManager.getIndex(fileId), fileId, false);
@@ -30727,16 +38717,17 @@ SOFTWARE.
         origClass = settings.removeClass,
         errClass = settings.removeErrorClass,
         resetProgress = function () {
-          var hasFiles = self.isAjaxUpload
-            ? self.previewCache.count(true)
-            : self._inputFileCount();
+          var hasFiles = self.isAjaxUpload ? self.previewCache.count(true) : self._inputFileCount();
           if (!self.getFrames().length && !hasFiles) {
             self._setCaption("");
             self.reset();
             self.initialCaption = "";
+          } else {
+            self._resetCaption();
           }
         };
       self._initZoomButton();
+      self._initRotateButton();
       $preview.find(btnRemove).each(function () {
         var $el = $(this),
           vUrl = $el.data("url") || self.deleteUrl,
@@ -30761,14 +38752,8 @@ SOFTWARE.
           extraData,
           index = $frame.attr("data-fileindex");
         index = parseInt(index.replace($h.INIT_FLAG, ""));
-        config =
-          $h.isEmpty(cache.config) && $h.isEmpty(cache.config[index])
-            ? null
-            : cache.config[index];
-        extraData =
-          $h.isEmpty(config) || $h.isEmpty(config.extra)
-            ? deleteExtraData
-            : config.extra;
+        config = $h.isEmpty(cache.config) && $h.isEmpty(cache.config[index]) ? null : cache.config[index];
+        extraData = $h.isEmpty(config) || $h.isEmpty(config.extra) ? deleteExtraData : config.extra;
         fileName = (config && (config.filename || config.caption)) || "";
         if (typeof extraData === "function") {
           extraData = extraData();
@@ -30799,9 +38784,7 @@ SOFTWARE.
           }
           $frame.removeClass("file-uploading").addClass("file-deleted");
           $frame.fadeOut("slow", function () {
-            index = parseInt(
-              $frame.attr("data-fileindex").replace($h.INIT_FLAG, "")
-            );
+            index = parseInt($frame.attr("data-fileindex").replace($h.INIT_FLAG, ""));
             self.previewCache.unset(index);
             self._deleteFileIndex($frame);
             n = self.previewCache.count(true);
@@ -30867,29 +38850,41 @@ SOFTWARE.
       var self = this;
       $h.addCss(self.$captionContainer, "icon-visible");
     },
-    _getSize: function (bytes, sizes) {
+    _getSize: function (bytes, skipTemplate, sizeUnits) {
       var self = this,
         size = parseFloat(bytes),
-        i,
+        i = 0,
+        factor = self.bytesToKB,
         func = self.fileSizeGetter,
-        out;
-      if (!$.isNumeric(bytes) || !$.isNumeric(size)) {
+        out,
+        sizeHuman = size,
+        newSize;
+      if (!$h.isNumeric(bytes) || !$h.isNumeric(size)) {
         return "";
       }
       if (typeof func === "function") {
         out = func(size);
       } else {
-        if (size === 0) {
-          out = "0.00 B";
-        } else {
-          i = Math.floor(Math.log(size) / Math.log(1024));
-          if (!sizes) {
-            sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-          }
-          out = (size / Math.pow(1024, i)).toFixed(2) * 1 + " " + sizes[i];
+        if (!sizeUnits) {
+          sizeUnits = self.sizeUnits;
         }
+        if (size > 0) {
+          while (sizeHuman >= factor) {
+            sizeHuman /= factor;
+            ++i;
+          }
+          if (!sizeUnits[i]) {
+            sizeHuman = size;
+            i = 0;
+          }
+        }
+        newSize = sizeHuman.toFixed(2);
+        if (newSize == sizeHuman) {
+          newSize = sizeHuman;
+        }
+        out = newSize + " " + sizeUnits[i];
       }
-      return self._getLayoutTemplate("size").replace("{sizeText}", out);
+      return skipTemplate ? out : self._getLayoutTemplate("size").replace("{sizeText}", out);
     },
     _getFileType: function (ftype) {
       var self = this;
@@ -30904,6 +38899,7 @@ SOFTWARE.
       fileId,
       isError,
       size,
+      fnameUpdated,
       frameClass,
       foot,
       ind,
@@ -30916,35 +38912,36 @@ SOFTWARE.
         prevContent,
         zoomContent = "",
         styleAttribs = "",
-        screenW =
-          window.innerWidth ||
-          document.documentElement.clientWidth ||
-          document.body.clientWidth,
+        filename = fnameUpdated || fname,
+        isIconic,
+        ext = filename.split(".").pop().toLowerCase(),
+        screenW = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth,
         config,
         title = caption,
         alt = caption,
         typeCss = "type-default",
         getContent,
-        footer =
-          foot || self._renderFileFooter(cat, caption, size, "auto", isError),
-        forcePrevIcon = self.preferIconicPreview,
-        forceZoomIcon = self.preferIconicZoomPreview,
+        addFrameCss,
+        footer = foot || self._renderFileFooter(cat, caption, size, "auto", isError),
+        isRotatable,
+        alwaysPreview = $.inArray(ext, self.alwaysPreviewFileExtensions) !== -1,
+        forcePrevIcon = self.preferIconicPreview && !alwaysPreview,
+        forceZoomIcon = self.preferIconicZoomPreview && !alwaysPreview,
         newCat = forcePrevIcon ? "other" : cat;
       config =
         screenW < 400
-          ? self.previewSettingsSmall[newCat] ||
-            self.defaults.previewSettingsSmall[newCat]
-          : self.previewSettings[newCat] ||
-            self.defaults.previewSettings[newCat];
+          ? self.previewSettingsSmall[newCat] || self.defaults.previewSettingsSmall[newCat]
+          : self.previewSettings[newCat] || self.defaults.previewSettings[newCat];
       if (config) {
         $.each(config, function (key, val) {
           styleAttribs += key + ":" + val + ";";
         });
       }
-      getContent = function (c, d, zoom, frameCss) {
+      getContent = function (vCat, vData, zoom, frameCss, vZoomData) {
         var id = zoom ? "zoom-" + previewId : previewId,
-          tmplt = self._getPreviewTemplate(c),
-          css = (frameClass || "") + " " + frameCss;
+          tmplt = self._getPreviewTemplate(vCat),
+          css = (frameClass || "") + " " + frameCss,
+          tokens;
         if (self.frameClass) {
           css = self.frameClass + " " + css;
         }
@@ -30967,10 +38964,10 @@ SOFTWARE.
             title = attrs.title;
           }
           if (attrs.alt !== undefined && attrs.alt !== null) {
-            title = attrs.alt;
+            alt = title = attrs.alt;
           }
         }
-        return tmplt.setTokens({
+        tokens = {
           previewId: id,
           caption: caption,
           title: title,
@@ -30979,45 +38976,46 @@ SOFTWARE.
           type: self._getFileType(ftype),
           fileindex: ind,
           fileid: fileId || "",
+          filename: filename,
           typeCss: typeCss,
           footer: footer,
-          data: d,
+          data: zoom && vZoomData ? self.zoomPlaceholder + "{zoomData}" : vData,
           template: templ || cat,
           style: styleAttribs ? 'style="' + styleAttribs + '"' : "",
-        });
+          zoomData: vZoomData ? encodeURIComponent(vZoomData) : "",
+        };
+        if (zoom) {
+          tokens.zoomCache = "";
+          tokens.zoomData = "{zoomData}";
+        }
+        return tmplt.setTokens(tokens);
       };
       ind = ind || previewId.slice(previewId.lastIndexOf("-") + 1);
+      isRotatable = self.fileActionSettings.showRotate && $.inArray(ext, self.rotatableFileExtensions) !== -1;
       if (self.fileActionSettings.showZoom) {
-        zoomContent = getContent(
-          forceZoomIcon ? "other" : cat,
-          zoomData ? zoomData : data,
-          true,
-          "kv-zoom-thumb"
-        );
+        addFrameCss = "kv-zoom-thumb";
+        if (isRotatable) {
+          addFrameCss += " rotatable" + (forceZoomIcon ? " hide-rotate" : "");
+        }
+        zoomContent = getContent(forceZoomIcon ? "other" : cat, data, true, addFrameCss, zoomData);
       }
-      zoomContent =
-        "\n" +
-        self
-          ._getLayoutTemplate("zoomCache")
-          .replace("{zoomContent}", zoomContent);
+      zoomContent = "\n" + self._getLayoutTemplate("zoomCache").replace("{zoomContent}", zoomContent);
       if (typeof self.sanitizeZoomCache === "function") {
         zoomContent = self.sanitizeZoomCache(zoomContent);
       }
-      prevContent = getContent(
-        forcePrevIcon ? "other" : cat,
-        data,
-        false,
-        "kv-preview-thumb"
-      );
+      addFrameCss = "kv-preview-thumb";
+      if (isRotatable) {
+        isIconic = forcePrevIcon || self.hideThumbnailContent || !!self.previewFileIconSettings[ext];
+        addFrameCss += " rotatable" + (isIconic ? " hide-rotate" : "");
+      }
+      prevContent = getContent(forcePrevIcon ? "other" : cat, data, false, addFrameCss, zoomData);
       return prevContent.setTokens({ zoomCache: zoomContent });
     },
     _addToPreview: function ($preview, content) {
       var self = this,
         $el;
       content = $h.cspBuffer.stash(content);
-      $el = self.reversePreviewOrder
-        ? $preview.prepend(content)
-        : $preview.append(content);
+      $el = self.reversePreviewOrder ? $preview.prepend(content) : $preview.append(content);
       $h.cspBuffer.apply($preview);
       return $el;
     },
@@ -31037,16 +39035,7 @@ SOFTWARE.
         fileId = self.fileManager.getId(file),
         previewId = self._getThumbId(fileId);
       self._clearDefaultPreview();
-      content = self._generatePreviewTemplate(
-        "other",
-        data,
-        fname,
-        ftype,
-        previewId,
-        fileId,
-        isError,
-        size
-      );
+      content = self._generatePreviewTemplate("other", data, fname, ftype, previewId, fileId, isError, size);
       self._addToPreview($preview, content);
       self._setThumbAttr(previewId, caption, size);
       if (isDisabled === true && self.isAjaxUpload) {
@@ -31060,13 +39049,14 @@ SOFTWARE.
       var self = this,
         fname = $h.getFileName(file),
         ftype = fileInfo.type,
+        content,
         caption = fileInfo.name,
         cat = self._parseFileType(ftype, fname),
-        content,
         $preview = self.$preview,
         fsize = file.size || 0,
         iData = cat === "image" ? theFile.target.result : data,
-        fileId = self.fileManager.getId(file),
+        fm = self.fileManager,
+        fileId = fm.getId(file),
         previewId = self._getThumbId(fileId);
       /** @namespace window.DOMPurify */
       content = self._generatePreviewTemplate(
@@ -31077,30 +39067,22 @@ SOFTWARE.
         previewId,
         fileId,
         false,
-        fsize
+        fsize,
+        fileInfo.filename
       );
       self._clearDefaultPreview();
       self._addToPreview($preview, content);
       var $thumb = self._getFrame(previewId);
-      self._validateImageOrientation(
-        $thumb.find("img"),
-        file,
-        previewId,
-        fileId,
-        caption,
-        ftype,
-        fsize,
-        iData
-      );
+      self._validateImageOrientation($thumb.find("img"), file, previewId, fileId, caption, ftype, fsize, iData);
       self._setThumbAttr(previewId, caption, fsize);
       self._initSortable();
     },
-    _setThumbAttr: function (id, caption, size) {
+    _setThumbAttr: function (id, caption, size, description) {
       var self = this,
         $frame = self._getFrame(id);
       if ($frame.length) {
         size = size && size > 0 ? self._getSize(size) : "";
-        $frame.data({ caption: caption, size: size });
+        $frame.data({ caption: caption, size: size, description: description || "" });
       }
     },
     _setInitThumbAttr: function () {
@@ -31110,6 +39092,7 @@ SOFTWARE.
         config,
         caption,
         size,
+        description,
         previewId;
       if (len === 0) {
         return;
@@ -31119,16 +39102,15 @@ SOFTWARE.
         previewId = self.previewInitId + "-" + $h.INIT_FLAG + i;
         caption = $h.ifSet("caption", config, $h.ifSet("filename", config));
         size = $h.ifSet("size", config);
-        self._setThumbAttr(previewId, caption, size);
+        description = $h.ifSet("description", config);
+        self._setThumbAttr(previewId, caption, size, description);
       }
     },
     _slugDefault: function (text) {
       // noinspection RegExpRedundantEscape
-      return $h.isEmpty(text, true)
-        ? ""
-        : String(text).replace(/[\[\]\/\{}:;#%=\(\)\*\+\?\\\^\$\|<>&"']/g, "_");
+      return $h.isEmpty(text, true) ? "" : String(text).replace(/[\[\]\/\{}:;#%=\(\)\*\+\?\\\^\$\|<>&"']/g, "_");
     },
-    _updateFileDetails: function (numFiles, skipRaiseEvent) {
+    _updateFileDetails: function (numFiles) {
       var self = this,
         $el = self.$element,
         label,
@@ -31136,9 +39118,7 @@ SOFTWARE.
         log,
         nFiles,
         file,
-        name =
-          ($h.isIE(9) && $h.findFileName($el.val())) ||
-          ($el[0].files[0] && $el[0].files[0].name);
+        name = ($h.isIE(9) && $h.findFileName($el.val())) || ($el[0].files[0] && $el[0].files[0].name);
       if (!name && self.fileManager.count() > 0) {
         file = self.fileManager.getFirstFile();
         label = file.nameFmt;
@@ -31147,9 +39127,10 @@ SOFTWARE.
       }
       n = self.isAjaxUpload ? self.fileManager.count() : numFiles;
       nFiles = self.previewCache.count(true) + n;
-      log = n === 1 ? label : self._getMsgSelected(nFiles);
+      log = n === 1 ? label : self._getMsgSelected(nFiles, !self.isAjaxUpload && !self.isError);
       if (self.isError) {
         self.$previewContainer.removeClass("file-thumb-loading");
+        self._initCapStatus();
         self.$previewStatus.html("");
         self.$captionContainer.removeClass("icon-visible");
       } else {
@@ -31157,9 +39138,7 @@ SOFTWARE.
       }
       self._setCaption(log, self.isError);
       self.$container.removeClass("file-input-new file-input-ajax-new");
-      if (!skipRaiseEvent) {
-        self._raise("fileselect", [numFiles, label]);
-      }
+      self._raise("fileselect", [numFiles, label]);
       if (self.previewCache.count(true)) {
         self._initPreviewActions();
       }
@@ -31174,9 +39153,7 @@ SOFTWARE.
         css = "file-preview-" + status.toLowerCase(),
         $indicator = $thumb.find(".file-upload-indicator"),
         config = self.fileActionSettings;
-      $thumb.removeClass(
-        "file-preview-success file-preview-error file-preview-paused file-preview-loading"
-      );
+      $thumb.removeClass("file-preview-success file-preview-error file-preview-paused file-preview-loading");
       if (status === "Success") {
         $thumb.find(".file-drag-handle").remove();
       }
@@ -31214,15 +39191,9 @@ SOFTWARE.
       }
       if (!$h.isEmpty(template)) {
         if (pctLimit && pct > pctLimit && p <= 100) {
-          out = template.setTokens({
-            percent: pctLimit,
-            status: self.msgUploadThreshold,
-          });
+          out = template.setTokens({ percent: pctLimit, status: self.msgUploadThreshold });
         } else {
-          out = template.setTokens({
-            percent: pct,
-            status: p > 100 ? self.msgUploadEnd : pct + "%",
-          });
+          out = template.setTokens({ percent: pct, status: p > 100 ? self.msgUploadEnd : pct + "%" });
         }
         stats = stats || "";
         out = out.setTokens({ stats: stats });
@@ -31242,9 +39213,7 @@ SOFTWARE.
         title = self.dropZoneTitle,
         strFiles;
       if (self.isClickable) {
-        strFiles = $h.isEmpty(self.$element.attr("multiple"))
-          ? self.fileSingle
-          : self.filePlural;
+        strFiles = $h.isEmpty(self.$element.attr("multiple")) ? self.fileSingle : self.filePlural;
         title += self.dropZoneClickTitle.replace("{files}", strFiles);
       }
       $zone.find("." + self.dropZoneTitleClass).remove();
@@ -31258,20 +39227,14 @@ SOFTWARE.
       ) {
         return;
       }
-      if (
-        $zone.find($h.FRAMES).length === 0 &&
-        $h.isEmpty(self.defaultPreviewContent)
-      ) {
-        $zone.prepend(
-          '<div class="' +
-            self.dropZoneTitleClass +
-            ' text-body-secondary">' +
-            title +
-            "</div>"
-        );
+      if ($zone.find($h.FRAMES).length === 0 && $h.isEmpty(self.defaultPreviewContent)) {
+        $zone.prepend($h.cspBuffer.stash('<div class="' + self.dropZoneTitleClass + '">' + title + "</div>"));
+        $h.cspBuffer.apply($zone);
       }
       self.$container.removeClass("file-input-new");
-      $h.addCss(self.$container, "file-input-ajax-new");
+      if (self.isAjaxUpload) {
+        $h.addCss(self.$container, "file-input-ajax-new");
+      }
     },
     _getStats: function (stats) {
       var self = this,
@@ -31284,9 +39247,7 @@ SOFTWARE.
       pendingTime =
         !stats.elapsed || !stats.bps
           ? self.msgCalculatingTime
-          : self.msgPendingTime.setTokens({
-              time: $h.getElapsed(Math.ceil(stats.pendingBytes / stats.bps)),
-            });
+          : self.msgPendingTime.setTokens({ time: $h.getElapsed(Math.ceil(stats.pendingBytes / stats.bps)) });
 
       return t.setTokens({
         uploadSpeed: stats.bitrate,
@@ -31349,8 +39310,7 @@ SOFTWARE.
         self._setResumableProgress(pctTot, totStats);
       } else {
         fm.setProgress(id, pct);
-        $prog =
-          $thumb && $thumb.length ? $thumb.find(".file-thumb-progress") : null;
+        $prog = $thumb && $thumb.length ? $thumb.find(".file-thumb-progress") : null;
         self._setProgress(pct, $prog, null, self._getStats(stats));
         $.each(fm.stats, function (id, cfg) {
           totUpSize += cfg.loaded;
@@ -31362,14 +39322,8 @@ SOFTWARE.
     },
     _validateMinCount: function () {
       var self = this,
-        len = self.isAjaxUpload
-          ? self.fileManager.count()
-          : self._inputFileCount();
-      if (
-        self.validateInitialCount &&
-        self.minFileCount > 0 &&
-        self._getFileCount(len - 1) < self.minFileCount
-      ) {
+        len = self.isAjaxUpload ? self.fileManager.count() : self._inputFileCount();
+      if (self.validateInitialCount && self.minFileCount > 0 && self._getFileCount(len - 1) < self.minFileCount) {
         self._noFilesError({});
         return false;
       }
@@ -31434,41 +39388,33 @@ SOFTWARE.
       $btn.attr("title", title);
       $h.setHtml($btn, icon);
     },
-    _checkDimensions: function (i, chk, $img, $thumb, fname, type, params) {
+    _isValidSize: function (size, type, $image, $thumb, filename, params) {
       var self = this,
         msg,
         dim,
-        tag = chk === "Small" ? "min" : "max",
-        limit = self[tag + "Image" + type],
-        $imgEl,
-        isValid;
-      if ($h.isEmpty(limit) || !$img.length) {
-        return;
+        $img,
+        tag = size === "Small" ? "min" : "max",
+        limit = self[tag + "Image" + type];
+      if ($h.isEmpty(limit) || !$image.length) {
+        return true;
       }
-      $imgEl = $img[0];
-      dim =
-        type === "Width"
-          ? $imgEl.naturalWidth || $imgEl.width
-          : $imgEl.naturalHeight || $imgEl.height;
-      isValid = chk === "Small" ? dim >= limit : dim <= limit;
-      if (isValid) {
-        return;
+      $img = $image[0];
+      dim = type === "Width" ? $img.naturalWidth || $img.width : $img.naturalHeight || $img.height;
+      if (size === "Small" ? dim >= limit : dim <= limit) {
+        return true;
       }
-      msg = self["msgImage" + type + chk].setTokens({
-        name: fname,
-        size: limit,
-      });
-      self._showFileError(msg, params);
+      msg = self["msgImage" + type + size] || 'Image "{name}" has a size validation error (limit "{size}").';
+      self._showFileError(msg.setTokens({ name: filename, size: limit, dimension: dim }), params);
       self._setPreviewError($thumb);
+      self.fileManager.remove($thumb);
+      self._clearFileInput();
+      return false;
     },
     _getExifObj: function (data) {
       var self = this,
         exifObj,
         error = $h.logMessages.exifWarning;
-      if (
-        data.slice(0, 23) !== "data:image/jpeg;base64," &&
-        data.slice(0, 22) !== "data:image/jpg;base64,"
-      ) {
+      if (data.slice(0, 23) !== "data:image/jpeg;base64," && data.slice(0, 22) !== "data:image/jpg;base64,") {
         exifObj = null;
         return;
       }
@@ -31478,7 +39424,7 @@ SOFTWARE.
         exifObj = null;
         error = (err && err.message) || "";
       }
-      if (!exifObj) {
+      if (!exifObj && self.showExifErrorLog) {
         self._log($h.logMessages.badExifParser, { details: error });
       }
       return exifObj;
@@ -31490,8 +39436,7 @@ SOFTWARE.
         $mark,
         isHidden = false,
         $div,
-        zoomOnly =
-          invalidImg && $thumb && $thumb.attr("data-template") === "image",
+        zoomOnly = invalidImg && $thumb && $thumb.attr("data-template") === "image",
         ev;
       if (invalidImg && invalidZoomImg) {
         return;
@@ -31501,14 +39446,9 @@ SOFTWARE.
         $img = $zoomImg;
         $zoomImg = null;
         $img.css(self.previewSettings.image);
-        $div = $(document.createElement("div")).appendTo(
-          $thumb.find(".kv-file-content")
-        );
+        $div = $h.createDiv().appendTo($thumb.find(".kv-file-content"));
         $mark = $(document.createElement("span")).insertBefore($img);
-        $img
-          .css("visibility", "hidden")
-          .removeClass("file-zoom-detail")
-          .appendTo($div);
+        $img.css("visibility", "hidden").removeClass("file-zoom-detail").appendTo($div);
       } else {
         isHidden = !$img.is(":visible");
       }
@@ -31537,82 +39477,40 @@ SOFTWARE.
         }
         var offsetAngle = Math.atan(w / h),
           origFactor = Math.sqrt(Math.pow(h, 2) + Math.pow(w, 2)),
-          scale = !origFactor
-            ? 1
-            : h / Math.cos(Math.PI / 2 + offsetAngle) / origFactor,
+          scale = !origFactor ? 1 : h / Math.cos(Math.PI / 2 + offsetAngle) / origFactor,
           s = " scale(" + Math.abs(scale) + ")";
         $h.setTransform(img, r + s);
         $h.setTransform(zoomImg, r + s);
         if (zoomOnly) {
-          $img
-            .css("visibility", "visible")
-            .insertAfter($mark)
-            .addClass("file-zoom-detail");
+          $img.css("visibility", "visible").insertAfter($mark).addClass("file-zoom-detail");
           $mark.remove();
           $div.remove();
         }
       });
     },
-    _validateImageOrientation: function (
-      $img,
-      file,
-      previewId,
-      fileId,
-      caption,
-      ftype,
-      fsize,
-      iData
-    ) {
+    _validateImageOrientation: function ($img, file, previewId, fileId, caption, ftype, fsize, iData) {
       var self = this,
-        exifObj,
+        exifObj = null,
         value,
         autoOrientImage = self.autoOrientImage,
         selector;
+      exifObj = self._getExifObj(iData);
       if (self.canOrientImage) {
         $img.css("image-orientation", autoOrientImage ? "from-image" : "none");
+        self._validateImage(previewId, fileId, caption, ftype, fsize, iData, exifObj);
         return;
       }
       selector = $h.getZoomSelector(previewId, " img");
-      exifObj = autoOrientImage ? self._getExifObj(iData) : null;
       value = exifObj ? exifObj["0th"][piexif.ImageIFD.Orientation] : null; // jshint ignore:line
       if (!value) {
-        self._validateImage(
-          previewId,
-          fileId,
-          caption,
-          ftype,
-          fsize,
-          iData,
-          exifObj
-        );
+        self._validateImage(previewId, fileId, caption, ftype, fsize, iData, exifObj);
         return;
       }
-      self.setImageOrientation(
-        $img,
-        $(selector),
-        value,
-        self._getFrame(previewId)
-      );
+      self.setImageOrientation($img, $(selector), value, self._getFrame(previewId));
       self._raise("fileimageoriented", { $img: $img, file: file });
-      self._validateImage(
-        previewId,
-        fileId,
-        caption,
-        ftype,
-        fsize,
-        iData,
-        exifObj
-      );
+      self._validateImage(previewId, fileId, caption, ftype, fsize, iData, exifObj);
     },
-    _validateImage: function (
-      previewId,
-      fileId,
-      fname,
-      ftype,
-      fsize,
-      iData,
-      exifObj
-    ) {
+    _validateImage: function (previewId, fileId, fname, ftype, fsize, iData, exifObj) {
       var self = this,
         $preview = self.$preview,
         params,
@@ -31624,76 +39522,44 @@ SOFTWARE.
       fname = fname || "Untitled";
       $img
         .one("load", function () {
+          if ($img.data("validated")) {
+            return;
+          }
+          $img.data("validated", true);
           w1 = $thumb.width();
           w2 = $preview.width();
           if (w1 > w2) {
             $img.css("width", "100%");
           }
           params = { ind: i, id: previewId, fileId: fileId };
-          self._checkDimensions(
-            i,
-            "Small",
-            $img,
-            $thumb,
-            fname,
-            "Width",
-            params
-          );
-          self._checkDimensions(
-            i,
-            "Small",
-            $img,
-            $thumb,
-            fname,
-            "Height",
-            params
-          );
-          if (!self.resizeImage) {
-            self._checkDimensions(
-              i,
-              "Large",
-              $img,
-              $thumb,
-              fname,
-              "Width",
-              params
-            );
-            self._checkDimensions(
-              i,
-              "Large",
-              $img,
-              $thumb,
-              fname,
-              "Height",
-              params
-            );
-          }
-          self._raise("fileimageloaded", [previewId]);
-          self.fileManager.addImage(fileId, {
-            ind: i,
-            img: $img,
-            thumb: $thumb,
-            pid: previewId,
-            typ: ftype,
-            siz: fsize,
-            validated: false,
-            imgData: iData,
-            exifObj: exifObj,
-          });
-          $thumb.data("exif", exifObj);
-          self._validateAllImages();
+          setTimeout(function () {
+            var isValidWidth, isValidHeight;
+            isValidWidth = self._isValidSize("Small", "Width", $img, $thumb, fname, params);
+            isValidHeight = self._isValidSize("Small", "Height", $img, $thumb, fname, params);
+            if (!self.resizeImage) {
+              isValidWidth = isValidWidth && self._isValidSize("Large", "Width", $img, $thumb, fname, params);
+              isValidHeight = isValidHeight && self._isValidSize("Large", "Height", $img, $thumb, fname, params);
+            }
+            self._raise("fileimageloaded", [previewId]);
+            $thumb.data("exif", exifObj);
+            if (isValidWidth && isValidHeight) {
+              self.fileManager.addImage(fileId, {
+                ind: i,
+                img: $img,
+                thumb: $thumb,
+                pid: previewId,
+                typ: ftype,
+                siz: fsize,
+                validated: false,
+                imgData: iData,
+                exifObj: exifObj,
+              });
+              self._validateAllImages();
+            }
+          }, self.processDelay);
         })
         .one("error", function () {
           self._raise("fileimageloaderror", [previewId]);
-        })
-        .each(function () {
-          if (this.complete) {
-            $(this).trigger("load");
-          } else {
-            if (this.error) {
-              $(this).trigger("error");
-            }
-          }
         });
     },
     _validateAllImages: function () {
@@ -31712,7 +39578,7 @@ SOFTWARE.
       $.each(self.fileManager.loadedImages, function (id, config) {
         if (!config.validated) {
           fsize = config.siz;
-          if (fsize && fsize > minSize * 1000) {
+          if (fsize && fsize > minSize * self.bytesToKB) {
             self._getResizedImage(id, config, counter, numImgs);
           }
           config.validated = true;
@@ -31756,11 +39622,7 @@ SOFTWARE.
       file = self.fileManager.getFile(id);
       params = { id: pid, index: ind, fileId: id };
       evParams = [id, pid, ind];
-      if (
-        !file ||
-        !isValidImage ||
-        (width <= maxWidth && height <= maxHeight)
-      ) {
+      if (!file || !isValidImage || (width <= maxWidth && height <= maxHeight)) {
         if (isValidImage && file) {
           self._raise("fileimageresized", evParams);
         }
@@ -31777,17 +39639,9 @@ SOFTWARE.
       chkWidth = width > maxWidth;
       chkHeight = height > maxHeight;
       if (self.resizePreference === "width") {
-        ratio = chkWidth
-          ? maxWidth / width
-          : chkHeight
-          ? maxHeight / height
-          : 1;
+        ratio = chkWidth ? maxWidth / width : chkHeight ? maxHeight / height : 1;
       } else {
-        ratio = chkHeight
-          ? maxHeight / height
-          : chkWidth
-          ? maxWidth / width
-          : 1;
+        ratio = chkHeight ? maxHeight / height : chkWidth ? maxWidth / width : 1;
       }
       self._resetCanvas();
       width *= ratio;
@@ -31862,9 +39716,8 @@ SOFTWARE.
       self._handler($zone, "click", function (e) {
         var $tar = $(e.target);
         if (
-          !$(self.elErrorContainer + ":visible").length &&
-          (!$tar.parents(".file-preview-thumbnails").length ||
-            $tar.parents(".file-default-preview").length)
+          !self.$errorContainer.is(":visible") &&
+          (!$tar.parents(".file-preview-thumbnails").length || $tar.parents(".file-default-preview").length)
         ) {
           self.$element.data("zoneClicked", true).trigger("click");
           $zone.blur();
@@ -31903,14 +39756,10 @@ SOFTWARE.
           cap = self._getMsgSelected(self.msgNo);
         }
         out = $h.isEmpty(content) ? cap : content;
-        icon =
-          '<span class="' +
-          self.msgValidationErrorClass +
-          '">' +
-          self.msgValidationErrorIcon +
-          "</span>";
+        icon = '<span class="' + self.msgValidationErrorClass + '">' + self.msgValidationErrorIcon + "</span>";
       } else {
         if ($h.isEmpty(content)) {
+          self.$caption.attr("title", "");
           return;
         }
         title = $("<div>" + content + "</div>").text();
@@ -31923,9 +39772,7 @@ SOFTWARE.
     },
     _createContainer: function () {
       var self = this,
-        attribs = {
-          class: "file-input file-input-new" + (self.rtl ? " kv-rtl" : ""),
-        },
+        attribs = { class: "file-input file-input-new" + (self.rtl ? " kv-rtl" : "") },
         $container = $h.createElement($h.cspBuffer.stash(self._renderMain()));
       $h.cspBuffer.apply($container);
       $container.insertBefore(self.$element).attr(attribs);
@@ -31948,27 +39795,26 @@ SOFTWARE.
       var self = this;
       self.$caption.attr({ readonly: self.isDisabled });
     },
+    _setTabIndex: function (type, html) {
+      var self = this,
+        index = self.tabIndexConfig[type];
+      return html.setTokens({
+        tabIndexConfig: index === undefined || index === null ? "" : 'tabindex="' + index + '"',
+      });
+    },
     _renderMain: function () {
       var self = this,
-        dropCss = self.dropZoneEnabled
-          ? " file-drop-zone"
-          : "file-drop-disabled",
+        dropCss = self.dropZoneEnabled ? " file-drop-zone" : "file-drop-disabled",
         close = !self.showClose ? "" : self._getLayoutTemplate("close"),
         preview = !self.showPreview
           ? ""
-          : self
-              ._getLayoutTemplate("preview")
-              .setTokens({ class: self.previewClass, dropClass: dropCss }),
-        css = self.isDisabled
-          ? self.captionClass + " file-caption-disabled"
-          : self.captionClass,
-        caption = self.captionTemplate.setTokens({
-          class: css + " kv-fileinput-caption",
-        });
+          : self._getLayoutTemplate("preview").setTokens({ class: self.previewClass, dropClass: dropCss }),
+        css = self.isDisabled ? self.captionClass + " file-caption-disabled" : self.captionClass,
+        caption = self.captionTemplate.setTokens({ class: css + " kv-fileinput-caption" });
+      caption = self._setTabIndex("caption", caption);
       return self.mainTemplate.setTokens({
-        class:
-          self.mainClass +
-          (!self.showBrowse && self.showCaption ? " no-browse" : ""),
+        class: self.mainClass + (!self.showBrowse && self.showCaption ? " no-browse" : ""),
+        inputGroupClass: self.inputGroupClass,
         preview: preview,
         close: close,
         caption: caption,
@@ -32011,9 +39857,7 @@ SOFTWARE.
             return "";
           }
           if (self.isAjaxUpload && !self.isDisabled) {
-            tmplt = self
-              ._getLayoutTemplate("btnLink")
-              .replace("{href}", self.uploadUrl);
+            tmplt = self._getLayoutTemplate("btnLink").replace("{href}", self.uploadUrl);
           } else {
             btnType = "submit";
           }
@@ -32027,14 +39871,11 @@ SOFTWARE.
         default:
           return "";
       }
+      tmplt = self._setTabIndex(type, tmplt);
 
-      css +=
-        type === "browse"
-          ? " btn-file"
-          : " fileinput-" + type + " fileinput-" + type + "-button";
+      css += type === "browse" ? " btn-file" : " fileinput-" + type + " fileinput-" + type + "-button";
       if (!$h.isEmpty(label)) {
-        label =
-          ' <span class="' + self.buttonLabelClass + '">' + label + "</span>";
+        label = ' <span class="' + self.buttonLabelClass + '">' + label + "</span>";
       }
       return tmplt.setTokens({
         type: btnType,
@@ -32049,11 +39890,7 @@ SOFTWARE.
       var self = this;
       return (
         '<div class="file-thumb-progress kv-hidden">' +
-        self.progressInfoTemplate.setTokens({
-          percent: 101,
-          status: self.msgUploadBegin,
-          stats: "",
-        }) +
+        self.progressInfoTemplate.setTokens({ percent: 101, status: self.msgUploadBegin, stats: "" }) +
         "</div>"
       );
     },
@@ -32063,6 +39900,7 @@ SOFTWARE.
         rem = config.showRemove,
         drg = config.showDrag,
         upl = config.showUpload,
+        rot = config.showRotate,
         zoom = config.showZoom,
         out,
         params,
@@ -32072,39 +39910,12 @@ SOFTWARE.
         title = isError ? config.indicatorErrorTitle : config.indicatorNewTitle,
         indicator = tInd.setTokens({ indicator: ind, indicatorTitle: title });
       size = self._getSize(size);
-      params = {
-        type: cat,
-        caption: caption,
-        size: size,
-        width: width,
-        progress: "",
-        indicator: indicator,
-      };
+      params = { type: cat, caption: caption, size: size, width: width, progress: "", indicator: indicator };
       if (self.isAjaxUpload) {
         params.progress = self._renderThumbProgress();
-        params.actions = self._renderFileActions(
-          params,
-          upl,
-          false,
-          rem,
-          zoom,
-          drg,
-          false,
-          false,
-          false
-        );
+        params.actions = self._renderFileActions(params, upl, false, rem, rot, zoom, drg, false, false, false);
       } else {
-        params.actions = self._renderFileActions(
-          params,
-          false,
-          false,
-          false,
-          zoom,
-          drg,
-          false,
-          false,
-          false
-        );
+        params.actions = self._renderFileActions(params, false, false, false, false, zoom, drg, false, false, false);
       }
       out = template.setTokens(params);
       out = $h.replaceTags(out, self.previewThumbTags);
@@ -32115,6 +39926,7 @@ SOFTWARE.
       showUpl,
       showDwn,
       showDel,
+      showRot,
       showZoom,
       showDrag,
       disabled,
@@ -32147,12 +39959,16 @@ SOFTWARE.
       if (typeof showDrag === "function") {
         showDrag = showDrag(cfg);
       }
-      if (!showUpl && !showDwn && !showDel && !showZoom && !showDrag) {
+      if (typeof showRot === "function") {
+        showRot = showRot(cfg);
+      }
+      if (!showUpl && !showDwn && !showDel && !showRot && !showZoom && !showDrag) {
         return "";
       }
       var vUrl = url === false ? "" : ' data-url="' + url + '"',
         btnZoom = "",
         btnDrag = "",
+        btnRotate = "",
         css,
         vKey = key === false ? "" : ' data-key="' + key + '"',
         btnDelete = "",
@@ -32160,13 +39976,8 @@ SOFTWARE.
         btnDownload = "",
         template = self._getLayoutTemplate("actions"),
         config = self.fileActionSettings,
-        otherButtons = self.otherActionButtons.setTokens({
-          dataKey: vKey,
-          key: key,
-        }),
-        removeClass = disabled
-          ? config.removeClass + " disabled"
-          : config.removeClass;
+        otherButtons = self.otherActionButtons.setTokens({ dataKey: vKey, key: key }),
+        removeClass = disabled ? config.removeClass + " disabled" : config.removeClass;
       if (showDel) {
         btnDelete = self._getLayoutTemplate("actionDelete").setTokens({
           removeClass: removeClass,
@@ -32175,6 +39986,13 @@ SOFTWARE.
           dataUrl: vUrl,
           dataKey: vKey,
           key: key,
+        });
+      }
+      if (showRot) {
+        btnRotate = self._getLayoutTemplate("actionRotate").setTokens({
+          rotateClass: config.rotateClass,
+          rotateIcon: config.rotateIcon,
+          rotateTitle: config.rotateTitle,
         });
       }
       if (showUpl) {
@@ -32212,6 +40030,7 @@ SOFTWARE.
         delete: btnDelete,
         upload: btnUpload,
         download: btnDownload,
+        rotate: btnRotate,
         zoom: btnZoom,
         drag: btnDrag,
         other: otherButtons,
@@ -32231,9 +40050,12 @@ SOFTWARE.
     },
     _change: function (e) {
       var self = this;
+      $(document.body).off("focusin.fileinput focusout.fileinput");
       if (self.changeTriggered) {
+        self._toggleLoading("hide");
         return;
       }
+      self._toggleLoading("show");
       var $el = self.$element,
         isDragDrop = arguments.length > 1,
         isAjaxUpload = self.isAjaxUpload,
@@ -32249,15 +40071,11 @@ SOFTWARE.
         inclAll = maxTotCount > 0 && maxTotCount > maxCount,
         flagSingle = isSingleUpl && ctr > 0,
         throwError = function (mesg, file, previewId, index) {
-          var p1 = $.extend(true, {}, self._getOutData(null, {}, {}, files), {
-              id: previewId,
-              index: index,
-            }),
+          var p1 = $.extend(true, {}, self._getOutData(null, {}, {}, files), { id: previewId, index: index }),
             p2 = { id: previewId, index: index, file: file, files: files };
           self.isPersistentError = true;
-          return isAjaxUpload
-            ? self._showFileError(mesg, p1)
-            : self._showError(mesg, p2);
+          self._toggleLoading("hide");
+          return isAjaxUpload ? self._showFileError(mesg, p1) : self._showError(mesg, p2);
         },
         maxCountCheck = function (n, m, all) {
           var msg = all ? self.msgTotalFilesTooMany : self.msgFilesTooMany;
@@ -32271,15 +40089,11 @@ SOFTWARE.
       self._resetUpload();
       self._hideFileIcon();
       if (self.dropZoneEnabled) {
-        self.$container
-          .find(".file-drop-zone ." + self.dropZoneTitleClass)
-          .remove();
+        self.$container.find(".file-drop-zone ." + self.dropZoneTitleClass).remove();
       }
       if (!isAjaxUpload) {
         if (e.target && e.target.files === undefined) {
-          files = e.target.value
-            ? [{ name: e.target.value.replace(/^.+\\/, "") }]
-            : [];
+          files = e.target.value ? [{ name: e.target.value.replace(/^.+\\/, "") }] : [];
         } else {
           files = e.target.files || {};
         }
@@ -32298,10 +40112,7 @@ SOFTWARE.
       total = self._getFileCount(initCount, inclAll ? false : undefined);
       if (maxCount > 0 && total > maxCount) {
         if (!self.autoReplace || len > maxCount) {
-          maxCountCheck(
-            self.autoReplace && len > maxCount ? len : total,
-            maxCount
-          );
+          maxCountCheck(self.autoReplace && len > maxCount ? len : total, maxCount);
           return;
         }
         if (total > maxCount) {
@@ -32312,11 +40123,7 @@ SOFTWARE.
           total = self._getFileCount(initCount, true);
           if (maxTotCount > 0 && total > maxTotCount) {
             if (!self.autoReplace || len > maxCount) {
-              maxCountCheck(
-                self.autoReplace && len > maxTotCount ? len : total,
-                maxTotCount,
-                true
-              );
+              maxCountCheck(self.autoReplace && len > maxTotCount ? len : total, maxTotCount, true);
               return;
             }
             if (total > maxCount) {
@@ -32330,31 +40137,33 @@ SOFTWARE.
             self.clearFileStack();
           }
         } else {
-          if (
-            isAjaxUpload &&
-            ctr === 0 &&
-            (!self.previewCache.count(true) || self.overwriteInitial)
-          ) {
+          if (isAjaxUpload && ctr === 0 && (!self.previewCache.count(true) || self.overwriteInitial)) {
             self._resetPreviewThumbs(true);
           }
         }
       }
+      if (self.autoReplace) {
+        self._getThumbs().each(function () {
+          var $thumb = $(this);
+          if ($thumb.hasClass("file-preview-success") || $thumb.hasClass("file-preview-error")) {
+            $thumb.remove();
+          }
+        });
+      }
       self.readFiles(tfiles);
+      self._toggleLoading("hide");
     },
     _abort: function (params) {
       var self = this,
         data;
-      if (
-        self.ajaxAborted &&
-        typeof self.ajaxAborted === "object" &&
-        self.ajaxAborted.message !== undefined
-      ) {
+      if (self.ajaxAborted && typeof self.ajaxAborted === "object" && self.ajaxAborted.message !== undefined) {
         data = $.extend(true, {}, self._getOutData(null), params);
         data.abortData = self.ajaxAborted.data || {};
         data.abortMessage = self.ajaxAborted.message;
         self._setProgress(101, self.$progress, self.msgCancelled);
         self._showFileError(self.ajaxAborted.message, data, "filecustomerror");
         self.cancel();
+        self.unlock();
         return true;
       }
       return !!self.ajaxAborted;
@@ -32369,7 +40178,7 @@ SOFTWARE.
         if (ind === "-1" || ind === -1) {
           return;
         }
-        if (!self.fileManager.getFile($thumb.attr("data-fileid"))) {
+        if (!self._getThumbFile($thumb)) {
           $thumb.attr({ "data-fileindex": i });
           i++;
         } else {
@@ -32388,10 +40197,7 @@ SOFTWARE.
         self._showFileError(self.msgFileRequired);
         return false;
       }
-      if (
-        self.minFileCount > 0 &&
-        self._getFileCount(cnt) < self.minFileCount
-      ) {
+      if (self.minFileCount > 0 && self._getFileCount(cnt) < self.minFileCount) {
         self._noFilesError({});
         return false;
       }
@@ -32399,17 +40205,12 @@ SOFTWARE.
     },
     _canPreview: function (file) {
       var self = this;
-      if (
-        !file ||
-        !self.showPreview ||
-        !self.$preview ||
-        !self.$preview.length
-      ) {
+      if (!file || !self.showPreview || !self.$preview || !self.$preview.length) {
         return false;
       }
       var name = file.name || "",
         type = file.type || "",
-        size = (file.size || 0) / 1000,
+        size = (file.size || 0) / self.bytesToKB,
         cat = self._parseFileType(type, name),
         allowedTypes,
         allowedMimes,
@@ -32421,8 +40222,7 @@ SOFTWARE.
         dTypes = self.disabledPreviewTypes,
         dMimes = self.disabledPreviewMimeTypes,
         dExts = self.disabledPreviewExtensions || [],
-        maxSize =
-          (self.maxFilePreviewSize && parseFloat(self.maxFilePreviewSize)) || 0,
+        maxSize = (self.maxFilePreviewSize && parseFloat(self.maxFilePreviewSize)) || 0,
         expAllExt = new RegExp("\\.(" + exts.join("|") + ")$", "i"),
         expDisExt = new RegExp("\\.(" + dExts.join("|") + ")$", "i");
       allowedTypes = !types || types.indexOf(cat) !== -1;
@@ -32436,7 +40236,11 @@ SOFTWARE.
       return !skipPreview && (allowedTypes || allowedMimes || allowedExts);
     },
     addToStack: function (file, id) {
-      this.fileManager.add(file, id);
+      var self = this;
+      self.stackIsUpdating = true;
+      self.fileManager.add(file, id);
+      self._refreshPreview();
+      self.stackIsUpdating = false;
     },
     clearFileStack: function () {
       var self = this;
@@ -32463,15 +40267,65 @@ SOFTWARE.
     getFileList: function () {
       return this.fileManager.list();
     },
+    getFilesSize: function () {
+      return this.fileManager.getTotalSize();
+    },
     getFilesCount: function (includeInitial) {
       var self = this,
-        len = self.isAjaxUpload
-          ? self.fileManager.count()
-          : self._inputFileCount();
+        len = self.isAjaxUpload ? self.fileManager.count() : self._inputFileCount();
       if (includeInitial) {
         len += self.previewCache.count(true);
       }
       return self._getFileCount(len);
+    },
+    _initCapStatus: function (status) {
+      var self = this,
+        $cap = self.$caption;
+      $cap.removeClass("is-valid file-processing");
+      if (!status) {
+        return;
+      }
+      if (status === "processing") {
+        $cap.addClass("file-processing");
+      } else {
+        $cap.addClass("is-valid");
+      }
+    },
+    _toggleLoading: function (type) {
+      var self = this;
+      $h.setHtml(self.$previewStatus, type === "hide" ? "" : self.msgProcessing);
+      self.$container.removeClass("file-thumb-loading");
+      self._initCapStatus(type === "hide" ? "" : "processing");
+      if (type !== "hide") {
+        if (self.dropZoneEnabled) {
+          self.$container.find(".file-drop-zone ." + self.dropZoneTitleClass).remove();
+        }
+        self.$container.addClass("file-thumb-loading");
+      }
+    },
+    _initFileSelected: function () {
+      var self = this,
+        $el = self.$element,
+        $body = $(document.body),
+        ev = "focusin.fileinput focusout.fileinput";
+      if ($body.length) {
+        $body
+          .off(ev)
+          .on("focusout.fileinput", function () {
+            self._toggleLoading("show");
+          })
+          .on("focusin.fileinput", function () {
+            setTimeout(function () {
+              if (!$el.val()) {
+                self._setFileDropZoneTitle();
+              }
+              $body.off(ev);
+              self._toggleLoading("hide");
+            }, 2500);
+          });
+      } else {
+        self._toggleLoading("hide");
+      }
     },
     readFiles: function (files) {
       this.reader = new FileReader();
@@ -32496,15 +40350,12 @@ SOFTWARE.
               index: index,
               fileId: fileId,
             }),
-            p2 = {
-              id: previewId,
-              index: index,
-              fileId: fileId,
-              file: file,
-              files: files,
-            };
-          self._previewDefault(file, true);
+            p2 = { id: previewId, index: index, fileId: fileId, file: file, files: files };
+          Object.values(files).forEach((x) => {
+            self._previewDefault(x, true);
+          });
           $thumb = self._getFrame(previewId, true);
+          self._toggleLoading("hide");
           if (self.isAjaxUpload) {
             setTimeout(function () {
               readFile(index + 1);
@@ -32520,9 +40371,7 @@ SOFTWARE.
             $thumb.find(".kv-file-upload").remove();
           }
           self.isPersistentError = true;
-          self.isError = self.isAjaxUpload
-            ? self._showFileError(msg, p1)
-            : self._showError(msg, p2);
+          self.isError = self.isAjaxUpload ? self._showFileError(msg, p1) : self._showError(msg, p2);
           self._updateFileDetails(numFiles);
         };
       self.fileManager.clearImages();
@@ -32541,12 +40390,10 @@ SOFTWARE.
           if (self.duplicateErrors.length) {
             errors = "<li>" + self.duplicateErrors.join("</li><li>") + "</li>";
             if ($error.find("ul").length === 0) {
-              $h.setHtml(
-                $error,
-                self.errorCloseButton + "<ul>" + errors + "</ul>"
-              );
+              $h.setHtml($error, self.errorCloseButton + "<ul>" + errors + "</ul>");
             } else {
-              $error.find("ul").append(errors);
+              $error.find("ul").append($h.cspBuffer.stash(errors));
+              $h.cspBuffer.apply($error);
             }
             $error.fadeIn(self.fadeDelay);
             self._handler($error.find(".kv-error-close"), "click", function () {
@@ -32563,27 +40410,28 @@ SOFTWARE.
             self._raise("filebatchselected", [files]);
           }
           $container.removeClass("file-thumb-loading");
+          self._initCapStatus("valid");
           $status.html("");
           return;
         }
         self.lock(true);
         var file = files[i],
-          id = self._getFileId(file),
-          previewId = previewInitId + "-" + id,
-          fSizeKB,
+          id,
+          previewId,
+          fileProcessed,
+          fSize = (file && file.size) || 0,
+          sizeHuman = self._getSize(fSize, true),
           j,
           msg,
-          fnText = settings.text,
           fnImage = settings.image,
-          fnHtml = settings.html,
-          typ,
           chk,
+          typ,
           typ1,
           typ2,
-          caption = self._getFileName(file, ""),
-          fileSize = ((file && file.size) || 0) / 1000,
+          caption,
+          fileSize = fSize / self.bytesToKB,
           fileExtExpr = "",
-          previewData = $h.createObjectURL(file),
+          previewData,
           fileCount = 0,
           strTypes = "",
           fileId,
@@ -32592,30 +40440,46 @@ SOFTWARE.
           func,
           knownTypes = 0,
           isImage,
-          txtFlag,
-          processFileLoaded = function () {
-            var msg = msgProgress.setTokens({
+          processFileLoaded,
+          initFileData;
+        initFileData = function (dataSource) {
+          dataSource = dataSource || file;
+          id = fileId = self._getFileId(file);
+          previewId = previewInitId + "-" + id;
+          previewData = $h.createObjectURL(dataSource);
+          caption = self._getFileName(file, "");
+        };
+        processFileLoaded = function () {
+          var isImageResized = !!fm.loadedImages[id],
+            msg = msgProgress.setTokens({
               index: i + 1,
               files: numFiles,
               percent: 50,
               name: caption,
             });
-            setTimeout(function () {
-              $status.html(msg);
-              self._updateFileDetails(numFiles);
-              readFile(i + 1);
-            }, self.processDelay);
-            if (
-              self._raise("fileloaded", [file, previewId, id, i, reader]) &&
-              self.isAjaxUpload
-            ) {
+          setTimeout(function () {
+            $h.setHtml($status, msg);
+            self._updateFileDetails(numFiles);
+            if (self.getFilesCount(true) > 0 && self.getFrames(":visible")) {
+              self.$dropZone.find("." + self.dropZoneTitleClass).remove();
+            }
+            readFile(i + 1);
+          }, self.processDelay);
+          if (self._raise("fileloaded", [file, previewId, id, i, reader]) && self.isAjaxUpload) {
+            if (!isImageResized) {
               fm.add(file);
             }
-          };
+          } else {
+            if (isImageResized) {
+              fm.removeFile(id);
+            }
+          }
+        };
         if (!file) {
           return;
         }
-        fileId = fm.getId(file);
+        initFileData();
+
         if (typLen > 0) {
           for (j = 0; j < typLen; j++) {
             typ1 = fileTypes[j];
@@ -32628,43 +40492,22 @@ SOFTWARE.
           return;
         }
         if (caption.length === 0) {
-          msg = self.msgInvalidFileName.replace(
-            "{name}",
-            $h.htmlEncode($h.getFileName(file), "[unknown]")
-          );
+          msg = self.msgInvalidFileName.replace("{name}", $h.htmlEncode($h.getFileName(file), "[unknown]"));
           throwError(msg, file, previewId, i, fileId);
           return;
         }
         if (!$h.isEmpty(fileExt)) {
           fileExtExpr = new RegExp("\\.(" + fileExt.join("|") + ")$", "i");
         }
-        fSizeKB = fileSize.toFixed(2);
-        if (
-          (self.isAjaxUpload && fm.exists(fileId)) ||
-          self._getFrame(previewId, true).length
-        ) {
-          var p2 = {
-            id: previewId,
-            index: i,
-            fileId: fileId,
-            file: file,
-            files: files,
-          };
-          msg = self.msgDuplicateFile.setTokens({
-            name: caption,
-            size: fSizeKB,
-          });
+        if ((self.isAjaxUpload && fm.exists(fileId)) || self._getFrame(previewId, true).length) {
+          var p2 = { id: previewId, index: i, fileId: fileId, file: file, files: files };
+          msg = self.msgDuplicateFile.setTokens({ name: caption, size: sizeHuman });
           if (self.isAjaxUpload) {
-            self.duplicateErrors.push(msg);
-            self.isDuplicateError = true;
-            self._raise("fileduplicateerror", [
-              file,
-              fileId,
-              caption,
-              fSizeKB,
-              previewId,
-              i,
-            ]);
+            if (!self.stackIsUpdating) {
+              self.duplicateErrors.push(msg);
+              self.isDuplicateError = true;
+              self._raise("fileduplicateerror", [file, fileId, caption, sizeHuman, previewId, i]);
+            }
             readFile(i + 1);
             self._updateFileDetails(numFiles);
           } else {
@@ -32677,23 +40520,39 @@ SOFTWARE.
           }
           return;
         }
-        if (self.maxFileSize > 0 && fileSize > self.maxFileSize) {
+
+        if (self.maxMultipleFileSize > 0 && files.length > 1) {
+          var captionGroup = [];
+          var fileSizeGroup = 0;
+          Object.values(files).forEach((file) => {
+            fileSizeGroup = fileSizeGroup + file.size / self.bytesToKB;
+            captionGroup.push(file.name);
+          });
+
+          if (fileSizeGroup > self.maxMultipleFileSize) {
+            msg = self.msgMultipleSizeTooLarge.setTokens({
+              name: captionGroup,
+              size: self._getSize(fileSizeGroup, true),
+              maxSize: self._getSize(self.maxMultipleFileSize * self.bytesToKB, true),
+            });
+
+            throwError(msg, file, previewId, i, fileId);
+            return;
+          }
+        } else if (self.maxFileSize > 0 && fileSize > self.maxFileSize) {
           msg = self.msgSizeTooLarge.setTokens({
             name: caption,
-            size: fSizeKB,
-            maxSize: self.maxFileSize,
+            size: sizeHuman,
+            maxSize: self._getSize(self.maxFileSize * self.bytesToKB, true),
           });
           throwError(msg, file, previewId, i, fileId);
           return;
         }
-        if (
-          self.minFileSize !== null &&
-          fileSize <= $h.getNum(self.minFileSize)
-        ) {
+        if (self.minFileSize !== null && fileSize <= $h.getNum(self.minFileSize)) {
           msg = self.msgSizeTooSmall.setTokens({
             name: caption,
-            size: fSizeKB,
-            minSize: self.minFileSize,
+            size: sizeHuman,
+            minSize: self._getSize(self.minFileSize * self.bytesToKB, true),
           });
           throwError(msg, file, previewId, i, fileId);
           return;
@@ -32702,48 +40561,31 @@ SOFTWARE.
           for (j = 0; j < fileTypes.length; j += 1) {
             typ = fileTypes[j];
             func = settings[typ];
-            fileCount +=
-              !func || typeof func !== "function"
-                ? 0
-                : func(file.type, $h.getFileName(file))
-                ? 1
-                : 0;
+            fileCount += !func || typeof func !== "function" ? 0 : func(file.type, $h.getFileName(file)) ? 1 : 0;
           }
           if (fileCount === 0) {
-            msg = self.msgInvalidFileType.setTokens({
-              name: caption,
-              types: strTypes,
-            });
+            msg = self.msgInvalidFileType.setTokens({ name: caption, types: strTypes });
             throwError(msg, file, previewId, i, fileId);
             return;
           }
         }
-        if (
-          fileCount === 0 &&
-          !$h.isEmpty(fileExt) &&
-          $h.isArray(fileExt) &&
-          !$h.isEmpty(fileExtExpr)
-        ) {
+        if (fileCount === 0 && !$h.isEmpty(fileExt) && $h.isArray(fileExt) && !$h.isEmpty(fileExtExpr)) {
           chk = $h.compare(caption, fileExtExpr);
           fileCount += $h.isEmpty(chk) ? 0 : chk.length;
           if (fileCount === 0) {
-            msg = self.msgInvalidFileExtension.setTokens({
-              name: caption,
-              extensions: strExt,
-            });
+            msg = self.msgInvalidFileExtension.setTokens({ name: caption, extensions: strExt });
             throwError(msg, file, previewId, i, fileId);
             return;
           }
         }
         if (!self._canPreview(file)) {
-          canLoad =
-            self.isAjaxUpload &&
-            self._raise("filebeforeload", [file, i, reader]);
+          canLoad = self._raise("filebeforeload", [file, i, reader]);
           if (self.isAjaxUpload && canLoad) {
             fm.add(file);
           }
           if (self.showPreview && canLoad) {
             $container.addClass("file-thumb-loading");
+            self._initCapStatus("processing");
             self._previewDefault(file);
             self._initFileActions();
           }
@@ -32757,94 +40599,97 @@ SOFTWARE.
           return;
         }
         isImage = fnImage(file.type, caption);
-        $status.html(
-          msgLoading.replace("{index}", i + 1).replace("{files}", numFiles)
-        );
+        $h.setHtml($status, msgLoading.replace("{index}", i + 1).replace("{files}", numFiles));
         $container.addClass("file-thumb-loading");
+        self._initCapStatus("processing");
         reader.onerror = function (evt) {
           self._errorHandler(evt, caption);
         };
         reader.onload = function (theFile) {
           var hex,
             fileInfo,
-            uint,
+            fileData,
             byte,
             bytes = [],
             contents,
             mime,
-            readImage = function () {
-              var newReader = new FileReader();
-              newReader.onerror = function (theFileNew) {
-                self._errorHandler(theFileNew, caption);
-              };
-              newReader.onload = function (theFileNew) {
-                if (
-                  self.isAjaxUpload &&
-                  !self._raise("filebeforeload", [file, i, reader])
-                ) {
-                  fileReaderAborted = true;
-                  self._resetCaption();
-                  reader.abort();
-                  $status.html("");
-                  $container.removeClass("file-thumb-loading");
-                  self.enable();
-                  return;
-                }
-                self._previewFile(i, file, theFileNew, previewData, fileInfo);
-                self._initFileActions();
-                processFileLoaded();
-              };
-              newReader.readAsDataURL(file);
+            processPreview = function (fType, ext) {
+              if ($h.isEmpty(fType)) {
+                // look for ascii text content
+                contents = $h.arrayBuffer2String(reader.result);
+                fType = $h.isSvg(contents) ? "image/svg+xml" : $h.getMimeType(hex, contents, file.type);
+              }
+              fileInfo = { name: caption, type: fType || "" };
+              if (ext && typeof File !== "undefined") {
+                try {
+                  var fName = (fileInfo.filename = caption + "." + ext);
+                  fileProcessed = new File([file], fName, { type: fileInfo.type });
+                  initFileData(fileProcessed);
+                } catch (err) {}
+              }
+              isImage = fnImage(fType, "");
+              if (isImage) {
+                var newReader = new FileReader();
+                newReader.onerror = function (theFileNew) {
+                  self._errorHandler(theFileNew, caption);
+                };
+                newReader.onload = function (theFileNew) {
+                  if (self.isAjaxUpload && !self._raise("filebeforeload", [file, i, reader])) {
+                    fileReaderAborted = true;
+                    self._resetCaption();
+                    reader.abort();
+                    $status.html("");
+                    $container.removeClass("file-thumb-loading");
+                    self._initCapStatus("valid");
+                    self.enable();
+                    return;
+                  }
+                  self._previewFile(i, file, theFileNew, previewData, fileInfo);
+                  self._initFileActions();
+                  processFileLoaded();
+                };
+                newReader.readAsDataURL(file);
+                return;
+              }
+              if (self.isAjaxUpload && !self._raise("filebeforeload", [file, i, reader])) {
+                fileReaderAborted = true;
+                self._resetCaption();
+                reader.abort();
+                $status.html("");
+                $container.removeClass("file-thumb-loading");
+                self._initCapStatus("valid");
+                self.enable();
+                return;
+              }
+              self._previewFile(i, file, theFile, previewData, fileInfo);
+              self._initFileActions();
+              processFileLoaded();
             };
-          fileInfo = { name: caption, type: file.type };
+          mime = file.type;
+          fileInfo = { name: caption, type: mime };
           $.each(settings, function (k, f) {
-            if (
-              k !== "object" &&
-              k !== "other" &&
-              typeof f === "function" &&
-              f(file.type, caption)
-            ) {
+            if (k !== "object" && k !== "other" && typeof f === "function" && f(mime, caption)) {
               knownTypes++;
             }
           });
-          if (knownTypes === 0) {
-            // auto detect mime types from content if no known file types detected
-            uint = new Uint8Array(theFile.target.result);
-            for (j = 0; j < uint.length; j++) {
-              byte = uint[j].toString(16);
-              bytes.push(byte);
+          if (typeof FileTypeParser !== "undefined") {
+            fileData = new Uint8Array(theFile.target.result);
+            new FileTypeParser().parse(fileData).then(function (result) {
+              processPreview((result && result.mime) || mime, (result && result.ext) || "");
+            });
+          } else {
+            if (knownTypes === 0) {
+              // auto detect mime types from content if no known file types detected
+              fileData = new Uint8Array(theFile.target.result);
+              for (j = 0; j < fileData.length; j++) {
+                byte = fileData[j].toString(16);
+                bytes.push(byte);
+              }
+              hex = bytes.join("").toLowerCase().substring(0, 8);
+              mime = $h.getMimeType(hex, "", "");
             }
-            hex = bytes.join("").toLowerCase().substring(0, 8);
-            mime = $h.getMimeType(hex, "", "");
-            if ($h.isEmpty(mime)) {
-              // look for ascii text content
-              contents = $h.arrayBuffer2String(reader.result);
-              mime = $h.isSvg(contents)
-                ? "image/svg+xml"
-                : $h.getMimeType(hex, contents, file.type);
-            }
-            fileInfo = { name: caption, type: mime };
-            isImage = fnImage(mime, "");
-            if (isImage) {
-              readImage(txtFlag);
-              return;
-            }
+            processPreview(mime);
           }
-          if (
-            self.isAjaxUpload &&
-            !self._raise("filebeforeload", [file, i, reader])
-          ) {
-            fileReaderAborted = true;
-            self._resetCaption();
-            reader.abort();
-            $status.html("");
-            $container.removeClass("file-thumb-loading");
-            self.enable();
-            return;
-          }
-          self._previewFile(i, file, theFile, previewData, fileInfo);
-          self._initFileActions();
-          processFileLoaded();
         };
         reader.onprogress = function (data) {
           if (data.lengthComputable) {
@@ -32858,20 +40703,16 @@ SOFTWARE.
             });
             setTimeout(function () {
               if (!fileReaderAborted) {
-                $status.html(msg);
+                $h.setHtml($status, msg);
               }
             }, self.processDelay);
           }
         };
-        if (isImage) {
-          reader.readAsDataURL(file);
-        } else {
-          reader.readAsArrayBuffer(file);
-        }
+        reader.readAsArrayBuffer(file);
       };
 
       readFile(0);
-      self._updateFileDetails(numFiles, true);
+      self._updateFileDetails(numFiles);
     },
     lock: function (selectMode) {
       var self = this,
@@ -32884,6 +40725,7 @@ SOFTWARE.
       if (!selectMode && self.showPause) {
         $container.find(".fileinput-pause").show();
       }
+      self._initCapStatus("processing");
       self._raise("filelock", [self.fileManager.stack, self._getExtraData()]);
       return self.$element;
     },
@@ -32904,34 +40746,38 @@ SOFTWARE.
       if (reset) {
         self._resetFileStack();
       }
+      self._initCapStatus();
       self._raise("fileunlock", [self.fileManager.stack, self._getExtraData()]);
       return self.$element;
     },
     resume: function () {
       var self = this,
+        fm = self.fileManager,
         flag = false,
         rm = self.resumableManager;
+      fm.bpsLog = [];
+      fm.bps = 0;
       if (!self.enableResumableUpload) {
         return self.$element;
       }
       if (self.paused) {
-        self._toggleResumableProgress(
-          self.progressPauseTemplate,
-          self.msgUploadResume
-        );
+        self._toggleResumableProgress(self.progressPauseTemplate, self.msgUploadResume);
       } else {
         flag = true;
       }
       self.paused = false;
       if (flag) {
-        self._toggleResumableProgress(
-          self.progressInfoTemplate,
-          self.msgUploadBegin
-        );
+        self._toggleResumableProgress(self.progressInfoTemplate, self.msgUploadBegin);
       }
       setTimeout(function () {
         rm.upload();
       }, self.processDelay);
+      return self.$element;
+    },
+    paste: function (e) {
+      var self = this,
+        dt = e.clipboardData || e.originalEvent.clipboardData;
+      self._addFilesFromSystem(e, dt, "filePaste");
       return self.$element;
     },
     pause: function () {
@@ -32961,30 +40807,18 @@ SOFTWARE.
       if (self.showPreview) {
         self._getThumbs().each(function () {
           var $thumb = $(this),
-            fileId = $thumb.attr("data-fileid"),
             t = self._getLayoutTemplate("stats"),
             stats,
             $indicator = $thumb.find(".file-upload-indicator");
           $thumb.removeClass("file-uploading");
           if ($indicator.attr("title") === actions.indicatorLoadingTitle) {
             self._setThumbStatus($thumb, "Paused");
-            stats = t.setTokens({
-              pendingTime: self.msgPaused,
-              uploadSpeed: "",
-            });
+            stats = t.setTokens({ pendingTime: self.msgPaused, uploadSpeed: "" });
             self.paused = true;
-            self._setProgress(
-              pct,
-              $thumb.find(".file-thumb-progress"),
-              pct + "%",
-              stats
-            );
+            self._setProgress(pct, $thumb.find(".file-thumb-progress"), pct + "%", stats);
           }
-          if (!self.fileManager.getFile(fileId)) {
-            $thumb
-              .find(".kv-file-remove")
-              .removeClass("disabled")
-              .removeAttr("disabled");
+          if (!self._getThumbFile($thumb)) {
+            $thumb.find(".kv-file-remove").removeClass("disabled").removeAttr("disabled");
           }
         });
       }
@@ -32999,7 +40833,6 @@ SOFTWARE.
         pool = rm ? tm.getPool(rm.id) : undefined,
         len = xhr.length,
         i;
-
       if (self.enableResumableUpload && pool) {
         pool.cancel().done(function () {
           self._setProgressCancelled();
@@ -33007,6 +40840,9 @@ SOFTWARE.
         rm.reset();
         self._raise("fileuploadcancelled", [self.fileManager, rm]);
       } else {
+        if (self.ajaxPool) {
+          self.ajaxPool.cancel();
+        }
         self._raise("fileuploadcancelled", [self.fileManager]);
       }
       self._initAjax();
@@ -33018,20 +40854,13 @@ SOFTWARE.
       }
       self._getThumbs().each(function () {
         var $thumb = $(this),
-          fileId = $thumb.attr("data-fileid"),
           $prog = $thumb.find(".file-thumb-progress");
         $thumb.removeClass("file-uploading");
         self._setProgress(0, $prog);
         $prog.hide();
-        if (!self.fileManager.getFile(fileId)) {
-          $thumb
-            .find(".kv-file-upload")
-            .removeClass("disabled")
-            .removeAttr("disabled");
-          $thumb
-            .find(".kv-file-remove")
-            .removeClass("disabled")
-            .removeAttr("disabled");
+        if (!self._getThumbFile($thumb)) {
+          $thumb.find(".kv-file-upload").removeClass("disabled").removeAttr("disabled");
+          $thumb.find(".kv-file-remove").removeClass("disabled").removeAttr("disabled");
         }
         self.unlock();
       });
@@ -33046,6 +40875,7 @@ SOFTWARE.
       if (!self._raise("fileclear")) {
         return;
       }
+      self.clearInput = true;
       self.$btnUpload.removeAttr("disabled");
       self
         ._getThumbs()
@@ -33072,10 +40902,7 @@ SOFTWARE.
           self.previewCache.data = {};
         }
         self.$preview.html("");
-        cap =
-          !self.overwriteInitial && self.initialCaption.length > 0
-            ? self.initialCaption
-            : "";
+        cap = !self.overwriteInitial && self.initialCaption.length > 0 ? self.initialCaption : "";
         self.$caption.attr("title", "").val(cap);
         $h.addCss(self.$container, "file-input-new");
         self._validateDefaultPreview();
@@ -33117,14 +40944,8 @@ SOFTWARE.
       self.$element.attr("disabled", "disabled");
       $container.addClass("is-locked");
       $h.addCss($container.find(".btn-file"), "disabled");
-      $container
-        .find(".kv-fileinput-caption")
-        .addClass("file-caption-disabled");
-      $container
-        .find(
-          ".fileinput-remove, .fileinput-upload, .file-preview-frame button"
-        )
-        .attr("disabled", true);
+      $container.find(".kv-fileinput-caption").addClass("file-caption-disabled");
+      $container.find(".fileinput-remove, .fileinput-upload, .file-preview-frame button").attr("disabled", true);
       self._initDragDrop();
       return self.$element;
     },
@@ -33135,14 +40956,8 @@ SOFTWARE.
       self._raise("fileenabled");
       self.$element.removeAttr("disabled");
       $container.removeClass("is-locked");
-      $container
-        .find(".kv-fileinput-caption")
-        .removeClass("file-caption-disabled");
-      $container
-        .find(
-          ".fileinput-remove, .fileinput-upload, .file-preview-frame button"
-        )
-        .removeAttr("disabled");
+      $container.find(".kv-fileinput-caption").removeClass("file-caption-disabled");
+      $container.find(".fileinput-remove, .fileinput-upload, .file-preview-frame button").removeAttr("disabled");
       $container.find(".btn-file").removeClass("disabled");
       self._initDragDrop();
       return self.$element;
@@ -33153,12 +40968,11 @@ SOFTWARE.
         totLen = fm.count(),
         i,
         outData,
+        tm = self.taskManager,
         hasExtraData = !$.isEmptyObject(self._getExtraData());
-      if (
-        !self.isAjaxUpload ||
-        self.isDisabled ||
-        !self._isFileSelectionValid(totLen)
-      ) {
+      fm.bpsLog = [];
+      fm.bps = 0;
+      if (!self.isAjaxUpload || self.isDisabled || !self._isFileSelectionValid(totLen)) {
         return;
       }
       self.lastProgress = 0;
@@ -33168,6 +40982,7 @@ SOFTWARE.
         return;
       }
       self.cancelling = false;
+      self.uploadInitiated = true;
       self._showProgress();
       self.lock();
       if (totLen === 0 && hasExtraData) {
@@ -33180,18 +40995,14 @@ SOFTWARE.
       }
       if (self.uploadAsync || self.enableResumableUpload) {
         outData = self._getOutData(null);
-        self._raise("filebatchpreupload", [outData]);
+        if (!self._checkBatchPreupload(outData)) {
+          return;
+        }
         self.fileBatchCompleted = false;
         self.uploadCache = [];
         $.each(self.getFileStack(), function (id) {
           var previewId = self._getThumbId(id);
-          self.uploadCache.push({
-            id: previewId,
-            content: null,
-            config: null,
-            tags: null,
-            append: true,
-          });
+          self.uploadCache.push({ id: previewId, content: null, config: null, tags: null, append: true });
         });
         self.$preview.find(".file-preview-initial").removeClass($h.SORT_CSS);
         self._initSortable();
@@ -33200,10 +41011,24 @@ SOFTWARE.
       self.hasInitData = false;
       if (self.uploadAsync) {
         i = 0;
-        $.each(fm.stack, function (id) {
-          self._uploadSingle(i, id, true);
+        var pool = (self.ajaxPool = tm.addPool($h.uniqId()));
+        $.each(self.getFileStack(), function (id) {
+          pool.addTask(id + i, function (deferrer) {
+            self._uploadSingle(i, id, true, deferrer);
+          });
           i++;
         });
+
+        pool
+          .run(self.maxAjaxThreads)
+          .done(function () {
+            self._log("Async upload batch completed successfully.");
+            self._raise("filebatchuploadsuccess", [fm.stack, self._getExtraData()]);
+          })
+          .fail(function () {
+            self._log("Async upload batch completed with errors.");
+            self._raise("filebatchuploaderror", [fm.stack, self._getExtraData()]);
+          });
         return;
       }
       self._uploadBatch();
@@ -33279,35 +41104,33 @@ SOFTWARE.
       retvals = [];
     args.shift();
     this.each(function () {
+      var options = {}, optObj = {};
+      if (typeof option === "object") {
+        options = $.extend(true, {}, $.fn.fileinput.defaults, option);
+        optObj = option;
+      } 
       var self = $(this),
         data = self.data("fileinput"),
-        options = typeof option === "object" && option,
-        theme = options.theme || self.data("theme"),
+        theme = options.theme || self.data("theme") || $.fn.fileinput.defaults.theme,
         l = {},
         t = {},
-        lang =
-          options.language ||
-          self.data("language") ||
-          $.fn.fileinput.defaults.language ||
-          "en",
+        lang = options.language || self.data("language") || $.fn.fileinput.defaults.language || "en",
         opt;
       if (!data) {
         if (theme) {
           t = $.fn.fileinputThemes[theme] || {};
         }
-        if (lang !== "en" && !$h.isEmpty($.fn.fileinputLocales[lang])) {
-          l = $.fn.fileinputLocales[lang] || {};
+        if (lang !== "en") {
+          if (!$h.isEmpty($.fn.fileinputLocales[lang])) {
+            l = $.fn.fileinputLocales[lang];
+          } else {
+            var langParts = lang.split('-', 2);
+            if (langParts.length > 1 && !$h.isEmpty($.fn.fileinputLocales[langParts[0]])) {
+              l = $.fn.fileinputLocales[langParts[0]];
+            }
+          }
         }
-        opt = $.extend(
-          true,
-          {},
-          $.fn.fileinput.defaults,
-          t,
-          $.fn.fileinputLocales.en,
-          l,
-          options,
-          self.data()
-        );
+        opt = $.extend(true, {}, $.fn.fileinput.defaults, t, $.fn.fileinputLocales.en, l, optObj, self.data());
         data = new FileInput(this, opt);
         self.data("fileinput", data);
       }
@@ -33326,11 +41149,13 @@ SOFTWARE.
     }
   };
 
-  var IFRAME_ATTRIBS =
-    'class="kv-preview-data file-preview-pdf" src="{renderer}?file={data}" {style}';
+  var IFRAME_ATTRIBS = 'class="kv-preview-data file-preview-pdf" src="{renderer}?file={data}" {style}',
+    defBtnCss1 = "btn btn-sm btn-kv " + $h.defaultButtonCss(),
+    defBtnCss2 = "btn " + $h.defaultButtonCss();
 
   $.fn.fileinput.defaults = {
     language: "en",
+    bytesToKB: 1024,
     showCaption: true,
     showBrowse: true,
     showPreview: true,
@@ -33344,6 +41169,7 @@ SOFTWARE.
     showConsoleLogs: false,
     browseOnZoneClick: false,
     autoReplace: false,
+    showDescriptionClose: true,
     autoOrientImage: function () {
       // applicable for JPEG images only and non ios safari
       var ua = window.navigator.userAgent,
@@ -33353,6 +41179,7 @@ SOFTWARE.
       return !iOSSafari;
     },
     autoOrientImageInitial: true,
+    showExifErrorLog: false,
     required: false,
     rtl: false,
     hideThumbnailContent: false,
@@ -33363,7 +41190,8 @@ SOFTWARE.
     previewClass: "",
     captionClass: "",
     frameClass: "krajee-default",
-    mainClass: "file-caption-main",
+    mainClass: "",
+    inputGroupClass: "",
     mainTemplate: null,
     fileSizeGetter: null,
     initialCaption: "",
@@ -33381,67 +41209,61 @@ SOFTWARE.
     deleteExtraData: {},
     overwriteInitial: true,
     sanitizeZoomCache: function (content) {
-      var $container = $h.createElement(content);
-      $container
-        .find("input,textarea,select,datalist,form,.file-thumbnail-footer")
-        .remove();
+      var $container = $h.createDiv();
+      $h.setHtml($container, content);
+      $container.find("input,textarea,select,datalist,form,.file-thumbnail-footer").remove();
       return $container.html();
     },
     previewZoomButtonIcons: {
-      prev: '<i class="glyphicon glyphicon-triangle-left"></i>',
-      next: '<i class="glyphicon glyphicon-triangle-right"></i>',
-      toggleheader: '<i class="glyphicon glyphicon-resize-vertical"></i>',
-      fullscreen: '<i class="glyphicon glyphicon-fullscreen"></i>',
-      borderless: '<i class="glyphicon glyphicon-resize-full"></i>',
-      close: '<i class="glyphicon glyphicon-remove"></i>',
+      prev: '<i class="bi-chevron-left"></i>',
+      next: '<i class="bi-chevron-right"></i>',
+      rotate: '<i class="bi-arrow-clockwise"></i>',
+      toggleheader: '<i class="bi-arrows-expand"></i>',
+      fullscreen: '<i class="bi-arrows-fullscreen"></i>',
+      borderless: '<i class="bi-arrows-angle-expand"></i>',
+      close: '<i class="bi-x-lg"></i>',
     },
     previewZoomButtonClasses: {
-      prev: "btn btn-navigate",
-      next: "btn btn-navigate",
-      toggleheader: "btn btn-sm btn-kv btn-default btn-outline-secondary",
-      fullscreen: "btn btn-sm btn-kv btn-default btn-outline-secondary",
-      borderless: "btn btn-sm btn-kv btn-default btn-outline-secondary",
-      close: "btn btn-sm btn-kv btn-default btn-outline-secondary",
+      prev: "btn btn-default btn-outline-secondary btn-navigate",
+      next: "btn btn-default btn-outline-secondary btn-navigate",
+      rotate: defBtnCss1,
+      toggleheader: defBtnCss1,
+      fullscreen: defBtnCss1,
+      borderless: defBtnCss1,
+      close: defBtnCss1,
     },
     previewTemplates: {},
     previewContentTemplates: {},
     preferIconicPreview: false,
     preferIconicZoomPreview: false,
+    alwaysPreviewFileExtensions: [],
+    rotatableFileExtensions: ["jpg", "jpeg", "png", "gif"],
     allowedFileTypes: null,
     allowedFileExtensions: null,
     allowedPreviewTypes: undefined,
     allowedPreviewMimeTypes: null,
     allowedPreviewExtensions: null,
     disabledPreviewTypes: undefined,
-    disabledPreviewExtensions: [
-      "msi",
-      "exe",
-      "com",
-      "zip",
-      "rar",
-      "app",
-      "vb",
-      "scr",
-    ],
+    disabledPreviewExtensions: ["msi", "exe", "com", "zip", "rar", "app", "vb", "scr"],
     disabledPreviewMimeTypes: null,
     defaultPreviewContent: null,
     customLayoutTags: {},
     customPreviewTags: {},
-    previewFileIcon: '<i class="glyphicon glyphicon-file"></i>',
+    previewFileIcon: '<i class="bi-file-earmark-fill"></i>',
     previewFileIconClass: "file-other-icon",
     previewFileIconSettings: {},
     previewFileExtSettings: {},
     buttonLabelClass: "hidden-xs",
-    browseIcon: '<i class="glyphicon glyphicon-folder-open"></i>&nbsp;',
+    browseIcon: '<i class="bi-folder2-open"></i> ',
     browseClass: "btn btn-primary",
-    removeIcon: '<i class="glyphicon glyphicon-trash"></i>',
-    removeClass: "btn btn-default btn-secondary",
-    cancelIcon: '<i class="glyphicon glyphicon-ban-circle"></i>',
-    cancelClass: "btn btn-default btn-secondary",
-    pauseIcon: '<i class="glyphicon glyphicon-pause"></i>',
-    pauseClass: "btn btn-default btn-secondary",
-    uploadIcon: '<i class="glyphicon glyphicon-upload"></i>',
-    uploadClass: "btn btn-default btn-secondary",
+    removeIcon: '<i class="bi-trash"></i>',
+    removeClass: defBtnCss2,
+    cancelIcon: '<i class="bi-slash-circle"></i>',
+    cancelClass: defBtnCss2,
+    pauseIcon: '<i class="bi-pause-fill"></i>',
+    pauseClass: defBtnCss2,
+    uploadIcon: '<i class="bi-upload"></i>',
+    uploadClass: defBtnCss2,
     uploadUrl: null,
     uploadUrlThumb: null,
     uploadAsync: true,
@@ -33461,19 +41283,22 @@ SOFTWARE.
     maxAjaxThreads: 5,
     fadeDelay: 800,
     processDelay: 100,
+    bitrateUpdateDelay: 500,
     queueDelay: 10, // must be lesser than process delay
     progressDelay: 0, // must be lesser than process delay
     enableResumableUpload: false,
     resumableUploadOptions: {
       fallback: null,
       testUrl: null, // used for checking status of chunks/ files previously / partially uploaded
-      chunkSize: 2 * 1024, // in KB
+      chunkSize: 2048, // in KB
       maxThreads: 4,
       maxRetries: 3,
       showErrorLog: true,
+      retainErrorHistory: false, // when set to true, display complete error history always unless user explicitly resets upload
+      skipErrorsAndProceed: false, // when set to true, files with errors will be skipped and upload will continue with other files
     },
     uploadExtraData: {},
-    zoomModalHeight: 480,
+    zoomModalHeight: 485, // 5px more than the default preview content heights set for text, html, pdf etc.
     minImageWidth: null,
     minImageHeight: null,
     maxImageWidth: null,
@@ -33485,21 +41310,18 @@ SOFTWARE.
     resizeIfSizeMoreThan: 0, // in KB
     minFileSize: -1,
     maxFileSize: 0,
+    maxMultipleFileSize: 0,
     maxFilePreviewSize: 25600, // 25 MB
     minFileCount: 0,
     maxFileCount: 0,
     maxTotalFileCount: 0,
     validateInitialCount: false,
     msgValidationErrorClass: "text-danger",
-    msgValidationErrorIcon:
-      '<i class="glyphicon glyphicon-exclamation-sign"></i> ',
+    msgValidationErrorIcon: '<i class="bi-exclamation-circle-fill"></i> ',
     msgErrorClass: "file-error-message",
-    progressThumbClass:
-      "progress-bar progress-bar-striped active progress-bar-animated",
-    progressClass:
-      "progress-bar bg-success progress-bar-success progress-bar-striped active progress-bar-animated",
-    progressInfoClass:
-      "progress-bar bg-info progress-bar-info progress-bar-striped active progress-bar-animated",
+    progressThumbClass: "progress-bar progress-bar-striped active progress-bar-animated",
+    progressClass: "progress-bar bg-success progress-bar-success progress-bar-striped active progress-bar-animated",
+    progressInfoClass: "progress-bar bg-info progress-bar-info progress-bar-striped active progress-bar-animated",
     progressCompleteClass: "progress-bar bg-success progress-bar-success",
     progressPauseClass:
       "progress-bar bg-primary progress-bar-primary progress-bar-striped active progress-bar-animated",
@@ -33508,12 +41330,11 @@ SOFTWARE.
     previewFileType: "image",
     elCaptionContainer: null,
     elCaptionText: null,
-    elCaptionLabelText: null,
     elPreviewContainer: null,
     elPreviewImage: null,
     elPreviewStatus: null,
     elErrorContainer: null,
-    errorCloseButton: $h.closeButton("kv-error-close"),
+    errorCloseButton: undefined,
     slugCallback: null,
     dropZoneEnabled: true,
     dropZoneTitleClass: "file-drop-zone-title",
@@ -33530,16 +41351,24 @@ SOFTWARE.
     reversePreviewOrder: false,
     usePdfRenderer: function () {
       var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
-      return (
-        !!navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/i) || isIE11
-      );
+      return !!navigator.userAgent.match(/(iPod|iPhone|iPad|Android)/i) || isIE11;
     },
     pdfRendererUrl: "",
     pdfRendererTemplate: "<iframe " + IFRAME_ATTRIBS + "></iframe>",
+    tabIndexConfig: {
+      browse: 500,
+      remove: 500,
+      upload: 500,
+      cancel: null,
+      pause: null,
+      modal: -1,
+    },
   };
 
   // noinspection HtmlUnknownAttribute
   $.fn.fileinputLocales.en = {
+    sizeUnits: ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
+    bitRateUnits: ["B/s", "KB/s", "MB/s", "GB/s", "TB/s", "PB/s", "EB/s", "ZB/s", "YB/s"],
     fileSingle: "file",
     filePlural: "files",
     browseLabel: "Browse &hellip;",
@@ -33558,26 +41387,20 @@ SOFTWARE.
     msgPlaceholder: "Select {files} ...",
     msgZoomModalHeading: "Detailed Preview",
     msgFileRequired: "You must select a file to upload.",
-    msgSizeTooSmall:
-      'File "{name}" (<b>{size} KB</b>) is too small and must be larger than <b>{minSize} KB</b>.',
-    msgSizeTooLarge:
-      'File "{name}" (<b>{size} KB</b>) exceeds maximum allowed upload size of <b>{maxSize} KB</b>.',
+    msgSizeTooSmall: 'File "{name}" (<b>{size}</b>) is too small and must be larger than <b>{minSize}</b>.',
+    msgSizeTooLarge: 'File "{name}" (<b>{size}</b>) exceeds maximum allowed upload size of <b>{maxSize}</b>.',
+    msgMultipleSizeTooLarge: 'Files "{name}" (<b>{size}</b>) exceeds maximum allowed upload size of <b>{maxSize}</b>.',
     msgFilesTooLess: "You must select at least <b>{n}</b> {files} to upload.",
-    msgFilesTooMany:
-      "Number of files selected for upload <b>({n})</b> exceeds maximum allowed limit of <b>{m}</b>.",
-    msgTotalFilesTooMany:
-      "You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).",
+    msgFilesTooMany: "Number of files selected for upload <b>({n})</b> exceeds maximum allowed limit of <b>{m}</b>.",
+    msgTotalFilesTooMany: "You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).",
     msgFileNotFound: 'File "{name}" not found!',
     msgFileSecured: 'Security restrictions prevent reading the file "{name}".',
     msgFileNotReadable: 'File "{name}" is not readable.',
     msgFilePreviewAborted: 'File preview aborted for "{name}".',
     msgFilePreviewError: 'An error occurred while reading the file "{name}".',
-    msgInvalidFileName:
-      'Invalid or unsupported characters in file name "{name}".',
-    msgInvalidFileType:
-      'Invalid type for file "{name}". Only "{types}" files are supported.',
-    msgInvalidFileExtension:
-      'Invalid extension for file "{name}". Only "{extensions}" files are supported.',
+    msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
+    msgInvalidFileType: 'Invalid type for file "{name}". Only "{types}" files are supported.',
+    msgInvalidFileExtension: 'Invalid extension for file "{name}". Only "{extensions}" files are supported.',
     msgFileTypes: {
       image: "image",
       html: "HTML",
@@ -33599,26 +41422,23 @@ SOFTWARE.
     msgProgressError: "Error",
     msgValidationError: "Validation Error",
     msgLoading: "Loading file {index} of {files} &hellip;",
-    msgProgress:
-      "Loading file {index} of {files} - {name} - {percent}% completed.",
+    msgProgress: "Loading file {index} of {files} - {name} - {percent}% completed.",
     msgSelected: "{n} {files} selected",
-    msgFoldersNotAllowed:
-      "Drag & drop files only! {n} folder(s) dropped were skipped.",
+    msgProcessing: "Processing ...",
+    msgFoldersNotAllowed: "Drag & drop files only! {n} folder(s) dropped were skipped.",
     msgImageWidthSmall:
-      'Width of image file "{name}" must be at least {size} px.',
+      'Width of image file "{name}" must be at least <b>{size} px</b> (detected <b>{dimension} px</b>).',
     msgImageHeightSmall:
-      'Height of image file "{name}" must be at least {size} px.',
-    msgImageWidthLarge: 'Width of image file "{name}" cannot exceed {size} px.',
+      'Height of image file "{name}" must be at least <b>{size} px</b> (detected <b>{dimension} px</b>).',
+    msgImageWidthLarge: 'Width of image file "{name}" cannot exceed <b>{size} px</b> (detected <b>{dimension} px</b>).',
     msgImageHeightLarge:
-      'Height of image file "{name}" cannot exceed {size} px.',
+      'Height of image file "{name}" cannot exceed <b>{size} px</b> (detected <b>{dimension} px</b>).',
     msgImageResizeError: "Could not get the image dimensions to resize.",
-    msgImageResizeException:
-      "Error while resizing the image.<pre>{errors}</pre>",
-    msgAjaxError:
-      "Something went wrong with the {operation} operation. Please try again later!",
+    msgImageResizeException: "Error while resizing the image.<pre>{errors}</pre>",
+    msgAjaxError: "Something went wrong with the {operation} operation. Please try again later!",
     msgAjaxProgressError: "{operation} failed",
     msgDuplicateFile:
-      'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
+      'File "{name}" of same size "{size}" has already been selected earlier. Skipping duplicate selection.',
     msgResumableUploadRetriesExceeded:
       "Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>",
     msgPendingTime: "{time} remaining",
@@ -33634,6 +41454,7 @@ SOFTWARE.
     previewZoomButtonTitles: {
       prev: "View previous file",
       next: "View next file",
+      rotate: "Rotate 90 deg. clockwise",
       toggleheader: "Toggle header",
       fullscreen: "Toggle full screen",
       borderless: "Toggle borderless mode",
@@ -33653,58 +41474,6 @@ SOFTWARE.
     }
   });
 });
-
-/*!
- * bootstrap-fileinput v5.1.3
- * http://plugins.krajee.com/file-input
- *
- * Font Awesome 5 icon theme configuration for bootstrap-fileinput. Requires font awesome 5 assets to be loaded.
- *
- * Author: Kartik Visweswaran
- * Copyright: 2014 - 2020, Kartik Visweswaran, Krajee.com
- *
- * Licensed under the BSD-3-Clause
- * https://github.com/kartik-v/bootstrap-fileinput/blob/master/LICENSE.md
- */
-(function ($) {
-  "use strict";
-
-  $.fn.fileinputThemes.fas = {
-    fileActionSettings: {
-      removeIcon: '<i class="fa-solid fa-trash-alt"></i>',
-      uploadIcon: '<i class="fa-solid fa-upload"></i>',
-      uploadRetryIcon: '<i class="fa-solid fa-redo-alt"></i>',
-      downloadIcon: '<i class="fa-solid fa-download"></i>',
-      zoomIcon: '<i class="fa-solid fa-search-plus"></i>',
-      dragIcon: '<i class="fa-solid fa-arrows-alt"></i>',
-      indicatorNew: '<i class="fa-solid fa-plus-circle text-warning"></i>',
-      indicatorSuccess: '<i class="fa-solid fa-check-circle text-success"></i>',
-      indicatorError:
-        '<i class="fa-solid fa-exclamation-circle text-danger"></i>',
-      indicatorLoading:
-        '<i class="fa-solid fa-hourglass text-body-secondary"></i>',
-      indicatorPaused: '<i class="fa fa-pause text-info"></i>',
-    },
-    layoutTemplates: {
-      fileIcon: '<i class="fa-solid fa-file kv-caption-icon"></i> ',
-    },
-    previewZoomButtonIcons: {
-      prev: '<i class="fa-solid fa-caret-left fa-lg"></i>',
-      next: '<i class="fa-solid fa-caret-right fa-lg"></i>',
-      toggleheader: '<i class="fa-solid fa-fw fa-arrows-alt-v"></i>',
-      fullscreen: '<i class="fa-solid fa-fw fa-arrows-alt"></i>',
-      borderless: '<i class="fa-solid fa-fw fa-external-link-alt"></i>',
-      close: '<i class="fa-solid fa-fw fa-xmark"></i>',
-    },
-    previewFileIcon: '<i class="fa-solid fa-file"></i>',
-    browseIcon: '<i class="fa-solid fa-folder-open"></i>',
-    removeIcon: '<i class="fa-solid fa-trash-alt"></i>',
-    cancelIcon: '<i class="fa-solid fa-ban"></i>',
-    pauseIcon: '<i class="fa-solid fa-pause"></i>',
-    uploadIcon: '<i class="fa-solid fa-upload"></i>',
-    msgValidationErrorIcon: '<i class="fa-solid fa-exclamation-circle"></i> ',
-  };
-})(window.jQuery);
 
 var $;
 

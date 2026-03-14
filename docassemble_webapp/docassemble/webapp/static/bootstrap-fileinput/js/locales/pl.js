@@ -8,10 +8,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['pl'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'plik',
         filePlural: 'pliki',
         browseLabel: 'Przeglądaj &hellip;',
@@ -19,22 +30,23 @@
         removeTitle: 'Usuń zaznaczone pliki',
         cancelLabel: 'Przerwij',
         cancelTitle: 'Anuluj wysyłanie',
-        pauseLabel: 'Pause',
-        pauseTitle: 'Pause ongoing upload',
+        pauseLabel: 'Wstrzymaj',
+        pauseTitle: 'Wstrzymaj trwające przesyłanie',
         uploadLabel: 'Wgraj',
         uploadTitle: 'Wgraj zaznaczone pliki',
         msgNo: 'Nie',
         msgNoFilesSelected: 'Brak zaznaczonych plików',
-        msgPaused: 'Paused',
+        msgPaused: 'Wstrzymano',
         msgCancelled: 'Odwołany',
         msgPlaceholder: 'Wybierz {files} ...',
         msgZoomModalHeading: 'Szczegółowy podgląd',
         msgFileRequired: 'Musisz wybrać plik do wgrania.',
-        msgSizeTooSmall: 'Plik "{name}" (<b>{size} KB</b>) jest zbyt mały i musi być większy niż <b>{minSize} KB</b>.',
-        msgSizeTooLarge: 'Plik o nazwie "{name}" (<b>{size} KB</b>) przekroczył maksymalną dopuszczalną wielkość pliku wynoszącą <b>{maxSize} KB</b>.',
+        msgSizeTooSmall: 'Plik "{name}" (<b>{size}</b>) jest zbyt mały i musi być większy niż <b>{minSize}</b>.',
+        msgSizeTooLarge: 'Plik o nazwie "{name}" (<b>{size}</b>) przekroczył maksymalną dopuszczalną wielkość pliku wynoszącą <b>{maxSize}</b>.',
+        msgMultipleSizeTooLarge: 'Plików o nazwie "{name}" (<b>{size}</b>) przekroczył maksymalną dopuszczalną wielkość pliku wynoszącą <b>{maxSize}</b>.',
         msgFilesTooLess: 'Minimalna liczba plików do wgrania: <b>{n}</b>.',
         msgFilesTooMany: 'Liczba plików wybranych do wgrania w liczbie <b>({n})</b>, przekracza maksymalny dozwolony limit wynoszący <b>{m}</b>.',
-        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
+        msgTotalFilesTooMany: 'Możesz wgrać maksymalnie <b>{m}</b> plików (wykryto <b>{n}</b>).',
         msgFileNotFound: 'Plik "{name}" nie istnieje!',
         msgFileSecured: 'Ustawienia zabezpieczeń uniemożliwiają odczyt pliku "{name}".',
         msgFileNotReadable: 'Plik "{name}" nie jest plikiem do odczytu.',
@@ -47,28 +59,29 @@
         msgUploadThreshold: 'Przetwarzanie &hellip;',
         msgUploadBegin: 'Rozpoczynanie &hellip;',
         msgUploadEnd: 'Gotowe!',
-        msgUploadResume: 'Resuming upload &hellip;',
+        msgUploadResume: 'Wznawianie przesyłania &hellip;',
         msgUploadEmpty: 'Brak poprawnych danych do przesłania.',
-        msgUploadError: 'Upload Error',
-        msgDeleteError: 'Delete Error',
+        msgUploadError: 'Błąd przesyłania',
+        msgDeleteError: 'Błąd usuwania',
         msgProgressError: 'Błąd',
         msgValidationError: 'Błąd walidacji',
         msgLoading: 'Wczytywanie pliku {index} z {files} &hellip;',
         msgProgress: 'Wczytywanie pliku {index} z {files} - {name} - {percent}% zakończone.',
         msgSelected: '{n} Plików zaznaczonych',
+        msgProcessing: 'Processing ...',
         msgFoldersNotAllowed: 'Metodą przeciągnij i upuść, można przenosić tylko pliki. Pominięto {n} katalogów.',
-        msgImageWidthSmall: 'Szerokość pliku obrazu "{name}" musi być co najmniej {size} px.',
-        msgImageHeightSmall: 'Wysokość pliku obrazu "{name}" musi być co najmniej {size} px.',
-        msgImageWidthLarge: 'Szerokość pliku obrazu "{name}" nie może przekraczać {size} px.',
-        msgImageHeightLarge: 'Wysokość pliku obrazu "{name}" nie może przekraczać {size} px.',
+        msgImageWidthSmall: 'Szerokość pliku obrazu "{name}" musi być co najmniej <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightSmall: 'Wysokość pliku obrazu "{name}" musi być co najmniej <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageWidthLarge: 'Szerokość pliku obrazu "{name}" nie może przekraczać <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightLarge: 'Wysokość pliku obrazu "{name}" nie może przekraczać <b>{size} px</b> (detected <b>{dimension} px</b>).',
         msgImageResizeError: 'Nie udało się uzyskać wymiaru obrazu, aby zmienić rozmiar.',
         msgImageResizeException: 'Błąd podczas zmiany rozmiaru obrazu.<pre>{errors}</pre>',
         msgAjaxError: 'Coś poczło nie tak podczas {operation}. Spróbuj ponownie!',
         msgAjaxProgressError: '{operation} nie powiodło się',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
-        msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
-        msgPendingTime: '{time} remaining',
-        msgCalculatingTime: 'calculating time remaining',
+        msgDuplicateFile: 'Plik "{name}" o identycznym rozmiarze "{size}" został wgrany wcześniej. Pomijanie zduplikowanego pliku.',
+        msgResumableUploadRetriesExceeded:  'Przekroczono limit <b>{max}</b> prób wgrania pliku <b>{file}</b>! Szczegóły błędu: <pre>{error}</pre>',
+        msgPendingTime: 'Pozostało {time}',
+        msgCalculatingTime: 'obliczanie pozostałego czasu',
         ajaxOperations: {
             deleteThumb: 'usuwanie pliku',
             uploadThumb: 'przesyłanie pliku',
@@ -82,21 +95,23 @@
             uploadTitle: 'Przesyłanie pliku',
             uploadRetryTitle: 'Ponów',
             downloadTitle: 'Pobierz plik',
+            rotateTitle: 'Rotate 90 deg. clockwise',
             zoomTitle: 'Pokaż szczegóły',
             dragTitle: 'Przenies / Ponownie zaaranżuj',
             indicatorNewTitle: 'Jeszcze nie przesłany',
             indicatorSuccessTitle: 'Dodane',
             indicatorErrorTitle: 'Błąd',
-            indicatorPausedTitle: 'Upload Paused',
+            indicatorPausedTitle: 'Przesyłanie zatrzymane',
             indicatorLoadingTitle:  'Przesyłanie &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Pokaż poprzedni plik',
             next: 'Pokaż następny plik',
+            rotate: 'Rotate 90 deg. clockwise',
             toggleheader: 'Włącz / wyłącz nagłówek',
             fullscreen: 'Włącz / wyłącz pełny ekran',
             borderless: 'Włącz / wyłącz tryb bez ramek',
             close: 'Zamknij szczegółowy widok'
         }
     };
-})(window.jQuery);
+}));

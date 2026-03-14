@@ -8,10 +8,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['sk'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'súbor',
         filePlural: 'súbory',
         browseLabel: 'Vybrať &hellip;',
@@ -24,14 +35,15 @@
         uploadLabel: 'Nahrať',
         uploadTitle: 'Nahrať vybraté súbory',
         msgNo: 'Nie',
-        msgNoFilesSelected: '',
+        msgNoFilesSelected: 'Nie su vybraté žiadne súbory',
         msgPaused: 'Pozastavené',
         msgCancelled: 'Zrušené',
         msgPlaceholder: 'Vybrať {files} ...',
         msgZoomModalHeading: 'Detailný náhľad',
         msgFileRequired: 'Musíte vybrať súbor, ktorý chcete nahrať.',
-        msgSizeTooSmall: 'Súbor "{name}" (<b>{size} KB</b>) je príliš malý, musí mať veľkosť najmenej <b>{minSize} KB</b>.',
-        msgSizeTooLarge: 'Súbor "{name}" (<b>{size} KB</b>) je príliš veľký, maximálna povolená veľkosť <b>{maxSize} KB</b>.',
+        msgSizeTooSmall: 'Súbor "{name}" (<b>{size}</b>) je príliš malý, musí mať veľkosť najmenej <b>{minSize}</b>.',
+        msgSizeTooLarge: 'Súbor "{name}" (<b>{size}</b>) je príliš veľký, maximálna povolená veľkosť <b>{maxSize}</b>.',
+        msgMultipleSizeTooLarge: 'Súborov "{name}" (<b>{size}</b>) je príliš veľký, maximálna povolená veľkosť <b>{maxSize}</b>.',
         msgFilesTooLess: 'Musíte vybrať najmenej <b>{n}</b> {files} pre nahranie.',
         msgFilesTooMany: 'Počet vybratých súborov <b>({n})</b> prekročil maximálny povolený limit <b>{m}</b>.',
         msgTotalFilesTooMany: 'Môžete nahrať maximálne <b>{m}</b> súborov (zistených <b>{n}</b> súborov).',
@@ -40,9 +52,9 @@
         msgFileNotReadable: 'Súbor "{name}" nie je čitateľný.',
         msgFilePreviewAborted: 'Náhľad súboru bol prerušený pre "{name}".',
         msgFilePreviewError: 'Nastala chyba pri načítaní súboru "{name}".',
-        msgInvalidFileName: 'Invalid or unsupported characters in file name "{name}".',
-        msgInvalidFileType: 'Neplatný typ súboru "{name}". Iba "{types}" súborov sú podporované.',
-        msgInvalidFileExtension: 'Neplatná extenzia súboru "{name}". Iba "{extensions}" súborov sú podporované.',
+        msgInvalidFileName: 'Nesprávne alebo nepodporované znaky v názve súboru "{name}".',
+        msgInvalidFileType: 'Neplatný typ súboru "{name}". Podporované sú iba súbory typu "{types}".',
+        msgInvalidFileExtension: 'Neplatná prípona súboru "{name}". Podporované sú iba prípony typu "{extensions}".',
         msgFileTypes: {
             'image': 'obrázok',
             'html': 'HTML',
@@ -51,7 +63,7 @@
             'audio': 'audio',
             'flash': 'flash',
             'pdf': 'PDF',
-            'object': 'object'
+            'object': 'objekt'
         },
         msgUploadAborted: 'Nahrávanie súboru bolo prerušené',
         msgUploadThreshold: 'Spracovávam &hellip;',
@@ -66,16 +78,17 @@
         msgLoading: 'Nahrávanie súboru {index} z {files} &hellip;',
         msgProgress: 'Nahrávanie súboru {index} z {files} - {name} - {percent}% dokončené.',
         msgSelected: '{n} {files} vybraté',
-        msgFoldersNotAllowed: 'Tiahni a pusť iba súbory! Vynechané {n} pustené prečinok(y).',
-        msgImageWidthSmall: 'Šírka obrázku "{name}", musí byť minimálne {size} px.',
-        msgImageHeightSmall: 'Výška obrázku "{name}", musí byť minimálne {size} px.',
-        msgImageWidthLarge: 'Šírka obrázku "{name}" nemôže presiahnuť {size} px.',
-        msgImageHeightLarge: 'Výška obrázku "{name}" nesmie presiahnuť {size} px.',
+        msgProcessing: 'Spracovávam ...',
+        msgFoldersNotAllowed: 'Potiahnite a pustite iba súbory! Vynechané priečinky: {n}.',
+        msgImageWidthSmall: 'Šírka obrázku "{name}", musí byť minimálne <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightSmall: 'Výška obrázku "{name}", musí byť minimálne <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageWidthLarge: 'Šírka obrázku "{name}" nesmie presiahnuť <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightLarge: 'Výška obrázku "{name}" nesmie presiahnuť <b>{size} px</b> (detected <b>{dimension} px</b>).',
         msgImageResizeError: 'Nepodarilo sa získať veľkosť obrázka pre zmenu veľkosti.',
         msgImageResizeException: 'Chyba pri zmene veľkosti obrázka.<pre>{errors}</pre>',
         msgAjaxError: 'Pri operácii {operation} sa vyskytla chyba. Skúste to prosím neskôr!',
         msgAjaxProgressError: '{operation} - neúspešné',
-        msgDuplicateFile: 'Súbor "{name}" rovnakej veľkosti "{size} KB" už bol vybratý skôr. Preskočenie duplicitného výberu.',
+        msgDuplicateFile: 'Súbor "{name}" rovnakej veľkosti "{size}" už bol vybratý skôr. Preskočenie duplicitného výberu.',
         msgResumableUploadRetriesExceeded:  'Nahrávanie bolo prerušené po <b>{max}</b> opakovaniach súboru <b>{file}</b>! Detaily chyby: <pre>{error}</pre>',
         msgPendingTime: '{time} zostáva',
         msgCalculatingTime: 'výpočet zostávajúceho času',
@@ -85,13 +98,14 @@
             uploadBatch: 'nahrať várku súborov',
             uploadExtra: 'odosielanie údajov z formulára'
         },
-        dropZoneTitle: 'Tiahni a pusť súbory tu &hellip;',
+        dropZoneTitle: 'Potiahnite a pustite súbory sem &hellip;',
         dropZoneClickTitle: '<br>(alebo kliknite sem a vyberte {files})',
         fileActionSettings: {
             removeTitle: 'Odstrániť súbor',
             uploadTitle: 'Nahrať súbor',
             uploadRetryTitle: 'Znova nahrať',
             downloadTitle: 'Stiahnuť súbor',
+            rotateTitle: 'Rotate 90 deg. clockwise',
             zoomTitle: 'Zobraziť podrobnosti',
             dragTitle: 'Posunúť / Preskládať',
             indicatorNewTitle: 'Ešte nenahral',
@@ -103,10 +117,11 @@
         previewZoomButtonTitles: {
             prev: 'Zobraziť predchádzajúci súbor',
             next: 'Zobraziť následujúci súbor',
+            rotate: 'Rotate 90 deg. clockwise',
             toggleheader: 'Prepnúť záhlavie',
             fullscreen: 'Prepnúť zobrazenie na celú obrazovku',
             borderless: 'Prepnúť na bezrámikové zobrazenie',
             close: 'Zatvoriť detailný náhľad'
         }
     };
-})(window.jQuery);
+}));

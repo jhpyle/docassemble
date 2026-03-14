@@ -6939,6 +6939,8 @@ def recurse_obj(the_object, recursive=True, use_objects=False):
                     # if isinstance(new_obj, DAList) or isinstance(new_obj, DADict) or isinstance(new_obj, DASet):
                     #    new_obj.gathered = True
                     objects.append(constructor(**transformed_item))
+                if use_objects:
+                    return DAList('return_object', elements=objects)
                 return objects
             if 'item' in the_object:
                 item = the_object['item']

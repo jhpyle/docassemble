@@ -9,10 +9,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['fa'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'فایل',
         filePlural: 'فایل‌ها',
         browseLabel: 'مرور &hellip;',
@@ -31,8 +42,9 @@
         msgPlaceholder: 'انتخاب {files} ...',
         msgZoomModalHeading: 'نمایش با جزییات',
         msgFileRequired: 'شما باید یک فایل برای بارگذاری انتخاب نمایید.',
-        msgSizeTooSmall: 'فایل "{name}" (<b>{size} کیلوبایت</b>) خیلی کوچک است و باید از <b>{minSize} کیلوبایت بزرگتر باشد</b>.',
-        msgSizeTooLarge: 'فایل "{name}" (<b>{size} کیلوبایت</b>) از حداکثر مجاز <b>{maxSize} کیلوبایت</b> بزرگتر است.',
+        msgSizeTooSmall: 'فایل "{name}" (<b>{size}</b>) خیلی کوچک است و باید از <b>{minSize}</b>.',
+        msgSizeTooLarge: 'فایل "{name}" (<b>{size}</b>) از حداکثر مجاز <b>{maxSize}</b> بزرگتر است.',
+        msgMultipleSizeTooLarge: 'فایل "{name}" (<b>{size}</b>) از حداکثر مجاز <b>{maxSize}</b> بزرگتر است.',
         msgFilesTooLess: 'شما باید حداقل <b>{n}</b> {files} فایل برای بارگذاری انتخاب کنید.',
         msgFilesTooMany: 'تعداد فایل‌های انتخاب شده برای بارگذاری <b>({n})</b> از حداکثر مجاز عبور کرده است <b>{m}</b>.',
         msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
@@ -67,6 +79,7 @@
         msgLoading: 'بارگیری فایل {index} از {files} &hellip;',
         msgProgress: 'بارگیری فایل {index} از {files} - {name} - {percent}% تمام شد.',
         msgSelected: '{n} {files} انتخاب شده',
+        msgProcessing: 'Processing ...',
         msgFoldersNotAllowed: 'فقط فایل‌ها را بکشید و رها کنید! {n} پوشه نادیده گرفته شد.',
         msgImageWidthSmall: 'عرض فایل تصویر "{name}" باید حداقل {size} پیکسل باشد.',
         msgImageHeightSmall: 'ارتفاع فایل تصویر "{name}" باید حداقل {size} پیکسل باشد.',
@@ -76,7 +89,7 @@
         msgImageResizeException: 'خطا در هنگام تغییر اندازه تصویر.<pre>{errors}</pre>',
         msgAjaxError: 'به نظر مشکلی در حین {operation} روی داده است. لطفا دوباره تلاش کنید!',
         msgAjaxProgressError: '{operation} لغو شد',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
+        msgDuplicateFile: 'File "{name}" of same size "{size}" has already been selected earlier. Skipping duplicate selection.',
         msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
         msgPendingTime: '{time} remaining',
         msgCalculatingTime: 'calculating time remaining',
@@ -93,6 +106,7 @@
             uploadTitle: 'آپلود فایل',
             uploadRetryTitle: 'بارگیری مجدد',
             downloadTitle: 'دریافت فایل',
+            rotateTitle: 'Rotate 90 deg. clockwise',
             zoomTitle: 'دیدن جزئیات',
             dragTitle: 'جابجایی / چیدمان',
             indicatorNewTitle: 'آپلود نشده است',
@@ -104,10 +118,11 @@
         previewZoomButtonTitles: {
             prev: 'مشاهده فایل قبلی',
             next: 'مشاهده فایل بعدی',
+            rotate: 'Rotate 90 deg. clockwise',
             toggleheader: 'نمایش عنوان',
             fullscreen: 'نمایش تمام صفحه',
             borderless: 'نمایش حاشیه',
             close: 'بستن نمایش با جزییات'
         }
     };
-})(window.jQuery);
+}));

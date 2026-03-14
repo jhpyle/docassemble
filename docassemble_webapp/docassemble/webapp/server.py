@@ -2563,7 +2563,7 @@ def do_refresh(is_ajax, yaml_filename):
 
 
 def standard_scripts(interview_language=DEFAULT_LANGUAGE, external=False):
-    if interview_language in ('ar', 'cs', 'et', 'he', 'ka', 'nl', 'ro', 'th', 'zh', 'az', 'da', 'fa', 'hu', 'kr', 'no', 'ru', 'tr', 'bg', 'de', 'fi', 'id', 'kz', 'pl', 'sk', 'uk', 'ca', 'el', 'fr', 'it', 'sl', 'uz', 'cr', 'es', 'gl', 'ja', 'lt', 'pt', 'sv', 'vi'):
+    if interview_language in ('ar', 'az', 'bg', 'ca', 'cr', 'cs', 'da', 'de', 'el', 'es', 'et', 'eu', 'fa', 'fi', 'fr', 'gl', 'he', 'hu', 'id', 'it', 'ja', 'ka', 'kr', 'kz', 'lt', 'lv', 'ms', 'nl', 'no', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sv', 'th', 'tr', 'uk', 'ur', 'uz', 'vi', 'zh'):
         fileinput_locale = f'\n  <script{DEFER} src="{url_for("static", filename="bootstrap-fileinput/js/locales/" + interview_language + ".js", v=da_version, _external=external)}"></script>'
     else:
         fileinput_locale = ''
@@ -15875,7 +15875,7 @@ def server_error(the_error):
 def css_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['bootstrap-fileinput', 'css', 'fileinput.css'], ['labelauty', 'source', 'jquery-labelauty.css'], ['bootstrap-combobox', 'css', 'bootstrap-combobox.css'], ['bootstrap-slider', 'dist', 'css', 'bootstrap-slider.css'], ['app', 'app.css']]:
+    for parts in [['bootstrap', 'css', 'bootstrap-icons.css'], ['bootstrap-fileinput', 'css', 'fileinput.css'], ['labelauty', 'source', 'jquery-labelauty.css'], ['bootstrap-combobox', 'css', 'bootstrap-combobox.css'], ['bootstrap-slider', 'dist', 'css', 'bootstrap-slider.css'], ['app', 'app.css']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -15886,7 +15886,7 @@ def css_bundle():
 def playground_css_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'pygments.css'], ['bootstrap-fileinput', 'css', 'fileinput.css']]:
+    for parts in [['app', 'pygments.css'], ['bootstrap', 'css', 'bootstrap-icons.css'], ['bootstrap-fileinput', 'css', 'fileinput.css']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -15897,7 +15897,7 @@ def playground_css_bundle():
 def js_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'jquery.js'], ['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'app.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js'], ['app', 'signature_pad.umd.min.js']]:
+    for parts in [['app', 'jquery.js'], ['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-fileinput', 'js', 'plugins', 'buffer.js'], ['bootstrap-fileinput', 'js', 'plugins', 'filetype.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'plugins', 'sortable.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['app', 'app.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js'], ['app', 'signature_pad.umd.min.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -15919,7 +15919,7 @@ def monitor_bundle():
 def playground_js_bundle():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['areyousure', 'jquery.are-you-sure.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'cm6.js'], ['app', 'playground.js']]:
+    for parts in [['areyousure', 'jquery.are-you-sure.js'], ['bootstrap-fileinput', 'js', 'plugins', 'buffer.js'], ['bootstrap-fileinput', 'js', 'plugins', 'filetype.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'plugins', 'sortable.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['app', 'cm6.js'], ['app', 'playground.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -15941,7 +15941,7 @@ def js_admin_bundle():
 def js_bundle_wrap():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = '(function($) {'
-    for parts in [['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'app.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js']]:
+    for parts in [['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'buffer.js'], ['bootstrap-fileinput', 'js', 'plugins', 'filetype.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'plugins', 'sortable.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['app', 'app.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"
@@ -15953,7 +15953,7 @@ def js_bundle_wrap():
 def js_bundle_no_query():
     base_path = Path(importlib.resources.files('docassemble.webapp'), 'static')
     output = ''
-    for parts in [['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['bootstrap-fileinput', 'themes', 'fas', 'theme.js'], ['app', 'app.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js']]:
+    for parts in [['app', 'jquery.validate.js'], ['app', 'additional-methods.js'], ['app', 'jquery.visible.js'], ['bootstrap', 'js', 'bootstrap.bundle.js'], ['bootstrap-slider', 'dist', 'bootstrap-slider.js'], ['bootstrap-fileinput', 'js', 'plugins', 'buffer.js'], ['bootstrap-fileinput', 'js', 'plugins', 'filetype.js'], ['bootstrap-fileinput', 'js', 'plugins', 'piexif.js'], ['bootstrap-fileinput', 'js', 'plugins', 'sortable.js'], ['bootstrap-fileinput', 'js', 'fileinput.js'], ['app', 'app.js'], ['labelauty', 'source', 'jquery-labelauty.js'], ['bootstrap-combobox', 'js', 'bootstrap-combobox.js'], ['app', 'socket.io.js']]:
         with open(os.path.join(base_path, *parts), encoding='utf-8') as fp:
             output += fp.read()
         output += "\n"

@@ -4,12 +4,14 @@
 
 ### Changed
 
-- Downgraded `numpy` to allow Python 3.10 to be used.
+- Downgraded `numpy`, `scipy`, and `scikit-learn` to allow Python 3.10
+  to continue to be used.
+- Upgraded `bootstrap-fileinput`.
+- Migrated the websockets interface from `eventlet` to `gevent`.
 
 ### Fixed
 
-- Avoided network error during upgrade process due to overly large log
-  messages.
+- Truncated `pip` logs to avoid errors during upgrade process.
 
 ## [1.9.2] - 2026-01-27
 

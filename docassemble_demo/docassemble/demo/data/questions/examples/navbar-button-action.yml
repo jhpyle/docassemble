@@ -1,0 +1,77 @@
+default screen parts:
+  navigation bar html: |
+    % if current_context().question_id not in ('ask_lawyer_page_one', 'ask_lawyer_page_two'):
+    <li class="nav-item"><a class="btn btn-primary" href="${ url_action('ask_lawyer') }">Message a Lawyer</a></li>
+    % endif
+---
+event: ask_lawyer
+code: |
+  force_ask('question_for_lawyer', {'recompute': 'question_emailed_to_lawyer'}, 'question_for_lawyer_acknowledgment')
+---
+id: ask_lawyer_page_one
+question: |
+  What would you like to ask the attorney on duty?
+fields:
+  - Your email address: user_email_address
+    datatype: email
+  - Question: question_for_lawyer
+    input type: area
+---
+template: email_to_lawyer
+subject: |
+  Question from ${ user_email_address }
+content: |
+  The user at ${ user_email_address } wants to know:
+
+  > ${ single_paragraph(question_for_lawyer) }
+---
+code: |
+  # send_email(to='jhpyle@gmail.com', template=email_to_lawyer)
+  del question_for_lawyer
+  question_emailed_to_lawyer = True
+---
+id: ask_lawyer_page_two
+question: |
+  Thank you for your question.
+subquestion: |
+  The lawyer on duty will answer your question promptly.
+continue button field: question_for_lawyer_acknowledgment
+continue button label: Resume interview
+---
+mandatory: True
+code: |
+  favorite_fruit
+  favorite_vegetable
+  favorite_legume
+  final_screen
+---
+question: |
+  What is your favorite fruit?
+fields:
+  - Fruit: favorite_fruit
+---
+question: |
+  What is your favorite vegetable?
+fields:
+  - Vegetable: favorite_vegetable
+---
+question: |
+  What is your favorite legume?
+fields:
+  - Legume: favorite_legume
+---
+event: final_screen
+question: |
+  Thank you for that information.
+subquestion: |
+  Your food preferences are very valuable.
+
+  I will make lots of money by selling your
+  food preferences to data brokers so that
+  you will receive targeted advertising about
+  ${ noun_plural(favorite_fruit) },
+  ${ noun_plural(favorite_vegetable) },
+  and ${ noun_plural(favorite_legume) }
+  in your Instagram feed.
+
+  Thank you very much!

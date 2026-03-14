@@ -5,10 +5,9 @@ import random
 import re
 import sys
 import time
-import trio  # noqa: E402,F401 # pylint: disable=unused-import
-import eventlet
-eventlet.sleep()
-eventlet.monkey_patch()
+# import trio  # noqa: E402,F401 # pylint: disable=unused-import
+from gevent import monkey
+monkey.patch_all()
 import docassemble.base.config  # noqa: E402
 docassemble.base.config.load(arguments=sys.argv)
 from docassemble.base.config import daconfig  # noqa: E402

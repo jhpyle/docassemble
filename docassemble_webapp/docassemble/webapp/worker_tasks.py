@@ -911,6 +911,8 @@ def update_packages(restart=True):
             worker_controller.set_request_active(False)
             logmessage("update_packages in worker: starting update after " + str(time.time() - start_time) + " seconds")
             ok, logmessages, results = worker_controller.update.check_for_updates(start_time=start_time, full=restart)
+            if len(logmessages) > 210000:
+                logmessages = logmessages[0:100000] + "\n\nTRUNCATED\n\n" + logmessages[-100000:]
             logmessage("update_packages in worker: update completed after " + str(time.time() - start_time) + " seconds")
             if restart and ':all:' not in CONTAINER_ROLE:
                 worker_controller.trigger_update(except_for=hostname)

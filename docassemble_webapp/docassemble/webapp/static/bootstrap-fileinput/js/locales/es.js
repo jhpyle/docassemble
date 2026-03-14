@@ -8,10 +8,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['es'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'archivo',
         filePlural: 'archivos',
         browseLabel: 'Examinar &hellip;',
@@ -19,22 +30,23 @@
         removeTitle: 'Quitar archivos seleccionados',
         cancelLabel: 'Cancelar',
         cancelTitle: 'Abortar la subida en curso',
-        pauseLabel: 'Pause',
-        pauseTitle: 'Pause ongoing upload',
+        pauseLabel: 'Pausar',
+        pauseTitle: 'Pausar la carga en curso',
         uploadLabel: 'Subir archivo',
         uploadTitle: 'Subir archivos seleccionados',
         msgNo: 'No',
         msgNoFilesSelected: 'No hay archivos seleccionados',
-        msgPaused: 'Paused',
+        msgPaused: 'Pausado',
         msgCancelled: 'Cancelado',
         msgPlaceholder: 'Seleccionar {files} ...',
         msgZoomModalHeading: 'Vista previa detallada',
         msgFileRequired: 'Debes seleccionar un archivo para subir.',
-        msgSizeTooSmall: 'El archivo "{name}" (<b>{size} KB</b>) es demasiado pequeño y debe ser mayor de <b>{minSize} KB</b>.',
-        msgSizeTooLarge: 'El archivo "{name}" (<b>{size} KB</b>) excede el tamaño máximo permitido de <b>{maxSize} KB</b>.',
+        msgSizeTooSmall: 'El archivo "{name}" (<b>{size}</b>) es demasiado pequeño y debe ser mayor de <b>{minSize}</b>.',
+        msgSizeTooLarge: 'El archivo "{name}" (<b>{size}</b>) excede el tamaño máximo permitido de <b>{maxSize}</b>.',
+        msgMultipleSizeTooLarge: 'El archivos "{name}" (<b>{size}</b>) excede el tamaño máximo permitido de <b>{maxSize}</b>.',
         msgFilesTooLess: 'Debe seleccionar al menos <b>{n}</b> {files} a cargar.',
         msgFilesTooMany: 'El número de archivos seleccionados a cargar <b>({n})</b> excede el límite máximo permitido de <b>{m}</b>.',
-        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
+        msgTotalFilesTooMany: 'Puede cargar un máximo de <b>{m}</b> archivos (<b>{n}</b> archivos detectados).',
         msgFileNotFound: 'Archivo "{name}" no encontrado.',
         msgFileSecured: 'No es posible acceder al archivo "{name}" porque está siendo usado por otra aplicación o no tiene permisos de lectura.',
         msgFileNotReadable: 'No es posible acceder al archivo "{name}".',
@@ -57,33 +69,34 @@
         msgUploadThreshold: 'Procesando &hellip;',
         msgUploadBegin: 'Inicializando &hellip;',
         msgUploadEnd: 'Hecho',
-        msgUploadResume: 'Resuming upload &hellip;',
+        msgUploadResume: 'Reanudando carga &hellip;',
         msgUploadEmpty: 'No existen datos válidos para el envío.',
-        msgUploadError: 'Upload Error',
-        msgDeleteError: 'Delete Error',
+        msgUploadError: 'Error al subir',
+        msgDeleteError: 'Error al eliminar',
         msgProgressError: 'Error',
         msgValidationError: 'Error de validación',
         msgLoading: 'Subiendo archivo {index} de {files} &hellip;',
         msgProgress: 'Subiendo archivo {index} de {files} - {name} - {percent}% completado.',
         msgSelected: '{n} {files} seleccionado(s)',
+        msgProcessing: 'Procesando ...',
         msgFoldersNotAllowed: 'Arrastre y suelte únicamente archivos. Omitida(s) {n} carpeta(s).',
-        msgImageWidthSmall: 'El ancho de la imagen "{name}" debe ser de al menos {size} px.',
-        msgImageHeightSmall: 'La altura de la imagen "{name}" debe ser de al menos {size} px.',
-        msgImageWidthLarge: 'El ancho de la imagen "{name}" no puede exceder de {size} px.',
-        msgImageHeightLarge: 'La altura de la imagen "{name}" no puede exceder de {size} px.',
+        msgImageWidthSmall: 'El ancho de la imagen "{name}" debe ser de al menos <b>{size} px</b> (detectado <b>{dimension} px</b>).',
+        msgImageHeightSmall: 'La altura de la imagen "{name}" debe ser de al menos <b>{size} px</b> (detectado <b>{dimension} px</b>).',
+        msgImageWidthLarge: 'El ancho de la imagen "{name}" no puede exceder de <b>{size} px</b> (detectado <b>{dimension} px</b>).',
+        msgImageHeightLarge: 'La altura de la imagen "{name}" no puede exceder de <b>{size} px</b> (detectado <b>{dimension} px</b>).',
         msgImageResizeError: 'No se pudieron obtener las dimensiones de la imagen para cambiar el tamaño.',
         msgImageResizeException: 'Error al cambiar el tamaño de la imagen.<pre>{errors}</pre>',
         msgAjaxError: 'Algo ha ido mal con la operación {operation}. Por favor, inténtelo de nuevo mas tarde.',
         msgAjaxProgressError: 'La operación {operation} ha fallado',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
-        msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
-        msgPendingTime: '{time} remaining',
-        msgCalculatingTime: 'calculating time remaining',
+        msgDuplicateFile: 'El archivo "{name}" del mismo tamaño "{size}" ya se seleccionó anteriormente. Saltar selección duplicada.',
+        msgResumableUploadRetriesExceeded:  '¡La carga se canceló más allá de <b>{max}</b> reintentos para el archivo <b>{file}</b>! Detalles del error: <pre>{error}</pre>',
+        msgPendingTime: '{time} restante',
+        msgCalculatingTime: 'calculando el tiempo restante',
         ajaxOperations: {
             deleteThumb: 'Archivo borrado',
             uploadThumb: 'Archivo subido',
             uploadBatch: 'Datos subidos en lote',
-            uploadExtra: 'Datos del formulario subidos '
+            uploadExtra: 'Datos del formulario subidos'
         },
         dropZoneTitle: 'Arrastre y suelte aquí los archivos &hellip;',
         dropZoneClickTitle: '<br>(o haga clic para seleccionar {files})',
@@ -92,21 +105,23 @@
             uploadTitle: 'Subir archivo',
             uploadRetryTitle: 'Reintentar subir',
             downloadTitle: 'Descargar archivo',
+            rotateTitle: 'Rotar 90º en sentido horario',
             zoomTitle: 'Ver detalles',
             dragTitle: 'Mover / Reordenar',
             indicatorNewTitle: 'No subido todavía',
             indicatorSuccessTitle: 'Subido',
             indicatorErrorTitle: 'Error al subir',
-            indicatorPausedTitle: 'Upload Paused',
+            indicatorPausedTitle: 'Subida pausada',
             indicatorLoadingTitle:  'Subiendo &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Anterior',
             next: 'Siguiente',
+            rotate: 'Rotar 90º en sentido horario',
             toggleheader: 'Mostrar encabezado',
             fullscreen: 'Pantalla completa',
             borderless: 'Modo sin bordes',
             close: 'Cerrar vista detallada'
         }
     };
-})(window.jQuery);
+}));

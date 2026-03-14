@@ -46,7 +46,7 @@ def create_app():
         origins = daconfig['cross site domains']
     else:
         origins = [daconfig.get('url root', '*')]
-    the_socketio = SocketIO(the_app, async_mode='eventlet', verify=False, logger=True, engineio_logger=True, cors_allowed_origins=origins)
+    the_socketio = SocketIO(the_app, async_mode='gevent', verify=False, logger=True, engineio_logger=True, cors_allowed_origins=origins)
     return the_app, the_db, the_socketio
 
 app, db, socketio = create_app()

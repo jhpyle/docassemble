@@ -175,7 +175,7 @@ dependencies = [
   "ruamel.yaml.clib==0.2.15",
   "ruamel.yaml.string==0.1.1",
   "s3transfer==0.16.0",
-  "scipy==1.16.3",
+  "scipy==1.15.3",
   "SecretStorage==3.5.0",
   "setuptools==80.9.0",
   "six==1.17.0",

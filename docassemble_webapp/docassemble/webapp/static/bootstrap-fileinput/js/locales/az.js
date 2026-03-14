@@ -9,10 +9,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['az'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'fayl',
         filePlural: 'fayl',
         browseLabel: 'Seç &hellip;',
@@ -31,8 +42,9 @@
         msgPlaceholder: 'Select {files} ...',
         msgZoomModalHeading: 'İlkin baxış',
         msgFileRequired: 'Yükləmə üçün fayl seçməlisiniz.',
-        msgSizeTooSmall: 'Seçdiyiniz "{name}" faylının həcmi (<b>{size} KB</b>)-dır,  minimum <b>{minSize} KB</b> olmalıdır.',
-        msgSizeTooLarge: 'Seçdiyiniz "{name}" faylının həcmi (<b>{size} KB</b>)-dır,  maksimum <b>{maxSize} KB</b> olmalıdır.',
+        msgSizeTooSmall: 'Seçdiyiniz "{name}" faylının həcmi (<b>{size}</b>)-dır,  minimum <b>{minSize}</b> olmalıdır.',
+        msgSizeTooLarge: 'Seçdiyiniz "{name}" faylının həcmi (<b>{size}</b>)-dır,  maksimum <b>{maxSize}</b> olmalıdır.',
+        msgMultipleSizeTooLarge: 'Seçdiyiniz "{name}" faylının həcmi (<b>{size}</b>)-dır,  maksimum <b>{maxSize}</b> olmalıdır.',
         msgFilesTooLess: 'Yükləmə üçün minimum <b>{n}</b> {files} seçməlisiniz.',
         msgFilesTooMany: 'Seçilmiş fayl sayı <b>({n})</b>. Maksimum <b>{m}</b> fayl seçmək mümkündür.',
         msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
@@ -67,16 +79,17 @@
         msgLoading: '{files} fayldan {index} yüklənir &hellip;',
         msgProgress: '{files} fayldan {index} - {name} - {percent}% yükləndi.',
         msgSelected: 'Faylların sayı: {n}',
+        msgProcessing: 'Processing ...',
         msgFoldersNotAllowed: 'Ancaq faylların daşınmasına icazə verilir! {n} qovluq yüklənmədi.',
-        msgImageWidthSmall: '{name} faylının eni {size} px -dən kiçik olmamalıdır.',
-        msgImageHeightSmall: '{name} faylının hündürlüyü {size} px -dən kiçik olmamalıdır.',
-        msgImageWidthLarge: '"{name}" faylının eni {size} px -dən böyük olmamalıdır.',
-        msgImageHeightLarge: '"{name}" faylının hündürlüyü {size} px -dən böyük olmamalıdır.',
+        msgImageWidthSmall: '{name} faylının eni <b>{size} px</b> (detected <b>{dimension} px</b>) -dən kiçik olmamalıdır.',
+        msgImageHeightSmall: '{name} faylının hündürlüyü <b>{size} px</b> (detected <b>{dimension} px</b>) -dən kiçik olmamalıdır.',
+        msgImageWidthLarge: '"{name}" faylının eni <b>{size} px</b> (detected <b>{dimension} px</b>) -dən böyük olmamalıdır.',
+        msgImageHeightLarge: '"{name}" faylının hündürlüyü <b>{size} px</b> (detected <b>{dimension} px</b>) -dən böyük olmamalıdır.',
         msgImageResizeError: 'Faylın ölçülərini dəyişmək üçün ölçüləri hesablamaq mümkün olmadı.',
         msgImageResizeException: 'Faylın ölçülərini dəyişmək mümkün olmadı.<pre>{errors}</pre>',
         msgAjaxError: '{operation} əməliyyatı zamanı səhv baş verdi. Təkrar yoxlayın!',
         msgAjaxProgressError: '{operation} əməliyyatı yerinə yetirmək mümkün olmadı.',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
+        msgDuplicateFile: 'File "{name}" of same size "{size}" has already been selected earlier. Skipping duplicate selection.',
         msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
         msgPendingTime: '{time} remaining',
         msgCalculatingTime: 'calculating time remaining',
@@ -93,6 +106,7 @@
             uploadTitle: 'Faylı yüklə',
             uploadRetryTitle: 'Retry upload',
             downloadTitle: 'Download file',
+            rotateTitle: 'Rotate 90 deg. clockwise',
             zoomTitle: 'məlumatlara bax',
             dragTitle: 'Yerini dəyiş və ya sırala',
             indicatorNewTitle: 'Davam edir',
@@ -104,10 +118,11 @@
         previewZoomButtonTitles: {
             prev: 'Əvvəlki fayla bax',
             next: 'Növbəti fayla bax',
+            rotate: 'Rotate 90 deg. clockwise',
             toggleheader: 'Başlığı dəyiş',
             fullscreen: 'Tam ekranı dəyiş',
             borderless: 'Bölmələrsiz rejimi dəyiş',
             close: 'Ətraflı baxışı bağla'
         }
     };
-})(window.jQuery);
+}));

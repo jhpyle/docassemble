@@ -8,10 +8,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['ca'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'arxiu',
         filePlural: 'arxius',
         browseLabel: 'Examinar &hellip;',
@@ -30,8 +41,9 @@
         msgPlaceholder: 'Selecciona {files} ...',
         msgZoomModalHeading: 'Vista prèvia detallada',
         msgFileRequired: 'Has de seleccionar un arxiu per pujar.',
-        msgSizeTooSmall: 'Arxiu "{name}" (<b>{size} KB</b>) es massa petit, ha de ser més gran de <b>{minSize} KB</b>.',
-        msgSizeTooLarge: 'Arxiu "{name}" (<b>{size} KB</b>) excedeix la mida màxima permès de <b>{maxSize} KB</b>.',
+        msgSizeTooSmall: 'Arxiu "{name}" (<b>{size}</b>) es massa petit, ha de ser més gran de <b>{minSize}</b>.',
+        msgSizeTooLarge: 'Arxiu "{name}" (<b>{size}</b>) excedeix la mida màxima permès de <b>{maxSize}</b>.',
+        msgMultipleSizeTooLarge: 'Arxiu "{name}" (<b>{size}</b>) excedeix la mida màxima permès de <b>{maxSize}</b>.',
         msgFilesTooLess: 'Heu de seleccionar almenys <b>{n}</b> {files} a carregar.',
         msgFilesTooMany: 'El nombre d\'arxius seleccionats a carregar <b>({n})</b> excedeix el límit màxim permès de <b>{m}</b>.',
         msgTotalFilesTooMany: 'Pots pujar un màxim de <b>{m}</b> arxius (<b>{n}</b> arxius seleccionats).',
@@ -66,16 +78,17 @@
         msgLoading: 'Pujant fitxer {index} de {files} &hellip;',
         msgProgress: 'Pujant fitxer {index} de {files} - {name} - {percent}% completat.',
         msgSelected: '{n} {files} seleccionat(s)',
+        msgProcessing: 'Processing ...',
         msgFoldersNotAllowed: 'Arrossegueu i deixeu anar únicament arxius. Omesa(es) {n} carpeta(es).',
-        msgImageWidthSmall: 'L\'ample de la imatge "{name}" ha de ser almenys {size} px.',
-        msgImageHeightSmall: 'L\'alçada de la imatge "{name}" ha de ser almenys {size} px.',
-        msgImageWidthLarge: 'L\'ample de la imatge "{name}" no pot excedir de {size} px.',
-        msgImageHeightLarge: 'L\'alçada de la imatge "{name}" no pot excedir de {size} px.',
+        msgImageWidthSmall: 'L\'ample de la imatge "{name}" ha de ser almenys <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightSmall: 'L\'alçada de la imatge "{name}" ha de ser almenys <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageWidthLarge: 'L\'ample de la imatge "{name}" no pot excedir de <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightLarge: 'L\'alçada de la imatge "{name}" no pot excedir de <b>{size} px</b> (detected <b>{dimension} px</b>).',
         msgImageResizeError: 'No s\'ha pogut obtenir les dimensions d\'imatge per canviar la mida.',
         msgImageResizeException: 'Error en canviar la mida de la imatge.<pre>{errors}</pre>',
         msgAjaxError: 'Something went wrong with the {operation} operation. Please try again later!',
         msgAjaxProgressError: '{operation} failed',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
+        msgDuplicateFile: 'File "{name}" of same size "{size}" has already been selected earlier. Skipping duplicate selection.',
         msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
         msgPendingTime: '{time} remaining',
         msgCalculatingTime: 'calculating time remaining',
@@ -92,6 +105,7 @@
             uploadTitle: 'Pujar arxiu',
             uploadRetryTitle: 'Tornar a pujar',
             downloadTitle: 'Descarregar arxiu',
+            rotateTitle: 'Rotate 90 deg. clockwise',
             zoomTitle: 'Veure detalls',
             dragTitle: 'Moure / Ordenar',
             indicatorNewTitle: 'No pujat encara',
@@ -103,10 +117,11 @@
         previewZoomButtonTitles: {
             prev: 'Veure arxiu previ',
             next: 'Veure arxiu següent',
+            rotate: 'Rotate 90 deg. clockwise',
             toggleheader: 'Activar capçalera',
             fullscreen: 'Activar pantalla completa',
             borderless: 'Activar mode sense vora',
             close: 'Tancar detalls'
         }
     };
-})(window.jQuery);
+}));

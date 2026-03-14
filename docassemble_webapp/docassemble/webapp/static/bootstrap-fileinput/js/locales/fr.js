@@ -8,10 +8,21 @@
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['fr'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'fichier',
         filePlural: 'fichiers',
         browseLabel: 'Parcourir &hellip;',
@@ -30,8 +41,9 @@
         msgPlaceholder: 'Sélectionner le(s) {files} ...',
         msgZoomModalHeading: 'Aperçu détaillé',
         msgFileRequired: 'Vous devez sélectionner un fichier à envoyer.',
-        msgSizeTooSmall: 'Le fichier "{name}" (<b>{size} KB</b>) est inférieur à la taille minimale de <b>{minSize} KB</b>.',
-        msgSizeTooLarge: 'Le fichier "{name}" (<b>{size} Ko</b>) dépasse la taille maximale autorisée qui est de <b>{maxSize} Ko</b>.',
+        msgSizeTooSmall: 'Le fichier "{name}" (<b>{size}</b>) est inférieur à la taille minimale de <b>{minSize}</b>.',
+        msgSizeTooLarge: 'Le fichiers "{name}" (<b>{size}</b>) dépasse la taille maximale autorisée qui est de <b>{maxSize}</b>.',
+        msgMultipleSizeTooLarge: 'Le fichier "{name}" (<b>{size}</b>) dépasse la taille maximale autorisée qui est de <b>{maxSize}</b>.',
         msgFilesTooLess: 'Vous devez sélectionner au moins <b>{n}</b> {files} à transmettre.',
         msgFilesTooMany: 'Le nombre de fichiers sélectionnés <b>({n})</b> dépasse la quantité maximale autorisée qui est de <b>{m}</b>.',
         msgTotalFilesTooMany: 'Il n\'est pas permis d\'envoyer plus de <b>{m}</b> fichiers (actuellement <b>{n}</b> fichiers).',
@@ -66,16 +78,17 @@
         msgLoading: 'Transmission du fichier {index} sur {files} &hellip;',
         msgProgress: 'Transmission du fichier {index} sur {files} - {name} - {percent}%.',
         msgSelected: '{n} {files} sélectionné(s)',
+        msgProcessing: 'Processing ...',
         msgFoldersNotAllowed: 'Glissez et déposez uniquement des fichiers ! {n} répertoire(s) exclu(s).',
-        msgImageWidthSmall: 'La largeur de l\'image "{name}" doit être d\'au moins {size} px.',
-        msgImageHeightSmall: 'La hauteur de l\'image "{name}" doit être d\'au moins {size} px.',
-        msgImageWidthLarge: 'La largeur de l\'image "{name}" ne peut pas dépasser {size} px.',
-        msgImageHeightLarge: 'La hauteur de l\'image "{name}" ne peut pas dépasser {size} px.',
+        msgImageWidthSmall: 'La largeur de l\'image "{name}" doit être d\'au moins <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightSmall: 'La hauteur de l\'image "{name}" doit être d\'au moins <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageWidthLarge: 'La largeur de l\'image "{name}" ne peut pas dépasser <b>{size} px</b> (detected <b>{dimension} px</b>).',
+        msgImageHeightLarge: 'La hauteur de l\'image "{name}" ne peut pas dépasser <b>{size} px</b> (detected <b>{dimension} px</b>).',
         msgImageResizeError: "Impossible d'obtenir les dimensions de l'image à redimensionner.",
         msgImageResizeException: "Erreur lors du redimensionnement de l'image.<pre>{errors}</pre>",
         msgAjaxError: "Une erreur s'est produite pendant l'opération de {operation}. Veuillez réessayer plus tard.",
         msgAjaxProgressError: 'L\'opération "{operation}" a échouée',
-        msgDuplicateFile: 'Le fichier "{name}" de taille "{size} KB" à déjà été envoyé. Les doublons sont ignorés.',
+        msgDuplicateFile: 'Le fichier "{name}" de taille "{size}" à déjà été envoyé. Les doublons sont ignorés.',
         msgResumableUploadRetriesExceeded:  'Le transfert a été annulé après <b>{max}</b> essais pour le fichier <b>{file}</b>! Details de l\'erreur: <pre>{error}</pre>',
         msgPendingTime: '{time} restant',
         msgCalculatingTime: 'calcul du temps restant',
@@ -92,6 +105,7 @@
             uploadTitle: 'Transférer le fichier',
             uploadRetryTitle: 'Relancer le transfert',
             downloadTitle: 'Télécharger',
+            rotateTitle: 'Rotate 90 deg. clockwise',
             zoomTitle: 'Voir les détails',
             dragTitle: 'Déplacer / Réarranger',
             indicatorNewTitle: 'Pas encore transféré',
@@ -103,10 +117,11 @@
         previewZoomButtonTitles: {
             prev: 'Voir le fichier précédent',
             next: 'Voir le fichier suivant',
+            rotate: 'Rotate 90 deg. clockwise',
             toggleheader: 'Masquer le titre',
             fullscreen: 'Mode plein écran',
             borderless: 'Mode cinéma',
             close: "Fermer l'aperçu"
         }
     };
-})(window.jQuery);
+}));

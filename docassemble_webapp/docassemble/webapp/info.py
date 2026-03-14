@@ -96,7 +96,6 @@ system_packages = [
     "email_validator",
     "et-xmlfile",
     "et_xmlfile",
-    "eventlet",
     "exceptiongroup",
     "Flask",
     "flask-babel",
@@ -113,6 +112,8 @@ system_packages = [
     "gcs-oauth2-boto-plugin",
     "geographiclib",
     "geopy",
+    "gevent",
+    "gevent-websocket",
     "google-api-core",
     "google-api-python-client",
     "google-auth",
@@ -331,5 +332,7 @@ system_packages = [
     "xlsxwriter",
     "xlwt",
     "yarl",
-    "zipp"
+    "zipp",
+    "zope.event",
+    "zope.interface"
 ]

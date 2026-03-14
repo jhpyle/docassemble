@@ -6,13 +6,25 @@
  *
  * @see http://github.com/kartik-v/bootstrap-fileinput
  * @author Bambang Riswanto <bamz3r@gmail.com>
+ * @author dheroefic <dheroefic@gmail.com>
  *
  * NOTE: this file must be saved in UTF-8 encoding.
  */
-(function ($) {
+(function (factory) {
+    'use strict';
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
+        factory(require('jquery'));
+    } else {
+        factory(window.jQuery);
+    }
+}(function ($) {
     "use strict";
 
     $.fn.fileinputLocales['id'] = {
+        sizeUnits: ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'], 
+        bitRateUnits: ['B/s', 'KB/s', 'MB/s', 'GB/s', 'TB/s', 'PB/s', 'EB/s', 'ZB/s', 'YB/s'],
         fileSingle: 'berkas',
         filePlural: 'berkas',
         browseLabel: 'Pilih berkas &hellip;',
@@ -20,25 +32,26 @@
         removeTitle: 'Hapus berkas terpilih',
         cancelLabel: 'Batal',
         cancelTitle: 'Batalkan proses pengunggahan',
-        pauseLabel: 'Pause',
-        pauseTitle: 'Pause ongoing upload',
+        pauseLabel: 'Tunda',
+        pauseTitle: 'Tunda unggahan yang berlangsung',
         uploadLabel: 'Unggah',
         uploadTitle: 'Unggah berkas terpilih',
         msgNo: 'Tidak',
         msgNoFilesSelected: '',
-        msgPaused: 'Paused',
+        msgPaused: 'Ditunda',
         msgCancelled: 'Dibatalkan',
         msgPlaceholder: 'Pilih {files} ...',
         msgZoomModalHeading: 'Pratinjau terperinci',
         msgFileRequired: 'Anda harus memilih berkas untuk diunggah.',
-        msgSizeTooSmall: 'Berkas "{name}" (<b>{size} KB</b>) terlalu kecil dan harus lebih besar dari <b>{minSize} KB</b>.',
-        msgSizeTooLarge: 'Berkas "{name}" (<b>{size} KB</b>) melebihi ukuran unggah maksimal yaitu <b>{maxSize} KB</b>.',
+        msgSizeTooSmall: 'Berkas "{name}" (<b>{size}</b>) terlalu kecil dan harus lebih besar dari <b>{minSize}</b>.',
+        msgSizeTooLarge: 'Berkas "{name}" (<b>{size}</b>) melebihi ukuran unggah maksimal yaitu <b>{maxSize}</b>.',
+        msgMultipleSizeTooLarge: 'Berkas "{name}" (<b>{size}</b>) melebihi ukuran unggah maksimal yaitu <b>{maxSize}</b>.',
         msgFilesTooLess: 'Anda harus memilih setidaknya <b>{n}</b> {files} untuk diunggah.',
         msgFilesTooMany: '<b>({n})</b> berkas yang dipilih untuk diunggah melebihi ukuran unggah maksimal yaitu <b>{m}</b>.',
-        msgTotalFilesTooMany: 'You can upload a maximum of <b>{m}</b> files (<b>{n}</b> files detected).',
-        msgFileNotFound: 'Berkas "{name}" tak ditemukan!',
+        msgTotalFilesTooMany: 'Anda dapat mengunggah maksimal <b>{m}</b> berkas (<b>{n}</b> files detected).',
+        msgFileNotFound: 'Berkas "{name}" tidak ditemukan!',
         msgFileSecured: 'Sistem keamanan mencegah untuk membaca berkas "{name}".',
-        msgFileNotReadable: 'Berkas "{name}" tak dapat dibaca.',
+        msgFileNotReadable: 'Berkas "{name}" tidak dapat dibaca.',
         msgFilePreviewAborted: 'Pratinjau untuk berkas "{name}" dibatalkan.',
         msgFilePreviewError: 'Kesalahan saat membaca berkas "{name}".',
         msgInvalidFileName: 'Karakter tidak dikenali atau tidak didukung untuk nama berkas "{name}".',
@@ -58,28 +71,29 @@
         msgUploadThreshold: 'Memproses &hellip;',
         msgUploadBegin: 'Menyiapkan &hellip;',
         msgUploadEnd: 'Selesai',
-        msgUploadResume: 'Resuming upload &hellip;',
+        msgUploadResume: 'Melanjutkan mengunggah &hellip;',
         msgUploadEmpty: 'Tidak ada data valid yang tersedia untuk diunggah.',
-        msgUploadError: 'Upload Error',
-        msgDeleteError: 'Delete Error',
+        msgUploadError: 'Gagal Mengunggah',
+        msgDeleteError: 'Gagal Menghapus',
         msgProgressError: 'Kesalahan',
         msgValidationError: 'Kesalahan saat memvalidasi',
         msgLoading: 'Memuat {index} dari {files} berkas &hellip;',
         msgProgress: 'Memuat {index} dari {files} berkas - {name} - {percent}% selesai.',
         msgSelected: '{n} {files} dipilih',
-        msgFoldersNotAllowed: 'Hanya tahan dan lepas file saja! {n} folder diabaikan.',
-        msgImageWidthSmall: 'Lebar dari gambar "{name}" harus sekurangnya {size} px.',
-        msgImageHeightSmall: 'Tinggi dari gambar "{name}" harus sekurangnya {size} px.',
-        msgImageWidthLarge: 'Lebar dari gambar "{name}" tak boleh melebihi {size} px.',
-        msgImageHeightLarge: 'Tinggi dari gambar "{name}" tak boleh melebihi {size} px.',
+        msgProcessing: 'Memproses ...',
+        msgFoldersNotAllowed: 'Hanya bisa tahan dan lepas file saja! {n} folder diabaikan.',
+        msgImageWidthSmall: 'Lebar dari gambar "{name}" harus sekurangnya <b>{size} px</b> (terdeteksi <b>{dimension} px</b>).',
+        msgImageHeightSmall: 'Tinggi dari gambar "{name}" harus sekurangnya <b>{size} px</b> (terdeteksi <b>{dimension} px</b>).',
+        msgImageWidthLarge: 'Lebar dari gambar "{name}" tidak boleh melebihi <b>{size} px</b> (terdeteksi <b>{dimension} px</b>).',
+        msgImageHeightLarge: 'Tinggi dari gambar "{name}" tidak boleh melebihi <b>{size} px</b> (terdeteksi <b>{dimension} px</b>).',
         msgImageResizeError: 'Tidak dapat menentukan dimensi gambar untuk mengubah ukuran.',
         msgImageResizeException: 'Kesalahan saat mengubah ukuran gambar.<pre>{errors}</pre>',
         msgAjaxError: 'Terjadi kesalahan ketika melakukan operasi {operation}. Silahkan coba lagi nanti!',
         msgAjaxProgressError: '{operation} gagal',
-        msgDuplicateFile: 'File "{name}" of same size "{size} KB" has already been selected earlier. Skipping duplicate selection.',
-        msgResumableUploadRetriesExceeded:  'Upload aborted beyond <b>{max}</b> retries for file <b>{file}</b>! Error Details: <pre>{error}</pre>',
-        msgPendingTime: '{time} remaining',
-        msgCalculatingTime: 'calculating time remaining',
+        msgDuplicateFile: 'Berkas "{name}" yang mempunyai ukuran "{size}" sebelumnya pernah dipilih. Mengabaikan pilihan yang duplikat.',
+        msgResumableUploadRetriesExceeded:  'Unggahan dibatalkan melewati batas <b>{max}</b> kali untuk berkas <b>{file}</b>! Detail Kesalahan: <pre>{error}</pre>',
+        msgPendingTime: '{time} tersisa',
+        msgCalculatingTime: 'menghitung waktu tersisa',
         ajaxOperations: {
             deleteThumb: 'Hapus berkas',
             uploadThumb: 'Unggah berkas',
@@ -93,21 +107,23 @@
             uploadTitle: 'Unggah Berkas',
             uploadRetryTitle: 'Unggah Ulang',
             downloadTitle: 'Unduh Berkas',
+            rotateTitle: 'Putar 90 derajat. Searah jarum jam',
             zoomTitle: 'Tampilkan Rincian',
             dragTitle: 'Pindah atau Atur Ulang',
             indicatorNewTitle: 'Belum diunggah',
             indicatorSuccessTitle: 'Sudah diunggah',
             indicatorErrorTitle: 'Kesalahan dalam mengungah',
-            indicatorPausedTitle: 'Upload Paused',
+            indicatorPausedTitle: 'Unggah Ditunda',
             indicatorLoadingTitle:  'Mengunggah &hellip;'
         },
         previewZoomButtonTitles: {
             prev: 'Lihat berkas sebelumnya',
             next: 'Lihat berkas selanjutnya',
+            rotate: 'Putar 90 derajat. Searah jarum jam',
             toggleheader: 'Beralih ke tajuk',
             fullscreen: 'Beralih ke mode penuh',
             borderless: 'Beralih ke mode tanpa tepi',
             close: 'Tutup pratinjau terperinci'
         }
     };
-})(window.jQuery);
+}));

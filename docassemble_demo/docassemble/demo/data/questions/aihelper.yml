@@ -1,0 +1,16 @@
+modules:
+  - .aihelper
+---
+generic object: AIInteraction
+event: x.prompt_ai
+code: |
+  answer = x.conv.ask(action_argument('system_prompt'), action_argument('user_input'))
+  background_response_action(x.attr_name('save_ai_response'), conv=x.conv, answer=answer)
+---
+generic object: AIInteraction
+event: x.save_ai_response
+code: |
+  x.conv = action_argument('conv')
+  x.output = action_argument('answer')
+  x.delattr('input', 'bg')
+  background_response()
