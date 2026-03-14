@@ -138,7 +138,7 @@ dependencies = [
   "portalocker==3.2.0",
   "propcache==0.4.1",
   "proto-plus==1.27.0",
-  "protobuf==6.33.2",
+  "protobuf==6.33.5",
   "pwdlib==0.3.0",
   "pyasn1==0.6.2",
   "pyasn1_modules==0.4.2",
