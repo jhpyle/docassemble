@@ -140,7 +140,7 @@ dependencies = [
   "proto-plus==1.27.0",
   "protobuf==6.33.2",
   "pwdlib==0.3.0",
-  "pyasn1==0.6.2",
+  "pyasn1==0.6.3",
   "pyasn1_modules==0.4.2",
   "pycountry==24.6.1",
   "pycparser==2.23",
