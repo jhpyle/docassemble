@@ -1271,19 +1271,21 @@ if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
     fi
 fi
 
-echo "initialize: Testing if RabbitMQ is running" >&2
+if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
+    echo "initialize: Testing if RabbitMQ is running" >&2
 
-if rabbitmqctl status &> /dev/null; then
-    RABBITMQRUNNING=true
-    echo "initialize: RabbitMQ is running" >&2
-else
-    RABBITMQRUNNING=false
-    echo "initialize: RabbitMQ is not already running" >&2
-fi
+    if rabbitmqctl status &> /dev/null; then
+	RABBITMQRUNNING=true
+	echo "initialize: RabbitMQ is running" >&2
+    else
+	RABBITMQRUNNING=false
+	echo "initialize: RabbitMQ is not already running" >&2
+    fi
 
-if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]] && [ "$RABBITMQRUNNING" == "false" ]; then
-    echo "initialize: Starting RabbitMQ" >&2
-    ${SUPERVISORCMD} start rabbitmq
+    if [ "$RABBITMQRUNNING" == "false" ]; then
+	echo "initialize: Starting RabbitMQ" >&2
+	${SUPERVISORCMD} start rabbitmq
+    fi
 fi
 
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then

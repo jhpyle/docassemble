@@ -1,0 +1,78 @@
+---
+include:
+  - aihelper.yml
+---
+objects:
+  - ai: AIHelper
+  - user: Individual
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+mandatory: true
+question: |
+  Download your affidavit
+attachment:
+  name: Favorite fruit affidavit
+  filename: affidavit
+  content: |
+    [CENTER]Affidavit of Favorite Fruit
+
+    ${ life_story }
+
+    ${ favorite_fruit_explanation }
+---
+code: |
+  life_story = ai['life'].interact()
+---
+question: |
+  What is your life story?
+subquestion: |
+  ${ ai['life'].output }
+fields:
+  - no label: ai['life'].input
+    input type: area
+---
+template: ai['life'].initial_output
+content: |
+  Please cover such details as where you were born, where you grew up,
+  where you went to school, and who you live with currently.
+---
+template: ai['life'].prompt
+content: |
+  You are a helpful assistant who is having a conversation with
+  ${ user } about ${ user.possessive('life story') }. You need to find
+  out from ${ user } where they were born, where they grew up, where
+  they went to school, and how they came to live with the people they
+  currently live with. When you have gathered this information, call
+  the conversation_complete tool with a 2 to 5 paragraph summary of
+  ${ user.possessive('life story') } written in first-person as
+  ${ user }, that includes all of these elements.
+---
+code: |
+  favorite_fruit_explanation = ai['fruit'].interact()
+---
+question: |
+  What is your favorite fruit and why?
+subquestion: |
+  ${ ai['fruit'].output }
+fields:
+  - no label: ai['fruit'].input
+    input type: area
+---
+template: ai['fruit'].initial_output
+content: |
+  Please explain your reasoning.
+---
+template: ai['fruit'].prompt
+content: |
+  You are a helpful assistant who is having a conversation with ${
+  user } about ${ user.possessive('favorite fruit') }. Your job is to
+  elicit from ${ user } what their favorite fruit is and specifically
+  why they like the fruit so much, compared with other fruits. When
+  you have gathered this information, call the conversation_complete
+  tool with a 2 to 3 sentence testimonial, written in first-person as
+  ${ user }, saying what their favorite fruit is and why.

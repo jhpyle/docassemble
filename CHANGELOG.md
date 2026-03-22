@@ -2,6 +2,11 @@
 
 ## [1.9.3] - 2026-
 
+### Added
+
+- Files in `docassemble.demo` for the recipe in the documentation
+  demonstrating the `AIHelper` class.
+
 ### Changed
 
 - Downgraded `numpy`, `scipy`, and `scikit-learn` to allow Python 3.10
@@ -16,10 +21,12 @@
 ## [1.9.2] - 2026-01-27
 
 ### Added
+
 - The `allow external auth to bypass local auth` Configuration
   directive.
 
 ### Changed
+
 - The `.bates_number()` method of `DAFile` now accepts parameters
   `offset_horizontal`, `offset_vertical`, and `font_size`.
 - Upgraded `azure-core`, `wheel`, `numpy`, and `pyasn1`.
@@ -61,6 +68,7 @@
   the server to finish restarting.
 
 ### Fixed
+
 - Avoided `KeyError` error messages related to `gathering_mode` and
   `save_status`.
 - Avoided translation of non-user-facing Mako template text in field

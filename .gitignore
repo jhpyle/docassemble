@@ -1,6 +1,7 @@
 *~
 .mypy_cache/*
 .vscode
+.venv
 .#*
 *.pyc
 en
@@ -67,3 +68,7 @@ mypy.ini
 stylelint.config.js
 .stylelintrc.json
 .sass-cache/
+CLAUDE.md
+.claude/
+.claudeignore
+__pycache__
