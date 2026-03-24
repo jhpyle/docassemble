@@ -93,7 +93,6 @@ if not in_celery:
     import celery.exceptions
 
 import packaging
-import apiclient
 from bs4 import BeautifulSoup
 from Crypto.Hash import MD5
 from Crypto.PublicKey import RSA
@@ -114,13 +113,11 @@ from flask_cors import cross_origin
 from flask_login import LoginManager
 from flask_login import login_user, logout_user, current_user
 from flask_wtf.csrf import CSRFError
-import googleapiclient.discovery
 import httplib2
 import humanize
 from jinja2.exceptions import TemplateError
 import links_from_header
 import oauth2client.client
-import pandas
 from PIL import Image
 import pyotp
 from pygments import highlight
@@ -1398,6 +1395,7 @@ def add_log_handler():
             docassemble_log_handler = logging.FileHandler(filename=os.path.join(LOG_DIRECTORY, 'docassemble.log'))
         except PermissionError:
             time.sleep(1)
+            tries += 1
             continue
         sys_logger.addHandler(docassemble_log_handler)
         if os.environ.get('SUPERVISORLOGLEVEL', 'info') == 'debug':
@@ -2916,7 +2914,7 @@ def save_user_dict_key(session_id, filename, priors=False, user=None):
 def save_user_dict(user_code, user_dict, filename, secret=None, changed=False, encrypt=True, manual_user_id=None, steps=None, max_indexno=None):
     # logmessage("save_user_dict: called with encrypt " + str(encrypt))
     if REQUIRE_IDEMPOTENT:
-        for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+        for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n', '__DANEWOBJECT'):
             if var_name in user_dict:
                 del user_dict[var_name]
         user_dict['_internal']['objselections'] = {}
@@ -7962,6 +7960,7 @@ def index(action_argument=None, refer=None):
                     try:
                         if not info['class'].call_validate(raw_data, key_with_sub, field_data):
                             raise DAValidationError(word("You need to enter a valid value."))
+                        new_values[key] = repr(raw_data)
                     except DAValidationError as err:
                         validated = False
                         if key in key_to_orig_key:
@@ -8106,6 +8105,7 @@ def index(action_argument=None, refer=None):
                     try:
                         if not info['class'].call_validate(raw_data, key_tr):
                             raise DAValidationError(word("You need to enter a valid value."))
+                        new_values[key] = repr(raw_data)
                     except DAValidationError as err:
                         validated = False
                         if key in key_to_orig_key:
@@ -8232,9 +8232,6 @@ def index(action_argument=None, refer=None):
                 logmessage("Tried to run " + the_string + " and got error " + errMess.__class__.__name__ + ": " + str(errMess))
             except:
                 pass
-        if is_object:
-            if '__DANEWOBJECT' in user_dict:
-                del user_dict['__DANEWOBJECT']
         if key not in key_to_orig_key:
             key_to_orig_key[key] = orig_key
     if validated and special_question is None and not disregard_input:
@@ -11826,6 +11823,7 @@ def rename_gd_project(old_project, new_project):
         logmessage('rename_gd_project: credentials missing or expired')
         return False
     http = credentials.authorize(httplib2.Http())
+    import apiclient  # pylint: disable=import-outside-toplevel
     service = apiclient.discovery.build('drive', 'v3', http=http)
     response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
     trashed = response.get('trashed', False)
@@ -11880,6 +11878,7 @@ def trash_gd_project(old_project):
         logmessage('trash_gd_project: credentials missing or expired')
         return False
     http = credentials.authorize(httplib2.Http())
+    import apiclient  # pylint: disable=import-outside-toplevel
     service = apiclient.discovery.build('drive', 'v3', http=http)
     response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
     trashed = response.get('trashed', False)
@@ -11934,6 +11933,7 @@ def trash_gd_file(section, filename, current_project):
         logmessage('trash_gd_file: credentials missing or expired')
         return False
     http = credentials.authorize(httplib2.Http())
+    import apiclient  # pylint: disable=import-outside-toplevel
     service = apiclient.discovery.build('drive', 'v3', http=http)
     response = service.files().get(fileId=the_folder, fields="mimeType, id, name, trashed").execute()
     trashed = response.get('trashed', False)
@@ -12674,6 +12674,7 @@ def google_drive_page():
         # logmessage("google_drive_page: uri is " + str(uri))
         return redirect(uri)
     http = credentials.authorize(httplib2.Http())
+    import apiclient  # pylint: disable=import-outside-toplevel
     try:
         service = apiclient.discovery.build('drive', 'v3', http=http)
     except:
@@ -12962,6 +12963,10 @@ def config_page():
                     fp.write(form.config_content.data)
                     flash(word('The configuration file was saved.'), 'success')
                 # session['restart'] = 1
+                pipe = r.pipeline()
+                pipe.set('da:skip_create_tables', 1)
+                pipe.expire('da:skip_create_tables', 10)
+                pipe.execute()
                 return redirect(url_for('restart_page'))
         elif form.cancel.data:
             flash(word('Configuration not updated.'), 'info')
@@ -16260,6 +16265,7 @@ def utilities():
             result[language] = {}
             existing = docassemble.base.functions.word_collection.get(language, {})
             if 'api key' in daconfig['google'] and daconfig['google']['api key']:
+                import googleapiclient.discovery  # pylint: disable=import-outside-toplevel
                 try:
                     service = googleapiclient.discovery.build('translate', 'v2',
                                                               developerKey=daconfig['google']['api key'])
@@ -18768,6 +18774,7 @@ def translation_file():
                 the_xlsx_file = docassemble.base.functions.package_data_filename(item)
                 if not os.path.isfile(the_xlsx_file):
                     continue
+                import pandas  # pylint: disable=import-outside-toplevel
                 df = pandas.read_excel(the_xlsx_file, na_values=['NaN', '-NaN', '#NA', '#N/A'], keep_default_na=False)
                 invalid = False
                 for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):

@@ -35,7 +35,6 @@ from jinja2.lexer import Token
 from jinja2.utils import internalcode, missing, object_type_repr
 from jinja2.ext import Extension
 from docxtpl import DocxTemplate
-import pandas
 import dateutil.parser
 try:
     import zoneinfo
@@ -2355,6 +2354,7 @@ class Question:
                     the_xlsx_file = docassemble.base.functions.package_data_filename(item)
                     if not os.path.isfile(the_xlsx_file):
                         raise DAError("The translations file " + the_xlsx_file + " could not be found")
+                    import pandas  # pylint: disable=import-outside-toplevel
                     df = pandas.read_excel(the_xlsx_file)
                     for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
                         if column_name not in df.columns:

@@ -8,6 +8,7 @@ timezone = daconfig.get('timezone', 'America/New_York')
 enable_utc = True
 broker_connection_retry = True
 broker_connection_retry_on_startup = True
+worker_cancel_long_running_tasks_on_connection_loss = True
 
 if daconfig.get('has_celery_single_queue', False):
     task_routes = {"docassemble.webapp.worker.ocr_page": {"queue": "single"}}

@@ -183,13 +183,13 @@ class PlaygroundPackagesForm(FlaskForm):
 class GoogleDriveForm(FlaskForm):
     folder = SelectField(word('Folder'))
     submit = SubmitField(word('Save'))
-    cancel = SubmitField(word('Cancel'))
+    cancel = SubmitField(word('Back to Profile'))
 
 
 class OneDriveForm(FlaskForm):
     folder = SelectField(word('Folder'))
     submit = SubmitField(word('Save'))
-    cancel = SubmitField(word('Cancel'))
+    cancel = SubmitField(word('Back to Profile'))
 
 
 class GitHubForm(FlaskForm):
@@ -198,7 +198,7 @@ class GitHubForm(FlaskForm):
     save = SubmitField(word('Save changes'))
     configure = SubmitField(word('Configure'))
     unconfigure = SubmitField(word('Disable'))
-    cancel = SubmitField(word('Back to profile'))
+    cancel = SubmitField(word('Back to Profile'))
 
 
 class TrainingForm(FlaskForm):

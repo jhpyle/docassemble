@@ -1301,6 +1301,18 @@ else
     CELERYRUNNING=false;
 fi
 
+if [[ $CONTAINERROLE =~ .*:(all|web|celery|cron):.* ]] && [ "${USENLTKSERVER:-true}" == "true" ]; then
+    mkdir -p /var/run/nltk
+    chown www-data:www-data /var/run/nltk
+    rm -f "${NLTKSOCKET:-/var/run/nltk/da_nltk.sock}"
+    echo "initialize: Starting NLTK server" >&2
+    ${SUPERVISORCMD} start nltk
+    while [ ! -e "${NLTKSOCKET:-/var/run/nltk/da_nltk.sock}" ]; do
+        echo "Waiting for NLTK server to start" >&2
+        sleep 1
+    done
+fi
+
 if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]] && [ "$CELERYRUNNING" == "false" ]; then
     echo "initialize: Starting Celery" >&2
     ${SUPERVISORCMD} start celery

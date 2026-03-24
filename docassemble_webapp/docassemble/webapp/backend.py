@@ -10,7 +10,6 @@ import re
 # import time
 import types
 import xml.etree.ElementTree as ET
-import pandas
 from Cryptodome.Cipher import AES
 from dateutil import tz
 from flask import session, url_for as base_url_for
@@ -46,7 +45,6 @@ import docassemble.webapp.machinelearning
 import docassemble.webapp.setup
 import docassemble.webapp.user_database
 import docassemble.webapp.worker
-import docassemble.webapp.google_api
 
 if DEBUG_BOOT:
     boot_log("backend: starting")
@@ -501,6 +499,7 @@ def fix_words():
                         logmessage("Error reading " + str(word_file) + ": yaml could not be processed.")
             elif filename.lower().endswith('.xlsx'):
                 try:
+                    import pandas  # pylint: disable=import-outside-toplevel
                     df = pandas.read_excel(filename, na_values=['#NA', '#N/A'], keep_default_na=False)
                     invalid = False
                     for column_name in ('orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
@@ -634,7 +633,12 @@ def cloud_custom(provider, config):
 docassemble.base.functions.update_server(cloud=cloud,
                                          cloud_custom=cloud_custom)
 
-docassemble.base.functions.update_server(google_api=docassemble.webapp.google_api)
+
+def get_google_api():
+    import docassemble.webapp.google_api  # pylint: disable=import-outside-toplevel
+    return docassemble.webapp.google_api
+
+docassemble.base.functions.update_server(google_api=get_google_api)
 
 if DEBUG_BOOT:
     boot_log("backend: finished obtaining cloud object")

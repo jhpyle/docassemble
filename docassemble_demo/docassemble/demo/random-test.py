@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+# do not pre-load
 import json
 import sys
 import random

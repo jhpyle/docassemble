@@ -17,7 +17,7 @@ def errlog(text):
 
 def main():
     container_role = ':' + os.environ.get('CONTAINERROLE', '') + ':'
-    errlog("checking to see if running create_tables if necessary")
+    errlog("checking to see if running create_tables is necessary")
     if ':all:' in container_role or ':cron:' in container_role:
         (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()  # pylint: disable=unused-variable
         r = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_offset, password=redis_password, username=redis_username, **ssl_opts)

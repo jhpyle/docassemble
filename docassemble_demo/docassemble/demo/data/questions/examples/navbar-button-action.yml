@@ -1,3 +1,10 @@
+metadata:
+  title: Side process
+  short title: Side
+  documentation: "https://docassemble.org/docs/recipes.html#email_lawyer"
+  example start: 1
+  example end: 11
+---
 default screen parts:
   navigation bar html: |
     % if current_context().question_id not in ('ask_lawyer_page_one', 'ask_lawyer_page_two'):

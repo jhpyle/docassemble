@@ -52,7 +52,7 @@ bash -c \
 && cp /usr/local/bin/unoconv /usr/bin/unoconv \
 && python3 -m venv --copies /usr/share/docassemble/local3.12 \
 && source /usr/share/docassemble/local3.12/bin/activate \
-&& pip install --upgrade pip==26.0 \
+&& pip install --upgrade pip==26.0.1 \
 && pip install --upgrade wheel==0.46.2 \
 && pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \
@@ -66,7 +66,7 @@ bash -c \
    click==8.3.1 \
    ConfigArgParse==1.7.1 \
    configobj==5.0.9 \
-   cryptography==46.0.3 \
+   cryptography==46.0.5 \
    distro==1.9.0 \
    idna==3.11 \
    joblib==1.5.3 \
@@ -74,7 +74,7 @@ bash -c \
    nltk==3.9.2 \
    parsedatetime==2.6 \
    pycparser==2.23 \
-   pyOpenSSL==25.3.0 \
+   pyOpenSSL==26.0.0 \
    pyparsing==3.3.1 \
    pyRFC3339==2.1.0 \
    python-augeas==1.2.0 \
@@ -84,7 +84,7 @@ bash -c \
    six==1.17.0 \
    tqdm==4.67.1 \
    typing_extensions==4.15.0 \
-   urllib3==2.6.2 \
+   urllib3==2.6.3 \
 && pip install \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \

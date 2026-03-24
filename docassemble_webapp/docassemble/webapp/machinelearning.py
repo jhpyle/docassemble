@@ -8,8 +8,6 @@ import json
 import threading
 from sqlalchemy import and_, select, delete
 from sklearn.ensemble import RandomForestClassifier
-import pandas as pd
-from pandas.api.types import CategoricalDtype
 import numpy as np
 import yaml
 from docassemble_pattern.vector import KNN, SVM, PORTER, Document
@@ -149,6 +147,8 @@ class MachineLearner:
             aref = json.loads(content)
         elif 'extension' in file_info and file_info['extension'].lower() in ['yaml', 'yml']:
             aref = yaml.load(content, Loader=yaml.FullLoader)
+        else:
+            aref = None
         if isinstance(aref, dict) and hasattr(self, 'group_id'):
             the_group_id = re.sub(r'.*:', '', self.group_id)
             if the_group_id in aref:
@@ -534,6 +534,7 @@ class RandomForestMachineLearner(MachineLearner):
             data.append(indep_var)
             success = True
         if success:
+            import pandas as pd  # pylint: disable=import-outside-toplevel
             df = pd.DataFrame(data, columns=sorted(detected_columns))
             for key, val in ml_thread.learners[self.group_id]['indep_type'].items():
                 if val is str:
@@ -575,6 +576,8 @@ class RandomForestMachineLearner(MachineLearner):
                 if val not in ml_thread.learners[self.group_id]['indep_categories'][key]:
                     val = np.nan
             indep_to_use[key] = val
+        import pandas as pd  # pylint: disable=import-outside-toplevel
+        from pandas.api.types import CategoricalDtype  # pylint: disable=import-outside-toplevel
         df = pd.DataFrame([indep_to_use], columns=sorted(indep_to_use.keys()))
         for key, val in indep_to_use.items():
             if ml_thread.learners[self.group_id]['indep_type'][key] is str:

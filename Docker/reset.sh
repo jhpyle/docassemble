@@ -23,21 +23,47 @@ else
     SUPERVISORCMD="supervisorctl --serverurl http://localhost:9001"
 fi
 
-if [ "${DAROOTOWNED:-false}" == "true" ]; then
-    if [ "${DAALLOWUPDATES:-true}" == "true" ] \
-       || [ "${DAENABLEPLAYGROUND:-true}" == "true" ] \
-       || [ "${DAALLOWCONFIGURATIONEDITING:-true}" == "true" ]; then
+restart_web_app() {
+    if [ "${DAROOTOWNED:-false}" == "true" ]; then
+	if [ "${DAALLOWUPDATES:-true}" == "true" ] \
+	   || [ "${DAENABLEPLAYGROUND:-true}" == "true" ] \
+	   || [ "${DAALLOWCONFIGURATIONEDITING:-true}" == "true" ]; then
+	    echo "`date` starting docassemble.webapp.restart" >&2
+	    python -m docassemble.webapp.restart
+	    echo "`date` finished docassemble.webapp.restart" >&2
+	fi
+    else
 	echo "`date` starting docassemble.webapp.restart" >&2
 	python -m docassemble.webapp.restart
 	echo "`date` finished docassemble.webapp.restart" >&2
     fi
-else
-    echo "`date` starting docassemble.webapp.restart" >&2
-    python -m docassemble.webapp.restart
-    echo "`date` finished docassemble.webapp.restart" >&2
-fi
+}
 
-if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+stop_celery() {
+    echo "`date` stopping celery" >&2
+    ${SUPERVISORCMD} stop celery || exit 1
+}
+stop_celery_single() {
+    echo "`date` stopping celerysingle" >&2
+    ${SUPERVISORCMD} stop celerysingle || exit 1
+}
+stop_rabbitmq() {
+    echo "`date` stopping rabbitmq" >&2
+    ${SUPERVISORCMD} stop rabbitmq || exit 1
+}
+start_celery() {
+    echo "`date` starting celery" >&2
+    ${SUPERVISORCMD} start celery || exit 1
+}
+start_celery_single() {
+    echo "`date` starting celerysingle" >&2
+    ${SUPERVISORCMD} start celerysingle || exit 1
+}
+start_rabbitmq() {
+    echo "`date` starting rabbitmq" >&2
+    ${SUPERVISORCMD} start rabbitmq || exit 1
+}
+update_pip_config(){
     if [ "${PIPINDEXURL:-null}" != "null" ]; then
 	pip config set global.index-url "${PIPINDEXURL}"
     else
@@ -49,38 +75,48 @@ if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     else
 	pip config unset global.extra-index-url &> /dev/null
     fi
-fi
-
-if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
-    echo "`date` stopping celery" >&2
-    ${SUPERVISORCMD} stop celery || exit 1
-    echo "`date` stopping celerysingle" >&2
-    ${SUPERVISORCMD} stop celerysingle || exit 1
-    if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
-	echo "`date` stopping rabbitmq" >&2
-	${SUPERVISORCMD} stop rabbitmq || exit 1
-    fi
-    sleep 1
-    if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
-	echo "`date` starting rabbitmq" >&2
-	${SUPERVISORCMD} start rabbitmq || exit 1
-    fi
-    sleep 1
-    echo "`date` starting celery" >&2
-    ${SUPERVISORCMD} start celery || exit 1
-    echo "`date` starting celerysingle" >&2
-    ${SUPERVISORCMD} start celerysingle || exit 1
-    echo "`date` finished resetting background task system" >&2
-fi
-
-if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+}
+restart_websockets() {
     echo "`date` stopping websockets" >&2
     ${SUPERVISORCMD} stop websockets || exit 1
     sleep 1
     echo "`date` starting websockets" >&2
     ${SUPERVISORCMD} start websockets || exit 1
     echo "`date` finished resetting websockets" >&2
+}
+restart_background() {
+    stop_celery &
+    pid_celery=$!
+    stop_celery_single &
+    pid_celery_single=$!
+    wait "$pid_celery" "$pid_celery_single"
+    if [[ $CONTAINERROLE =~ .*:(all|rabbitmq):.* ]]; then
+	stop_rabbitmq
+	start_rabbitmq
+    fi
+    start_celery &
+    pid_celery=$!
+    start_celery_single &
+    pid_celery_single=$!
+    wait "$pid_celery" "$pid_celery_single"
+    echo "`date` finished resetting background task system" >&2
+}
+
+restart_web_app &
+
+if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
+    update_pip_config &
 fi
+
+if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+    restart_websockets &
+fi
+
+if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
+    restart_background &
+fi
+
+wait
 
 echo "`date` finished reset process" >&2
 exit 0

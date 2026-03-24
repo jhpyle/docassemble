@@ -178,6 +178,7 @@ system_packages = [
     "more-itertools",
     "msal",
     "msal-extensions",
+    "msgpack",
     "msrest",
     "multidict",
     "mypy_extensions",

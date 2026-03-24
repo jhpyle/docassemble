@@ -1,3 +1,4 @@
+# do not pre-load
 from docassemble.base.util import get_config, DAObject, BackgroundAction, DADict
 import anthropic
 

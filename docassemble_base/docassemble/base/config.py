@@ -10,11 +10,6 @@ import importlib.metadata
 from packaging import version
 import yaml
 import httplib2
-import boto3
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-import docassemble.base.amazon
-import docassemble.base.microsoft
 from docassemble.base.generate_key import random_string
 
 START_TIME = time.time()
@@ -100,7 +95,7 @@ def cleanup_filename(filename):
 
 
 def delete_environment():
-    for var in ('AWS_ACCESS_KEY_ID', 'AWS_DEFAULT_REGION', 'AWS_SECRET_ACCESS_KEY', 'AZUREACCOUNTKEY', 'AZUREACCOUNTNAME', 'AZURECONNECTIONSTRING', 'AZURECONTAINER', 'AZUREENABLE', 'BEHINDHTTPSLOADBALANCER', 'COLLECTSTATISTICS', 'DAALLOWCONFIGURATIONEDITING', 'DAALLOWLOGVIEWING', 'DAALLOWUPDATES', 'DABACKUPDAYS', 'DACELERYWORKERS', 'DADEBUG', 'DAENABLEPLAYGROUND', 'DAEXPOSEWEBSOCKETS', 'DAHOSTNAME', 'DAMAXCELERYWORKERS', 'DAMAXCONTENTLENGTH', 'DAREADONLYFILESYSTEM', 'DAROOTOWNED', 'DASECRETKEY', 'DASQLPING', 'DASSLPROTOCOLS', 'DASTABLEVERSION', 'DASUPERVISORPASSWORD', 'DASUPERVISORUSERNAME', 'DATIMEOUT', 'DAUPDATEONSTART', 'DAWEBSERVER', 'DAWEBSOCKETSIP', 'DAWEBSOCKETSPORT', 'DBBACKUP', 'DBHOST', 'DBNAME', 'DBPASSWORD', 'DBPORT', 'DBPREFIX', 'DBSSLCERT', 'DBSSLKEY', 'DBSSLMODE', 'DBSSLROOTCERT', 'DBTABLEPREFIX', 'DBTYPE', 'DBUSER', 'EC2', 'ENVIRONMENT_TAKES_PRECEDENCE', 'KUBERNETES', 'LETSENCRYPTEMAIL', 'LOGSERVER', 'OTHERLOCALES', 'PACKAGES', 'PIPEXTRAINDEXURLS', 'PIPINDEXURL', 'PORT', 'POSTURLROOT', 'PYTHONPACKAGES', 'RABBITMQ', 'REDIS', 'REDISCLI', 'S3ACCESSKEY', 'S3BUCKET', 'S3ENABLE', 'S3ENDPOINTURL', 'S3REGION', 'S3SECRETACCESSKEY', 'S3_SSE_ALGORITHM', 'S3_SSE_CUSTOMER_ALGORITHM', 'S3_SSE_CUSTOMER_KEY', 'S3_SSE_KMS_KEY_ID', 'S4CMD_OPTS', 'SERVERADMIN', 'URLROOT', 'USECLOUDURLS', 'USEHTTPS', 'USELETSENCRYPT', 'USEMINIO', 'WSGIROOT', 'XSENDFILE'):
+    for var in ('AWS_ACCESS_KEY_ID', 'AWS_DEFAULT_REGION', 'AWS_SECRET_ACCESS_KEY', 'AZUREACCOUNTKEY', 'AZUREACCOUNTNAME', 'AZURECONNECTIONSTRING', 'AZURECONTAINER', 'AZUREENABLE', 'BEHINDHTTPSLOADBALANCER', 'COLLECTSTATISTICS', 'DAALLOWCONFIGURATIONEDITING', 'DAALLOWLOGVIEWING', 'DAALLOWUPDATES', 'DABACKUPDAYS', 'DACELERYWORKERS', 'DADEBUG', 'DAENABLEPLAYGROUND', 'DAEXPOSEWEBSOCKETS', 'DAHOSTNAME', 'DAMAXCELERYWORKERS', 'DAMAXCONTENTLENGTH', 'DAREADONLYFILESYSTEM', 'DAROOTOWNED', 'DASECRETKEY', 'DASQLPING', 'DASSLPROTOCOLS', 'DASTABLEVERSION', 'DASUPERVISORPASSWORD', 'DASUPERVISORUSERNAME', 'DATIMEOUT', 'DAUPDATEONSTART', 'DAWEBSERVER', 'DAWEBSOCKETSIP', 'DAWEBSOCKETSPORT', 'DBBACKUP', 'DBHOST', 'DBNAME', 'DBPASSWORD', 'DBPORT', 'DBPREFIX', 'DBSSLCERT', 'DBSSLKEY', 'DBSSLMODE', 'DBSSLROOTCERT', 'DBTABLEPREFIX', 'DBTYPE', 'DBUSER', 'EC2', 'ENVIRONMENT_TAKES_PRECEDENCE', 'KUBERNETES', 'LETSENCRYPTEMAIL', 'LOGSERVER', 'OTHERLOCALES', 'PACKAGES', 'PIPEXTRAINDEXURLS', 'PIPINDEXURL', 'PORT', 'POSTURLROOT', 'PYTHONPACKAGES', 'RABBITMQ', 'REDIS', 'REDISCLI', 'S3ACCESSKEY', 'S3BUCKET', 'S3ENABLE', 'S3ENDPOINTURL', 'S3REGION', 'S3SECRETACCESSKEY', 'S3_SSE_ALGORITHM', 'S3_SSE_CUSTOMER_ALGORITHM', 'S3_SSE_CUSTOMER_KEY', 'S3_SSE_KMS_KEY_ID', 'S4CMD_OPTS', 'SERVERADMIN', 'URLROOT', 'USECLOUDURLS', 'USEHTTPS', 'USELETSENCRYPT', 'USEMINIO', 'WSGIROOT', 'XSENDFILE', 'NLTK_SOCKET'):
         if var in os.environ:
             del os.environ[var]
 
@@ -117,6 +112,7 @@ def aws_get_region(arn):
 
 
 def aws_get_secret(data):
+    import boto3  # pylint: disable=import-outside-toplevel
     region = aws_get_region(data)
     if region not in this_thread.botoclient:
         if env_exists('AWSACCESSKEY') and env_exists('AWSSECRETACCESSKEY'):
@@ -160,6 +156,8 @@ def aws_get_secret(data):
 
 
 def azure_get_secret(data):
+    from azure.identity import DefaultAzureCredential  # pylint: disable=import-outside-toplevel
+    from azure.keyvault.secrets import SecretClient  # pylint: disable=import-outside-toplevel
     vault_name = None
     secret_name = None
     secret_version = None
@@ -516,8 +514,10 @@ def load(**kwargs):
     else:
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
+        import docassemble.base.amazon  # pylint: disable=import-outside-toplevel
         cloud = docassemble.base.amazon.s3object(s3_config)
     elif AZURE_ENABLED:
+        import docassemble.base.microsoft  # pylint: disable=import-outside-toplevel
         cloud = docassemble.base.microsoft.azureobject(azure_config)
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
             daconfig = cloud.load_with_secrets(daconfig)
@@ -1080,6 +1080,8 @@ def load(**kwargs):
             override_config(daconfig, messages, 'behind https load balancer', 'BEHINDHTTPSLOADBALANCER')
         if env_exists('XSENDFILE'):
             override_config(daconfig, messages, 'xsendfile', 'XSENDFILE')
+        if env_exists('NLTKSOCKET'):
+            override_config(daconfig, messages, 'nltk socket', 'NLTKSOCKET')
         if env_exists('DAUPDATEONSTART'):
             override_config(daconfig, messages, 'update on start', 'DAUPDATEONSTART')
         if env_exists('URLROOT'):

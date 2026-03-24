@@ -29,7 +29,6 @@ from requests.auth import HTTPDigestAuth, HTTPBasicAuth, AuthBase
 from requests.exceptions import RequestException
 import httplib2
 import oauth2client.client
-import apiclient
 try:
     import zoneinfo
 except ImportError:
@@ -49,7 +48,6 @@ import i18naddress
 from pyzbar.pyzbar import decode
 from docxtpl import InlineImage, Subdoc, DocxTemplate
 # import tablib
-import pandas
 from docx import Document
 from pikepdf import Pdf
 import google.cloud
@@ -6577,6 +6575,7 @@ class DALazyTableTemplate(DALazyTemplate):
         if file_format not in ('json', 'xlsx', 'csv'):
             raise DAError("export: unsupported file format")
         header_output, contents = self.header_and_contents()
+        import pandas  # pylint: disable=import-outside-toplevel
         df = pandas.DataFrame.from_records(contents, columns=header_output)
         if output_to is None:
             output_to = DAFile()
@@ -6610,6 +6609,7 @@ class DALazyTableTemplate(DALazyTemplate):
     def as_df(self):
         """Returns the table as a pandas data frame"""
         header_output, contents = self.header_and_contents()
+        import pandas  # pylint: disable=import-outside-toplevel
         return pandas.DataFrame.from_records(contents, columns=header_output)
 
     def export_safe_eval(self, x, user_dict_copy):
@@ -7659,7 +7659,7 @@ class DAGoogleAPI(DAObject):
 
     def api_credentials(self, scope):
         """Returns an OAuth2 credentials object for the given scope."""
-        return server.google_api.google_api_credentials(scope)
+        return server.google_api().google_api_credentials(scope)
 
     def http(self, scope):
         """Returns a credentialized http object for the given scope."""
@@ -7667,27 +7667,29 @@ class DAGoogleAPI(DAObject):
 
     def drive_service(self):
         """Returns a Google Drive service object using google-api-python-client."""
+        import apiclient
         return apiclient.discovery.build('drive', 'v3', http=self.http('https://www.googleapis.com/auth/drive'))
 
     def sheets_service(self):
         """Returns a Google Sheets service object using google-api-python-client."""
+        import apiclient
         return apiclient.discovery.build('sheets', 'v4', http=self.http('https://www.googleapis.com/auth/spreadsheets.readonly'))
 
     def cloud_credentials(self, scopes=None):
         """Returns a google.oauth2.service_account credentials object."""
-        return server.google_api.google_cloud_credentials(scopes=scopes)
+        return server.google_api().google_cloud_credentials(scopes=scopes)
 
     def project_id(self):
         """Returns the ID of the project referenced in the google service account credentials in the Configuration."""
-        return server.google_api.project_id()
+        return server.google_api().project_id()
 
     def google_cloud_storage_client(self):
         """Returns a google.cloud.storage.Client object."""
-        return server.google_api.google_cloud_storage_client()
+        return server.google_api().google_cloud_storage_client()
 
     def google_cloud_vision_client(self):
         """Returns a google.cloud.vision.ImageAnnotatorClient object."""
-        return server.google_api.google_cloud_vision_client()
+        return server.google_api().google_cloud_vision_client()
 
 
 def run_python_module(module, arguments=None):

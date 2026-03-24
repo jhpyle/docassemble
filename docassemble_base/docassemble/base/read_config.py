@@ -33,6 +33,8 @@ if __name__ == "__main__":
     print('DAMAXCELERYWORKERS=' + str(daconfig['max celery processes']))
     if 'celery processes' in daconfig and isinstance(daconfig['celery processes'], int):
         print('DACELERYWORKERS=' + str(daconfig['celery processes']))
+    if 'nltk socket' in daconfig and daconfig['nltk socket'] is not None and daconfig['nltk socket'] != '':
+        print('export NLTKSOCKET="' + str(daconfig['nltk socket']) + '"')
     if '--limited' in sys.argv:
         sys.exit(0)
     if 'other os locales' in daconfig and isinstance(daconfig['other os locales'], list):
