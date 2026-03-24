@@ -44483,7 +44483,7 @@ function daProcessAjaxError(xhr, status, error) {
               }
             }
           }
-          delete errorScriptDiv;
+          delete globalThis.errorScriptDiv;
         }
         $("#da-retry").on("click", function (e) {
           location.reload();
@@ -44495,7 +44495,7 @@ function daProcessAjaxError(xhr, status, error) {
       } else {
         $(daTargetDiv).html(theHtml);
       }
-      delete newDiv;
+      delete globalThis.newDiv;
     }
     if (daJsEmbed) {
       $(daTargetDiv)[0].scrollTo(0, 1);
