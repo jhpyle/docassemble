@@ -3,6 +3,26 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.5](https://github.com/jhpyle/docassemble/releases/tag/v1.9.5) - 2026-03-24
+
+
+### Fixed
+
+- Issue with upgrade of `werkzeug` and `flask`.
+
+## [1.9.4](https://github.com/jhpyle/docassemble/releases/tag/v1.9.4) - 2026-03-24
+
+
+### Changed
+
+- Upgraded `werkzeug` and `flask`.
+
+
+### Fixed
+
+- Issue introduced in 1.9.3 that prevented the `nltk` daemon from
+  starting.
+
 ## [1.9.3](https://github.com/jhpyle/docassemble/releases/tag/v1.9.3) - 2026-03-23
 
 
@@ -16,7 +36,7 @@ short_title: Change Log
 
 - The `objects from file` block and the `objects_from_file()` function
   now return a `DAList` instead of a `list` when `use_objects` is
-  true.
+  true and a list of items is encountered in the data structure.
 - Downgraded `numpy`, `scipy`, and `scikit-learn` to allow Python 3.10
   to continue to be used.
 - Upgraded `bootstrap-fileinput`.
