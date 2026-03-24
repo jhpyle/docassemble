@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.9.4] - 2026-03-24
+
+### Changed
+
+- Upgraded `werkzeug` and `flask`.
+
+### Fixed
+
+- Issue introduced in 1.9.3 that prevented the `nltk` daemon from
+  starting.
+
 ## [1.9.3] - 2026-03-23
 
 ### Added
@@ -11,7 +22,7 @@
 
 - The `objects from file` block and the `objects_from_file()` function
   now return a `DAList` instead of a `list` when `use_objects` is
-  true.
+  true and a list of items is encountered in the data structure.
 - Downgraded `numpy`, `scipy`, and `scikit-learn` to allow Python 3.10
   to continue to be used.
 - Upgraded `bootstrap-fileinput`.
