@@ -1234,8 +1234,8 @@ when the `.object_type` of the [`DADict`] is not set.
 It also uses the following methods, which correspond with the same
 methods of the [Python dict].
 
-* <a name="DADict.keys"></a>`keys()`
-* <a name="DADict.values"></a>`values()`
+* <a name="DADict.keys"></a><a name="DADict.iterkeys"></a>`keys()`
+* <a name="DADict.values"></a><a name="DADict.itervalues"></a>`values()`
 * <a name="DADict.update"></a>`update()`
 * <a name="DADict.pop"></a>`pop()`
 * <a name="DADict.popitem"></a>`popitem()`
@@ -1243,7 +1243,7 @@ methods of the [Python dict].
 * <a name="DADict.get"></a>`get()`
 * <a name="DADict.copy"></a>`copy()`
 * <a name="DADict.has_key"></a>`has_key()`
-* <a name="DADict.items"></a>`items()`
+* <a name="DADict.items"></a><a name="DADict.iteritems"></a>`items()`
 
 For most purposes, your code can treat a `DADict` object just like a
 [Python dictionary].
@@ -2215,6 +2215,10 @@ element in it.
 <a name="DAFileList.path"></a>The `.path()` method returns a complete
 file path that you can use to access the first file in the collection.
 
+<a name="DAFileList.convert_to"></a>The `.convert_to()` method calls
+[`.convert_to()`](#DAFile.convert_to) on each of the files in the
+collection.
+
 <a name="DAFileList.size_in_bytes"></a>The `.size_in_bytes()` method
 returns the number of bytes in the first file in the collection.
 
@@ -2646,7 +2650,7 @@ parameter, the `operand` attribute is set to that parameter.
 For more information on how `DACatchAll` is used, see the [catchall
 questions] subsection.
 
-## <a name="DALink"></a>DALink
+## <a name="DALink"></a><a name="DALink.show"></a>DALink
 
 The `DALink` class represents a [hyperlink] to a [URL].  It has two
 properties:
@@ -5479,8 +5483,9 @@ additional language methods.
 * `plaintiffs.as_singular_noun()` returns `plaintiff` regardless of
   how many elements are in the list.
 * `plaintiffs.number_as_word()` returns `'two'`.
-* `plaintiffs.quantity_noun('ox')` returns `'two oxen'`, but if there
-  was only one plaintiff, it would return `'one ox'`.
+* <a name="DASet.quantity_noun"></a><a name="DAList.quantity_noun"></a><a name="DADict.quantity_noun"></a>`plaintiffs.quantity_noun('ox')`
+  returns `'two oxen'`, but if there was only one plaintiff, it would
+  return `'one ox'`.
 
 ## <a name="point of view"></a>Point of view
 

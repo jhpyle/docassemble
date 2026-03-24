@@ -3374,6 +3374,217 @@ modules:
 Any time the OpenAI API is called, the user will see the waiting
 screen.
 
+# <a name="llmhelper"></a>Helper class for using LLMs
+
+This recipe provides an example of an `AIHelper` class that
+facilitates using an LLM to have a conversation with the user and
+define a variable when a goal is achieved. It uses the
+[BackgroundAction] class so that time-consuming API calls to the LLM
+do not delay HTTP responses.
+
+Here is an example interview that uses the `AIHelper` class. The
+`AIHelper` class is brought into the interview through the `include`
+block that incorporates the `aihelper.yml` file.
+
+{% highlight yaml %}
+include:
+  - aihelper.yml
+---
+objects:
+  - ai: AIHelper
+  - user: Individual
+---
+question: |
+  What is your name?
+fields:
+  - First name: user.name.first
+  - Last name: user.name.last
+---
+mandatory: true
+question: |
+  Download your affidavit
+attachment:
+  name: Favorite fruit affidavit
+  filename: affidavit
+  content: |
+    [CENTER]Affidavit of Favorite Fruit
+
+    ${ life_story }
+
+    ${ favorite_fruit_explanation }
+---
+code: |
+  life_story = ai['life'].interact()
+---
+question: |
+  What is your life story?
+subquestion: |
+  ${ ai['life'].output }
+fields:
+  - no label: ai['life'].input
+    input type: area
+---
+template: ai['life'].initial_output
+content: |
+  Please cover such details as where you were born, where you grew up,
+  where you went to school, and who you live with currently.
+---
+template: ai['life'].prompt
+content: |
+  You are a helpful assistant who is having a conversation with
+  ${ user } about ${ user.possessive('life story') }. You need to find
+  out from ${ user } where they were born, where they grew up, where
+  they went to school, and how they came to live with the people they
+  currently live with. When you have gathered this information, call
+  the conversation_complete tool with a 2 to 5 paragraph summary of
+  ${ user.possessive('life story') } written in first-person as
+  ${ user }, that includes all of these elements.
+---
+code: |
+  favorite_fruit_explanation = ai['fruit'].interact()
+---
+question: |
+  What is your favorite fruit and why?
+subquestion: |
+  ${ ai['fruit'].output }
+fields:
+  - no label: ai['fruit'].input
+    input type: area
+---
+template: ai['fruit'].initial_output
+content: |
+  Please explain your reasoning.
+---
+template: ai['fruit'].prompt
+content: |
+  You are a helpful assistant who is having a conversation with ${
+  user } about ${ user.possessive('favorite fruit') }. Your job is to
+  elicit from ${ user } what their favorite fruit is and specifically
+  why they like the fruit so much, compared with other fruits. When
+  you have gathered this information, call the conversation_complete
+  tool with a 2 to 3 sentence testimonial, written in first-person as
+  ${ user }, saying what their favorite fruit is and why.
+{% endhighlight %}
+
+The `aihelper.yml` file is as follows. It imports names from
+`aihelper.py` and provides some `generic object` blocks that run
+`code` in the context of background actions.
+
+{% highlight yaml %}
+modules:
+  - .aihelper
+---
+generic object: AIInteraction
+event: x.prompt_ai
+code: |
+  answer = x.conv.ask(action_argument('system_prompt'), action_argument('user_input'))
+  background_response_action(x.attr_name('save_ai_response'), conv=x.conv, answer=answer)
+---
+generic object: AIInteraction
+event: x.save_ai_response
+code: |
+  x.conv = action_argument('conv')
+  x.output = action_argument('answer')
+  x.delattr('input', 'bg')
+  background_response()
+{% endhighlight %}
+
+The `aihelper.py` file is as follows.
+
+{% highlight python %}
+from docassemble.base.util import get_config, DAObject, BackgroundAction, DADict
+import anthropic
+
+__all__ = ['AIHelper', 'AIInteraction']
+
+client = anthropic.Anthropic(api_key=get_config('anthropic api key'))
+
+tools = [
+    {
+        "name": "conversation_complete",
+        "description": "Call this tool when you have collected all necessary information from the user.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "output": {
+                    "type": "string",
+                    "description": "The output that was requested of you"
+                }
+            },
+            "required": ["output"]
+        }
+    }
+]
+
+
+class Conversation(DAObject):
+    def init(self, *pargs, **kwargs):
+        self.conversation = []
+        self.done = False
+        super().init(*pargs, **kwargs)
+
+    def ask(self, system_prompt, prompt):
+        str(system_prompt)
+        self.conversation.append({"role": "user", "content": prompt})
+        response = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1024*8,
+            system=str(system_prompt),
+            tools=tools,
+            messages=self.conversation
+        )
+        tool_use_block = None
+        text_blocks = []
+        for block in response.content:
+            if block.type == "tool_use" and block.name == "conversation_complete":
+                tool_use_block = block
+            elif block.type == "text":
+                text_blocks.append(block.text)
+        if tool_use_block:
+            result = tool_use_block.input
+            self.done = True
+            self.output = result['output']
+            return self.output
+        self.conversation.append({"role": "assistant", "content": response.content})
+        return ' '.join(text_blocks)
+
+
+class AIInteraction(DAObject):
+    def init(self, *pargs, **kwargs):
+        self.initializeAttribute('conv', Conversation)
+        self.started = False
+        super().init(*pargs, **kwargs)
+
+    def interact(self):  # pylint: disable=inconsistent-return-statements
+        if not self.started:
+            str(self.prompt)
+            self.output = str(self.initial_output)
+            self.input  # pylint: disable=pointless-statement
+            self.started = True
+        if self.conv.done:
+            self.delattr('bg')
+            return self.output
+        if not hasattr(self, 'bg'):
+            sys_prompt = str(self.prompt)
+            prompt = self.input
+            self.initializeAttribute('bg', BackgroundAction)
+            self.bg.run(self.attr_name('prompt_ai'), system_prompt=sys_prompt, user_input=prompt)
+        self.bg.run(self.attr_name('prompt_ai'))
+        self.delattr('input')
+        self.delattr('bg')
+        self.input  # pylint: disable=pointless-statement
+
+
+class AIHelper(DADict):
+    def init(self, *pargs, **kwargs):
+        self.object_type = AIInteraction
+        super().init(*pargs, **kwargs)
+{% endhighlight %}
+
+This example uses Anthropic, and assumes that there is an `anthropic
+api key` defined in the [Configuration], but the usage of AI is not
+specific to Anthropic and could be implemented using other LLM models.
+
 # <a name="email_lawyer"></a>Launching a side process from a button always on the screen
 
 This interview shows how you can place a button in the navigation bar
@@ -3552,3 +3763,4 @@ from the navigation bar when the side process is ongoing.
 [`module blacklist`]: {{ site.baseurl }}/docs/config.html#module blacklist
 [OpenAI Platform]: https://platform.openai.com
 [`openai`]: https://pypi.org/project/openai/
+[BackgroundAction]: {{ site.baseurl }}/docs/background.html#BackgroundAction

@@ -3,30 +3,54 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
-## [1.9.3](https://github.com/jhpyle/docassemble/releases/tag/v1.9.3) - 2026-02-01
+## [1.9.3](https://github.com/jhpyle/docassemble/releases/tag/v1.9.3) - 2026-03-23
+
+
+### Added
+
+- Files in `docassemble.demo` for the recipe in the documentation
+  that demonstrates the `AIHelper` class.
 
 
 ### Changed
 
+- The `objects from file` block and the `objects_from_file()` function
+  now return a `DAList` instead of a `list` when `use_objects` is
+  true.
 - Downgraded `numpy`, `scipy`, and `scikit-learn` to allow Python 3.10
   to continue to be used.
 - Upgraded `bootstrap-fileinput`.
 - Migrated the websockets interface from `eventlet` to `gevent`.
+- Moved code that depends on `nltk` into a daemon in order to optimize
+  restart speed (system upgrade required).
+- Moved some package loads from server start time to runtime in order
+  to optimize restart speed.
+- Updated restart process so that code runs in parallel.
+- A restart after a Configuration change no longer runs
+  `create_tables`.
+- Applied security updates recommended by `dependabot`.
+- Upgraded `docxcompose`.
+- Updated documentation links and test scripts.
+- Changed names of buttons in the Profile settings.
 
 
 ### Fixed
 
 - Truncated `pip` logs to avoid errors during upgrade process.
+- Issue with default values of custom data types after a `validation
+  code` validation error.
 
 ## [1.9.2](https://github.com/jhpyle/docassemble/releases/tag/v1.9.2) - 2026-01-27
 
 
 ### Added
+
 - The `allow external auth to bypass local auth` Configuration
   directive.
 
 
 ### Changed
+
 - The `.bates_number()` method of `DAFile` now accepts parameters
   `offset_horizontal`, `offset_vertical`, and `font_size`.
 - Upgraded `azure-core`, `wheel`, `numpy`, and `pyasn1`.
@@ -72,6 +96,7 @@ short_title: Change Log
 
 
 ### Fixed
+
 - Avoided `KeyError` error messages related to `gathering_mode` and
   `save_status`.
 - Avoided translation of non-user-facing Mako template text in field

@@ -2502,6 +2502,11 @@ names for a language other than the current language.
 
 {% include side-by-side.html demo="sections-keywords-set-sections" %}
 
+## <a name="DANav.section_ids"></a>nav.section_ids()
+
+`nav.section_ids()` returns a list of section IDs, including
+subsections.
+
 ## <a name="DANav.show_sections"></a>nav.show_sections()
 
 To display the section list to the user in the body of a question, you
