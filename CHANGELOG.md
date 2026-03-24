@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.9.5] - 2026-03-24
+
+### Fixed
+
+- Issue with upgrade of `werkzeug` and `flask`.
+
 ## [1.9.4] - 2026-03-24
 
 ### Changed
