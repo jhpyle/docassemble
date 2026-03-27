@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.9.6] - 2026-03-27
+
+### Fixed
+
+- Removed dependency on `telnyx`.
+
 ## [1.9.5] - 2026-03-24
 
 ### Fixed

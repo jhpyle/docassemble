@@ -284,7 +284,6 @@ dependencies = [
   "SQLAlchemy==2.0.45",
   "starkbank-ecdsa==2.2.0",
   "tailer==0.4.1",
-  "telnyx==3.17.0",
   "threadpoolctl==3.6.0",
   "tinycss2==1.5.1",
   "titlecase==2.4.1",
