@@ -1,14 +1,15 @@
 name: Build and Push Docker Image to GHCR
-
+ 
 on:
   push:
     branches:
-      - master   #runs on every merge to master
+      - master
+    tags:
+      - 'v*'            # push to registry only on version tags
   pull_request:
     branches:
-      - master  #also runs on PRs, but buidld-only
-
-  workflow_dispatch:   #lets you trigger this manually from Action tab
+      - master
+  workflow_dispatch:       # allows manual trigger from Action tab
 
 jobs:
   build-and-push:
@@ -33,18 +34,22 @@ jobs:
       # generates tags and labels from repo metadata
       - name: Extract metadata for Docker
         id: meta
-        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804  #v5.7.0
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804  # v5.7.0
         with:
-          images: ghcr.io/${{ github.repository }}  
+          images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}     #tag as 'latest' on master builds
-            type=sha,prefix=sha-     #tags with commit SHA
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
 
+            type=sha,prefix=sha-  #tags with commit SHA
+
+  
       - name: Build and push Docker image
         uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25  #v5.4.0
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}   #push only on master, skip PRs
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}  # only push on tags
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
