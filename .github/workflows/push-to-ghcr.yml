@@ -1,0 +1,50 @@
+name: Build and Push Docker Image to GHCR
+
+on:
+  push:
+    branches:
+      - master   #runs on every merge to master
+  pull_request:
+    branches:
+      - master  #also runs on PRs, but buidld-only
+
+  workflow_dispatch:   #lets you trigger this manually from Action tab
+
+jobs:
+  build-and-push:
+    name: Build and push to GHCR
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567  # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} #automatically available, no secrets needed
+
+      # generates tags and labels from repo metadata
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804  #v5.7.0
+        with:
+          images: ghcr.io/${{ github.repository }}  
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}     #tag as 'latest' on master builds
+            type=sha,prefix=sha-     #tags with commit SHA
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@ca052bb54ab0790a636c9b5f226502c73d547a25  #v5.4.0
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}   #push only on master, skip PRs
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
