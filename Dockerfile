@@ -53,38 +53,13 @@ bash -c \
 && python3 -m venv --copies /usr/share/docassemble/local3.12 \
 && source /usr/share/docassemble/local3.12/bin/activate \
 && pip install --upgrade pip==26.0.1 \
-&& pip install --upgrade wheel==0.46.2 \
 && pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \
-   acme==5.2.2 \
    certbot==5.2.2 \
    certbot-apache==5.2.2 \
    certbot-nginx==5.2.2 \
-   certifi==2025.11.12 \
-   cffi==2.0.0 \
-   charset-normalizer==3.4.4 \
-   click==8.3.1 \
-   ConfigArgParse==1.7.1 \
-   configobj==5.0.9 \
-   cryptography==46.0.5 \
-   distro==1.9.0 \
-   idna==3.11 \
-   joblib==1.5.3 \
-   josepy==2.2.0 \
-   nltk==3.9.2 \
-   parsedatetime==2.6 \
-   pycparser==2.23 \
-   pyOpenSSL==26.0.0 \
-   pyparsing==3.3.1 \
-   pyRFC3339==2.1.0 \
-   python-augeas==1.2.0 \
-   pytz==2025.2 \
-   regex==2025.11.3 \
-   requests==2.32.5 \
-   six==1.17.0 \
-   tqdm==4.67.1 \
-   typing_extensions==4.15.0 \
-   urllib3==2.6.3 \
+   minio==7.2.20 \
+   uWSGI==2.0.31 \
 && pip install \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \

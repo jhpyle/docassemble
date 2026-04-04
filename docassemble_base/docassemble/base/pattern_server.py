@@ -47,27 +47,21 @@ async def _write_msg(writer, obj):
     await writer.drain()
 
 
-async def _worker(queue):
-    while True:
-        request, future = await queue.get()
-        try:
-            module = getattr(docassemble_pattern, request[0])
-            fn = getattr(module, request[1])
-            result = fn(*request[2], **request[3])
-            future.set_result({'result': result})
-        except Exception:
-            future.set_result({'error': traceback.format_exc()})
+def _call(request):
+    module = getattr(docassemble_pattern, request[0])
+    fn = getattr(module, request[1])
+    return fn(*request[2], **request[3])
 
 
-async def _handle(reader, writer, queue):
+async def _handle(reader, writer):
     try:
         while True:
             request = await _read_msg(reader)
-            future = asyncio.get_event_loop().create_future()
-            await queue.put((request, future))
-            await writer.drain()
-            response = await future
-            await _write_msg(writer, response)
+            try:
+                result = await asyncio.to_thread(_call, request)
+                await _write_msg(writer, {'result': result})
+            except Exception:
+                await _write_msg(writer, {'error': traceback.format_exc()})
     except asyncio.IncompleteReadError:
         pass
     finally:
@@ -76,10 +70,8 @@ async def _handle(reader, writer, queue):
 
 
 async def main():
-    queue = asyncio.Queue()
-    asyncio.create_task(_worker(queue))
     server = await asyncio.start_unix_server(
-        lambda r, w: _handle(r, w, queue),
+        _handle,
         path=SOCKET_PATH,
     )
     async with server:

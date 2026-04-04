@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==80.9.0"]
+requires = ["setuptools==82.0.1"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "docassemble.demo"
@@ -13,10 +13,12 @@ license = "MIT"
 license-files = ["LICENSE.txt"]
 requires-python = ">= 3.9"
 dependencies = [
-  'docassemble.base==1.9.6',
-  "googledrivedownloader",
-  "ics",
-  "matplotlib"
+  'docassemble.base==1.9.6'
+#  "ics",
+#  "openai",
+#  "anthropic",
+#  "gspread",
+#  "matplotlib"
 ]
 [tool.setuptools.packages.find]
 where = ["."]

@@ -11340,7 +11340,7 @@ SOFTWARE.
 """
         gitignore = daconfig.get('default gitignore', DEFAULT_GITIGNORE)
         readme = '# docassemble.' + str(pkgname) + "\n\nA docassemble extension.\n\n## Author\n\n" + name_of_user(current_user, include_email=True) + "\n"
-        pyprojecttoml = tomli_w.dumps({'build-system': {'requires': ['setuptools==80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': '0.0.1', 'description': 'A docassemble extension.', 'readme': 'README.md', 'authors': [{'name': str(name_of_user(current_user)), 'email': str(current_user.email)}], 'license': 'MIT', 'license-files': ['LICENSE'], 'urls': {'Homepage': 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}})
+        pyprojecttoml = tomli_w.dumps({'build-system': {'requires': ['setuptools=>80.9.0'], 'build-backend': 'setuptools.build_meta'}, 'project': {'name': f'docassemble.{pkgname}', 'version': '0.0.1', 'description': 'A docassemble extension.', 'readme': 'README.md', 'authors': [{'name': str(name_of_user(current_user)), 'email': str(current_user.email)}], 'license': 'MIT', 'license-files': ['LICENSE'], 'urls': {'Homepage': 'https://docassemble.org'}}, 'tool': {'setuptools': {'packages': {'find': {'where': ['.']}}}}})
         manifestin = f"""\
 include README.md
 graft docassemble/{pkgname}/data
