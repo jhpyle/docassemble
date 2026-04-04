@@ -50,10 +50,10 @@ document.addEventListener("DOMContentLoaded", function () {
   for (var i = 0; i < daCustomItems.length; i++) {
     try {
       daGlobalEval(daCustomItems[i].js);
-    } catch {
-      console.log(
+    } catch (e) {
+      console.error(
         "Error with JavaScript code of CustomDataType " +
-          daCustomItems[i].datatype,
+          daCustomItems[i].datatype, e.stack
       );
     }
   }
@@ -3006,7 +3006,6 @@ function daProcessAjaxError(xhr, status, error) {
               }
             }
           }
-          delete errorScriptDiv;
         }
         $("#da-retry").on("click", function (e) {
           location.reload();
@@ -3018,7 +3017,6 @@ function daProcessAjaxError(xhr, status, error) {
       } else {
         $(daTargetDiv).html(theHtml);
       }
-      delete newDiv;
     }
     if (daJsEmbed) {
       $(daTargetDiv)[0].scrollTo(0, 1);
