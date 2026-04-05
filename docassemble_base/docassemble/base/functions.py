@@ -4884,19 +4884,16 @@ def components_of(full_variable):
 
 def get_user_dict():
     frame = sys._getframe(1)
-    the_user_dict = frame.f_locals
-    while '_internal' not in the_user_dict:
+    while frame is not None:
+        f_locals = frame.f_locals
+        if 'user_dict' in f_locals:
+            user_dict = f_locals['user_dict']
+            if isinstance(user_dict, dict) and '_internal' in user_dict:
+                return user_dict
+        if '_internal' in f_locals:
+            return f_locals
         frame = frame.f_back
-        if frame is None:
-            return {}
-        if 'user_dict' in frame.f_locals:
-            the_user_dict = eval('user_dict', frame.f_locals)
-            if '_internal' in the_user_dict:
-                break
-            return None
-        the_user_dict = frame.f_locals
-    return the_user_dict
-
+    return {}
 
 def invalidate(*pargs):
     """Invalidates the variable or variables if they exist."""
@@ -4928,7 +4925,7 @@ def undefine(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
         if frame is None:
             return
         if 'user_dict' in frame.f_locals:
-            the_user_dict = eval('user_dict', frame.f_locals)
+            the_user_dict = frame.f_locals['user_dict']
             if '_internal' in the_user_dict:
                 break
             return
@@ -5047,7 +5044,7 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
                 return failure_val
             force_ask_nameerror(variable)
         if user_dict_name in frame.f_locals:
-            the_user_dict = eval(user_dict_name, frame.f_locals)
+            the_user_dict = frame.f_locals[user_dict_name]
             if variable in the_user_dict:
                 break
             if caller.is_pure():

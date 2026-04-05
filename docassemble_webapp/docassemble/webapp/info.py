@@ -1,3 +1,5 @@
+import os
+
 __all__ = ['system_packages']
 
 system_packages = [
@@ -108,7 +110,6 @@ system_packages = [
     "grpc-google-iam-v1",
     "grpcio",
     "grpcio-status",
-    "gspread",
     "h11",
     "httplib2",
     "humanize",
@@ -144,10 +145,12 @@ system_packages = [
     "minio",
     "mod-wsgi",
     "monotonic",
+    "more-itertools",
     "msal",
     "msal-extensions",
     "msgpack",
     "msrest",
+    "multidict",
     "netifaces",
     "nh3",
     "nltk",
@@ -240,6 +243,7 @@ system_packages = [
     "titlecase",
     "toml",
     "tomli",
+    "tomli_w",
     "tomli-w",
     "tqdm",
     "twilio",
@@ -267,19 +271,25 @@ system_packages = [
     "zipp",
     "zope.event",
     "zope.interface"
-] + [
-    "ConfigArgParse",
-    "PyOpenSSL",
-    "acme",
-    "certbot-apache",
-    "certbot-nginx",
-    "certbot",
-    "configobj",
-    "distro",
-    "josepy",
-    "minio",
-    "parsedatetime",
-    "pyrfc3339",
-    "python-augeas",
-    "uWSGI"
 ]
+
+if bool(os.environ.get('SUPERVISOR_SERVER_URL', None)):
+    system_packages += [
+        "ConfigArgParse",
+        "PyOpenSSL",
+        "pyOpenSSL",
+        "acme",
+        "certbot-apache",
+        "certbot-nginx",
+        "certbot",
+        "configobj",
+        "distro",
+        "josepy",
+        "minio",
+        "mod_wsgi",
+        "parsedatetime",
+        "pyrfc3339",
+        "pyRFC3339",
+        "python-augeas",
+        "uWSGI"
+    ]

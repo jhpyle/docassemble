@@ -111,7 +111,6 @@ dependencies = [
   "grpc-google-iam-v1==0.14.3",
   "grpcio==1.76.0",
   "grpcio-status==1.76.0",
-  "gspread==6.2.1",
   "h11==0.16.0",
   "httplib2==0.31.0",
   "humanize==4.15.0",

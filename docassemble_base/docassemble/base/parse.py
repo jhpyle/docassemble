@@ -8803,13 +8803,14 @@ class Interview:
             user_dict['_internal']['device_local'] = {}
             user_dict['_internal']['user_local'] = {}
         if session_uid not in user_dict['_internal']['session_local'] or device_id not in user_dict['_internal']['device_local'] or user_id not in user_dict['_internal']['user_local']:
-            exec('from docassemble.base.util import DASessionLocal, DADeviceLocal, DAUserLocal')
+            glob_ns = globals()
+            exec('from docassemble.base.util import DASessionLocal, DADeviceLocal, DAUserLocal', glob_ns)
             if session_uid not in user_dict['_internal']['session_local']:
-                user_dict['_internal']['session_local'][session_uid] = eval("DASessionLocal()")
+                user_dict['_internal']['session_local'][session_uid] = eval("DASessionLocal()", glob_ns)
             if device_id not in user_dict['_internal']['device_local']:
-                user_dict['_internal']['device_local'][device_id] = eval("DADeviceLocal()")
+                user_dict['_internal']['device_local'][device_id] = eval("DADeviceLocal()", glob_ns)
             if user_id not in user_dict['_internal']['user_local']:
-                user_dict['_internal']['user_local'][user_id] = eval("DAUserLocal()")
+                user_dict['_internal']['user_local'][user_id] = eval("DAUserLocal()", glob_ns)
         user_dict['session_local'] = user_dict['_internal']['session_local'][session_uid]
         user_dict['device_local'] = user_dict['_internal']['device_local'][device_id]
         user_dict['user_local'] = user_dict['_internal']['user_local'][user_id]

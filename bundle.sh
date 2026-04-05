@@ -6,14 +6,14 @@ file_changed=false
 for css_file in app/app.css app/pygments.css; do
     orig_file="${css_file/.css/.scss}"
     if [[ docassemble_webapp/docassemble/webapp/static/${orig_file} -nt docassemble_webapp/docassemble/webapp/static/${css_file} ]]; then
-	sass docassemble_webapp/docassemble/webapp/static/${orig_file} docassemble_webapp/docassemble/webapp/static/${css_file}
+	/usr/bin/sass docassemble_webapp/docassemble/webapp/static/${orig_file} docassemble_webapp/docassemble/webapp/static/${css_file}
 	file_changed=true
     fi
 done
 for min_file in app/app.min.css app/pygments.min.css bootstrap-slider/dist/css/bootstrap-slider.min.css bootstrap-combobox/css/bootstrap-combobox.min.css; do
     orig_file="${min_file/.min/}"
     if [[ docassemble_webapp/docassemble/webapp/static/${orig_file} -nt docassemble_webapp/docassemble/webapp/static/${min_file} ]]; then
-	sass --style compressed docassemble_webapp/docassemble/webapp/static/${orig_file} docassemble_webapp/docassemble/webapp/static/${min_file}
+	/usr/bin/sass --style compressed docassemble_webapp/docassemble/webapp/static/${orig_file} docassemble_webapp/docassemble/webapp/static/${min_file}
 	file_changed=true
     fi
 done
@@ -32,9 +32,9 @@ if [ "$file_changed" = true ]; then
 fi
 
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/bundle.css ${SERVER}/bundle.css
-sass --style compressed docassemble_webapp/docassemble/webapp/static/app/bundle.css docassemble_webapp/docassemble/webapp/static/app/bundle.min.css
+/usr/bin/sass --style compressed docassemble_webapp/docassemble/webapp/static/app/bundle.css docassemble_webapp/docassemble/webapp/static/app/bundle.min.css
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.css ${SERVER}/playgroundbundle.css
-sass --style compressed docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.css docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.min.css
+/usr/bin/sass --style compressed docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.css docassemble_webapp/docassemble/webapp/static/app/playgroundbundle.min.css
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/bundle.js ${SERVER}/bundle.js
 uglifyjs docassemble_webapp/docassemble/webapp/static/app/bundle.js --source-map "url='bundle.min.js.map',includeSources" --output docassemble_webapp/docassemble/webapp/static/app/bundle.min.js
 wget -q -O docassemble_webapp/docassemble/webapp/static/app/monitorbundle.js ${SERVER}/monitorbundle.js
