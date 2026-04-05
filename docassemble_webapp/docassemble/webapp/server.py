@@ -5066,10 +5066,11 @@ class Auth0SignIn(OAuthSignIn):
     def authorize(self):
         if 'oauth' in daconfig and 'auth0' in daconfig['oauth'] and daconfig['oauth']['auth0'].get('enable', True) and self.consumer_domain is None:
             raise DAException("To use Auth0, you need to set your domain in the configuration.")
+        audience_domain = daconfig['oauth']['auth0'].get('audience domain') or self.consumer_domain
         return redirect(self.service.get_authorize_url(
             response_type='code',
             scope='openid profile email',
-            audience='https://' + str(self.consumer_domain) + '/userinfo',
+            audience=f'https://{audience_domain}/userinfo',
             redirect_uri=self.get_callback_url())
         )
 

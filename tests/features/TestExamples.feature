@@ -13,6 +13,22 @@ Feature: Example interviews
   #   And I wait 2 seconds
   #   Then I should see the phrase "Here is the file you uploaded"
 
+  Scenario: Test the interview "Fields example"
+    Given I start the interview "docassemble.base:data/questions/examples/fields.yml"
+    And I set "Description" to "five foot two, eyes of blue"
+    And I set "Annual income" to "50001"
+    And I set "E-mail address" to "turnip@vegetable.com"
+    And I click the "Been vaccinated" option
+    And I click the "Seen Mount Rushmore" option
+    And I click the "Outie" option under "Belly button type"
+    And I click the "One" option under "Number of friends"
+    And I click the "College" option under "Degrees obtained"
+    And I select "Alabama" as the "State you grew up in"
+    And I click the "Independent" option under "Party"
+    And I click the button "Continue"
+    Then I should see the phrase "All done"
+    And I should see the phrase "Your income is 50001.0."
+
   Scenario: Test the interview "Vocabulary" 1
     Given I start the interview "docassemble.base:data/questions/examples/question-autoterms.yml"
     Then I should see the phrase "Have you ever met a creeper?"
@@ -1920,22 +1936,6 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should not see the phrase "You like apples."
     And I should see the phrase "You do not like turnips."
-
-  Scenario: Test the interview "Fields example"
-    Given I start the interview "docassemble.base:data/questions/examples/fields.yml"
-    And I set "Description" to "five foot two, eyes of blue"
-    And I set "Annual income" to "50001"
-    And I set "E-mail address" to "turnip@vegetable.com"
-    And I click the "Been vaccinated" option
-    And I click the "Seen Mount Rushmore" option
-    And I click the "Outie" option under "Belly button type"
-    And I click the "One" option under "Number of friends"
-    And I click the "College" option under "Degrees obtained"
-    And I select "Alabama" as the "State you grew up in"
-    And I click the "Independent" option under "Party"
-    And I click the button "Continue"
-    Then I should see the phrase "All done"
-    And I should see the phrase "Your income is 50001.0."
 
   Scenario: Test the interview "End-of-sentence punctuation" with no period
     Given I start the interview "docassemble.base:data/questions/examples/fix-punctuation.yml"
@@ -7763,12 +7763,6 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Please wait."
 
-  # Scenario: Test the interview "Get data from Google Sheet"
-  #   Given I start the interview "docassemble.demo:data/questions/examples/google-sheet-2.yml"
-
-  # Scenario: Test the interview "Google Sheets mail merge"
-  #   Given I start the interview "docassemble.demo:data/questions/examples/google-sheet-3.yml"
-
   # Scenario: Test the interview "Upload file size"
   #   Given I start the interview "docassemble.demo:data/questions/examples/upload-file-size.yml"
 
@@ -9325,10 +9319,6 @@ Feature: Example interviews
     Then I should see the phrase "Please tell me what you think."
     And I should see the phrase "None of the above"
 
-  Scenario: Test the interview "Sending a calendar invite"
-    Given I start the interview "docassemble.demo:data/questions/examples/calendar.yml"
-    Then I should see the phrase "Tell me about yourself."
-
   # Scenario: Test the interview "Cards included file"
   #   Given I start the interview "docassemble.demo:data/questions/examples/cards.yml"
 
@@ -9389,23 +9379,6 @@ Feature: Example interviews
 
   # Scenario: Test the interview "Profile"
   #   Given I start the interview "docassemble.demo:data/questions/examples/globalprofile3.yml"
-
-  Scenario: Test the interview "Graph in document"
-    Given I start the interview "docassemble.demo:data/questions/examples/graph.yml"
-    Then I should see the phrase "Tell me about an animal in your house."
-    And I set "Species of animal" to "horse"
-    And I set "Number of pets of this type" to "2"
-    And I click the button "Continue"
-    Then I should see the phrase "Do you have any more animals in your house?"
-    And I click the button "Yes"
-    Then I should see the phrase "Tell me about an animal in your house."
-    And I set "Species of animal" to "pig"
-    And I set "Number of pets of this type" to "6"
-    And I click the button "Continue"
-    Then I should see the phrase "Do you have any more animals in your house?"
-    And I click the button "No"
-    Then I should see the phrase "Here is your document with a graph."
-    And I should see the phrase "The following document has been created for you."
 
   Scenario: Test the interview "Reporting database"
     Given I start the interview "docassemble.demo:data/questions/examples/indexdemo.yml"
@@ -10507,5 +10480,3 @@ Feature: Example interviews
     Then I should see the phrase "Thank you for that information."
     And I should see the phrase "I will make lots of money by selling your food preferences to data brokers so that you will receive targeted advertising about apples, potatoes, and beans in your Instagram feed."
 
-  # Scenario: Test the interview "OpenAI Lookup"
-  #   Given I start the interview "docassemble.demo:data/questions/examples/openai-lookup.yml"

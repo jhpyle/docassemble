@@ -616,7 +616,7 @@ def unfocus(context):
     elem = WebDriverWait(context.browser, 10).until(
         EC.element_to_be_clickable((By.ID, 'daMainQuestion'))
     )
-    elem.click()
+    context.browser.execute_script("document.activeElement.blur();")
 
 
 @step(r'I click the final link "(?P<link_name>[^"]+)"')
