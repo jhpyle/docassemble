@@ -5209,6 +5209,7 @@ oauth:
     id: ceyd6imTYxTNmuj2CYpwH_cEhdWt93e6
     secret: LLGEBDrrgDFDfBsFjErsdSdsntkrtAbfa4ee3ss_adfdSDFEWEsfgHTerjNsd3dD
     domain: example.auth0.com
+    # audience domain: example.com
   keycloak:
     enable: True
     id: example

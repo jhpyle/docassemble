@@ -3,6 +3,29 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.7](https://github.com/jhpyle/docassemble/releases/tag/v1.9.7) - 2026-04-05
+
+
+### Changed
+
+- Removed unnecessary Python dependencies from `docassemble.webapp`
+  and `docassemble.base`.
+- Removed all dependencies from `docassemble.demo`. If you want to be
+  able to run all of the demo interviews, you will need to install
+  `ics`, `openai`, `anthropic`, `gspread`, and `matplotlib` manually.
+- Upgraded `setuptools`.
+- Improved debugging of `CustomDataType` JavaScript.
+- Made changes to the code for compatibility with Python 3.13.
+- Changed the default value of `user can request developer account` to
+  `False`.
+- Allowed `auth0` configuration to set an `audience domain` different
+  from the `domain`.
+
+
+### Fixed
+
+- Problem with NGINX log rotation.
+
 ## [1.9.6](https://github.com/jhpyle/docassemble/releases/tag/v1.9.6) - 2026-03-27
 
 

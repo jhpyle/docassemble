@@ -794,6 +794,7 @@ interface.
   under the `auth0` part of the [`oauth`] directive so that it
   includes the `domain`, `id`, and `secret` values you noted in the
   steps above.  Make sure that `enable` is not set to `False`.
+* If you use a custom domain in auth0, set `audience domain`.
 * Also, in your [configuration], set the [`url root`] directive.
 
 ## <a name="keycloak"></a>Setting up Keycloak logins
