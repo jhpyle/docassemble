@@ -1906,6 +1906,14 @@ because if you do, then **docassemble** will use the [JSONB] data type
 for the [JSON] version of the interview answers, which will enable
 fast and convenient querying of the data.
 
+If there is a problem with your `variables snapshot db` configuration,
+the web app will not be able to start. This is because the database
+connection to the snapshot database is made early on in the startup
+process, at the same time as the connection to the main database. If
+your snapshot database goes down, your server will not start. If your
+authentication information is wrong, you will need to resort to
+troubleshooting using the command line. (See [Troubleshooting].)
+
 ## <a name="appname"></a><a name="brandname"></a>Branding
 
 The `appname` and `brandname` directives control the name of the
