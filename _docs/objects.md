@@ -6869,23 +6869,13 @@ database containing one row and one column. By scanning the files in
 files in the `versions` directory it needs to run to perform an
 upgrade.
 
-The above module example contains code that calls [Alembic].
+The following command runs [Alembic]..
 
 {% highlight python %}
-upgrade_db(url, __file__, engine, version_table='auto', conn_args=conn_args)
+create_objects(__file__, DB_NAME)
 {% endhighlight %}
 
-This function calls [Alembic] to perform any necessary upgrades. When
-the `version_table` parameter is set to `'auto'`, that means that the
-name of the table in the database that [Alembic] uses to track the
-current version will be based on the name of the package. If
-`version_table` is set to `None`, the default name of
-`alembic_version` will be used. If the database you are using is
-already serving as the [`db`] database of a **docassemble** server,
-there will be a conflict because the **docassemble** server uses
-[Alembic] with `alembic_version` as the name of its version table. You
-can also set `version_table` to a string, in which case the name of
-the version table will be that string.
+It also creates tables that do not exist.
 
 For examples of what the [Alembic]-related files should look like, see
 the [`docassemble.demo`] package and consult the [Alembic]
