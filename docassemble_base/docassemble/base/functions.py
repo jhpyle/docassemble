@@ -5883,6 +5883,14 @@ def redact(text):
     return output
 
 
+def format_ssn(number):
+    if isinstance(number, int):
+        number = str(number).zfill(9)
+    if len(number) != 9 or not number.isdigit():
+        raise ValueError('format_ssn() requires an input with exactly 9 digits.')
+    return f"{number[:3]}-{number[3:5]}-{number[5:]}"
+
+
 def ensure_definition(*pargs, **kwargs):
     for val in pargs:
         if isinstance(val, Undefined):
