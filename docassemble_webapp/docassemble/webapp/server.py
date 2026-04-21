@@ -7593,6 +7593,8 @@ def index(action_argument=None, refer=None):
                         file_formats.append('docx')
                     if 'rtf to docx' in the_attachment['valid_formats']:
                         file_formats.append('rtf to docx')
+                if 'raw' in the_attachment['valid_formats']:
+                    file_formats.append('raw')
                 for file_format in the_attachment.get('manual_formats', []):
                     if file_format not in file_formats:
                         file_formats.append(file_format)
