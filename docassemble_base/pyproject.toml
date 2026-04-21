@@ -97,7 +97,7 @@ dependencies = [
   "jmespath==1.0.1",
   "joblib==1.5.3",
   "keyring==25.7.0",
-  "lxml==6.0.2",
+  "lxml==6.1.0",
   "Mako==1.3.10",
   "Markdown==3.10",
   "markdown-it-py==4.0.0",
