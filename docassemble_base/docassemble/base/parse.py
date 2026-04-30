@@ -795,6 +795,7 @@ class InterviewStatus:
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
         self.extras = question_result['extras']
+        self.can_go_back = question_result['can_go_back']
         self.labels = question_result['labels']
         self.sought = question_result['sought']
         self.orig_sought = question_result['orig_sought']
@@ -2484,8 +2485,12 @@ class Question:
             self.language = data['language']
         else:
             self.language = self.from_source.get_language()
-        if 'prevent going back' in data and data['prevent going back']:
-            self.can_go_back = False
+        if 'prevent going back' in data:
+            if isinstance(data['prevent going back'], (bool, NoneType)):
+                self.can_go_back = not data['prevent going back']
+            else:
+                self.can_go_back = compile('not (' + str(data['prevent going back']) + ')', '<prevent going back>', 'eval')
+                self.find_fields_in(str(data['prevent going back']))
         if 'back button' in data:
             if isinstance(data['back button'], (bool, NoneType)):
                 self.back_button = data['back button']
@@ -5970,6 +5975,10 @@ class Question:
         helptexts = {}
         labels = {}
         extras['required'] = {}
+        if isinstance(self.can_go_back, (bool, NoneType)):
+            extras['can_go_back'] = self.can_go_back
+        else:
+            extras['can_go_back'] = bool(eval(self.can_go_back, user_dict))
         if hasattr(self, 'back_button'):
             if isinstance(self.back_button, (bool, NoneType)):
                 extras['back_button'] = self.back_button
@@ -6860,7 +6869,7 @@ class Question:
         if self.need_post is not None:
             for need_code in self.need_post:
                 eval(need_code, user_dict)
-        return {'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'interview_help_text': interview_help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}
+        return {'type': 'question', 'question_text': question_text, 'subquestion_text': subquestion, 'continue_label': continuelabel, 'audiovideo': audiovideo, 'decorations': decorations, 'help_text': help_text_list, 'interview_help_text': interview_help_text_list, 'attachments': attachment_text, 'question': self, 'selectcompute': selectcompute, 'defaults': defaults, 'hints': hints, 'helptexts': helptexts, 'extras': extras, 'can_go_back': extras['can_go_back'], 'labels': labels, 'sought': sought, 'orig_sought': orig_sought}
 
     def processed_attachments(self, the_user_dict, **kwargs):
         use_cache = kwargs.get('use_cache', True)

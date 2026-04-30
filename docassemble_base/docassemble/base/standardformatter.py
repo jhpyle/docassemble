@@ -822,7 +822,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         datatypes[safeid(status.question.fields_saveas)] = "boolean"
     continue_button_color = status.extras.get('continuecolor', None) or BUTTON_COLOR
     back_button_val = status.extras.get('back_button', None)
-    if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.question.can_go_back and steps > 1:
+    if (back_button_val or (back_button_val is None and status.question.interview.question_back_button)) and status.can_go_back and steps > 1:
         back_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + (status.extras.get('back button color', None) or BUTTON_COLOR_BACK) + ' ' + BUTTON_CLASS + ' daquestionbackbutton danonsubmit" title=' + json.dumps(word("Go back to the previous question")) + '><i class="fa-solid fa-chevron-left me-1"></i>'
         back_button += status.back
         back_button += '</button>'
