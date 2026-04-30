@@ -2486,8 +2486,12 @@ class Question:
         else:
             self.language = self.from_source.get_language()
         if 'prevent going back' in data:
-            if isinstance(data['prevent going back'], (bool, NoneType)):
+            if data['prevent going back'] is None:
+                self.can_go_back = True
+            elif isinstance(data['prevent going back'], bool):
                 self.can_go_back = not data['prevent going back']
+            elif isinstance(data['prevent going back'], str) and not data['prevent going back'].strip():
+                self.can_go_back = True
             else:
                 self.can_go_back = compile('not (' + str(data['prevent going back']) + ')', '<prevent going back>', 'eval')
                 self.find_fields_in(str(data['prevent going back']))
