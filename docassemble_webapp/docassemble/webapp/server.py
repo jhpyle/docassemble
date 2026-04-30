@@ -18787,7 +18787,7 @@ def translation_file():
                 if not os.path.isfile(the_xlsx_file):
                     continue
                 import pandas  # pylint: disable=import-outside-toplevel
-                df = pandas.read_excel(the_xlsx_file, na_values=['NaN', '-NaN', '#NA', '#N/A'], keep_default_na=False)
+                df = pandas.read_excel(the_xlsx_file, na_values=['NaN', '-NaN', '#NA', '#N/A'], keep_default_na=False, usecols='A:H')
                 invalid = False
                 for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
                     if column_name not in df.columns:
