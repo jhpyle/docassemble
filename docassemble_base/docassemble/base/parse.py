@@ -795,7 +795,7 @@ class InterviewStatus:
         self.hints = question_result['hints']
         self.helptexts = question_result['helptexts']
         self.extras = question_result['extras']
-        self.can_go_back = question_result['can_go_back']
+        self.can_go_back = question_result.get('can_go_back', self.extras.get('can_go_back', True))
         self.labels = question_result['labels']
         self.sought = question_result['sought']
         self.orig_sought = question_result['orig_sought']
