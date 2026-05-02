@@ -15366,7 +15366,7 @@ def delete_variable_file(current_project):
 
 def get_list_of_playgrounds():
     user_list = []
-    for user in db.session.execute(select(UserModel.id, UserModel.social_id, UserModel.email, UserModel.first_name, UserModel.last_name).join(UserRoles, UserModel.id == UserRoles.user_id).join(Role, UserRoles.role_id == Role.id).where(and_(UserModel.active == True, or_(Role.name == 'admin', Role.name == 'developer'))).order_by(UserModel.id)):  # noqa: E712 # pylint: disable=singleton-comparison
+    for user in db.session.execute(select(UserModel.id, UserModel.social_id, UserModel.email, UserModel.first_name, UserModel.last_name).join(UserRoles, UserModel.id == UserRoles.user_id).join(Role, UserRoles.role_id == Role.id).where(and_(UserModel.active == True, or_(Role.name == 'admin', Role.name == 'developer'))).distinct().order_by(UserModel.id)):  # noqa: E712 # pylint: disable=singleton-comparison
         if user.social_id.startswith('disabled$'):
             continue
         user_info = {}
