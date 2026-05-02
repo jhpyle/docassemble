@@ -18,6 +18,8 @@ fields:
 mandatory: True
 question: |
   Here is the source code.
+allow downloading: True
+zip filename: Hello.zip
 attachment:
   name: Hello, world program
   filename: hello_world

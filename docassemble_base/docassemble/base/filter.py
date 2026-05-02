@@ -1146,6 +1146,10 @@ def image_include_string(match, emoji=False, question=None):
             width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
+    if match.lastindex == 3:
+        alt_text = match.group(3)
+    else:
+        alt_text = None
     file_info = server.file_finder(file_reference, question=question)
     if 'path' in file_info and 'extension' in file_info:
         convert_svg_to_eps(file_info)
@@ -1174,10 +1178,14 @@ def image_include_string(match, emoji=False, question=None):
                         server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
                     output = '\\includepdf[pages={-}]{' + file_info['path'] + '.pdf}'
                 else:
-                    if emoji:
-                        output = '\\raisebox{-.6\\dp\\strutbox}{\\mbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}}'
+                    if alt_text:
+                        alt_text_string = ', alt={' + re.sub(r'[{}]', '', alt_text) + '}'
                     else:
-                        output = '\\mbox{\\includegraphics[width=' + width + ']{' + file_info['path'] + '}}'
+                        alt_text_string = ''
+                    if emoji:
+                        output = '\\raisebox{-.6\\dp\\strutbox}{\\mbox{\\includegraphics[width=' + width + alt_text_string + ']{' + file_info['path'] + '}}}'
+                    else:
+                        output = '\\mbox{\\includegraphics[width=' + width + alt_text_string + ']{' + file_info['path'] + '}}'
                     if width == '\\textwidth':
                         output = '\\clearpage ' + output + '\\clearpage '
                 return output
@@ -1196,6 +1204,12 @@ def image_include_docx(match, question=None):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
+    if match.lastindex == 3:
+        alt_text = match.group(3)
+    else:
+        alt_text = None
+    if not alt_text:
+        alt_text = ''
     file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
@@ -1206,10 +1220,10 @@ def image_include_docx(match, question=None):
             if file_info['extension'] in ('docx', 'rtf', 'doc', 'odt'):
                 if not os.path.isfile(file_info['path'] + '.pdf'):
                     server.fg_make_pdf_for_word_path(file_info['path'], file_info['extension'])
-                output = '![](' + file_info['path'] + '.pdf){width=' + width + '}'
+                output = '![' + alt_text + '](' + file_info['path'] + '.pdf){width=' + width + '}'
                 return output
             if file_info['extension'] in ['png', 'jpg', 'gif', 'pdf', 'eps', 'jpe', 'jpeg']:
-                output = '![](' + file_info['fullpath'] + '){width=' + width + '}'
+                output = '![' + alt_text + '](' + file_info['fullpath'] + '){width=' + width + '}'
                 return output
     return '[invalid graphics reference]'
 
@@ -1224,11 +1238,19 @@ def qr_include_string(match):
             width = '\\textwidth'
     except:
         width = DEFAULT_IMAGE_WIDTH
+    if match.lastindex == 3:
+        alt_text = match.group(3)
+    else:
+        alt_text = None
     im = qrcode.make(string)
     with tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False) as the_image:
         # docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
         im.save(the_image.name)
-        output = '\\mbox{\\includegraphics[width=' + width + ']{' + the_image.name + '}}'
+        if alt_text:
+            alt_text_string = ', alt={' + re.sub(r'[{}]', '', alt_text) + '}'
+        else:
+            alt_text_string = ''
+        output = '\\mbox{\\includegraphics[width=' + width + alt_text_string + ']{' + the_image.name + '}}'
     if width == '\\textwidth':
         output = '\\clearpage ' + output + '\\clearpage '
     # logmessage("Output is " + output)
@@ -1245,11 +1267,17 @@ def qr_include_docx(match):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
+    if match.lastindex == 3:
+        alt_text = match.group(3)
+    else:
+        alt_text = None
+    if not alt_text:
+        alt_text = ''
     im = qrcode.make(string)
     with tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False) as the_image:
         # docassemble.base.functions.this_thread.temporary_resources.add(the_image.name)
         im.save(the_image.name)
-        output = '![](' + the_image.name + '){width=' + width + '}'
+        output = '![' + alt_text + '](' + the_image.name + '){width=' + width + '}'
     return output
 
 
@@ -1902,6 +1930,10 @@ def image_include_docx_template(match, question=None):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
+    if match.lastindex == 3:
+        alt_text = match.group(3)
+    else:
+        alt_text = None
     file_info = server.file_finder(file_reference, question=question)
     if 'mimetype' in file_info and file_info['mimetype']:
         if re.search(r'^(audio|video)', file_info['mimetype']):
@@ -1917,7 +1949,7 @@ def image_include_docx_template(match, question=None):
                 return docassemble.base.file_docx.markdown_to_docx(contents, question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
             if file_info['mimetype'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return str(docassemble.base.file_docx.include_docx_template(docassemble.base.functions.DALocalFile(file_info['fullpath'])))
-            return str(docassemble.base.file_docx.image_for_docx(file_reference, question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+            return str(docassemble.base.file_docx.image_for_docx(file_reference, question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text))
     return '[reference to file that could not be found]'
 
 
@@ -1931,10 +1963,14 @@ def qr_include_docx_template(match):
             width = '100%'
     except:
         width = DEFAULT_IMAGE_WIDTH
+    if match.lastindex == 3:
+        alt_text = match.group(3)
+    else:
+        alt_text = None
     im = qrcode.make(string)
     with tempfile.NamedTemporaryFile(prefix="datemp", suffix=".png", delete=False) as the_image:
         im.save(the_image.name)
-        return str(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width))
+        return str(docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(the_image.name), None, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text))
 
 
 def convert_svg_to_eps(file_info):
@@ -1958,6 +1994,7 @@ def convert_svg_to_png(file_info):
             with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".png", delete=False) as png_file:
                 with open(file_info['fullpath'], 'rb') as fp:
                     svg2png(file_obj=fp, write_to=png_file, dpi=300)
+                png_file.flush()
                 with PIL.Image.open(png_file.name) as im:
                     file_info['width'], file_info['height'] = im.size
                 file_info['path'] = png_file.name

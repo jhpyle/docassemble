@@ -5624,18 +5624,18 @@ class DAFile(DAObject):
         if self.mimetype == 'text/plain':
             the_content = self.slurp()
             return the_content
+        if alt_text is None:
+            alt_text = self.get_alt_text()
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self, _use_jinja2=False)
             if self.mimetype in ('application/pdf', 'application/rtf', 'application/vnd.oasis.opendocument.text', 'application/msword'):
                 return self._pdf_pages(width)
-            return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
+            return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text)
         if width is not None:
             the_width = str(width)
         else:
             the_width = 'None'
-        if alt_text is None:
-            alt_text = self.get_alt_text()
         if alt_text is not None:
             the_alt_text = re.sub(r'\]', '', str(alt_text))
         else:
@@ -6102,19 +6102,19 @@ class DAStaticFile(DAObject):
 
         """
         self._populate()
+        if alt_text is None:
+            alt_text = self.get_alt_text()
         if docassemble.base.functions.this_thread.evaluation_context == 'docx':
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)
             if self.mimetype in ('application/pdf', 'application/rtf', 'application/vnd.oasis.opendocument.text', 'application/msword'):
                 return self._pdf_pages(width)
-            the_text = docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width)
+            the_text = docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text)
             return the_text
         if width is not None:
             the_width = str(width)
         else:
             the_width = 'None'
-        if alt_text is None:
-            alt_text = self.get_alt_text()
         if alt_text is not None:
             the_alt_text = the_alt_text = re.sub(r'\]', '', str(alt_text))
         else:

@@ -37,7 +37,25 @@ DEFAULT_PAGE_WIDTH = '6.5in'
 list_types = ['1', 'A', 'a', 'I', 'i']
 
 
-def image_for_docx(fileref, question, tpl, width=None):
+def fix_double_quote(the_string):
+    return '"' + re.sub('"', '&quot;', the_string) + '"'
+
+
+class CustomInlineImage(InlineImage):
+    alt_text = None
+
+    def __init__(self, tpl, image_descriptor, width=None, height=None, anchor=None, alt_text=None):
+        super().__init__(tpl, image_descriptor, width=width, height=height, anchor=anchor)
+        self.alt_text = alt_text
+
+    def _insert_image(self):
+        output = super()._insert_image()
+        if self.alt_text:
+            return re.sub('<wp:docPr ', f'<wp:docPr descr={fix_double_quote(self.alt_text)}', output)
+        return output
+
+
+def image_for_docx(fileref, question, tpl, width=None, alt_text=None):
     if fileref.__class__.__name__ in ('DAFile', 'DAFileList', 'DAFileCollection', 'DALocalFile', 'DAStaticFile'):
         file_info = {'fullpath': fileref.path()}
     else:
@@ -67,7 +85,7 @@ def image_for_docx(fileref, question, tpl, width=None):
             the_width = Inches(2)
     else:
         the_width = Inches(2)
-    return InlineImage(tpl, file_info['fullpath'], the_width)
+    return CustomInlineImage(tpl, file_info['fullpath'], width=the_width, alt_text=alt_text)
 
 
 def transform_for_docx(text):

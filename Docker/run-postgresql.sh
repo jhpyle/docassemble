@@ -2,7 +2,7 @@
 
 export CONTAINERROLE=":${CONTAINERROLE:-all}:"
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
-export DA_DEFAULT_LOCAL="local3.12"
+export DA_DEFAULT_LOCAL="local3.14"
 
 export DA_ACTIVATE="${DA_PYTHON:-${DA_ROOT}/${DA_DEFAULT_LOCAL}}/bin/activate"
 export DA_CONFIG_FILE="${DA_CONFIG:-${DA_ROOT}/config/config.yml}"
@@ -15,36 +15,8 @@ export LANG=$1
 
 PGVERSION=`pg_config --version | sed 's/PostgreSQL \([0-9][0-9]*\.[0-9][0-9]*\).*/\1/'`
 
-if [[ $PGVERSION == 10* ]]; then
-    PGVERSION=10
-fi
-
-if [[ $PGVERSION == 11* ]]; then
-    PGVERSION=11
-fi
-
-if [[ $PGVERSION == 12* ]]; then
-    PGVERSION=12
-fi
-
-if [[ $PGVERSION == 13* ]]; then
-    PGVERSION=13
-fi
-
-if [[ $PGVERSION == 14* ]]; then
-    PGVERSION=14
-fi
-
-if [[ $PGVERSION == 15* ]]; then
-    PGVERSION=15
-fi
-
-if [[ $PGVERSION == 16* ]]; then
-    PGVERSION=16
-fi
-
-if [[ $PGVERSION == 17* ]]; then
-    PGVERSION=17
+if [[ $PGVERSION =~ ^([0-9]+) ]] && (( ${BASH_REMATCH[1]} >= 10 )); then
+    PGVERSION=${BASH_REMATCH[1]}
 fi
 
 chown -R postgres:postgres /etc/postgresql

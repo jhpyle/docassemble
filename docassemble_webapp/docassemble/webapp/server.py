@@ -561,7 +561,7 @@ update_editable()
 
 default_yaml_filename = daconfig.get('default interview', None)
 final_default_yaml_filename = daconfig.get('default interview', 'docassemble.base:data/questions/default-interview.yml')
-keymap = daconfig.get('keymap', None)
+keymap = daconfig.get('keymap', None) or 'default'
 google_config = daconfig['google']
 if 'google maps api key' in google_config:
     google_api_key = google_config.get('google maps api key')

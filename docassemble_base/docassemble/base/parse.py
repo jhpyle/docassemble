@@ -10546,7 +10546,7 @@ class DAEnvironment(Environment):
 def ampersand_filter(value):
     if value.__class__.__name__ in ('DAFile', 'DALink', 'DAStaticFile', 'DAFileCollection', 'DAFileList'):
         return value
-    if value.__class__.__name__ in ('InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate', 'Markup'):
+    if value.__class__.__name__ in ('CustomInlineImage', 'InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate', 'Markup'):
         return str(value)
     if isinstance(value, (int, bool, float, NoneType)):
         return value
