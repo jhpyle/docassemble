@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.9.9] - 2026-05-02
+
+### Changed
+
+- In the Docker image, the underlying operating system is upgraded
+  from 24.04 to 26.04, the version of PostgreSQL in the image is
+  upgraded from 16 to 18, and the version of Python in the image is
+  upgraded from 3.12 to 3.14. (System upgrade required.) Note that
+  Python 3.14 may raise errors that Python 3.12 did not, or it may
+  change which versions of third-party Python packages are available
+  to be installed.
+- When images are included in documents assembled using Pandoc or
+  `docx template file`, alt text is included.
+- The `prevent going back` modifier now accepts a Python expression.
+
+### Fixed
+
+- The use of keymaps with CodeMirror was only functional for emacs; it
+  is now functional for `emacs`, `vscode`, or `vim`.
+- Raw attachments are now included when attachments are downloaded as
+  a ZIP file.
+
 ## [1.9.8] - 2026-04-12
 
 ### Changed
