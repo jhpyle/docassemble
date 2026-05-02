@@ -3307,7 +3307,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
       <div class="navbar""" + fixed_top + """ navbar-expand-md """ + inverse + '"' + """ role="banner">
         <div class="container danavcontainer justify-content-start">
 """
-    if status.question.can_go_back and steps > 1:
+    if status.extras['can_go_back'] and steps > 1:
         if status.question.interview.navigation_back_button:
             navbar += """\
           <form style="display: inline-block" id="dabackbutton" method="POST" action=""" + json.dumps(url_for('index', **index_params)) + """><input type="hidden" name="csrf_token" value=""" + '"' + generate_csrf() + '"' + """/><input type="hidden" name="_back_one" value="1"/><button class="navbar-brand navbar-nav dabackicon dabackbuttoncolor me-3" type="submit" title=""" + json.dumps(word("Go back to the previous question")) + """><span class="nav-link"><i class="fa-solid fa-chevron-left"></i><span class="daback">""" + status.cornerback + """</span></span></button></form>
@@ -7314,7 +7314,7 @@ def index(action_argument=None, refer=None):
         ok_to_go_back = True
         if STRICT_MODE:
             interview.assemble(user_dict, interview_status=interview_status)
-            if not interview_status.question.can_go_back:
+            if not interview_status.extras['can_go_back']:
                 ok_to_go_back = False
         if ok_to_go_back:
             action = None
@@ -8983,7 +8983,7 @@ def index(action_argument=None, refer=None):
         reload_after = 1000 * int(interview_status.extras['reload_after'])
     else:
         reload_after = 0
-    allow_going_back = bool(interview_status.question.can_go_back and (steps - user_dict['_internal']['steps_offset']) > 1)
+    allow_going_back = bool(interview_status.extras['can_go_back'] and (steps - user_dict['_internal']['steps_offset']) > 1)
     if hasattr(interview_status.question, 'id'):
         question_id = interview_status.question.id
     else:
@@ -20931,7 +20931,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     interview_status.cornerback = title_info.get('corner back button label', the_main_page_parts['main page corner back button label'] or interview_status.question.cornerback())
     if steps is None:
         steps = user_dict['_internal']['steps']
-    allow_going_back = bool(interview_status.question.can_go_back and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1))
+    allow_going_back = bool(interview_status.extras['can_go_back'] and (steps is None or (steps - user_dict['_internal']['steps_offset']) > 1))
     data = {'browser_title': interview_status.tabtitle, 'exit_link': interview_status.exit_link, 'exit_url': interview_status.exit_url, 'exit_label': interview_status.exit_label, 'title': interview_status.title, 'display_title': interview_status.display_title, 'short_title': interview_status.short_title, 'lang': interview_language, 'steps': steps, 'allow_going_back': allow_going_back, 'message_log': docassemble.base.functions.get_message_log(), 'section': the_section, 'display_section': the_section_display, 'sections': the_sections}
     if allow_going_back:
         data['cornerBackButton'] = interview_status.cornerback
