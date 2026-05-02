@@ -2355,7 +2355,7 @@ class Question:
                     if not os.path.isfile(the_xlsx_file):
                         raise DAError("The translations file " + the_xlsx_file + " could not be found")
                     import pandas  # pylint: disable=import-outside-toplevel
-                    df = pandas.read_excel(the_xlsx_file)
+                    df = pandas.read_excel(the_xlsx_file, usecols='A:H')
                     for column_name in ('interview', 'question_id', 'index_num', 'hash', 'orig_lang', 'tr_lang', 'orig_text', 'tr_text'):
                         if column_name not in df.columns:
                             raise DAError("Invalid translations file " + os.path.basename(the_xlsx_file) + ": column " + column_name + " is missing")
