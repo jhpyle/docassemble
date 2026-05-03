@@ -39,8 +39,6 @@ bash -c \
 && cp /tmp/docassemble/Docker/config/exim4-update /etc/exim4/update-exim4.conf.conf \
 && cp /tmp/docassemble/Docker/config/nascent.conf /usr/share/docassemble/config/nascent.conf \
 && cp /tmp/docassemble/Docker/nascent.html /var/www/nascent/index.html \
-&& cp /tmp/docassemble/Docker/daunoconv /usr/bin/daunoconv \
-&& chmod ogu+rx /usr/bin/daunoconv \
 && update-exim4.conf \
 && chown -R www-data:www-data \
    /usr/share/docassemble/log \
@@ -48,8 +46,9 @@ bash -c \
 && chmod ogu+r /usr/share/docassemble/config/config.yml.dist \
 && chmod 755 /etc/ssl/docassemble \
 && cd /tmp \
-&& /usr/bin/pip3 install --break-system-packages unoconv \
-&& cp /usr/local/bin/unoconv /usr/bin/unoconv \
+&& /usr/bin/pip3 install --break-system-packages unoserver==3.6 \
+&& cp /usr/local/bin/unoserver /usr/bin/unoserver \
+&& cp /usr/local/bin/unoconvert /usr/bin/unoconvert \
 && python3 -m venv --copies /usr/share/docassemble/local3.14 \
 && source /usr/share/docassemble/local3.14/bin/activate \
 && pip install --upgrade pip==26.0.1 \
