@@ -51,7 +51,7 @@ class CustomInlineImage(InlineImage):
     def _insert_image(self):
         output = super()._insert_image()
         if self.alt_text:
-            return re.sub('<wp:docPr ', f'<wp:docPr descr={fix_double_quote(self.alt_text)}', output)
+            return re.sub('<wp:docPr ', f'<wp:docPr descr={fix_double_quote(self.alt_text)} ', output)
         return output
 
 

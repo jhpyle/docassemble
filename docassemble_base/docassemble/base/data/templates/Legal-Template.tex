@@ -1,3 +1,11 @@
+$if(taggedpdf)$
+\DocumentMetadata{
+  lang = $syslang$,
+  pdfstandard = ua-2,
+  $if(pdfa)$pdfstandard = a-4f,
+  $endif$tagging = on
+}
+$endif$
 $if(pdfa)$
 \begin{filecontents*}{\jobname.xmpdata}
 \Title{$title-meta$}
@@ -188,24 +196,20 @@ $if(graphics)$
 % using explicit options in \includegraphics[width, height, ...]{}
 %\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
 $endif$
-$if(pdfa)$
-$else$
 \ifxetex
   \usepackage[setpagesize=false, unicode=false, xetex]{hyperref}
 \else
-  \usepackage[unicode=true]{hyperref}
+  \usepackage{hyperref}
 \fi
-$endif$
 \hypersetup{breaklinks=true,
             bookmarks=true,
             pdfauthor={$author-meta$},
             pdftitle={$title-meta$},
-            $if(pdfa)$
-            unicode=false,
+            $if(pdfa)$unicode=false,
             linktoc=none,
             pdfa,
-            $endif$
-            colorlinks=true,
+            $else$unicode=true,
+            $endif$colorlinks=true,
             citecolor=$if(citecolor)$$citecolor$$else$blue$endif$,
             urlcolor=$if(urlcolor)$$urlcolor$$else$blue$endif$,
             linkcolor=$if(linkcolor)$$linkcolor$$else$magenta$endif$,

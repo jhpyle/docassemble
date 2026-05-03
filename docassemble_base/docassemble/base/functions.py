@@ -72,11 +72,16 @@ class RawValue:
 
 
 def raw(val):
-    """This function is only used when passing values to a docx template
-    file.  It causes a value to be passed as-is, so that it can be
-    used by Jinja2 template code, for example as a list, rather than
-    being converted to text.
+    """Pass a value as-is to a DOCX template without converting it to text.
 
+    Wraps the value so that Jinja2 template code can use it directly,
+    for example as a list or other Python object rather than a string.
+
+    Args:
+        val: The value to pass through without text conversion.
+
+    Returns:
+        RawValue: A wrapper object containing the original value.
     """
     return RawValue(val)
 
@@ -230,7 +235,16 @@ def get_uid():
 
 
 def get_chat_log(utc=False, timezone=None):
-    """Returns the messages in the chat log of the interview."""
+    """Return the messages in the chat log of the current interview session.
+
+    Args:
+        utc (bool, optional): If True, return times in UTC. Defaults to False.
+        timezone (str, optional): Timezone name to use for timestamps (e.g.,
+            ``'America/New_York'``). Defaults to None.
+
+    Returns:
+        list: A list of chat messages for the current interview session.
+    """
     return server.get_chat_log(this_thread.current_info.get('yaml_filename', None), this_thread.current_info.get('session', None), this_thread.current_info.get('secret', None), utc=utc, timezone=timezone)
 
 
@@ -247,17 +261,27 @@ def get_current_question():
 
 
 def user_logged_in():
-    """Returns True if the user is logged in, False otherwise."""
+    """Return True if the user is logged in, False otherwise.
+
+    Returns:
+        bool: True if the current user is authenticated, False otherwise.
+    """
     if this_thread.current_info['user']['is_authenticated']:
         return True
     return False
 
 
 def device(ip=False):
-    """Returns an object describing the device the user is using, or the
-    user's IP address if the optional keyword argument 'ip' is
-    True.
+    """Return information about the user's device or IP address.
 
+    Args:
+        ip (bool, optional): If True, return the user's IP address as a string
+            instead of device information. Defaults to False.
+
+    Returns:
+        object: A user-agent object with browser and device information, or
+            a string IP address when ``ip=True``. Returns None if device
+            information cannot be determined.
     """
     if ip:
         return this_thread.current_info['clientip']
@@ -302,7 +326,21 @@ def parse_accept_language(language_header, restrict=True):
 
 
 def language_from_browser(*pargs):
-    """Attempts to determine the user's language based on information supplied by the user's web browser."""
+    """Return the user's preferred language based on the browser's Accept-Language header.
+
+    Reads the Accept-Language HTTP header and returns the first recognized
+    ISO-639-1, ISO-639-2, or ISO-639-3 language code. If called with arguments,
+    only languages in the argument list are considered valid.
+
+    Args:
+        *pargs: Optional list of valid language codes. If provided, only these
+            codes are considered, and None is returned if the browser's preferred
+            language is not in the list.
+
+    Returns:
+        str: A language code (e.g., ``'en'``, ``'es'``) or None if the language
+            cannot be determined.
+    """
     if len(pargs) > 0:
         restrict = True
         valid_options = list(pargs)
@@ -358,15 +396,33 @@ def language_from_browser(*pargs):
 
 
 def country_name(country_code):
-    """Given a two-digit country code, returns the country name."""
+    """Return the full name of a country given its two-letter ISO 3166-1 alpha-2 code.
+
+    The name is passed through the ``word()`` function for translation.
+
+    Args:
+        country_code (str): A two-letter, capitalized country code (e.g., ``'US'``, ``'DE'``).
+
+    Returns:
+        str: The full name of the country in the current language.
+    """
     ensure_definition(country_code)
     return word(pycountry.countries.get(alpha_2=country_code).name)
 
 
 def state_name(state_code, country_code=None):
-    """Given a two-digit U.S. state abbreviation or the abbreviation of a
-    subdivision of another country, returns the state/subdivision
-    name."""
+    """Return the full name of a U.S. state or country subdivision given its abbreviation.
+
+    Args:
+        state_code (str): The abbreviated code for the state or subdivision
+            (e.g., ``'NY'`` for New York).
+        country_code (str, optional): A two-letter ISO 3166-1 alpha-2 country
+            code. Defaults to the current country as returned by ``get_country()``.
+
+    Returns:
+        str: The full name of the state or subdivision, passed through ``word()``
+            for translation. Returns the original ``state_code`` if not found.
+    """
     ensure_definition(state_code, country_code)
     if country_code is None:
         country_code = get_country() or 'US'
@@ -379,10 +435,18 @@ def state_name(state_code, country_code=None):
 
 
 def language_name(language_code):
-    """Given a 2 digit language code abbreviation, returns the full name
-    of the language. The language name will be passed through the
-    `word()` function.
+    """Return the full name of a language given its ISO-639-1 or ISO-639-3 code.
 
+    The language name is passed through the ``word()`` function for translation.
+    If the language cannot be found, the original code is returned (also via
+    ``word()``).
+
+    Args:
+        language_code (str): A two-letter ISO-639-1 code (e.g., ``'en'``) or
+            three-letter ISO-639-3 code (e.g., ``'eng'``).
+
+    Returns:
+        str: The full name of the language (e.g., ``'English'``).
     """
     ensure_definition(language_code)
     try:
@@ -394,8 +458,18 @@ def language_name(language_code):
 
 
 def subdivision_type(country_code):
-    """Returns the name of the most common country subdivision type for
-    the given country code."""
+    """Return the name of the primary subdivision type for the given country.
+
+    For example, returns ``'State'`` for ``'US'``, ``'Province'`` for ``'CA'``.
+    Returns None if the country has no subdivisions.
+
+    Args:
+        country_code (str): A two-letter ISO 3166-1 alpha-2 country code.
+
+    Returns:
+        str: The name of the most common first-level subdivision type, or None
+            if the country has no subdivisions.
+    """
     ensure_definition(country_code)
     counts = {}
     for subdivision in pycountry.subdivisions.get(country_code=country_code):
@@ -664,13 +738,33 @@ def subdivision_type(country_code):
 
 
 def countries_list():
-    """Returns a list of countries, suitable for use in a multiple choice field."""
+    """Return a list of countries sorted by name, suitable for use in a multiple-choice field.
+
+    Each element in the list is a single-key dictionary mapping the two-letter
+    ISO 3166-1 alpha-2 country code to the country name.
+
+    Returns:
+        list: A list of dicts, each mapping a country code (str) to a country name (str).
+    """
     return [{item[0]: item[1]} for item in sorted([[country.alpha_2, word(country.name)] for country in pycountry.countries], key=lambda x: x[1])]
 
 
 def states_list(country_code=None, abbreviate=False):
-    """Returns a list of U.S. states or subdivisions of another country,
-    suitable for use in a multiple choice field."""
+    """Return a dictionary of state or subdivision abbreviations to full names.
+
+    Returns the first-level subdivisions of the given country, sorted by name,
+    suitable for use in a multiple-choice field.
+
+    Args:
+        country_code (str, optional): A two-letter ISO 3166-1 alpha-2 country
+            code. Defaults to the current country as returned by ``get_country()``.
+        abbreviate (bool, optional): If True, both keys and values will be the
+            abbreviated subdivision code. Defaults to False.
+
+    Returns:
+        dict: A dictionary mapping subdivision abbreviations to full names,
+            or abbreviations to abbreviations if ``abbreviate=True``.
+    """
     ensure_definition(country_code)
     if country_code is None:
         country_code = get_country() or 'US'
@@ -691,21 +785,43 @@ def states_list(country_code=None, abbreviate=False):
 
 
 def interface():
-    """Returns web, json, api, sms, cron, or worker, depending on how the interview is being accessed."""
+    """Return a string describing how the interview is being accessed.
+
+    Possible return values are ``'web'`` (browser), ``'json'`` (web with JSON
+    parameter), ``'api'`` (REST API), ``'sms'`` (SMS/text message), ``'cron'``
+    (scheduled task), or ``'worker'`` (background process).
+
+    Returns:
+        str: The interface type, or None if unknown.
+    """
     return this_thread.current_info.get('interface', None)
 
 
 def user_privileges():
-    """Returns a list of the user's privileges.  For users who are not
-    logged in, this is always ['user']."""
+    """Return a list of the current user's privileges.
+
+    For users who are not logged in, this is always ``['user']``. For
+    scheduled tasks, this is ``['cron']``.
+
+    Returns:
+        list: A list of privilege strings (e.g., ``['user', 'admin']``).
+    """
     if user_logged_in():
         return list(this_thread.current_info['user']['roles'])
     return ['user']
 
 
 def user_has_privilege(*pargs):
-    """Given a privilege or a list of privileges, returns True if the user
-    has any of the privileges, False otherwise."""
+    """Return True if the current user has any of the given privileges.
+
+    Args:
+        *pargs: One or more privilege names (strings) or lists of privilege
+            names. Returns True if the user holds any of the named privileges.
+
+    Returns:
+        bool: True if the user has at least one of the specified privileges,
+            False otherwise.
+    """
     privileges = []
     for parg in pargs:
         if isinstance(parg, list):
@@ -998,24 +1114,44 @@ class TheUser:
 
 
 def current_context():
-    """Returns an object with information about the context in which
-    the Python code is currently operating."""
+    """Return an object describing the context in which Python code is executing.
+
+    The returned object has attributes including ``session``, ``filename``,
+    ``package``, ``question_id``, ``current_filename``, ``current_package``,
+    ``variable``, ``current_section``, ``inside_of``, ``attachment``, and
+    ``request_url``.
+
+    Returns:
+        TheContext: An object with context attributes for the current execution.
+    """
     return TheContext()
 
 
 def user_info():
-    """Returns an object with information from the user profile. Keys
-    include first_name, last_name, id, email, country,
-    subdivision_first, subdivision_second, subdivision_third, and
-    organization.
+    """Return an object with information about the current user's profile.
 
+    The returned object has attributes including ``id``, ``first_name``,
+    ``last_name``, ``email``, ``login_method``, ``phone_number``, ``country``,
+    ``subdivision_first``, ``subdivision_second``, ``subdivision_third``,
+    ``organization``, ``language``, ``timezone``, and ``privileges``.
+
+    Returns:
+        TheUser: An object with attributes describing the current user.
     """
     return TheUser()
 
 
 def action_arguments():
-    """Used when processing an "action."  Returns a dictionary with the
-    arguments passed to url_action() or interview_url_action()."""
+    """Return a dictionary of arguments passed to the current action.
+
+    Used when processing an action triggered by ``url_action()`` or
+    ``interview_url_action()``. The special keys ``_initial`` and ``_changed``
+    are excluded from the result.
+
+    Returns:
+        dict: A dictionary of keyword arguments passed to the action, or an
+            empty dictionary if no arguments were provided.
+    """
     if 'arguments' in this_thread.current_info:
         args = copy.deepcopy(this_thread.current_info['arguments'])
         if '_initial' in args and '_changed' in args:
@@ -1026,10 +1162,21 @@ def action_arguments():
 
 
 def action_argument(item=None):
-    """Used when processing an "action."  Returns the value of the given
-    argument, which is assumed to have been passed to url_action() or
-    interview_url_action().  If no argument is given, it returns the name
-    of the action itself, or None if no action is active."""
+    """Return the value of a named argument for the current action.
+
+    Used when processing an action triggered by ``url_action()`` or
+    ``interview_url_action()``. If called without an argument, returns the
+    name of the action itself (useful in ``initial`` blocks before calling
+    ``process_action()``). Returns None if no action is active.
+
+    Args:
+        item (str, optional): The name of the argument to retrieve. If omitted,
+            the name of the action itself is returned. Defaults to None.
+
+    Returns:
+        The value of the specified argument, the action name (if ``item`` is
+            None), or None if the action or argument is not found.
+    """
     # logmessage("action_argument: item is " + str(item) + " and arguments are " + repr(this_thread.current_info['arguments']))
     if item is None:
         return this_thread.current_info.get('action', None)
@@ -1039,10 +1186,15 @@ def action_argument(item=None):
 
 
 def location_returned():
-    """Returns True or False depending on whether an attempt has yet
-    been made to transmit the user's GPS location from the browser to
-    docassemble.  Will return true even if the attempt was not successful
-    or the user refused to consent to the transfer."""
+    """Return True if an attempt has been made to transmit the user's GPS location.
+
+    Returns True even if the attempt was unsuccessful or the user refused to
+    consent to the transfer. Use ``location_known()`` to test whether the
+    location was successfully obtained.
+
+    Returns:
+        bool: True if a location transmission has been attempted, False otherwise.
+    """
     # logmessage("Location returned")
     if 'user' in this_thread.current_info:
         # logmessage("user exists")
@@ -1054,13 +1206,22 @@ def location_returned():
 
 
 def location_known():
-    """Returns True or False depending on whether docassemble was able to learn the user's
-    GPS location through the web browser."""
+    """Return True if docassemble successfully obtained the user's GPS location.
+
+    Returns:
+        bool: True if the user's latitude and longitude are known, False otherwise.
+    """
     return bool('user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and isinstance(this_thread.current_info['user']['location'], dict) and 'latitude' in this_thread.current_info['user']['location'])
 
 
 def user_lat_lon():
-    """Returns the user's latitude and longitude as a tuple."""
+    """Return the user's latitude and longitude as a tuple.
+
+    Returns:
+        tuple: A ``(latitude, longitude)`` tuple of floats if the location is
+            known, or ``(None, None)`` if the location is not available. If
+            there was a location error, returns ``(error_message, error_message)``.
+    """
     if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and isinstance(this_thread.current_info['user']['location'], dict):
         if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
             return this_thread.current_info['user']['location']['latitude'], this_thread.current_info['user']['location']['longitude']
@@ -1070,8 +1231,19 @@ def user_lat_lon():
 
 
 def chat_partners_available(*pargs, **kwargs):
-    """Given a list of partner roles, returns the number of operators and
-    peers available to chat with the user."""
+    """Return the number of chat partners available to the user.
+
+    Args:
+        *pargs: One or more partner role names (strings or lists of strings)
+            to include as valid chat partners.
+        partner_roles (list, optional): Additional partner roles. Defaults to [].
+        mode (str, optional): The chat mode, e.g., ``'peerhelp'``. Defaults to
+            ``'peerhelp'``.
+
+    Returns:
+        dict: A dictionary with keys ``'peer'`` and ``'help'``, each mapping to
+            an integer count of available partners.
+    """
     partner_roles = kwargs.get('partner_roles', [])
     mode = kwargs.get('mode', 'peerhelp')
     if not isinstance(partner_roles, list):
@@ -1103,7 +1275,21 @@ def chat_partners_available(*pargs, **kwargs):
 
 
 def interview_email(key=None, index=None):
-    """Returns an e-mail address that can be used to send e-mail messages to the case"""
+    """Return an e-mail address that routes incoming messages to this interview session.
+
+    The address is a unique random identifier at the configured incoming mail
+    domain. Every call with the same ``key`` and ``index`` returns the same address.
+
+    Args:
+        key (str, optional): A label to distinguish different e-mail addresses
+            for the same session (e.g., ``'evidence'``, ``'opposing counsel'``).
+            Defaults to None.
+        index (int, optional): An integer to further distinguish addresses under
+            the same ``key``. Requires ``key`` to be set. Defaults to None.
+
+    Returns:
+        str: An e-mail address string (e.g., ``'kgjeir@help.example.com'``).
+    """
     if key is None and index is not None:
         raise DAError("interview_email: if you provide an index you must provide a key")
     domain = server.daconfig.get('incoming mail domain', server.daconfig.get('external hostname', server.hostname))
@@ -1111,7 +1297,21 @@ def interview_email(key=None, index=None):
 
 
 def get_emails(key=None, index=None):
-    """Returns a data structure representing existing e-mail addresses for the interview and any e-mails sent to those e-mail addresses"""
+    """Return information about e-mail addresses and messages for this interview session.
+
+    Returns a list of objects, each with attributes ``address``, ``emails``,
+    ``key``, and ``index``.
+
+    Args:
+        key (str, optional): Filter results to addresses created with this key.
+            Defaults to None (returns all addresses).
+        index (int, optional): Further filter to the address with this index
+            under the given ``key``. Defaults to None.
+
+    Returns:
+        list: A list of objects representing e-mail addresses and their received
+            messages.
+    """
     return server.retrieve_emails(key=key, index=index)
 
 
@@ -1133,9 +1333,17 @@ def modify_i_argument(args):
 
 
 def interview_url(**kwargs):
-    """Returns a URL that is direct link to the interview and the current
-    variable store.  This is used in multi-user interviews to invite
-    additional users to participate."""
+    """Return a URL that links directly to the current interview session.
+
+    Used in multi-user interviews to invite additional users to participate.
+    Keyword arguments are included as URL parameters. Special keyword arguments
+    include ``i`` (interview filename), ``session`` (session ID), ``local``
+    (return a relative URL), ``new_session``, ``reset``, ``style``,
+    ``temporary`` (expire in N hours), and ``once_temporary``.
+
+    Returns:
+        str: A URL string pointing to the interview session.
+    """
     do_local = False
     args = {}
     temporary = kwargs.pop('temporary', None)
@@ -1234,9 +1442,12 @@ def temp_redirect(url, expire_seconds, do_local, one_time):
 
 
 def set_parts(**kwargs):
-    """Sets parts of the page, such as words in the navigation bar and
-    HTML in the page.
+    """Set parts of the page display, such as the title, navigation bar text, and HTML.
 
+    Keyword arguments correspond to page part names. Recognized keywords include
+    ``title``, ``short``, ``tab``, ``subtitle``, ``logo``, ``exit link``,
+    ``exit label``, ``pre``, ``post``, ``submit``, ``continue button label``,
+    ``help label``, ``under``, ``right``, ``footer``, and others.
     """
     if 'short' in kwargs:
         this_thread.internal['short title'] = kwargs['short']
@@ -1251,7 +1462,7 @@ def set_parts(**kwargs):
 
 
 def set_title(**kwargs):
-    """Obsolete name for the set_parts function"""
+    """Set parts of the page display (deprecated; use ``set_parts()`` instead)."""
     logmessage("warning: the set_title() function has been renamed to set_parts()")
     return set_parts(**kwargs)
 
@@ -1366,9 +1577,13 @@ class DATagsSet():
 
 
 def session_tags():
-    """Returns the set of tags with which the interview and session have
-    been tagged.
+    """Return the set of tags associated with the current interview session.
 
+    The tags are initialized from the ``tags`` list in any ``metadata`` blocks
+    and can be modified using the returned set object.
+
+    Returns:
+        DATagsSet: A set-like object containing the current session tags.
     """
     if 'tags' not in this_thread.internal:
         this_thread.internal['tags'] = set()
@@ -1387,10 +1602,21 @@ def interview_path():
 
 
 def interview_url_action(action, **kwargs):
-    """Like interview_url, except it additionally specifies an action.
-    The keyword arguments are arguments to the action, except for the keyword
-    arguments local, i, and session, which are used the way they are used in
-    interview_url"""
+    """Return a URL that links to the interview and triggers a specified action.
+
+    Like ``interview_url()``, but additionally encodes an action to run when
+    the URL is visited. Keyword arguments are passed as action arguments, except
+    for ``i``, ``session``, ``local``, ``new_session``, ``reset``,
+    ``_forget_prior``, ``style``, ``temporary``, and ``once_temporary``, which
+    control the URL behavior.
+
+    Args:
+        action (str): The name of the action to trigger.
+        **kwargs: Arguments to the action and URL modifiers.
+
+    Returns:
+        str: A URL string that will trigger the specified action when visited.
+    """
     do_local = False
     if 'local' in kwargs:
         if kwargs['local']:
@@ -1494,9 +1720,15 @@ def interview_url_action(action, **kwargs):
 
 
 def interview_url_as_qr(**kwargs):
-    """Inserts into the markup a QR code linking to the interview.
-    This can be used to pass control from a web browser or a paper
-    handout to a mobile device."""
+    """Return markup for a QR code linking to the current interview session.
+
+    Can be used to pass control from a web browser or a paper handout to a
+    mobile device. Accepts the same keyword arguments as ``interview_url()``,
+    plus ``alt_text`` and ``width`` for the QR code image.
+
+    Returns:
+        str: Markup string containing a QR code image linking to the interview.
+    """
     alt_text = None
     width = None
     the_kwargs = {}
@@ -1511,8 +1743,19 @@ def interview_url_as_qr(**kwargs):
 
 
 def interview_url_action_as_qr(action, **kwargs):
-    """Like interview_url_as_qr, except it additionally specifies an
-    action.  The keyword arguments are arguments to the action."""
+    """Return markup for a QR code linking to the interview with a specified action.
+
+    Like ``interview_url_as_qr()``, but the URL encodes an action to run when
+    visited. Accepts the same keyword arguments as ``interview_url_action()``,
+    plus ``alt_text`` and ``width`` for the QR code image.
+
+    Args:
+        action (str): The name of the action to trigger when the QR code is scanned.
+        **kwargs: Arguments to the action and URL/image modifiers.
+
+    Returns:
+        str: Markup string containing a QR code image linking to the action URL.
+    """
     alt_text = None
     width = None
     the_kwargs = {}
@@ -1527,7 +1770,14 @@ def interview_url_action_as_qr(action, **kwargs):
 
 
 def get_info(att):
-    """Used to retrieve the values of global variables set through set_info()."""
+    """Return the value of a global variable previously set with ``set_info()``.
+
+    Args:
+        att (str): The name of the attribute to retrieve.
+
+    Returns:
+        The value that was set for the attribute, or None if it was never set.
+    """
     if hasattr(this_thread.global_vars, att):
         return getattr(this_thread.global_vars, att)
     return None
@@ -1538,23 +1788,49 @@ def get_current_info():
 
 
 def set_info(**kwargs):
-    """Used to set the values of global variables you wish to retrieve through get_info()."""
+    """Store global variables for later retrieval with ``get_info()``.
+
+    Typically called in an ``initial`` code block so the values are refreshed
+    on every page load. Common usage includes setting ``user`` and ``role``.
+
+    Args:
+        **kwargs: Keyword arguments whose names become attribute names and
+            whose values are stored for later retrieval.
+    """
     for att, val in kwargs.items():
         setattr(this_thread.global_vars, att, val)
 
 
 def set_progress(number):
-    """Sets the position of the progress meter."""
+    """Set the position of the interview progress meter.
+
+    Args:
+        number (int or float): The progress value to display. Pass None to
+            hide the progress meter.
+    """
     this_thread.internal['progress'] = number
 
 
 def get_progress():
-    """Returns the position of the progress meter."""
+    """Return the current value of the interview progress meter.
+
+    Returns:
+        int or float: The current progress value.
+    """
     return this_thread.internal['progress']
 
 
 def update_terms(dictionary, auto=False, language='*'):
-    """Defines terms and auto terms"""
+    """Define or override interview-wide terms or auto terms programmatically.
+
+    Args:
+        dictionary (dict or list): A dictionary mapping term strings to their
+            definitions, or a list of single-key dictionaries.
+        auto (bool, optional): If True, update ``auto terms`` instead of
+            ``terms``. Defaults to False.
+        language (str, optional): The language code for which to set the terms.
+            Use ``'*'`` for the default language. Defaults to ``'*'``.
+    """
     if auto:
         type_of_term = 'autoterms'
     else:
@@ -1591,7 +1867,13 @@ def update_terms(dictionary, auto=False, language='*'):
 
 
 def set_save_status(status):
-    """Indicates whether the current processing of the interview logic should result in a new step in the interview."""
+    """Control whether the current interview logic processing creates a new step.
+
+    Args:
+        status (str): One of ``'new'`` (create a new step, the default),
+            ``'overwrite'`` (overwrite the current step), or ``'ignore'``
+            (do not save a new step at all).
+    """
     if status in ('new', 'overwrite', 'ignore'):
         if this_thread.misc.get('save_status', SS_NEW) == SS_IGNORE:
             if status != 'ignore':
@@ -1928,28 +2210,60 @@ server.get_url = null_func_dict
 
 
 def write_record(key, data):
-    """Stores the data in a SQL database for later retrieval with the
-    key.  Returns the unique ID integers of the saved record.
+    """Store data in the SQL database under the given key.
+
+    Args:
+        key (str): A string key to associate with the record.
+        data: The data to store. Must be pickleable.
+
+    Returns:
+        int: The unique integer ID of the saved record.
     """
     return server.write_record(key, data)
 
 
 def read_records(key):
-    """Returns a dictionary of records that have been stored with
-    write_record() using the given key.  In the dictionary, the key is
-    the unique ID integer of the record and the value is the data that
-    had been stored.
+    """Return all records stored under the given key.
+
+    Args:
+        key (str): The string key used when calling ``write_record()``.
+
+    Returns:
+        dict: A dictionary mapping unique integer record IDs to the stored data.
     """
     return server.read_records(key)
 
 
 def delete_record(key, the_id):
-    """Deletes a record with the given key and id."""
+    """Delete a record from the SQL database by key and ID.
+
+    Args:
+        key (str): The string key associated with the record.
+        the_id (int): The unique integer ID of the record to delete.
+    """
     return server.delete_record(key, the_id)
 
 
 def url_of(file_reference, **kwargs):
-    """Returns a URL to a file within a docassemble package, or another page in the application."""
+    """Return a URL to a file within a docassemble package or to a page in the application.
+
+    The ``file_reference`` can be a filename like ``'brochure.pdf'`` (relative
+    to the current package's ``static`` folder), a package-qualified reference
+    like ``'docassemble.mypackage:data/static/file.pdf'``, a ``DAFile`` object,
+    or one of several special strings (``'login'``, ``'register'``, ``'root'``,
+    ``'interview'``, ``'temp_url'``, ``'login_url'``, etc.). Keyword arguments
+    are passed as URL parameters.
+
+    Args:
+        file_reference: A filename, package-qualified reference, DAFile object,
+            or special string identifying the target.
+        **kwargs: Additional URL parameters or control arguments like
+            ``_external=True`` for a full URL or ``_attachment=True`` to
+            trigger a download.
+
+    Returns:
+        str: A URL string.
+    """
     if file_reference == 'temp_url':
         url = kwargs.get('url', None)
         if url is None:
@@ -1988,7 +2302,17 @@ def url_of(file_reference, **kwargs):
 
 
 def server_capabilities():
-    """Returns a dictionary with true or false values indicating various capabilities of the server."""
+    """Return a dictionary of boolean flags indicating what the server supports.
+
+    Keys include ``'sms'``, ``'fax'``, ``'google_login'``, ``'facebook_login'``,
+    ``'auth0_login'``, ``'keycloak_login'``, ``'authentik_login'``,
+    ``'azure_login'``, ``'phone_login'``, ``'voicerss'``, ``'s3'``,
+    ``'azure'``, ``'github'``, ``'pypi'``, ``'googledrive'``, and
+    ``'google_maps'``.
+
+    Returns:
+        dict: A dictionary mapping capability names to True/False values.
+    """
     result = {'sms': False, 'fax': False, 'google_login': False, 'facebook_login': False, 'auth0_login': False, 'keycloak_login': False, 'authentik_login': False, 'azure_login': False, 'miniorange_login': False, 'phone_login': False, 'voicerss': False, 's3': False, 'azure': False, 'github': False, 'pypi': False, 'googledrive': False, 'google_maps': False}
     if 'twilio' in server.daconfig and isinstance(server.daconfig['twilio'], (list, dict)):
         if isinstance(server.daconfig['twilio'], list):
@@ -2228,22 +2552,67 @@ def restore_thread_variables(backup):
 
 
 def background_response(*pargs, **kwargs):
-    """Finishes a background task."""
+    """Finish a background task and optionally return a result.
+
+    Must be called at the end of every background action code block.
+    When called with a value, that value is retrievable via ``.get()``
+    on the task object.  Can also be called with keyword arguments to
+    populate target areas on the screen, set field values, run
+    JavaScript, or trigger a screen refresh.
+
+    Args:
+        *pargs: An optional return value, or special control strings
+            such as ``'refresh'``, ``'javascript'``, ``'flash'``, or
+            ``'fields'``.
+        **kwargs: Optional keyword arguments such as ``target`` and
+            ``content`` for populating ``[TARGET ...]`` areas.
+    """
     raise BackgroundResponseError(*pargs, **kwargs)
 
 
 def background_response_action(*pargs, **kwargs):
-    """Finishes a background task by running an action to save values."""
+    """Finish a background task by triggering an action to save values to the interview dictionary.
+
+    Use this instead of :func:`background_response` when the background task
+    needs to persist changes to interview variables.  The first argument is
+    the name of the action to run; keyword arguments are passed to that action.
+
+    Args:
+        *pargs: The action name as the first positional argument.
+        **kwargs: Arguments to pass to the specified action.
+    """
     raise BackgroundResponseActionError(*pargs, **kwargs)
 
 
 def background_error_action(*pargs, **kwargs):
-    """Indicates an action that should be run if the current background task results in an error."""
+    """Register an action to run if the current background task raises an error.
+
+    Sets up an error handler for the background task.  If the task raises an
+    exception, the specified action will be run.
+
+    Args:
+        *pargs: The action name as the first positional argument.
+        **kwargs: Arguments to pass to the error-handling action.
+    """
     this_thread.current_info['on_error'] = {'action': pargs[0], 'arguments': kwargs}
 
 
 def background_action(*pargs, **kwargs):
-    """Runs an action in the background."""
+    """Start an interview action as a background (Celery) task and return immediately.
+
+    The specified action runs asynchronously in a Celery worker.  Returns a
+    task object whose ``.ready()``, ``.failed()``, ``.wait()``, ``.get()``,
+    and ``.result()`` methods can be used to monitor and retrieve the result.
+
+    Args:
+        *pargs: The action name as the first positional argument, and an
+            optional second argument for the UI notification mode.
+        **kwargs: Arguments to pass to the action, accessible inside the
+            action via :func:`action_argument`.
+
+    Returns:
+        A task object representing the background task.
+    """
     action = pargs[0]
     if len(pargs) > 1:
         ui_notification = pargs[1]
@@ -2414,7 +2783,18 @@ ordinal_functions = {
 
 
 def fix_punctuation(text, mark=None, other_marks=None):
-    """Ensures the text ends with punctuation."""
+    """Ensure the text ends with a punctuation mark, adding one if necessary.
+
+    Args:
+        text (str): The text to check.
+        mark (str, optional): The punctuation mark to append if none is
+            present. Defaults to ``'.'``.
+        other_marks (list, optional): A list of punctuation marks that are
+            considered acceptable endings. Defaults to ``['.', '?', '!']``.
+
+    Returns:
+        str: The text, possibly with a punctuation mark appended.
+    """
     ensure_definition(text, mark, other_marks)
     if other_marks is None:
         other_marks = ['.', '?', '!']
@@ -2432,7 +2812,21 @@ def fix_punctuation(text, mark=None, other_marks=None):
 
 
 def item_label(num, level=None, punctuation=True):
-    """Given an index and an outline level, returns I., II., A., etc."""
+    """Return a formatted list item label for a given zero-based index and outline level.
+
+    Args:
+        num (int): The zero-based index of the item.
+        level (int, optional): The outline level (0–6).  Level 0 uses
+            Roman numerals, 1 uses uppercase letters, 2 and 4 use Arabic
+            numerals, 3 and 5 use lowercase letters, 6 uses lowercase Roman
+            numerals. Defaults to ``0``.
+        punctuation (bool, optional): If ``True``, appends the appropriate
+            punctuation mark. Defaults to ``True``.
+
+    Returns:
+        str: The formatted label (e.g. ``'I.'``, ``'A.'``, ``'1.'``,
+            ``'a)'``, ``'(1)'``, ``'(a)'``, ``'i)'``).
+    """
     ensure_definition(num, level, punctuation)
     if level is None:
         level = 0
@@ -2463,7 +2857,17 @@ def item_label(num, level=None, punctuation=True):
 
 
 def alpha(num, case=None):
-    """Given an index, returns A, B, C ... Z, AA, AB, etc."""
+    """Return a letter label for a zero-based index (A, B, … Z, AA, AB, …).
+
+    Args:
+        num (int): The zero-based index.
+        case (str, optional): ``'upper'`` for uppercase (default) or
+            ``'lower'`` for lowercase.
+
+    Returns:
+        str: The alphabetical label (e.g. ``alpha(0)`` returns ``'A'``,
+            ``alpha(25)`` returns ``'Z'``, ``alpha(26)`` returns ``'AA'``).
+    """
     ensure_definition(num, case)
     if case is None:
         case = 'upper'
@@ -2479,7 +2883,21 @@ def alpha(num, case=None):
 
 
 def roman(num, case=None):
-    """Given an index between 0 and 3999, returns a roman numeral between 1 and 4000."""
+    """Return a Roman numeral for a zero-based index.
+
+    Args:
+        num (int): The zero-based index (0–3998).
+        case (str, optional): ``'upper'`` for uppercase (default) or
+            ``'lower'`` for lowercase.
+
+    Returns:
+        str: The Roman numeral for ``num + 1`` (e.g. ``roman(0)`` returns
+            ``'I'``, ``roman(65)`` returns ``'LXVI'``).
+
+    Raises:
+        ValueError: If ``num + 1`` is not between 1 and 3999.
+        TypeError: If ``num`` is not an integer.
+    """
     ensure_definition(num, case)
     if case is None:
         case = 'upper'
@@ -2583,8 +3001,21 @@ class LazyArray:
 
 
 def word(the_word, **kwargs):
-    """Returns the word translated into the current language.  If a translation
-    is not known, the input is returned."""
+    """Return the word translated into the current language.
+
+    If no translation is found for the current language, the input is
+    returned unchanged.  Used throughout docassemble to support
+    multilingual interviews.
+
+    Args:
+        the_word (str): The word or phrase to translate.
+        **kwargs: Optional keyword arguments.  Pass ``language`` to
+            look up a translation for a specific language, or
+            ``capitalize=True`` to capitalize the result.
+
+    Returns:
+        str: The translated (or original) word.
+    """
     # Currently, no kwargs are used, but in the future, this function could be
     # expanded to use kwargs.  For example, for languages with gendered words,
     # the gender could be passed as a keyword argument.
@@ -2642,10 +3073,16 @@ def update_word_collection(lang, defs):
 
 
 def get_config(key, none_value=None):
-    """Returns a value from the docassemble configuration.  If not
-    defined, returns None or the value of the optional keyword
-    argument, none_value.
+    """Return a value from the docassemble configuration file.
 
+    Args:
+        key (str): The configuration directive to look up.
+        none_value (optional): The value to return if the key is not found in
+            the configuration. Defaults to None.
+
+    Returns:
+        The configuration value associated with the key, or ``none_value``
+            if the key is not present.
     """
     return server.daconfig.get(key, none_value)
 
@@ -2670,10 +3107,13 @@ def get_config(key, none_value=None):
 
 
 def get_default_timezone():
-    """Returns the default timezone (e.g., 'America/New_York').  This is
-    the time zone of the server, unless the default timezone is set in
-    the docassemble configuration.
+    """Return the default timezone string for the server.
 
+    Returns the server's local timezone unless a default timezone is configured
+    in the docassemble configuration.
+
+    Returns:
+        str: A timezone string such as ``'America/New_York'``.
     """
     return server.default_timezone
 
@@ -2716,17 +3156,28 @@ def reset_local_variables():
 
 
 def prevent_going_back():
-    """Instructs docassemble to disable the user's back button, so that the user cannot
-    go back and change any answers before this point in the interview."""
+    """Disable the back button so the user cannot revisit previous questions.
+
+    Once called, the user will not be able to go back and change any answers
+    entered before this point in the interview.
+    """
     this_thread.prevent_going_back = True
 
 
 def set_language(lang, dialect=None, voice=None):
-    """Sets the language to use for linguistic functions.  E.g.,
-    set_language('es') to set the language to Spanish.  Use the
-    keyword argument "dialect" to set a dialect. Use the keyword
-    argument "voice" to set a voice.
+    """Set the language used for linguistic functions and the web application.
 
+    Does not change the Python locale; call ``update_locale()`` for that.
+    Should be called in an ``initial`` code block so it takes effect on every
+    page load.
+
+    Args:
+        lang (str): A lowercase ISO-639-1 or ISO-639-3 language code
+            (e.g., ``'en'``, ``'es'``, ``'fr'``).
+        dialect (str, optional): A dialect code for the text-to-speech engine.
+            Defaults to None.
+        voice (str, optional): A voice name for the text-to-speech engine.
+            Defaults to None.
     """
     try:
         if dialect:
@@ -2746,32 +3197,67 @@ def set_language(lang, dialect=None, voice=None):
 
 
 def get_language():
-    """Returns the current language (e.g., "en")."""
+    """Return the current language code.
+
+    Returns:
+        str: The current language code (e.g., ``'en'``, ``'es'``).
+    """
     return this_thread.language
 
 
 def set_country(country):
-    """Sets the current country (e.g., "US")."""
+    """Set the current country used for phone number formatting and other locale features.
+
+    Args:
+        country (str): A two-letter uppercase ISO 3166-1 alpha-2 country code
+            (e.g., ``'US'``, ``'GB'``, ``'DE'``).
+    """
     this_thread.country = country
 
 
 def get_country():
-    """Returns the current country (e.g., "US")."""
+    """Return the current country code.
+
+    Returns:
+        str: A two-letter uppercase ISO 3166-1 alpha-2 country code
+            (e.g., ``'US'``). Defaults to ``'US'`` unless configured otherwise.
+    """
     return this_thread.country
 
 
 def get_dialect():
-    """Returns the current dialect."""
+    """Return the current dialect.
+
+    Returns:
+        str: The dialect code set by the ``dialect`` keyword argument to
+            :func:`set_language`, or ``None`` if no dialect has been set.
+    """
     return this_thread.dialect
 
 
 def get_voice():
-    """Returns the current voice."""
+    """Return the current voice.
+
+    Returns:
+        str: The voice name set by the ``voice`` keyword argument to
+            :func:`set_language`, or ``None`` if no voice has been set.
+    """
     return this_thread.voice
 
 
 def set_locale(*pargs, **kwargs):
-    """Sets the current locale.  See also update_locale()."""
+    """Set the current locale string and/or locale convention overrides.
+
+    Calling ``set_locale('FR.utf8')`` stores the locale string so that
+    :func:`get_locale` returns it.  The actual Python locale does not change
+    until :func:`update_locale` is called.  Keyword arguments such as
+    ``currency_symbol`` override individual locale conventions used by
+    functions like :func:`currency` and :func:`currency_symbol`.
+
+    Args:
+        *pargs: An optional locale string (e.g. ``'FR.utf8'``).
+        **kwargs: Locale convention overrides (e.g. ``currency_symbol='€'``).
+    """
     if len(pargs) == 1:
         this_thread.locale = pargs[0]
     if len(kwargs):
@@ -2779,9 +3265,20 @@ def set_locale(*pargs, **kwargs):
 
 
 def get_locale(*pargs):
-    """Given no argments, returns the current locale setting. Given one
-    argument, returns the locale convention indicated by the argument.
+    """Return the current locale setting or a specific locale convention.
 
+    With no arguments, returns the locale string previously set with
+    :func:`set_locale`.  With one argument, returns the value of the named
+    locale convention (e.g. ``'currency_symbol'``), taking into account any
+    overrides set with :func:`set_locale`.
+
+    Args:
+        *pargs: An optional locale convention name (e.g.
+            ``'currency_symbol'``).
+
+    Returns:
+        str or None: The locale string when called with no arguments, or the
+            value of the requested locale convention (``None`` if not found).
     """
     if len(pargs) == 1:
         if 'locale_overrides' in this_thread.misc and pargs[0] in this_thread.misc['locale_overrides']:
@@ -2801,7 +3298,14 @@ def get_currency_symbol():
 
 
 def update_locale():
-    """Updates the system locale based on the value set by set_locale()."""
+    """Update the Python locale based on the current language and locale settings.
+
+    Applies the locale string previously set with :func:`set_locale` (combined
+    with the current language from :func:`get_language` when necessary) so that
+    Python's ``locale`` module reflects the desired locale.  This is required
+    for functions like :func:`currency` and :func:`currency_symbol` to produce
+    locale-appropriate formatting.
+    """
     if '_' in this_thread.locale:
         the_locale = str(this_thread.locale)
     else:
@@ -2919,8 +3423,19 @@ def add_separators_en(*pargs, **kwargs):
 
 
 def need(*pargs):
-    """Given one or more variables, this function instructs docassemble
-    to do what is necessary to define the variables."""
+    """Ensure that the given variables are defined, asking questions if necessary.
+
+    Evaluating each argument causes docassemble to seek its definition
+    through the normal interview logic.  The function always returns
+    ``True``.  Using ``need()`` is purely for readability; writing
+    ``need(x, y)`` is equivalent to writing ``x; y`` in a code block.
+
+    Args:
+        *pargs: Variables whose definitions should be ensured.
+
+    Returns:
+        bool: Always ``True``.
+    """
     ensure_definition(*pargs)
     for argument in pargs:
         argument  # pylint: disable=pointless-statement
@@ -4052,53 +4567,253 @@ ordinal = language_function_constructor('ordinal')
 salutation = language_function_constructor('salutation')
 
 if verb_past.__doc__ is None:
-    verb_past.__doc__ = """Given a verb, returns the past tense of the verb."""
+    verb_past.__doc__ = """Return the past tense of a verb.
+
+    Args:
+        verb (str): The verb to conjugate.
+        **kwargs: Optional conjugation parameters passed to the underlying
+            language function (e.g. ``'3gp'`` for third-person past tense).
+
+    Returns:
+        str: The past-tense form of the verb (e.g. ``verb_past('help')``
+            returns ``'helped'``).
+    """
 if verb_present.__doc__ is None:
-    verb_present.__doc__ = """Given a verb, returns the present tense of the verb."""
+    verb_present.__doc__ = """Return the present tense of a verb.
+
+    Args:
+        verb (str): The verb to conjugate (may be in any tense).
+        **kwargs: Optional conjugation parameters passed to the underlying
+            language function (e.g. ``'3sg'`` for third-person singular).
+
+    Returns:
+        str: The present-tense form of the verb (e.g.
+            ``verb_present('helped', '3sg')`` returns ``'helps'``).
+    """
 if noun_plural.__doc__ is None:
-    noun_plural.__doc__ = """Given a noun, returns the plural version of the noun, unless the optional second argument indicates a quantity of 1."""
+    noun_plural.__doc__ = """Return the plural form of a noun.
+
+    Args:
+        noun (str): The noun to pluralize.
+        *pargs: An optional quantity (number, list, dict, or set). When the
+            quantity is exactly ``1`` the singular form is returned instead.
+        **kwargs: Pass ``noun_is_singular=True`` to skip singularization
+            before pluralizing.
+
+    Returns:
+        str: The plural form of the noun, or the singular form if the
+            optional quantity equals ``1``.
+    """
 if noun_singular.__doc__ is None:
-    noun_singular.__doc__ = """Given a noun, returns the singular version of the noun, unless the optional second argument indicates a quantity other than 1."""
+    noun_singular.__doc__ = """Return the singular form of a noun.
+
+    Args:
+        noun (str): The noun to singularize.
+        *pargs: An optional quantity (number, list, dict, or set). When the
+            quantity is not ``1`` the original noun is returned unchanged.
+
+    Returns:
+        str: The singular form of the noun, or the original noun when the
+            optional quantity is not ``1``.
+    """
 if indefinite_article.__doc__ is None:
-    indefinite_article.__doc__ = """Given a noun, returns the noun with an indefinite article attached
-                                 (e.g., indefinite_article("fish") returns "a fish")."""
+    indefinite_article.__doc__ = """Return a noun preceded by the appropriate indefinite article.
+
+    Args:
+        noun (str): The noun phrase to precede with an article.
+        **kwargs: Additional keyword arguments passed to the underlying
+            language function.
+
+    Returns:
+        str: The noun prefixed with ``'a'`` or ``'an'`` as appropriate
+            (e.g. ``indefinite_article('apple')`` returns ``'an apple'``).
+    """
 if capitalize.__doc__ is None:
-    capitalize.__doc__ = """Capitalizes the first letter of the word or phrase."""
+    capitalize.__doc__ = """Return the input string with the first letter capitalized.
+
+    Args:
+        a (str): The string to capitalize.
+        **kwargs: Additional keyword arguments passed to the underlying
+            language function.
+
+    Returns:
+        str: The input string with its first character converted to
+            upper case.
+    """
 if period_list.__doc__ is None:
-    period_list.__doc__ = """Returns an array of arrays where the first element of each array is a number,
-                          and the second element is a word expressing what that numbers means as a per-year
-                          period.  This is meant to be used in code for a multiple-choice field."""
+    period_list.__doc__ = """Return a list of per-year period options for use in multiple-choice fields.
+
+    Returns:
+        list: A list of ``[number, label]`` pairs representing common
+            payment periods (e.g. ``[[12, 'Per Month'], [1, 'Per Year'],
+            [52, 'Per Week'], ...]``).
+    """
 if name_suffix.__doc__ is None:
-    name_suffix.__doc__ = """Returns an array of choices for the suffix of a name.
-                          This is meant to be used in code for a multiple-choice field."""
-if period_list.__doc__ is None:
-    period_list.__doc__ = """Returns a list of periods of a year, for inclusion in dropdown items."""
-if name_suffix.__doc__ is None:
-    name_suffix.__doc__ = """Returns a list of name suffixes, for inclusion in dropdown items."""
+    name_suffix.__doc__ = """Return a list of common name suffixes for use in multiple-choice fields.
+
+    Returns:
+        list: A list of name suffix strings such as
+            ``['Jr', 'Sr', 'II', 'III', 'IV', 'V', 'VI']``.
+    """
 if currency.__doc__ is None:
-    currency.__doc__ = """Formats the argument as a currency value, according to language and locale."""
+    currency.__doc__ = """Format a number as a currency value using the current locale.
+
+    Args:
+        value: The numeric value to format.
+        **kwargs: Optional keyword arguments including ``decimals`` (bool,
+            default ``True``), ``symbol`` (str override for the currency
+            symbol), and ``symbol_precedes`` (bool controlling symbol
+            position).
+
+    Returns:
+        str: The formatted currency string (e.g. ``currency(45.2)`` returns
+            ``'$45.20'`` for a US locale).
+    """
 if currency_symbol.__doc__ is None:
-    currency_symbol.__doc__ = """Returns the symbol for currency, according to the locale."""
+    currency_symbol.__doc__ = """Return the currency symbol for the current locale.
+
+    Returns:
+        str: The currency symbol (e.g. ``'$'`` for a US locale). Respects
+            overrides set via :func:`set_locale` or the ``currency symbol``
+            configuration setting.
+    """
 if possessify.__doc__ is None:
-    possessify.__doc__ = """Given two arguments, a and b, returns "a's b." """
+    possessify.__doc__ = """Return the possessive phrase combining two arguments.
+
+    Args:
+        a: The possessor.
+        b: The thing possessed.
+        **kwargs: Additional keyword arguments passed to the underlying
+            language function.
+
+    Returns:
+        str: A possessive phrase such as ``"a's b"``.
+    """
 if possessify_long.__doc__ is None:
-    possessify_long.__doc__ = """Given two arguments, a and b, returns "the b of a." """
+    possessify_long.__doc__ = """Return the long possessive phrase combining two arguments.
+
+    Args:
+        a: The possessor.
+        b: The thing possessed.
+        **kwargs: Additional keyword arguments passed to the underlying
+            language function.
+
+    Returns:
+        str: A possessive phrase of the form ``"the b of a"``.
+    """
 if comma_list.__doc__ is None:
-    comma_list.__doc__ = """Returns the arguments separated by commas."""
+    comma_list.__doc__ = """Return the items joined by commas.
+
+    Args:
+        *pargs: Items to join, or a single iterable as the first argument.
+        **kwargs: Optional ``comma_string`` (default ``', '``) to customize
+            the separator.
+
+    Returns:
+        str: The items separated by commas (e.g.
+            ``comma_list('lions', 'tigers', 'bears')`` returns
+            ``'lions, tigers, bears'``).
+    """
 if comma_and_list.__doc__ is None:
-    comma_and_list.__doc__ = """Returns the arguments separated by commas with "and" before the last one."""
+    comma_and_list.__doc__ = """Return the items joined by commas with "and" before the last item.
+
+    Args:
+        *pargs: Items to join, or a single iterable as the first argument.
+        **kwargs: Optional keyword arguments including ``oxford`` (bool,
+            default ``True``), ``and_string`` (default ``'and'``),
+            ``comma_string``, ``before_and``, and ``after_and``.
+
+    Returns:
+        str: An English-language listing such as ``'lions, tigers, and
+            bears'``.
+    """
+if add_separators.__doc__ is None:
+    add_separators.__doc__ = """Return the list items as strings with separators appended.
+
+    Appends ``;`` to all items except the penultimate, which gets
+    ``'; and'``, and the last, which gets ``'.'``.
+
+    Args:
+        the_list: The list of items to process.
+        separator (str, optional): Separator appended to middle items.
+            Defaults to ``';'``.
+        last_separator (str, optional): Separator appended to the
+            penultimate item. Defaults to ``'; and'``.
+        end_mark (str, optional): Mark appended to the final item.
+            Defaults to ``'.'``.
+
+    Returns:
+        list: A list of strings with separators appended.
+    """
 if nice_number.__doc__ is None:
-    nice_number.__doc__ = """Takes a number as an argument and returns the number as a word if ten or below."""
+    nice_number.__doc__ = """Return a number expressed as a word for small values, or as a formatted numeral.
+
+    Args:
+        num: The number to convert.
+        **kwargs: Optional keyword arguments including ``capitalize``
+            (bool), ``language`` (str), and ``use_word`` (bool, default
+            ``False``).
+
+    Returns:
+        str: The number as a word (e.g. ``nice_number(4)`` returns
+            ``'four'``) or as a locale-formatted numeral for larger values.
+    """
 if quantity_noun.__doc__ is None:
-    quantity_noun.__doc__ = """Takes a number and a singular noun as an argument and returns the number as a word if ten or below, followed by the noun in a singular or plural form depending on the number."""
-if capitalize.__doc__ is None:
-    capitalize.__doc__ = """Returns the argument with the first letter capitalized."""
+    quantity_noun.__doc__ = """Return a number combined with a noun in the appropriate singular or plural form.
+
+    Combines :func:`nice_number` and :func:`noun_plural`. Rounds the number
+    to the nearest integer unless ``as_integer=False`` is passed.
+
+    Args:
+        num: The quantity.
+        noun (str): The singular noun.
+        **kwargs: Optional keyword arguments including ``as_integer``
+            (bool, default ``True``) and other arguments accepted by
+            :func:`nice_number`.
+
+    Returns:
+        str: The quantity and noun combined (e.g. ``quantity_noun(2,
+            'apple')`` returns ``'two apples'``).
+    """
 if title_case.__doc__ is None:
-    title_case.__doc__ = """Returns the argument with the first letter of each word capitalized, as in a title."""
+    title_case.__doc__ = """Return the input string with the first letter of each word capitalized.
+
+    Args:
+        a (str): The string to convert to title case.
+        **kwargs: Additional keyword arguments passed to the underlying
+            language function.
+
+    Returns:
+        str: The title-cased string (e.g. ``title_case('the importance of
+            being ernest')`` returns ``'The Importance of Being Ernest'``).
+    """
 if ordinal_number.__doc__ is None:
-    ordinal_number.__doc__ = """Given a number, returns "first" or "23rd" for 1 or 23, respectively."""
+    ordinal_number.__doc__ = """Return the ordinal form of a cardinal number.
+
+    Args:
+        num: The cardinal number (1-based).
+        **kwargs: Optional keyword arguments including ``capitalize``
+            (bool) and ``use_word`` (bool, default depends on the value).
+
+    Returns:
+        str: The ordinal form (e.g. ``ordinal_number(8)`` returns
+            ``'eighth'``; ``ordinal_number(8, use_word=False)`` returns
+            ``'8th'``).
+    """
 if ordinal.__doc__ is None:
-    ordinal.__doc__ = """Given a number that is expected to be an index, returns "first" or "23rd" for 0 or 22, respectively."""
+    ordinal.__doc__ = """Return the ordinal form of a zero-based index.
+
+    Equivalent to ``ordinal_number(num + 1)``. This is useful when working
+    with zero-based list indexes.
+
+    Args:
+        num: The zero-based index.
+        **kwargs: Optional keyword arguments passed to :func:`ordinal_number`.
+
+    Returns:
+        str: The ordinal form (e.g. ``ordinal(0)`` returns ``'first'``;
+            ``ordinal(22)`` returns ``'23rd'``).
+    """
 
 
 def underscore_to_space(a):
@@ -4106,32 +4821,106 @@ def underscore_to_space(a):
 
 
 def space_to_underscore(a):
-    """Converts spaces in the input to underscores in the output and removes characters not safe for filenames."""
+    """Convert spaces to underscores and sanitize the input for use as a filename.
+
+    Replaces spaces with underscores and removes characters that are not safe
+    for filenames using Werkzeug's ``secure_filename``.
+
+    Args:
+        a: The value to convert (coerced to a string).
+
+    Returns:
+        str: A filename-safe string with spaces replaced by underscores.
+    """
     return werkzeug.utils.secure_filename(str(a).encode('ascii', errors='ignore').decode())
 
 
 def message(*pargs, **kwargs):
-    """Presents a screen to the user with the given message."""
+    """Stop the interview and present a message screen to the user.
+
+    Raises a ``QuestionError`` so that docassemble immediately shows a screen
+    with the given title and optional subquestion text.  Code after
+    ``message()`` is never executed.
+
+    Args:
+        *pargs: Positional arguments passed to the underlying
+            ``QuestionError``.  The first argument is the title
+            (``question``) and the optional second argument is the body
+            (``subquestion``).
+        **kwargs: Keyword arguments such as ``question``, ``subquestion``,
+            ``show_restart``, ``show_exit``, ``show_leave``, ``url``, and
+            ``buttons``.
+    """
     raise QuestionError(*pargs, **kwargs)
 
 
 def response(*pargs, **kwargs):
-    """Sends a custom HTTP response."""
+    """Send a custom HTTP response instead of the normal interview screen.
+
+    Raises a ``ResponseError`` so that docassemble immediately returns the
+    specified content to the client.  Code after ``response()`` is never
+    executed.
+
+    Args:
+        *pargs: Positional arguments passed to the underlying
+            ``ResponseError``.
+        **kwargs: Keyword arguments specifying the response type and
+            content.  Use one of: ``response`` (text), ``binaryresponse``
+            (bytes), ``file`` (``DAFile`` or package reference), or ``url``
+            (redirect target).  Optional: ``content_type`` and
+            ``response_code`` (default ``200``).
+    """
     raise ResponseError(*pargs, **kwargs)
 
 
 def json_response(data, response_code=None):
-    """Sends data in JSON format as an HTTP response."""
+    """Send the given data as a JSON HTTP response.
+
+    A shorthand for calling :func:`response` with a JSON-encoded binary
+    body and ``content_type='application/json'``.  Code after
+    ``json_response()`` is never executed.
+
+    Args:
+        data: The data to serialize and return as JSON.
+        response_code (int, optional): The HTTP response code. Defaults to
+            ``200``.
+    """
     raise ResponseError(binaryresponse=(json.dumps(data, sort_keys=True, indent=2) + "\n").encode('utf-8'), content_type="application/json", response_code=response_code)
 
 
 def variables_as_json(include_internal=False):
-    """Sends an HTTP response with all variables in JSON format."""
+    """Send all interview session variables as a JSON HTTP response.
+
+    Like :func:`all_variables` combined with :func:`json_response`: returns
+    all interview variables in simplified, JSON-serializable form.  Code
+    after ``variables_as_json()`` is never executed.
+
+    Args:
+        include_internal (bool, optional): If ``True``, includes the
+            ``_internal`` and ``nav`` variables in the output. Defaults to
+            ``False``.
+    """
     raise ResponseError(None, all_variables=True, include_internal=include_internal)
 
 
 def store_variables_snapshot(data=None, include_internal=False, key=None, persistent=False):
-    """Stores a snapshot of the interview answers in non-encrypted JSON format."""
+    """Store a snapshot of the interview answers in unencrypted JSON format.
+
+    Writes the current interview variables (or provided ``data``) to the
+    database in plain JSON so they can be retrieved later without the user's
+    encryption key.
+
+    Args:
+        data (optional): Data to store instead of the current interview
+            variables. Defaults to ``None`` (uses current interview
+            variables).
+        include_internal (bool, optional): If ``True``, includes
+            ``_internal`` variables in the snapshot. Defaults to ``False``.
+        key (str, optional): A tag string to associate with the snapshot.
+            Defaults to ``None``.
+        persistent (bool, optional): If ``True``, the snapshot persists
+            after the session ends. Defaults to ``False``.
+    """
     session = get_uid()
     filename = this_thread.current_info.get('yaml_filename', None)
     if session is None or filename is None:
@@ -4146,7 +4935,29 @@ def store_variables_snapshot(data=None, include_internal=False, key=None, persis
 
 
 def all_variables(simplify=True, include_internal=False, special=False, make_copy=False):
-    """Returns the interview variables as a dictionary suitable for export to JSON or other formats."""
+    """Return the interview session variables as a dictionary.
+
+    By default, returns a simplified dictionary suitable for JSON
+    serialization (objects converted to dicts, dates to ISO strings).
+    Use ``simplify=False`` for the raw Python dictionary.
+
+    Args:
+        simplify (bool, optional): If ``True`` (default), converts objects
+            to JSON-friendly representations. If ``False``, returns the raw
+            Python dictionary.
+        include_internal (bool, optional): If ``True``, includes the
+            ``_internal`` and ``nav`` variables. Defaults to ``False``.
+        special (str or bool, optional): Pass ``'titles'`` to return
+            interview title metadata, ``'metadata'`` to return consolidated
+            metadata, or ``'tags'`` to return the current session tags.
+            Defaults to ``False``.
+        make_copy (bool, optional): When ``simplify=False``, if ``True``
+            returns a deep copy of the dictionary. Defaults to ``False``.
+
+    Returns:
+        dict or set: The interview variables dictionary, or a set of tags
+            when ``special='tags'``.
+    """
     if special == 'titles':
         return this_thread.interview.get_title(get_user_dict(), adapted=True)
     if special == 'metadata':
@@ -4167,7 +4978,19 @@ def all_variables(simplify=True, include_internal=False, special=False, make_cop
 
 
 def command(*pargs, **kwargs):
-    """Executes a command, such as exit, logout, restart, leave, or wait."""
+    """Trigger an interview exit command such as exit, logout, or restart.
+
+    Raises a ``CommandError`` so that docassemble immediately processes the
+    specified command.  Code after ``command()`` is never executed.
+
+    Args:
+        *pargs: The command string as the first positional argument.  Valid
+            values are ``'restart'``, ``'new_session'``, ``'exit'``,
+            ``'logout'``, ``'exit_logout'``, ``'leave'``, and
+            ``'signin'``.
+        **kwargs: Optional keyword arguments such as ``url`` (the redirect
+            target) and ``sleep`` (seconds to pause in scheduled tasks).
+    """
     raise CommandError(*pargs, **kwargs)
 
 
@@ -4183,13 +5006,20 @@ def unpack_pargs(args):
 
 
 def force_ask(*pargs, **kwargs):
-    """Given a variable name, instructs docassemble to ask a question that
-    would define the variable, even if the variable has already been
-    defined.  This does not change the interview logic, but merely
-    diverts from the interview logic, temporarily, in order to attempt
-    to ask a question.  If more than one variable name is provided,
-    questions will be asked serially.
+    """Force docassemble to ask one or more questions, even if the variables are already defined.
 
+    Triggers the actions mechanism so that the interview shows a question
+    corresponding to each specified variable name, regardless of whether the
+    variable is already defined.  Code after ``force_ask()`` is never reached.
+    Variable names must be passed as strings.
+
+    Args:
+        *pargs: Variable name strings (or action dictionaries) identifying
+            the questions to ask.
+        **kwargs: Optional keyword arguments including ``forget_prior``
+            (bool, default ``False``) to clear pending actions before
+            adding new ones, and ``evaluate`` (bool, default ``False``) to
+            resolve alias variable names to their intrinsic names.
     """
     the_pargs = unpack_pargs(pargs)
     if kwargs.get('forget_prior', False):
@@ -4211,14 +5041,21 @@ def force_ask_nameerror(variable_name, priority=False):  # pylint: disable=unuse
 
 
 def force_gather(*pargs, forget_prior=False, evaluate=False):
-    """Similar to force_ask(), except it works globally across all users
-    and sessions and it does not seek definitions of already-defined
-    variables. In addition to making a single attempt to ask a
-    question that offers to define the variable, it enlists the
-    process_action() function to seek the definition of the variable.
-    The process_action() function will keep trying to define the
-    variable until it is defined.
+    """Force docassemble to keep seeking a definition for one or more variables.
 
+    Unlike :func:`force_ask`, this function affects the global interview
+    logic (for all users) and does not require the variable to be
+    undefined.  It adds each variable to an internal gather list so that
+    :func:`process_action` continues to seek its definition until it is
+    defined.  Code after ``force_gather()`` is never reached.
+
+    Args:
+        *pargs: Variable name strings identifying the variables to gather.
+        forget_prior (bool, optional): If ``True``, clears any pending
+            actions before adding the new ones. Defaults to ``False``.
+        evaluate (bool, optional): If ``True``, resolves alias variable
+            names to their intrinsic names before gathering. Defaults to
+            ``False``.
     """
     if forget_prior:
         unique_id = this_thread.current_info['user']['session_uid']
@@ -4274,11 +5111,23 @@ def static_filename(filereference):
 
 
 def static_image(filereference, width=None):
-    """Inserts appropriate markup to include a static image.  If you know
-    the image path, you can just use the "[FILE ...]" markup.  This function is
-    useful when you want to assemble the image path programmatically.
-    Takes an optional keyword argument "width"
-    (e.g., static_image('docassemble.demo:crawling.png', width='2in'))."""
+    """Return the markup string to embed a static image.
+
+    Produces a ``[FILE ...]`` markup tag that docassemble renders as an
+    image.  Useful when the image path is assembled programmatically
+    rather than written literally in a template.
+
+    Args:
+        filereference (str): A package-qualified file reference such as
+            ``'docassemble.demo:crawling.png'``, or just ``'crawling.png'``
+            for a file in the current package.
+        width (str, optional): The display width, e.g. ``'2in'`` or
+            ``'50%'``. Defaults to ``None`` (no explicit width).
+
+    Returns:
+        str: A ``[FILE ...]`` markup string, or an error string if the
+            reference is invalid.
+    """
     ensure_definition(filereference, width)
     filename = static_filename(filereference)
     if filename is None:
@@ -4289,12 +5138,22 @@ def static_image(filereference, width=None):
 
 
 def qr_code(string, width=None, alt_text=None):
-    """Inserts appropriate markup to include a QR code image.  If you know
-    the string you want to encode, you can just use the "[QR ...]" markup.
-    This function is useful when you want to assemble the string programmatically.
-    Takes an optional keyword argument "width"
-    (e.g., qr_code('https://google.com', width='2in')).  Also takes an optional
-    keyword argument "alt_text" for the alt text."""
+    """Return the markup string to embed a QR code image for the given string.
+
+    Produces a ``[QR ...]`` markup tag that docassemble renders as a QR
+    code image.  Useful when the string to encode is assembled
+    programmatically rather than written literally in a template.
+
+    Args:
+        string (str): The text or URL to encode in the QR code.
+        width (str, optional): The display width, e.g. ``'2in'``. Defaults
+            to ``None`` (no explicit width).
+        alt_text (str, optional): The alt text for the image. Defaults to
+            ``None``.
+
+    Returns:
+        str: A ``[QR ...]`` markup string.
+    """
     ensure_definition(string, width)
     if width is None:
         if alt_text is None:
@@ -4453,7 +5312,15 @@ def list_list_same(a, b):
 
 
 def process_action():
-    """If an action is waiting to be processed, it processes the action."""
+    """Process any pending interview action.
+
+    Checks whether an action has been requested (e.g., via a URL created by
+    :func:`url_action`) and, if so, handles it by calling :func:`force_ask`
+    on the indicated variable.  If no action is pending, returns without
+    doing anything.  This function is normally called automatically by
+    docassemble before evaluating ``initial`` and ``mandatory`` blocks, but
+    you can call it explicitly to control when actions are processed.
+    """
     # logmessage("process_action() started")
     # logmessage("process_action: starting")
     if 'action' not in this_thread.current_info:
@@ -4782,7 +5649,21 @@ def process_action():
 
 
 def url_action(action, **kwargs):
-    """Returns a URL to run an action in the interview."""
+    """Return a URL that triggers an action in the current interview.
+
+    When visited, the URL causes :func:`process_action` to run the specified
+    action.  The action can run a code block labeled with ``event``, ask a
+    question, or define a variable.
+
+    Args:
+        action (str): The name of the action (variable or event) to trigger.
+        **kwargs: Arguments to pass to the action.  The special keyword
+            argument ``_forget_prior`` (bool), if ``True``, discards any
+            currently pending actions before running this one.
+
+    Returns:
+        str: A URL string that triggers the action when visited.
+    """
     if contains_volatile.search(action):
         raise DAError("url_action cannot be used with a generic object or a variable iterator")
     if '_forget_prior' in kwargs:
@@ -4812,16 +5693,21 @@ def debug_status():
 
 
 def action_menu_item(label, action, **kwargs):
-    """Takes two arguments, a label and an action, and optionally takes
-    keyword arguments that are passed on to the action.  The label is
-    what the user will see and the action is the action that will be
-    performed when the user clicks on the item in the menu.  This is
-    only used when setting the special variable menu_items.  E.g.,
-    menu_items = [ action_menu_item('Ask for my favorite food',
-    'favorite_food') ]  There is a special optional keyword argument,
-    _screen_size, which can be set to 'small' or 'large' and will result
-    in the menu item being only shown on small screen or large screens,
-    respectively.
+    """Return a menu item dictionary that triggers an action when clicked.
+
+    Constructs a dictionary with a ``label`` and a ``url`` (created via
+    :func:`url_action`) for use in the ``menu_items`` special variable.
+
+    Args:
+        label (str): The text displayed in the menu.
+        action (str): The action name to trigger when the item is clicked.
+        **kwargs: Arguments passed on to the action via :func:`url_action`.
+            The special argument ``_screen_size`` (``'small'`` or
+            ``'large'``) restricts the item to the given screen size.
+
+    Returns:
+        dict: A dictionary with keys ``label`` and ``url``, and optionally
+            ``screen_size``.
     """
     args = copy.deepcopy(kwargs)
     if '_screen_size' in args:
@@ -4831,9 +5717,18 @@ def action_menu_item(label, action, **kwargs):
 
 
 def from_b64_json(string):
-    """Converts the string from base-64, then parses the string as JSON, and returns the object.
-    This is an advanced function that is used by software developers to integrate other systems
-    with docassemble."""
+    """Decode a base-64 string and parse it as JSON, returning the resulting object.
+
+    This is an advanced function used to integrate external systems with
+    docassemble by decoding data that was encoded with base-64 JSON encoding.
+
+    Args:
+        string (str): A base-64-encoded JSON string, or ``None``.
+
+    Returns:
+        The Python object represented by the decoded JSON, or ``None`` if
+            ``string`` is ``None``.
+    """
     if string is None:
         return None
     return json.loads(base64.b64decode(repad(string)))
@@ -4896,12 +5791,30 @@ def get_user_dict():
     return {}
 
 def invalidate(*pargs):
-    """Invalidates the variable or variables if they exist."""
+    """Make one or more variables undefined while remembering their prior values as defaults.
+
+    Like :func:`undefine`, but also stores the current value so that it is
+    offered as a default when the question is re-asked.
+
+    Args:
+        *pargs: Variable name strings to invalidate.
+    """
     undefine(*pargs, invalidate=True)
 
 
 def undefine(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
-    """Deletes the variable or variables if they exist."""
+    """Delete one or more interview variables, making them undefined.
+
+    If a variable is not defined, this function does nothing (no error is
+    raised).  Multiple variable names can be passed at once.
+
+    Args:
+        *pargs: Variable name strings to undefine.
+        invalidate (bool, optional): Internal flag; when ``True``, also
+            saves the current value for use as a default. Use
+            :func:`invalidate` instead of setting this directly. Defaults
+            to ``False``.
+    """
     vars_to_delete = []
     the_pargs = unpack_pargs(pargs)
     for var in the_pargs:
@@ -4946,7 +5859,20 @@ def undefine(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
 
 
 def dispatch(var):
-    """Shows a menu screen."""
+    """Present a nested menu driven by the value of a variable.
+
+    Repeatedly evaluates the variable named by ``var``.  When the variable
+    is set to the name of another variable, that variable is evaluated and
+    then undefined, allowing the user to visit sub-menus or pages.  The
+    loop ends when the variable is set to ``None``.
+
+    Args:
+        var (str): The name of the variable that controls the menu
+            selection.
+
+    Returns:
+        bool: Always ``True``.
+    """
     if not isinstance(var, str):
         raise DAError("dispatch() must be given a string")
     if illegal_variable_name(var):
@@ -4960,7 +5886,18 @@ def dispatch(var):
 
 
 def set_variables(variables, process_objects=False):
-    """Updates the interview answers using variable names and values specified in a dictionary"""
+    """Update the current interview answers using a dictionary of variable names and values.
+
+    Similar to calling :func:`define` repeatedly, but accepts a dictionary.
+
+    Args:
+        variables (dict): A dictionary mapping variable name strings to
+            their new values.
+        process_objects (bool, optional): If ``True``, converts the
+            dictionary from docassemble's serializable object representation
+            (e.g., from ``.as_serializable()``) into actual Python objects.
+            Defaults to ``False``.
+    """
     if hasattr(variables, 'instanceName') and hasattr(variables, 'elements'):
         variables = variables.elements
     if not isinstance(variables, dict):
@@ -4979,7 +5916,16 @@ def set_variables(variables, process_objects=False):
 
 
 def define(var, val):
-    """Sets the given variable, expressed as a string, to the given value."""
+    """Set an interview variable by name to the given value.
+
+    Equivalent to writing ``var_name = val`` in a code block, but uses a
+    string for the variable name.
+
+    Args:
+        var (str): The name of the variable to define (must be a valid
+            Python identifier or expression).
+        val: The value to assign to the variable.
+    """
     ensure_definition(var, val)
     if not isinstance(var, str) or not re.search(r'^[A-Za-z_]', var):
         raise DAError("define() must be given a string as the variable name")
@@ -5146,7 +6092,21 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
 
 
 def value(var: str, prior=False):
-    """Returns the value of the variable given by the string 'var'."""
+    """Return the value of an interview variable specified by name.
+
+    Equivalent to evaluating the variable directly, but uses a string for
+    the variable name.  If the variable is not yet defined, docassemble will
+    ask questions to define it.
+
+    Args:
+        var (str): The name of the variable whose value to return.
+        prior (bool, optional): If ``True``, on screens loaded after the
+            user pressed the Back button, look in the previous set of
+            interview answers. Defaults to ``False``.
+
+    Returns:
+        The value of the specified variable.
+    """
     str(var)
     if not isinstance(var, str):
         raise DAError("value() must be given a string")
@@ -5162,7 +6122,20 @@ def value(var: str, prior=False):
 
 
 def defined(var: str, prior=False) -> bool:
-    """Returns true if the variable has already been defined.  Otherwise, returns false."""
+    """Return ``True`` if the named interview variable is already defined.
+
+    Checks whether the variable is defined without triggering docassemble's
+    question-asking process.  The variable name must be passed as a string.
+
+    Args:
+        var (str): The name of the variable to check.
+        prior (bool, optional): If ``True``, on screens loaded after the
+            user pressed the Back button, also check the previous set of
+            interview answers. Defaults to ``False``.
+
+    Returns:
+        bool: ``True`` if the variable is defined, ``False`` otherwise.
+    """
     str(var)
     if not isinstance(var, str):
         raise DAError("defined() must be given a string")
@@ -5179,9 +6152,20 @@ def defined(var: str, prior=False) -> bool:
 
 
 def showifdef(var: str, alternative='', prior=False):
-    """Returns the variable indicated by the variable name if it is
-     defined, but otherwise returns empty text, or other alternative text.
-     """
+    """Return the value of a variable if it is defined, otherwise return alternative text.
+
+    Args:
+        var (str): The name of the variable whose value to return.
+        alternative (optional): The value to return when the variable is
+            not defined. Defaults to ``''``.
+        prior (bool, optional): If ``True``, on screens loaded after the
+            user pressed the Back button, also check the previous set of
+            interview answers. Defaults to ``False``.
+
+    Returns:
+        The value of the variable if it is defined, otherwise
+            ``alternative``.
+    """
     # A combination of the preambles of defined and value
     str(var)
     if not isinstance(var, str):
@@ -5212,22 +6196,47 @@ def illegal_variable_name(var):
 
 
 def single_paragraph(text):
-    """Reduces the text to a single paragraph.  Useful when using Markdown
-    to indent user-supplied text."""
+    """Replace all line breaks in the text with spaces, collapsing it to a single paragraph.
+
+    Useful when embedding user-supplied text in a Markdown block-quote or
+    similar context where internal line breaks would break the formatting.
+
+    Args:
+        text (str): The text to process.
+
+    Returns:
+        str: The text with all newline characters replaced by spaces.
+    """
     return newlines.sub(' ', str(text))
 
 
 def quote_paragraphs(text):
-    """Adds Markdown to quote all paragraphs in the text."""
+    """Wrap each paragraph in the text with Markdown block-quote formatting.
+
+    Adds ``> `` before each paragraph so that the text is displayed as a
+    Markdown block-quote.
+
+    Args:
+        text (str): The text to quote.
+
+    Returns:
+        str: The text with each paragraph prefixed by ``'> '``.
+    """
     return '> ' + single_newline.sub('\n> ', str(text).strip())
 
 
 def set_live_help_status(availability=None, mode=None, partner_roles=None):
-    """Defines whether live help features are available, the mode of chat,
-    the roles that the interview user will assume in the live chat
-    system, and the roles of people with which the interview user
-    would like to live chat.
+    """Configure the live help (chat) feature for the current interview session.
 
+    Args:
+        availability (str or bool, optional): Set to ``'available'`` or
+            ``True`` to enable live help, ``'unavailable'`` or ``False``
+            to disable it, or ``'observeonly'`` to allow the monitor to
+            observe but not chat.
+        mode (str, optional): Chat mode; one of ``'help'``, ``'peer'``,
+            or ``'peerhelp'``.
+        partner_roles (str or list, optional): The roles of monitors with
+            whom the user may chat.
     """
     if availability in ['available', True]:
         this_thread.internal['livehelp']['availability'] = 'available'
@@ -5264,8 +6273,18 @@ def set_live_help_status(availability=None, mode=None, partner_roles=None):
 
 
 def phone_number_in_e164(number, country=None):
-    """Given a phone number and a country code, returns the number in
-    E.164 format.  Returns None if the number could not be so formatted."""
+    """Return a phone number formatted in E.164 international format.
+
+    Args:
+        number (str): The phone number to format.
+        country (str, optional): An ISO 3166-1 alpha-2 country code (e.g.
+            ``'US'``, ``'SE'``) used to interpret the number. Defaults to
+            the result of :func:`get_country`.
+
+    Returns:
+        str or None: The number in E.164 format (e.g. ``'+12025551234'``),
+            or ``None`` if the number could not be formatted.
+    """
     ensure_definition(number, country)
     if country is None:
         country = get_country() or 'US'
@@ -5286,7 +6305,17 @@ def phone_number_in_e164(number, country=None):
 
 
 def phone_number_is_valid(number, country=None):
-    """Given a phone number and a country code, returns True if the phone number is valid, otherwise False."""
+    """Return ``True`` if the phone number is valid for the specified country.
+
+    Args:
+        number (str): The phone number to validate.
+        country (str, optional): An ISO 3166-1 alpha-2 country code used
+            to determine applicable standards. Defaults to the result of
+            :func:`get_country`.
+
+    Returns:
+        bool: ``True`` if the number is valid, ``False`` otherwise.
+    """
     ensure_definition(number, country)
     if country is None:
         country = get_country() or 'US'
@@ -5304,6 +6333,24 @@ def phone_number_is_valid(number, country=None):
 
 
 def phone_number_part(number, part, country=None):
+    """Return a specific segment of a phone number's national format.
+
+    Splits the nationally formatted phone number on non-digit separators and
+    returns the segment at the given zero-based index.
+
+    Args:
+        number (str): The phone number to parse.
+        part (int): The zero-based index of the segment to return
+            (e.g. ``0`` for area code, ``1`` for exchange, ``2`` for
+            subscriber number).
+        country (str, optional): An ISO 3166-1 alpha-2 country code used
+            to format the number. Defaults to the result of
+            :func:`get_country`.
+
+    Returns:
+        str: The requested segment, or an empty string if parsing fails or
+            the index is out of range.
+    """
     ensure_definition(number, part, country)
     if country is None:
         country = get_country() or 'US'
@@ -5323,9 +6370,18 @@ def phone_number_part(number, part, country=None):
 
 
 def phone_number_formatted(number, country=None):
-    """Given a phone number and a country code, returns the number in
-    the standard format for the country.  Returns None if the number
-    could not be so formatted."""
+    """Return a phone number in the national format for the specified country.
+
+    Args:
+        number (str): The phone number to format.
+        country (str, optional): An ISO 3166-1 alpha-2 country code used
+            to determine national formatting conventions. Defaults to the
+            result of :func:`get_country`.
+
+    Returns:
+        str or None: The number in national format, or ``None`` if the
+            number could not be formatted.
+    """
     ensure_definition(number, country)
     if number.__class__.__name__ == 'DAEmpty':
         return str(number)
@@ -5427,7 +6483,24 @@ def safe_json(the_object, level=0, is_key=False):
 
 
 def referring_url(default=None, current=False):
-    """Returns the URL that the user was visiting when the session was created."""
+    """Return the URL that the user was visiting when the interview session was created.
+
+    Retrieves the HTTP Referer URL recorded when the session started.  If
+    the URL is unavailable (e.g., the user typed the URL directly), returns
+    the ``default`` value or the ``exitpage`` configuration setting.
+
+    Args:
+        default (optional): Value to return if the referring URL is not
+            available. If ``None``, falls back to the ``exitpage``
+            configuration setting. Defaults to ``None``.
+        current (bool, optional): If ``True``, returns the Referer of the
+            current request instead of the session-start Referer. Defaults
+            to ``False``.
+
+    Returns:
+        str: The referring URL, the ``default`` value, or the ``exitpage``
+            URL.
+    """
     if current:
         url = server.get_referer()
     else:
@@ -5456,7 +6529,19 @@ def class_name(the_object):
 
 
 def plain(text, default=None):
-    """Substitutes empty string or the value of the default parameter if the text is empty."""
+    """Return the text as-is, or an empty string (or default) if the text is blank.
+
+    Useful in templates when you want blank values to produce no output
+    instead of an empty string.
+
+    Args:
+        text: The value to return.
+        default (optional): Value to return if ``text`` is blank or
+            ``None``. Defaults to ``None`` (returns ``''``).
+
+    Returns:
+        str: The text, or the default value if the text is empty.
+    """
     ensure_definition(text, default)
     if text is None or str(text).strip() == '':
         if default is None:
@@ -5466,7 +6551,20 @@ def plain(text, default=None):
 
 
 def bold(text, default=None):
-    """Adds Markdown tags to make the text bold if it is not blank."""
+    """Return the text wrapped in Markdown bold formatting, or an empty string if blank.
+
+    If ``text`` is empty and ``default`` is provided, wraps ``default`` in
+    bold formatting instead.
+
+    Args:
+        text: The value to make bold.
+        default (optional): Fallback value (also bolded) if ``text`` is
+            blank. Defaults to ``None`` (returns ``''``).
+
+    Returns:
+        str: The text wrapped in ``**...**`` Markdown, or ``''`` if blank
+            and no default is given.
+    """
     ensure_definition(text, default)
     if text is None or str(text).strip() == '':
         if default is None:
@@ -5476,7 +6574,20 @@ def bold(text, default=None):
 
 
 def italic(text, default=None):
-    """Adds Markdown tags to make the text italic if it is not blank."""
+    """Return the text wrapped in Markdown italic formatting, or an empty string if blank.
+
+    If ``text`` is empty and ``default`` is provided, wraps ``default`` in
+    italic formatting instead.
+
+    Args:
+        text: The value to make italic.
+        default (optional): Fallback value (also italicized) if ``text``
+            is blank. Defaults to ``None`` (returns ``''``).
+
+    Returns:
+        str: The text wrapped in ``_..._`` Markdown, or ``''`` if blank
+            and no default is given.
+    """
     ensure_definition(text, default)
     if text is None or str(text).strip() == '':
         if default is None:
@@ -5491,10 +6602,19 @@ def italic(text, default=None):
 
 
 def indent(text, by=None):
-    """Indents multi-line text by four spaces.  To indent by a different
-    amount, use the optional keyword argument 'by' to specify a
-    different number of spaces.
+    """Indent each line of the text by a number of spaces.
 
+    Useful when embedding a paragraph or table inside a Markdown bulleted
+    list to keep the content associated with the list item.
+
+    Args:
+        text (str): The text to indent.
+        by (int, optional): Number of spaces to add at the start of each
+            line. Defaults to ``4``.
+
+    Returns:
+        str: The text with each line prefixed by the specified number of
+            spaces.
     """
     ensure_definition(text, by)
     if by is None:
@@ -5506,9 +6626,18 @@ def indent(text, by=None):
 
 
 def yesno(the_value, invert=False):
-    """Returns 'Yes' or 'No' depending on whether the given value is true.
-    This is used for populating PDF checkboxes.
+    """Return ``'Yes'`` or ``'No'`` based on the truth value of the argument.
 
+    Useful for populating PDF checkbox fields that expect ``'Yes'`` or
+    ``'No'`` strings.
+
+    Args:
+        the_value: The value to evaluate.
+        invert (bool, optional): If ``True``, returns ``'No'`` for truthy
+            values and ``'Yes'`` for falsy values. Defaults to ``False``.
+
+    Returns:
+        str: ``'Yes'`` or ``'No'``, or ``''`` if the value is empty.
     """
     ensure_definition(the_value, invert)
     if the_value is None or the_value == '' or the_value.__class__.__name__ == 'DAEmpty':
@@ -5523,10 +6652,18 @@ def yesno(the_value, invert=False):
 
 
 def noyes(the_value, invert=False):
-    """Returns 'No' or 'Yes' depending on whether the given value is true
-    or false, respectively.  This is used for populating PDF
-    checkboxes.
+    """Return ``'No'`` or ``'Yes'`` based on the truth value of the argument.
 
+    The inverse of :func:`yesno`: returns ``'No'`` for truthy values and
+    ``'Yes'`` for falsy values.  Useful for populating PDF checkbox fields.
+
+    Args:
+        the_value: The value to evaluate.
+        invert (bool, optional): If ``True``, reverses the output (same
+            behavior as :func:`yesno`). Defaults to ``False``.
+
+    Returns:
+        str: ``'No'`` or ``'Yes'``, or ``''`` if the value is empty.
     """
     ensure_definition(the_value, invert)
     if the_value is None or the_value == '' or the_value.__class__.__name__ == 'DAEmpty':
@@ -5541,7 +6678,23 @@ def noyes(the_value, invert=False):
 
 
 def split(text, breaks, index):
-    """Splits text at particular breakpoints and returns the given piece."""
+    """Split text into character-length segments at word boundaries and return one segment.
+
+    Useful for filling in PDF form fields when a single phrase must be
+    distributed across multiple fields.  Splits on word breaks where possible.
+
+    Args:
+        text (str): The phrase to split.
+        breaks (int or list): Maximum character length of each segment.
+            A single integer splits into two parts; a list of integers
+            splits into ``len(breaks) + 1`` parts.
+        index (int or str): The zero-based index of the segment to return,
+            or ``'all'`` to return a list of all segments.
+
+    Returns:
+        str or list: The requested segment string, ``''`` if the index is
+            out of range, or a list of all segments when ``index='all'``.
+    """
     ensure_definition(text, breaks, index)
     text = re.sub(r'[\n\r]+', "\n", str(text).strip())
     if not isinstance(breaks, list):
@@ -5593,9 +6746,21 @@ def split(text, breaks, index):
 
 
 def showif(var, condition, alternative=''):
-    """Returns the variable indicated by the variable name if the
-    condition is true, but otherwise returns empty text, or other alternative text.
+    """Return the value of a variable if a condition is true, otherwise return alternative text.
 
+    The variable name is only evaluated when the condition is true, preventing
+    unnecessary question-asking.
+
+    Args:
+        var (str): The name of the variable whose value to return.
+        condition: A condition that is evaluated to decide whether to return
+            the variable's value.
+        alternative (optional): The value to return when the condition is
+            false. Defaults to ``''``.
+
+    Returns:
+        The value of the variable if the condition is true, otherwise
+            ``alternative``.
     """
     ensure_definition(var, condition, alternative)
     if condition:
@@ -5604,7 +6769,16 @@ def showif(var, condition, alternative=''):
 
 
 def log(the_message, priority='log'):
-    """Log a message to the server or the browser."""
+    """Log a message to the server log, the browser console, or the user's screen.
+
+    Args:
+        the_message (str): The message to log.
+        priority (str, optional): Destination and style. Use ``'log'`` for
+            the server log, ``'console'`` for the browser console,
+            ``'javascript'`` to run the message as JavaScript, or a
+            Bootstrap alert level (``'success'``, ``'info'``, ``'danger'``,
+            etc.) to show a popup notification. Defaults to ``'log'``.
+    """
     if priority == 'log':
         logmessage(str(the_message))
     else:
@@ -5619,17 +6793,62 @@ def get_message_log():
 
 
 def encode_name(var):
-    """Convert a variable name to base64-encoded form for inclusion in an HTML element."""
+    """Return the base64-encoded form of a Python variable name.
+
+    Used internally to represent variable names as HTML input element names.
+
+    Args:
+        var (str): The Python variable name to encode.
+
+    Returns:
+        str: The base64-encoded variable name (without padding ``=`` characters).
+    """
     return re.sub(r'[\n=]', '', codecs.encode(var.encode('utf-8'), 'base64').decode())
 
 
 def decode_name(var):
-    """Convert a base64-encoded variable name to plain text."""
+    """Return the plain-text Python variable name from a base64-encoded form.
+
+    The inverse of :func:`encode_name`.
+
+    Args:
+        var (str): A base64-encoded variable name.
+
+    Returns:
+        str: The decoded Python variable name.
+    """
     return codecs.decode(repad_byte(bytearray(var, encoding='utf-8')), 'base64').decode('utf-8')
 
 
 def interview_list(exclude_invalid=True, action=None, filename=None, session=None, user_id=None, query=None, include_dict=True, delete_shared=False, next_id=None):
-    """Returns a list of interviews that users have started."""
+    """Return information about interview sessions, or perform bulk session operations.
+
+    If the current user is logged in, returns a paginated list of interview
+    session dictionaries. Can also delete sessions.
+
+    Args:
+        exclude_invalid (bool, optional): If ``True``, omit sessions where
+            the interview could not be loaded or decrypted. Defaults to
+            ``True``.
+        action (str, optional): Pass ``'delete_all'`` to delete matching
+            sessions (returns count deleted), or ``'delete'`` to delete a
+            single session specified by ``filename`` and ``session``.
+        filename (str, optional): Limit results to sessions of this
+            interview filename.
+        session (str, optional): Limit results to this session ID.
+        user_id (int or str, optional): User ID to filter by, or ``'all'``
+            for all users. Defaults to the current user.
+        query: An optional query expression for complex filtering.
+        include_dict (bool, optional): If ``True``, include the session
+            dictionary in the results. Defaults to ``True``.
+        delete_shared (bool, optional): When deleting, also delete shared
+            sessions. Defaults to ``False``.
+        next_id (str, optional): Pagination token from a previous call.
+
+    Returns:
+        tuple or int or None: A ``(list, next_id)`` tuple for listing, an
+            integer when deleting, or ``None`` if the user is not logged in.
+    """
     if this_thread.current_info['user']['is_authenticated']:
         if user_id == 'all' or session is not None:
             user_id = None
@@ -5659,12 +6878,30 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
 
 
 def interview_menu(*pargs, **kwargs):
-    """Returns the list of interviews that is offered at /list."""
+    """Return the list of available interviews shown at the ``/list`` page.
+
+    Returns:
+        list: A list of dictionaries, each describing an interview with
+            keys such as ``title``, ``filename``, ``link``, ``tags``,
+            and ``metadata``.
+    """
     return server.interview_menu(*pargs, **kwargs)
 
 
 def get_user_list(include_inactive=False, next_id=None):
-    """Returns a list of users on the system."""
+    """Return a paginated list of registered users on the server.
+
+    Requires ``admin``, ``advocate``, or the ``access_user_info`` permission.
+
+    Args:
+        include_inactive (bool, optional): If ``True``, include inactive
+            users in the results. Defaults to ``False``.
+        next_id (str, optional): Pagination token from a previous call.
+
+    Returns:
+        tuple or None: A ``(list, next_id)`` tuple where the list contains
+            user-info dictionaries, or ``None`` if the user is not logged in.
+    """
     if this_thread.current_info['user']['is_authenticated']:
         if next_id is not None:
             try:
@@ -5682,7 +6919,22 @@ def get_user_list(include_inactive=False, next_id=None):
 
 
 def manage_privileges(*pargs):
-    """Gets or sets information about privileges on the system."""
+    """List, add, remove, or inspect privilege types on the system.
+
+    Requires ``admin`` privileges or a custom privilege with the appropriate
+    permissions.
+
+    Args:
+        *pargs: The first argument is the command (``'list'``, ``'add'``,
+            ``'remove'``, or ``'inspect'``).  ``'add'`` and ``'remove'``
+            take one or more privilege name strings as additional arguments.
+            ``'inspect'`` takes a single privilege name.
+
+    Returns:
+        list or bool or None: The list of privileges for ``'list'``,
+            permission details for ``'inspect'``, ``True`` for successful
+            ``'add'``/``'remove'``, or ``None`` if not authenticated.
+    """
     if this_thread.current_info['user']['is_authenticated']:
         arglist = list(pargs)
         if len(arglist) == 0:
@@ -5711,14 +6963,39 @@ def manage_privileges(*pargs):
 
 
 def get_user_info(user_id=None, email=None):
-    """Returns information about the given user, or the current user, if no user ID or e-mail is provided."""
+    """Return profile information for a user.
+
+    With no arguments, returns information about the currently logged-in
+    user.  To look up another user, provide their ``user_id`` or ``email``.
+    Requires the user to be logged in; admin/advocate or ``access_user_info``
+    permission is required to look up other users.
+
+    Args:
+        user_id (int, optional): The user ID of the user to look up.
+        email (str, optional): The e-mail address of the user to look up.
+
+    Returns:
+        dict or None: A dictionary of user profile information, or ``None``
+            if no user is found.
+    """
     if this_thread.current_info['user']['is_authenticated'] and user_id is None and email is None:
         user_id = this_thread.current_info['user']['the_user_id']
     return server.get_user_info(user_id=user_id, email=email)
 
 
 def set_user_info(**kwargs):
-    """Sets information about the given user, or the current user, if no user ID or e-mail is provided"""
+    """Write information to a user's profile.
+
+    Updates profile fields for the current user, or for another user when
+    ``user_id`` or ``email`` is provided.  Accepted keyword parameters
+    include ``first_name``, ``last_name``, ``country``, ``language``,
+    ``organization``, ``timezone``, ``password``, ``active``,
+    ``privileges``, and others.  Requires the user to be logged in.
+
+    Args:
+        **kwargs: Profile fields to update.  Use ``user_id`` or ``email``
+            to target a specific user.
+    """
     user_id = kwargs.get('user_id', None)
     email = kwargs.get('email', None)
     server.set_user_info(**kwargs)
@@ -5735,32 +7012,77 @@ def set_user_info(**kwargs):
 
 
 def create_user(email, password, privileges=None, info=None):
-    """Creates a user account with the given e-mail and password, returning the user ID of the new account."""
+    """Create a new user account on the server.
+
+    Requires ``admin`` privileges or the ``create_user`` permission.
+
+    Args:
+        email (str): The e-mail address for the new account.
+        password (str): The password for the new account.
+        privileges (str or list, optional): A privilege name or list of
+            privilege names to assign to the new user.
+        info (dict, optional): Additional profile information such as
+            ``first_name``, ``last_name``, ``country``, etc.
+
+    Returns:
+        int: The user ID of the newly created account.
+    """
     return server.create_user(email, password, privileges=privileges, info=info)
 
 
 def invite_user(email_address, privilege=None, send=True):
-    """Creates an invitation for a user to create an account. If the
-    send parameter is true, which is the default, then an email
-    invitation is sent and the function returns None. If the send
-    parameter is false, then a URL is returned, which a user can visit
-    in order to create an account. The privilege parameter can be set
-    to a single privilege; if omitted, the new user has the privilege
-    of an ordinary user.
+    """Create an invitation for a user to register an account.
+
+    Generates a registration token for the given e-mail address.  Requires
+    ``admin`` privileges or the ``create_user`` permission.
+
+    Args:
+        email_address (str): The e-mail address to invite.
+        privilege (str, optional): A privilege to assign when the user
+            registers. Defaults to the ordinary user privilege.
+        send (bool, optional): If ``True`` (default), sends an invitation
+            e-mail and returns ``None``.  If ``False``, returns the
+            registration URL instead.
+
+    Returns:
+        str or None: The registration URL when ``send=False``, otherwise
+            ``None``.
     """
     return server.invite_user(email_address, privilege=privilege, send=send)
 
 
 def get_user_secret(username, password):
-    """Tests the username and password and if they are valid, returns the
-    decryption key for the user account.
+    """Return the decryption key for a user account if the credentials are valid.
 
+    Used to obtain the encryption key required for :func:`get_session_variables`
+    and :func:`set_session_variables` when the target interview uses
+    server-side encryption.
+
+    Args:
+        username (str): The user's e-mail address.
+        password (str): The user's password.
+
+    Returns:
+        str or None: The decryption key string if the credentials are valid,
+            otherwise ``None``.
     """
     return server.get_secret(username, password)
 
 
 def create_session(yaml_filename, secret=None, url_args=None):
-    """Creates a new session in the given interview."""
+    """Create a new interview session and return its session ID.
+
+    Args:
+        yaml_filename (str): The interview filename (e.g.
+            ``'docassemble.demo:data/questions/questions.yml'``).
+        secret (str, optional): The encryption key for the session. If
+            not provided, the current user's key is used.
+        url_args (dict, optional): URL arguments to make available in
+            the new session via ``url_args``.
+
+    Returns:
+        str: The session ID of the newly created session.
+    """
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
     (encrypted, session_id) = server.create_session(yaml_filename, secret, url_args=url_args)  # pylint: disable=assignment-from-none,unpacking-non-sequence
@@ -5770,7 +7092,21 @@ def create_session(yaml_filename, secret=None, url_args=None):
 
 
 def get_session_variables(yaml_filename, session_id, secret=None, simplify=True):
-    """Returns the interview dictionary for the given interview session."""
+    """Return the interview dictionary for the specified session.
+
+    Cannot be used to retrieve variables from the current session.
+
+    Args:
+        yaml_filename (str): The interview filename.
+        session_id (str): The session ID.
+        secret (str, optional): The encryption key for decrypting the
+            session. Uses the current user's key if not provided.
+        simplify (bool, optional): If ``True``, returns a simplified
+            JSON-serializable dictionary. Defaults to ``True``.
+
+    Returns:
+        dict: The interview session dictionary.
+    """
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise DAError("You cannot get variables from the current interview session")
     if secret is None:
@@ -5779,7 +7115,26 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
 
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None, overwrite=False, process_objects=False, delete=None):
-    """Sets variables in the interview dictionary for the given interview session."""
+    """Set variables in the interview dictionary of another session.
+
+    Cannot be used to modify the current session.
+
+    Args:
+        yaml_filename (str): The interview filename.
+        session_id (str): The session ID.
+        variables (dict): A dictionary mapping variable name strings to
+            their new values.
+        secret (str, optional): The encryption key for the session.
+        question_name (str, optional): The ID of a mandatory question to
+            mark as answered.
+        overwrite (bool, optional): If ``True``, overwrites the previous
+            step instead of creating a new one. Defaults to ``False``.
+        process_objects (bool, optional): If ``True``, treats the
+            dictionary as a serializable representation of docassemble
+            objects. Defaults to ``False``.
+        delete (str or list, optional): Variable name(s) to undefine in
+            the session.
+    """
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise DAError("You cannot set variables in the current interview session")
     if secret is None:
@@ -5793,6 +7148,29 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, que
 
 
 def run_action_in_session(yaml_filename, session_id, action, arguments=None, secret=None, persistent=False, overwrite=False, read_only=False):
+    """Run an action in a different interview session.
+
+    Cannot be used on the current session.
+
+    Args:
+        yaml_filename (str): The interview filename.
+        session_id (str): The session ID of the target session.
+        action (str): The name of the action (event) to run.
+        arguments (dict, optional): Arguments to pass to the action.
+        secret (str, optional): The encryption key for the session.
+        persistent (bool, optional): If ``True``, the action can ask
+            questions. Defaults to ``False``.
+        overwrite (bool, optional): If ``True``, overwrites the previous
+            step. Defaults to ``False``.
+        read_only (bool, optional): If ``True``, the session is not saved
+            after the action. Defaults to ``False``.
+
+    Returns:
+        bool: ``True`` on success.
+
+    Raises:
+        DAError: If the action fails or targets the current session.
+    """
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise DAError("You cannot run an action in the current interview session")
     if arguments is None:
@@ -5808,7 +7186,19 @@ def run_action_in_session(yaml_filename, session_id, action, arguments=None, sec
 
 
 def get_question_data(yaml_filename, session_id, secret=None):
-    """Returns data about the current question for the given interview session."""
+    """Return data about the current question for the specified interview session.
+
+    Cannot be used on the current session.
+
+    Args:
+        yaml_filename (str): The interview filename.
+        session_id (str): The session ID.
+        secret (str, optional): The encryption key for decrypting the
+            session. Uses the current user's key if not provided.
+
+    Returns:
+        dict: A dictionary containing data about the current question.
+    """
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise DAError("You cannot get question data from the current interview session")
     if secret is None:
@@ -5817,7 +7207,16 @@ def get_question_data(yaml_filename, session_id, secret=None):
 
 
 def go_back_in_session(yaml_filename, session_id, secret=None):
-    """Goes back one step in an interview session."""
+    """Go back one step in a different interview session.
+
+    Has the same effect as the user clicking the Back button in that session.
+    Cannot be used on the current session.
+
+    Args:
+        yaml_filename (str): The interview filename.
+        session_id (str): The session ID.
+        secret (str, optional): The encryption key for the session.
+    """
     if session_id == get_uid() and yaml_filename == this_thread.current_info.get('yaml_filename', None):
         raise DAError("You cannot go back in the current interview session")
     if secret is None:
@@ -5830,7 +7229,19 @@ def turn_to_at_sign(match):
 
 
 def redact(text):
-    """Redact the given text from documents, except when redaction is turned off for the given file."""
+    """Return a redacted version of the text for use in documents.
+
+    Replaces the text with a redaction mark unless redaction has been
+    disabled for the current document (e.g., via ``redact: False``).
+
+    Args:
+        text (str): The text to potentially redact.
+
+    Returns:
+        str: The original text if redaction is disabled, or a redacted
+            version (masking characters appropriate for the output format)
+            if redaction is enabled.
+    """
     if not this_thread.misc.get('redact', True):
         return text
     the_text = str(text)
@@ -5893,7 +7304,19 @@ def ensure_definition(*pargs, **kwargs):
 
 
 def verbatim(text):
-    """Disables the effect of formatting characters in the text."""
+    """Return the text with special formatting characters escaped for the current output context.
+
+    Prevents Markdown, HTML, or LaTeX characters in user-supplied input from
+    being interpreted as formatting codes when rendered on screen or in a
+    document.
+
+    Args:
+        text (str): The text to escape.
+
+    Returns:
+        str: The text with formatting characters escaped appropriately for
+            the current output context (Markdown, HTML, DOCX, or LaTeX).
+    """
     if this_thread.evaluation_context in ('pandoc tex', 'pandoc pdf'):
         return '\\textrm{' + str(escape_latex(re.sub(r'\r?\n(\r?\n)+', '\n', str(text).strip()))) + '}'
     if this_thread.evaluation_context is None:
@@ -5929,7 +7352,16 @@ class DALocalFile:
 
 
 def forget_result_of(*pargs):
-    """Resets the user's answer to an embedded code question or mandatory code block."""
+    """Reset the result of one or more blocks so they will run again.
+
+    Used to re-ask questions with embedded blocks, or to re-run mandatory
+    code blocks, by clearing the record of whether those blocks have been
+    completed.
+
+    Args:
+        *pargs: The ``id`` strings of the blocks whose results should be
+            forgotten.
+    """
     the_pargs = unpack_pargs(pargs)
     for id_name in the_pargs:
         key = 'ID ' + id_name
@@ -5941,7 +7373,13 @@ def forget_result_of(*pargs):
 
 
 def re_run_logic():
-    """Run the interview logic from the beginning."""
+    """Stop execution and re-evaluate all initial and mandatory blocks from the beginning.
+
+    Raises a ``ForcedReRun`` exception so that docassemble restarts the
+    evaluation of interview logic.  Useful after making variable changes that
+    should cause earlier blocks to run again.  Take care to avoid infinite
+    loops.
+    """
     raise ForcedReRun()
 
 
@@ -5992,7 +7430,17 @@ def intrinsic_names_of(*pargs, the_user_dict=None):
 
 
 def reconsider(*pargs, evaluate=False):
-    """Ensures that the value of one or more variables is freshly calculated."""
+    """Undefine and re-evaluate one or more variables, ensuring fresh values.
+
+    Each variable is undefined and then immediately re-sought.  A variable
+    is only reconsidered once per page load, even if called multiple times.
+
+    Args:
+        *pargs: Variable name strings to reconsider.
+        evaluate (bool, optional): If ``True``, resolves alias variable
+            names to their intrinsic names before reconsidering. Defaults
+            to ``False``.
+    """
     if 'reconsidered' not in this_thread.misc:
         this_thread.misc['reconsidered'] = set()
     pargs = unpack_pargs(pargs)
@@ -6007,7 +7455,18 @@ def reconsider(*pargs, evaluate=False):
 
 
 def single_to_double_newlines(text):
-    """Converts single newlines to double newlines."""
+    """Convert single newlines to double newlines so each line break becomes a paragraph break.
+
+    Useful when user-supplied text uses single newlines as paragraph
+    separators, but the Markdown renderer requires double newlines.
+
+    Args:
+        text (str): The text to convert.
+
+    Returns:
+        str: The text with each sequence of newline characters replaced by
+            two newlines.
+    """
     return re.sub(r'[\n\r]+', r'\n\n', str(text))
 
 

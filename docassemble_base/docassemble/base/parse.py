@@ -7781,16 +7781,16 @@ class Question:
                         result['markdown'][doc_format] = the_markdown
                         docassemble.base.functions.reset_context()
                     else:
-                        the_markdown = ""
-                        if len(result['metadata']) > 0:
-                            modified_metadata = {}
-                            for key, data in result['metadata'].items():
-                                if re.search(r'Footer|Header', key) and 'Lines' not in key:
-                                    # modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + str('[END]')
-                                    modified_metadata[key] = data + str('[END]')
-                                else:
-                                    modified_metadata[key] = data
-                            the_markdown += '---\n' + altyaml.dump_to_string(modified_metadata) + "\n...\n"
+                        modified_metadata = {"syslang": get_language()}
+                        if result['convert_to_tagged_pdf']:
+                            modified_metadata['taggedpdf'] = "true"
+                        for key, data in result['metadata'].items():
+                            if re.search(r'Footer|Header', key) and 'Lines' not in key:
+                                # modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + str('[END]')
+                                modified_metadata[key] = data + str('[END]')
+                            else:
+                                modified_metadata[key] = data
+                        the_markdown = '---\n' + altyaml.dump_to_string(modified_metadata) + "\n...\n"
                         docassemble.base.functions.set_context('pandoc ' + doc_format)
                         the_markdown += the_content.text(the_user_dict)
                         # logmessage("Markdown is:\n" + repr(the_markdown) + "END")
