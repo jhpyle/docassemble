@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.10](https://github.com/jhpyle/docassemble/releases/tag/v1.9.10) - 2026-05-03
+
+
+### Fixed
+
+- Pickle error introduced in 1.9.9.
+
 ## [1.9.9](https://github.com/jhpyle/docassemble/releases/tag/v1.9.9) - 2026-05-03
 
 
