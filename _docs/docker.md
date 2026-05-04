@@ -198,28 +198,28 @@ Linux, you many need to do `sudo systemctl start docker`, `sudo
 service docker start`, or `sudo /etc/init.d/docker start`.
 
 The operating system that runs inside of the **docassemble** Docker
-container is Ubuntu 24.04. This is a fairly recent version of
+container is Ubuntu 26.04. This is a fairly recent version of
 Ubuntu. When using [Docker], it is recommended that you run a recent
 version of [Docker] and its dependencies ([containerd] and
-[runC]). Ubuntu 22 and Debian 12 are known to work well. (If you run
-Docker on Mac or Windows, it will likely start a virtual machine and
-then deploy the **docassemble** Docker container inside that virtual
-machine; the operating system of that virtual machine, which is likely
-a flavor of Linux, should be recent.)  You may encounter
-difficult-to-diagnose problems if **docassemble**'s OS and software do
-not fully function inside the host operating system. It is difficult
-to predict what these errors will be. If you run the latest
-**docassemble** image on an OS that is older than Ubuntu 22, it is
-likely that you will encounter problems, if not right away then at a
-later point in time. The software in the **docassemble** image and
-Python packages is continually updated, and the latest versions of
-software may expect the latest versions of operating system.
+[runC]). Ubuntu 24 is known to work well. (If you run Docker on Mac or
+Windows, it will likely start a virtual machine and then deploy the
+**docassemble** Docker container inside that virtual machine; the
+operating system of that virtual machine, which is likely a flavor of
+Linux, should be recent.)  You may encounter difficult-to-diagnose
+problems if **docassemble**'s OS and software do not fully function
+inside the host operating system. It is difficult to predict what
+these errors will be. If you run the latest **docassemble** image on
+an OS that is older than Ubuntu 24, it is likely that you will
+encounter problems, if not right away then at a later point in
+time. The software in the **docassemble** image and Python packages is
+continually updated, and the latest versions of software may expect
+the latest versions of operating system.
 
-As of August 2024, Ubuntu 24.04's `docker.io` package has a problem
-with AppArmor interfering with the functionality of [`docker
-stop`]. If you use Ubuntu 24.04 as the operating system on which to
-run Docker, follow the instructions on Docker's web site for
-installing the Community Edition.
+As of August 2024, Ubuntu's `docker.io` package has a problem with
+AppArmor interfering with the functionality of [`docker stop`]. If you
+use Ubuntu as the operating system on which to run Docker, follow the
+instructions on Docker's web site for installing the Community
+Edition.
 
 If you are using [Docker Desktop], it is recommended that you go to
 Settings and change the Docker Engine settings so that the
@@ -423,7 +423,7 @@ that **docassemble** uses, including:
   kills them, called `watchdog`.
 * A [WebSocket] server that supports the [live help] functionality,
   called `websockets`.
-* A [unoconv] server, called `unoconv` (which will be used for DOCX to
+* A [unoserver] server, called `unoserver` (which will be used for DOCX to
   PDF conversion if [`enable unoconv`] is true).
 
 In addition to starting background tasks, [Supervisor] coordinates the
@@ -876,7 +876,7 @@ rabbitmq                         RUNNING   pid 793, uptime 0:02:02
 reset                            STOPPED   Not started
 sync                             STOPPED   Not started
 syslogng                         STOPPED   Not started
-unoconv                          RUNNING   pid 1275, uptime 0:01:37
+unoserver                        RUNNING   pid 1275, uptime 0:01:37
 update                           STOPPED   Not started
 uwsgi                            RUNNING   pid 1148, uptime 0:01:44
 watchdog                         RUNNING   pid 9, uptime 0:02:21
@@ -886,7 +886,7 @@ websockets                       RUNNING   pid 1107, uptime 0:01:46
 If you are running **docassemble** in a single-server arrangement, the
 processes that should be "RUNNING" include `celery`, `celerysingle`,
 `cron`, `exim4`, `initialize`, `nginx`, `postgres`, `rabbitmq`,
-`redis`, `unoconv`, `uwsgi`, `watchdog`, and `websockets`. (The
+`redis`, `unoserver`, `uwsgi`, `watchdog`, and `websockets`. (The
 `initialize`, `postgres`, and `redis` processes are prefixed with
 `main:` because they are combined into a group called `main` so that
 they shut down simultaneously.)
@@ -1535,7 +1535,7 @@ your container for the new configuration to take effect.
   the extra package index sites that `pip` uses. See the [`pip extra
   index urls`] configuration directive.
 * <a name="ENABLEUNOCONV"></a>`ENABLEUNOCONV`: This controls whether
-  [unoconv] is used for DOCX to PDF conversion. It can be set to
+  [unoserver] is used for DOCX to PDF conversion. It can be set to
   `true` or `false`. See the [`enable unoconv`] configuration
   directive.
 * <a name="GOTENBERGURL"></a>`GOTENBERGURL`: This can be set to the
@@ -3821,7 +3821,7 @@ endpoints that you can use.
 [Gotenberg]: https://gotenberg.dev/
 [deletes inactive sessions]: {{ site.baseurl }}/docs/config.html#interview delete days
 [receiving emails]: {{ site.baseurl }}/docs/functions.html#interview_email
-[unoconv]: https://linux.die.net/man/1/unoconv
+[unoserver]: https://github.com/unoconv/unoserver
 [AWS CLI]: https://aws.amazon.com/cli/
 [Azure CLI]: https://learn.microsoft.com/en-us/cli/azure/
 [Amazon Lightsail]: https://aws.amazon.com/lightsail/

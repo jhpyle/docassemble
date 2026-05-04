@@ -318,10 +318,12 @@ app will not offer the user a back button while showing the question.
 
 {% include side-by-side.html demo="prevent-going-back" %}
 
+The `prevent going back` specifier accepts boolean values or a Python
+expression.
+
 There is also a [`prevent_going_back()` function] that accomplishes
-the same thing from [Python] code.  This may be more useful than the
-`prevent going back` modifier if the need to prevent the user from
-clicking the back button depends on the outcome of a process.
+the same thing from [Python] code, if you want to programmatically
+turn off the ability to go back, regardless of what `question` appears.
 
 # <a name="back button"></a>Adding a back button inside the question
 

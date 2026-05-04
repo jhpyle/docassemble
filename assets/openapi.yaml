@@ -1,0 +1,3982 @@
+openapi: 3.1.0
+
+info:
+  title: docassemble API
+  version: "1.0"
+  description: |
+    HTTP-based API for controlling docassemble features programmatically.
+    All requests must be authenticated using an API key.
+
+    ## Authentication
+
+    An API key can be supplied in any of the following ways (listed from most
+    to least recommended):
+
+    - **X-API-Key header**: `X-API-Key: <key>`
+    - **Authorization bearer token**: `Authorization: Bearer <key>`
+    - **X-API-Key cookie**: `Cookie: X-API-Key=<key>`
+    - **`key` body/query parameter** (not recommended — URLs are often logged):
+      include `key=<key>` as a query or body parameter.
+
+    ## Response format
+
+    Most endpoints return JSON. Error responses are plain-text strings with the
+    appropriate HTTP status code.
+
+    ## POST requests
+
+    POST endpoints accept either `application/json` or
+    `application/x-www-form-urlencoded`. Use `multipart/form-data` when
+    uploading files. When submitting JSON, complex parameters (arrays, objects)
+    do not need to be pre-serialised to strings.
+
+    ## Pagination
+
+    Paginated list endpoints return `{"items": [...], "next_id": string|null}`.
+    Pass the returned `next_id` value in the next request to retrieve the
+    following page. If `next_id` is `null` there are no more records.
+
+servers:
+  - url: /
+    description: Local docassemble installation (host varies per deployment)
+
+security:
+  - ApiKeyHeader: []
+  - BearerAuth: []
+  - ApiKeyCookie: []
+
+components:
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key passed as a request header.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: API key passed as a bearer token in the Authorization header.
+    ApiKeyCookie:
+      type: apiKey
+      in: cookie
+      name: X-API-Key
+      description: API key passed as a cookie.
+
+  schemas:
+    ErrorResponse:
+      type: string
+      description: Plain-text error message.
+
+    TaskId:
+      type: object
+      properties:
+        task_id:
+          type: string
+          description: Opaque identifier that can be passed to a status endpoint.
+      required:
+        - task_id
+
+    PaginatedMeta:
+      type: object
+      properties:
+        next_id:
+          type:
+            - string
+            - "null"
+          description: >
+            Opaque token to pass as `next_id` to retrieve the next page.
+            `null` when no further pages exist.
+      required:
+        - next_id
+
+    UserInfo:
+      type: object
+      description: Information about a docassemble user.
+      properties:
+        id:
+          type: integer
+          description: Integer user ID.
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+        last_name:
+          type: string
+        country:
+          type: string
+          description: Country code (e.g. "US").
+        subdivisionfirst:
+          type: string
+          description: State.
+        subdivisionsecond:
+          type: string
+          description: County.
+        subdivisionthird:
+          type: string
+          description: Municipality.
+        organization:
+          type: string
+        timezone:
+          type: string
+          description: Time-zone string (e.g. "America/New_York").
+        language:
+          type: string
+          description: Language code (e.g. "en").
+        privileges:
+          type: array
+          items:
+            type: string
+          description: List of privilege names the user holds.
+        active:
+          type: boolean
+          description: Whether the user account is active.
+        account_type:
+          type: string
+          description: Authentication provider type (e.g. "local").
+
+    UserInfoList:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedMeta"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserInfo"
+          required:
+            - items
+
+    InterviewSession:
+      type: object
+      description: A single interview session record.
+      properties:
+        email:
+          type: string
+        filename:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        modtime:
+          type: string
+        session:
+          type: string
+        starttime:
+          type: string
+        subtitle:
+          type:
+            - string
+            - "null"
+        tags:
+          type: array
+          items:
+            type: string
+        temp_user_id:
+          type:
+            - integer
+            - "null"
+        title:
+          type: string
+        user_id:
+          type:
+            - integer
+            - "null"
+        utc_modtime:
+          type: string
+        utc_starttime:
+          type: string
+        valid:
+          type: boolean
+        dict:
+          type: object
+          additionalProperties: true
+          description: Interview answers (only present when include_dictionary=1).
+        encrypted:
+          type: boolean
+          description: Whether answers are encrypted (only present when include_dictionary=1).
+
+    InterviewSessionList:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedMeta"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/InterviewSession"
+          required:
+            - items
+
+    InterviewListItem:
+      type: object
+      description: An advertised interview from the dispatch list.
+      properties:
+        filename:
+          type: string
+        link:
+          type: string
+        package:
+          type: string
+        status_class:
+          type:
+            - string
+            - "null"
+        subtitle:
+          type:
+            - string
+            - "null"
+        subtitle_class:
+          type:
+            - string
+            - "null"
+        tags:
+          type: array
+          items:
+            type: string
+        title:
+          type: string
+
+    PackageInfo:
+      type: object
+      description: Information about an installed package.
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        type:
+          type: string
+          enum: ["pip", "zip", "git"]
+        can_update:
+          type: boolean
+        can_uninstall:
+          type: boolean
+        git_url:
+          type: string
+        branch:
+          type: string
+        zip_file_number:
+          type: integer
+
+    ApiKeyInfo:
+      type: object
+      description: Information about a user API key.
+      properties:
+        name:
+          type: string
+        key:
+          type: string
+          description: The API key value (last four characters shown; rest masked).
+        method:
+          type: string
+          enum: ["ip", "referer", "none"]
+        constraints:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    PackageUpdateStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["working", "completed", "unknown"]
+        ok:
+          type: boolean
+          description: Whether the operation succeeded (present when status=completed).
+        log:
+          type: string
+          description: pip output log (present when status=completed and ok=true).
+        error_message:
+          type: string
+          description: Error details (present when status=completed and ok=false).
+
+    RestartStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["working", "completed", "unknown"]
+
+    UserUpdateBody:
+      type: object
+      description: |
+        Fields that can be updated for the API owner's profile.
+        All fields are optional; supply only those you wish to change.
+      properties:
+        first_name:
+          type: string
+          description: The user's first name.
+        last_name:
+          type: string
+          description: The user's last name.
+        country:
+          type: string
+          description: Country code (e.g. "US").
+        subdivisionfirst:
+          type: string
+          description: State.
+        subdivisionsecond:
+          type: string
+          description: County.
+        subdivisionthird:
+          type: string
+          description: Municipality.
+        organization:
+          type: string
+          description: Organization name.
+        timezone:
+          type: string
+          description: Time-zone string (e.g. "America/New_York").
+        language:
+          type: string
+          description: Language code (e.g. "en").
+        password:
+          type: string
+          description: New password for the user.
+        old_password:
+          type: string
+          description: >
+            Current password. Required when changing the password so that
+            encrypted interview answers can be re-encrypted with the new key.
+
+    UserUpdateBodyWithActive:
+      allOf:
+        - $ref: "#/components/schemas/UserUpdateBody"
+        - type: object
+          description: |
+            Same as `UserUpdateBody` plus the `active` flag, which may only be
+            set when modifying another user (not oneself or the original admin).
+          properties:
+            active:
+              type: boolean
+              description: >
+                Whether the user account should be active. Cannot be changed
+                for the current user or the original admin account.
+
+    SessionPostBody:
+      type: object
+      description: |
+        Request body for `POST /api/session` when sending `application/json`.
+        Complex values (`variables`, `delete_variables`, `event_list`,
+        `file_variables`) may be passed as native JSON types.
+      required:
+        - i
+        - session
+      properties:
+        i:
+          type: string
+          description: >
+            Interview filename (e.g.
+            `docassemble.demo:data/questions/questions.yml`).
+        session:
+          type: string
+          description: Session ID.
+        secret:
+          type: string
+          description: Encryption secret (required if the session uses encryption).
+        variables:
+          type: object
+          additionalProperties: true
+          description: >
+            Key/value pairs of variables to set in the interview dictionary.
+        raw:
+          type: integer
+          enum: [0, 1]
+          description: >
+            Set to `0` to skip automatic conversion of dates and DAObjects.
+            Defaults to `1` (conversion enabled).
+        question_name:
+          type: string
+          description: >
+            Name of the question being answered (needed for mandatory questions).
+        question:
+          type: integer
+          enum: [0, 1]
+          description: >
+            Set to `0` to update variables without evaluating the interview or
+            returning the current question. Default is `1`.
+        advance_progress_meter:
+          type: integer
+          enum: [0, 1]
+          description: Set to `1` to advance the progress meter.
+        overwrite:
+          type: integer
+          enum: [0, 1]
+          description: Set to `1` to overwrite the previous step instead of creating a new one.
+        delete_variables:
+          type: array
+          items:
+            type: string
+          description: Variable names to delete (after `variables` are set).
+        file_variables:
+          type: object
+          additionalProperties:
+            type: string
+          description: >
+            Maps upload field names to interview variable names when the field
+            name cannot be used directly as the variable name.
+        event_list:
+          type: array
+          items:
+            type: string
+          description: List of variable names that triggered the current question.
+
+    SessionPostBodyForm:
+      type: object
+      description: |
+        Request body for `POST /api/session` when sending
+        `application/x-www-form-urlencoded`. Array/object parameters must be
+        individually JSON-encoded strings.
+      required:
+        - i
+        - session
+      properties:
+        i:
+          type: string
+          description: >
+            Interview filename (e.g.
+            `docassemble.demo:data/questions/questions.yml`).
+        session:
+          type: string
+          description: Session ID.
+        secret:
+          type: string
+          description: Encryption secret (required if the session uses encryption).
+        variables:
+          type: string
+          description: JSON-encoded object of variable name/value pairs.
+        raw:
+          type: integer
+          enum: [0, 1]
+          description: Set to `0` to skip automatic date/DAObject conversion.
+        question_name:
+          type: string
+          description: Name of the question being answered.
+        question:
+          type: integer
+          enum: [0, 1]
+          description: Set to `0` to suppress interview evaluation.
+        advance_progress_meter:
+          type: integer
+          enum: [0, 1]
+          description: Set to `1` to advance the progress meter.
+        overwrite:
+          type: integer
+          enum: [0, 1]
+          description: Set to `1` to overwrite instead of creating a new step.
+        delete_variables:
+          type: string
+          description: JSON-encoded array of variable names to delete.
+        file_variables:
+          type: string
+          description: JSON-encoded object mapping upload field names to variable names.
+        event_list:
+          type: string
+          description: JSON-encoded array of event variable names.
+
+    SessionPostBodyMultipart:
+      type: object
+      description: |
+        Request body for `POST /api/session` when sending
+        `multipart/form-data` (required when uploading files). Array/object
+        parameters must be individually JSON-encoded strings.
+      required:
+        - i
+        - session
+      properties:
+        i:
+          type: string
+          description: Interview filename.
+        session:
+          type: string
+          description: Session ID.
+        secret:
+          type: string
+          description: Encryption secret (required if the session uses encryption).
+        variables:
+          type: string
+          description: JSON-encoded object of variable name/value pairs.
+        raw:
+          type: integer
+          enum: [0, 1]
+          description: Set to `0` to skip automatic date/DAObject conversion.
+        question_name:
+          type: string
+          description: Name of the question being answered.
+        question:
+          type: integer
+          enum: [0, 1]
+          description: Set to `0` to suppress interview evaluation.
+        advance_progress_meter:
+          type: integer
+          enum: [0, 1]
+          description: Set to `1` to advance the progress meter.
+        overwrite:
+          type: integer
+          enum: [0, 1]
+          description: Set to `1` to overwrite instead of creating a new step.
+        delete_variables:
+          type: string
+          description: JSON-encoded array of variable names to delete.
+        file_variables:
+          type: string
+          description: JSON-encoded object mapping upload field names to variable names.
+        event_list:
+          type: string
+          description: JSON-encoded array of event variable names.
+
+    ApiKeyCreateBody:
+      type: object
+      description: Body for creating a new API key.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          description: >
+            A unique name for this API key (unique within the user's keys,
+            max 255 characters).
+        method:
+          type: string
+          enum: ["ip", "referer", "none"]
+          default: "none"
+          description: >
+            Access-control method: `ip` (restrict by IP address), `referer`
+            (restrict by Referer header), or `none` (no restriction).
+        allowed:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: string
+          description: >
+            JSON-encoded list of allowed IP addresses or URLs. Applicable when
+            `method` is `ip` or `referer`. Defaults to an empty list.
+        permissions:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: string
+          description: >
+            JSON-encoded list of limited permissions for this API key.
+            Applicable only if the owning user has `admin` privileges.
+
+    ApiKeyUpdateBody:
+      type: object
+      description: Body for updating an existing API key.
+      properties:
+        api_key:
+          type: string
+          description: >
+            The API key value to modify. If omitted, the key used to
+            authenticate is modified.
+        name:
+          type: string
+          maxLength: 255
+          description: New name for the API key (max 255 characters, must be unique for the user).
+        method:
+          type: string
+          enum: ["ip", "referer", "none"]
+          description: New access-control method.
+        allowed:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: string
+          description: >
+            JSON-encoded list of allowed IP addresses or URLs (replaces existing
+            list). Applicable when `method` is `ip` or `referer`.
+        add_to_allowed:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Item(s) to add to the allowed list.
+        remove_from_allowed:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Item(s) to remove from the allowed list.
+        permissions:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: string
+          description: >
+            JSON-encoded list of limited permissions (replaces existing list).
+            Only effective for `admin` users.
+        add_to_permissions:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Permission(s) to add. Only effective for `admin` users.
+        remove_from_permissions:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: Permission(s) to remove. Only effective for `admin` users.
+
+tags:
+  - name: Users
+    description: Manage user accounts and their attributes.
+  - name: Sessions
+    description: Create and manipulate interview sessions.
+  - name: Interviews
+    description: List, delete, and query interview sessions across the system.
+  - name: Packages
+    description: Install, update, uninstall, and query Python packages.
+  - name: Playground
+    description: Manage files and projects in the developer Playground.
+  - name: Configuration
+    description: Read and write the server configuration.
+  - name: Files
+    description: Retrieve stored files.
+  - name: System
+    description: System-level utilities (restart, cache, temp URLs, stash, etc.).
+
+paths:
+
+  # ---------------------------------------------------------------------------
+  # Users
+  # ---------------------------------------------------------------------------
+
+  /api/user/new:
+    post:
+      tags: [Users]
+      summary: Create a new user
+      operationId: createUser
+      description: |
+        Creates a user with a given e-mail address and password.
+        Requires `admin` privileges or the `access_user_info` + `create_user` permissions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username]
+              properties:
+                username:
+                  type: string
+                  format: email
+                  description: The user's e-mail address.
+                password:
+                  type: string
+                  description: >
+                    The user's password (min 4, max 254 characters).
+                    If omitted, a random password is generated.
+                privileges:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: Privilege(s) to assign. Defaults to ["user"].
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                country:
+                  type: string
+                subdivisionfirst:
+                  type: string
+                subdivisionsecond:
+                  type: string
+                subdivisionthird:
+                  type: string
+                organization:
+                  type: string
+                timezone:
+                  type: string
+                language:
+                  type: string
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [username]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                privileges:
+                  type: string
+                  description: A single privilege name or a JSON-encoded array.
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                country:
+                  type: string
+                subdivisionfirst:
+                  type: string
+                subdivisionsecond:
+                  type: string
+                subdivisionthird:
+                  type: string
+                organization:
+                  type: string
+                timezone:
+                  type: string
+                language:
+                  type: string
+      responses:
+        "200":
+          description: User created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                  password:
+                    type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user_invite:
+    post:
+      tags: [Users]
+      summary: Invite new user(s)
+      operationId: inviteUser
+      description: |
+        Creates one or more invitations for new users to register with a given privilege.
+        Requires `admin` privileges or the `create_user` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email_addresses]
+              properties:
+                email_addresses:
+                  oneOf:
+                    - type: string
+                      format: email
+                    - type: array
+                      items:
+                        type: string
+                        format: email
+                  description: One or more e-mail addresses to invite.
+                privilege:
+                  type: string
+                  default: user
+                  description: Privilege to assign to the invited user(s).
+                send_emails:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+                  description: Set to 0 to suppress invitation e-mails.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email_addresses]
+              properties:
+                email_addresses:
+                  type: string
+                  description: A single e-mail address or a JSON-encoded array.
+                privilege:
+                  type: string
+                send_emails:
+                  type: integer
+      responses:
+        "200":
+          description: Invitations processed.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                    invitation_sent:
+                      type: boolean
+                    url:
+                      type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user_list:
+    get:
+      tags: [Users]
+      summary: List users
+      operationId: listUsers
+      description: |
+        Returns a paginated list of registered users.
+        Requires `admin`, `advocate`, or the `access_user_info` permission.
+      parameters:
+        - name: include_inactive
+          in: query
+          description: Set to 1 to include inactive users.
+          schema:
+            type: integer
+            enum: [0, 1]
+        - name: next_id
+          in: query
+          description: Pagination token from a previous response.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of users.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfoList"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user_info:
+    get:
+      tags: [Users]
+      summary: Retrieve user information by username
+      operationId: getUserInfoByUsername
+      description: |
+        Returns information about the user with the given e-mail address.
+        Requires `admin`, `advocate`, or the `access_user_info` permission.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: The e-mail address of the user.
+          schema:
+            type: string
+            format: email
+        - name: case_sensitive
+          in: query
+          description: Set to 1 for a case-sensitive e-mail lookup.
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        "200":
+          description: User information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfo"
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user:
+    get:
+      tags: [Users]
+      summary: Get information about the API owner
+      operationId: getCurrentUser
+      description: |
+        Returns information about the user who owns the API key used to
+        authenticate the request. No special privileges required.
+      responses:
+        "200":
+          description: User information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfo"
+        "400":
+          description: Error obtaining user information.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Users]
+      summary: Set information about the API owner (POST)
+      operationId: updateCurrentUserPost
+      description: |
+        Updates profile information of the user who owns the API key.
+        Alias for the PATCH method.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBody"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBody"
+      responses:
+        "204":
+          description: User information updated.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied or insufficient privileges.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags: [Users]
+      summary: Set information about the API owner
+      operationId: updateCurrentUser
+      description: |
+        Updates profile information of the user who owns the API key.
+        Requires `edit_user_info` permission for profile fields; `edit_user_password`
+        permission (or admin) for changing the password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBody"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBody"
+      responses:
+        "204":
+          description: User information updated.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied or insufficient privileges.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user/privileges:
+    get:
+      tags: [Users]
+      summary: Get privileges of the API owner
+      operationId: getCurrentUserPrivileges
+      description: Returns the list of privileges of the user who owns the API key.
+      responses:
+        "200":
+          description: List of privilege names.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "400":
+          description: Error obtaining user information.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user/{user_id}:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Integer user ID.
+        schema:
+          type: integer
+    get:
+      tags: [Users]
+      summary: Get information about a user by ID
+      operationId: getUserById
+      description: |
+        Returns information about the user with the given `user_id`.
+        Requires `admin`, `advocate`, the same user ID as the API owner, or
+        the `access_user_info` permission.
+      responses:
+        "200":
+          description: User information.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfo"
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Users]
+      summary: Make a user inactive or delete a user account
+      operationId: deleteUser
+      description: |
+        Deactivates the account of the user with the given `user_id`, or
+        deletes the account entirely if `remove` is provided.
+      parameters:
+        - name: remove
+          in: query
+          description: |
+            Set to `account` to delete the account and its data. Set to
+            `account_and_shared` to also delete shared interview sessions.
+            Omit to only deactivate the account.
+          schema:
+            type: string
+            enum: ["account", "account_and_shared"]
+      responses:
+        "204":
+          description: Operation completed.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied or insufficient privileges.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Users]
+      summary: Update user information by ID (POST)
+      operationId: updateUserByIdPost
+      description: Alias for the PATCH method on this path.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBodyWithActive"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBodyWithActive"
+      responses:
+        "204":
+          description: User information updated.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied or insufficient privileges.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags: [Users]
+      summary: Update user information by ID
+      operationId: updateUserById
+      description: |
+        Updates information about the user with the given `user_id`.
+        Requires `admin`, the same user ID as the API owner, or the
+        `access_user_info` + `edit_user_info` permissions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBodyWithActive"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/UserUpdateBodyWithActive"
+      responses:
+        "204":
+          description: User information updated.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied or insufficient privileges.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user/{user_id}/privileges:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Integer user ID.
+        schema:
+          type: integer
+    get:
+      tags: [Users]
+      summary: Get privileges of a user by ID
+      operationId: getUserPrivileges
+      description: Returns the list of privileges for the user with the given ID.
+      responses:
+        "200":
+          description: List of privilege names.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "400":
+          description: Error obtaining user information.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Users]
+      summary: Give a user a privilege
+      operationId: addUserPrivilege
+      description: |
+        Gives the user with the given `user_id` the named privilege.
+        Requires `admin` or the `edit_user_privileges` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [privilege]
+              properties:
+                privilege:
+                  type: string
+                  description: Name of the privilege to add.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [privilege]
+              properties:
+                privilege:
+                  type: string
+      responses:
+        "204":
+          description: Privilege added.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Users]
+      summary: Remove a privilege from a user
+      operationId: removeUserPrivilege
+      description: |
+        Removes the named privilege from the user with the given `user_id`.
+        Requires `admin` or the `edit_user_privileges` permission.
+      parameters:
+        - name: privilege
+          in: query
+          required: true
+          description: Name of the privilege to remove.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Privilege removed.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/privileges:
+    get:
+      tags: [Users]
+      summary: List available privileges
+      operationId: listPrivileges
+      description: |
+        Returns all privilege names that exist in the system.
+        Requires `admin`, `developer`, or the `access_privileges` permission.
+      responses:
+        "200":
+          description: List of privilege names.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "400":
+          description: Error.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Users]
+      summary: Add a privilege
+      operationId: addPrivilege
+      description: |
+        Adds a new privilege name to the system.
+        Requires `admin` or the `access_privileges` + `edit_privileges` permissions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [privilege]
+              properties:
+                privilege:
+                  type: string
+                  description: Name of the new privilege.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [privilege]
+              properties:
+                privilege:
+                  type: string
+      responses:
+        "204":
+          description: Privilege added.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Users]
+      summary: Delete a privilege
+      operationId: deletePrivilege
+      description: |
+        Removes a privilege name from the system (cannot remove built-in privileges).
+        Requires `admin` or the `edit_privileges` permission.
+      parameters:
+        - name: privilege
+          in: query
+          required: true
+          description: Name of the privilege to remove.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Privilege removed.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user/api:
+    get:
+      tags: [Users]
+      summary: Get the API owner's API keys
+      operationId: getUserApiKeys
+      description: |
+        Returns information about the API keys belonging to the user who owns
+        the API key used to authenticate. If `api_key` or `name` is provided,
+        returns a single key object; otherwise returns a list.
+      parameters:
+        - name: api_key
+          in: query
+          description: Retrieve information for this specific API key value.
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Retrieve information for the API key with this name.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: API key information.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ApiKeyInfo"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/ApiKeyInfo"
+        "400":
+          description: Error accessing API information.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No such API key.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Users]
+      summary: Create an API key for the API owner
+      operationId: createUserApiKey
+      description: |
+        Adds a new API key for the user who owns the API key used to authenticate.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyCreateBody"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ApiKeyCreateBody"
+      responses:
+        "200":
+          description: New API key value.
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Users]
+      summary: Delete an API key of the API owner
+      operationId: deleteUserApiKey
+      description: Deletes the specified API key belonging to the API owner.
+      parameters:
+        - name: api_key
+          in: query
+          required: true
+          description: The API key to delete.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: API key deleted (or did not exist).
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags: [Users]
+      summary: Update an API key of the API owner
+      operationId: updateUserApiKey
+      description: |
+        Updates properties of an API key belonging to the API owner. If `api_key`
+        is omitted the key used to authenticate is modified.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyUpdateBody"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ApiKeyUpdateBody"
+      responses:
+        "204":
+          description: API key updated.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user/{user_id}/api:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Integer user ID.
+        schema:
+          type: integer
+    get:
+      tags: [Users]
+      summary: Get API keys of a user by ID
+      operationId: getUserApiKeysByUserId
+      description: |
+        Returns API key information for the user with the given `user_id`.
+        Requires `admin`, the same user ID as the API owner, or the
+        `access_user_api_info` permission.
+      parameters:
+        - name: api_key
+          in: query
+          description: Retrieve information for this specific API key value.
+          schema:
+            type: string
+        - name: name
+          in: query
+          description: Retrieve information for the API key with this name.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: API key information.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/ApiKeyInfo"
+                  - type: array
+                    items:
+                      $ref: "#/components/schemas/ApiKeyInfo"
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: No such API key or user not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Users]
+      summary: Create an API key for a user by ID
+      operationId: createUserApiKeyByUserId
+      description: |
+        Adds a new API key for the user with the given `user_id`.
+        Requires `admin`, the same user ID as the API owner, or the
+        `access_user_api_info` + `edit_user_api_info` permissions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyCreateBody"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ApiKeyCreateBody"
+      responses:
+        "200":
+          description: New API key value.
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Users]
+      summary: Delete an API key of a user by ID
+      operationId: deleteUserApiKeyByUserId
+      description: |
+        Deletes the specified API key belonging to the user with the given `user_id`.
+        Requires `admin`, the same user ID as the API owner, or the
+        `access_user_api_info` + `edit_user_api_info` permissions.
+      parameters:
+        - name: api_key
+          in: query
+          required: true
+          description: The API key to delete.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: API key deleted (or did not exist).
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags: [Users]
+      summary: Update an API key of a user by ID
+      operationId: updateUserApiKeyByUserId
+      description: |
+        Updates properties of an API key belonging to the user with the given `user_id`.
+        The `api_key` parameter is required for this endpoint.
+        Requires `admin`, the same user ID as the API owner, or the
+        `access_user_api_info` + `edit_user_api_info` permissions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyUpdateBody"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/ApiKeyUpdateBody"
+      responses:
+        "204":
+          description: API key updated.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # Sessions
+  # ---------------------------------------------------------------------------
+
+  /api/secret:
+    get:
+      tags: [Sessions]
+      summary: Obtain a decryption key for a user
+      operationId: getSecret
+      description: |
+        Given a username and password, returns the encryption secret required
+        to decrypt that user's stored interview answers in API calls.
+      parameters:
+        - name: username
+          in: query
+          required: true
+          description: The user's e-mail address.
+          schema:
+            type: string
+            format: email
+        - name: password
+          in: query
+          required: true
+          description: The user's password.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Decryption secret.
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Missing parameters.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Authentication failed or 2FA enabled.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/session/new:
+    get:
+      tags: [Sessions]
+      summary: Start a new interview session
+      operationId: newSession
+      description: |
+        Starts a new session for the given interview and returns the session ID.
+        Any extra query parameters (other than `i`, `secret`, and `key`) are
+        added to the interview's `url_args` variable.
+      parameters:
+        - name: i
+          in: query
+          required: true
+          description: >
+            Interview filename (e.g.
+            `docassemble.demo:data/questions/questions.yml`).
+          schema:
+            type: string
+        - name: secret
+          in: query
+          description: >
+            Encryption secret. If omitted and the interview uses encryption, a
+            random secret is generated and returned.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: New session created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  i:
+                    type: string
+                  session:
+                    type: string
+                  encrypted:
+                    type: boolean
+                  secret:
+                    type: string
+                    description: >
+                      Only present when no secret was provided and the interview
+                      uses encryption.
+                required:
+                  - i
+                  - session
+                  - encrypted
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/session:
+    get:
+      tags: [Sessions]
+      summary: Get variables from an interview session
+      operationId: getSessionVariables
+      description: |
+        Returns a JSON representation of the current interview dictionary
+        (all variables in the session).
+      parameters:
+        - name: i
+          in: query
+          required: true
+          description: Interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          required: true
+          description: Session ID.
+          schema:
+            type: string
+        - name: secret
+          in: query
+          description: Encryption secret (required if the session uses encryption).
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Interview dictionary as JSON.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Sessions]
+      summary: Set variables in an interview session
+      operationId: setSessionVariables
+      description: |
+        Sets variables in the interview dictionary and (by default) returns a
+        JSON representation of the current question. Supports file uploads via
+        `multipart/form-data`; when uploading files, use `multipart/form-data`
+        and encode complex parameters as JSON strings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionPostBody"
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/SessionPostBodyForm"
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/SessionPostBodyMultipart"
+      responses:
+        "200":
+          description: >
+            Current question as JSON (returned when `question` is not 0).
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "204":
+          description: >
+            Empty response when `question` is set to 0.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Sessions]
+      summary: Delete an interview session
+      operationId: deleteSession
+      description: Deletes the specified interview session for the API owner.
+      parameters:
+        - name: i
+          in: query
+          required: true
+          description: Interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          required: true
+          description: Session ID.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Session deleted.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/session/question:
+    get:
+      tags: [Sessions]
+      summary: Get the current question in an interview session
+      operationId: getSessionQuestion
+      description: Returns a JSON representation of the current question in the interview.
+      parameters:
+        - name: i
+          in: query
+          required: true
+          description: Interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          required: true
+          description: Session ID.
+          schema:
+            type: string
+        - name: secret
+          in: query
+          description: Encryption secret.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Current question as JSON.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/session/action:
+    post:
+      tags: [Sessions]
+      summary: Run an action in an interview session
+      operationId: runSessionAction
+      description: |
+        Runs a named action in the specified interview session. The response is
+        empty (204) unless the action ends with a `response()` call, in which
+        case the response content is returned (200).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [i, session, action]
+              properties:
+                i:
+                  type: string
+                  description: Interview filename.
+                session:
+                  type: string
+                  description: Session ID.
+                secret:
+                  type: string
+                  description: Encryption secret.
+                action:
+                  type: string
+                  description: Name of the action to run.
+                arguments:
+                  type: object
+                  additionalProperties: true
+                  description: Arguments to pass to the action.
+                persistent:
+                  type: integer
+                  enum: [0, 1]
+                  description: Set to 1 if the action shows a question block.
+                overwrite:
+                  type: integer
+                  enum: [0, 1]
+                  description: Set to 1 to overwrite the previous step rather than creating a new one.
+                read_only:
+                  type: integer
+                  enum: [0, 1]
+                  description: Set to 1 to run the action without saving interview answers.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [i, session, action]
+              properties:
+                i:
+                  type: string
+                session:
+                  type: string
+                secret:
+                  type: string
+                action:
+                  type: string
+                arguments:
+                  type: string
+                  description: JSON-encoded object.
+                persistent:
+                  type: integer
+                overwrite:
+                  type: integer
+                read_only:
+                  type: integer
+      responses:
+        "200":
+          description: Action produced a response.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "204":
+          description: Action completed with no response body.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/session/back:
+    post:
+      tags: [Sessions]
+      summary: Go back one step in an interview session
+      operationId: sessionBack
+      description: |
+        Undoes the last step in the interview and (by default) returns the
+        current question. If `question` is 0, returns 204 with an empty body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [i, session]
+              properties:
+                i:
+                  type: string
+                  description: Interview filename.
+                session:
+                  type: string
+                  description: Session ID.
+                secret:
+                  type: string
+                  description: Encryption secret.
+                question:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+                  description: Set to 0 to skip returning the current question.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [i, session]
+              properties:
+                i:
+                  type: string
+                session:
+                  type: string
+                secret:
+                  type: string
+                question:
+                  type: integer
+      responses:
+        "200":
+          description: Current question after going back.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "204":
+          description: Went back; no question returned (when question=0).
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/login_url:
+    post:
+      tags: [Sessions]
+      summary: Obtain a temporary auto-login URL
+      operationId: getLoginUrl
+      description: |
+        Returns a temporary URL that logs a user in without requiring them to
+        enter their credentials. The URL expires after `expire` seconds (default 15).
+        Requires `admin` or the `log_user_in` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                i:
+                  type: string
+                  description: Interview filename to redirect to after login.
+                session:
+                  type: string
+                  description: Session ID (when `i` is also provided).
+                resume_existing:
+                  type: integer
+                  enum: [0, 1]
+                  description: Set to 1 to resume an existing session for the interview.
+                expire:
+                  type: integer
+                  description: Seconds until the URL expires (default 15).
+                url_args:
+                  type: object
+                  additionalProperties: true
+                  description: Additional URL arguments included in the destination URL.
+                next:
+                  type: string
+                  description: >
+                    Alternative destination path (e.g. "playground", "config") or full URL.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                i:
+                  type: string
+                session:
+                  type: string
+                resume_existing:
+                  type: integer
+                expire:
+                  type: integer
+                url_args:
+                  type: string
+                  description: JSON-encoded object.
+                next:
+                  type: string
+      responses:
+        "200":
+          description: Temporary login URL.
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied or authentication failed.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/resume_url:
+    post:
+      tags: [Sessions]
+      summary: Obtain a redirect URL for an existing session
+      operationId: getResumeUrl
+      description: |
+        Returns a temporary URL that redirects a user to resume an existing
+        interview session without transmitting the session ID to the browser.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [i]
+              properties:
+                i:
+                  type: string
+                  description: Interview filename.
+                session:
+                  type: string
+                  description: Session ID of the session to resume.
+                expire:
+                  type: integer
+                  default: 3600
+                  description: Seconds until the URL expires.
+                one_time:
+                  type: integer
+                  enum: [0, 1]
+                  description: Set to 1 to make the URL expire after one use.
+                url_args:
+                  type: object
+                  additionalProperties: true
+                  description: Additional URL arguments.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [i]
+              properties:
+                i:
+                  type: string
+                session:
+                  type: string
+                expire:
+                  type: integer
+                one_time:
+                  type: integer
+                url_args:
+                  type: string
+                  description: JSON-encoded object.
+      responses:
+        "200":
+          description: Temporary resume URL.
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/temp_url:
+    get:
+      tags: [System]
+      summary: Obtain a general-purpose redirect URL
+      operationId: getTempUrl
+      description: |
+        Returns a temporary URL that responds with a 302 redirect to the
+        given URL. Useful for hiding the final destination from the browser.
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: The destination URL.
+          schema:
+            type: string
+        - name: expire
+          in: query
+          description: Seconds until the URL expires (default 3600).
+          schema:
+            type: integer
+            default: 3600
+        - name: one_time
+          in: query
+          description: Set to 1 to expire after one use.
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        "200":
+          description: Temporary redirect URL.
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # Interviews
+  # ---------------------------------------------------------------------------
+
+  /api/list:
+    get:
+      tags: [Interviews]
+      summary: Get a list of advertised interviews
+      operationId: listInterviews
+      description: |
+        Returns interviews advertised by the system through the `dispatch`
+        configuration directive.
+      parameters:
+        - name: tag
+          in: query
+          description: Limit results to interviews with this tag.
+          schema:
+            type: string
+        - name: absolute_urls
+          in: query
+          description: Set to 0 to return relative (rather than absolute) URLs.
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        "200":
+          description: List of advertised interviews.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InterviewListItem"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/interviews:
+    get:
+      tags: [Interviews]
+      summary: List interview sessions on the system
+      operationId: listAllInterviews
+      description: |
+        Returns a filterable, paginated list of all interview sessions on the
+        system. Requires `admin`, `advocate`, or the `access_sessions` permission.
+      parameters:
+        - name: secret
+          in: query
+          description: Decryption secret to include encrypted session data.
+          schema:
+            type: string
+        - name: i
+          in: query
+          description: Filter by interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Filter by session ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string for additional filtering.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter by tag.
+          schema:
+            type: string
+        - name: include_dictionary
+          in: query
+          description: Set to 1 to include the interview answers in the response.
+          schema:
+            type: integer
+            enum: [0, 1]
+        - name: next_id
+          in: query
+          description: Pagination token.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of interview sessions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSessionList"
+        "400":
+          description: Error reading interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Interviews]
+      summary: Delete interview sessions on the system
+      operationId: deleteAllInterviews
+      description: |
+        Deletes interview sessions. Without filters, deletes ALL sessions.
+        Requires `admin`, `advocate`, or the `access_sessions` + `edit_sessions` permissions.
+      parameters:
+        - name: i
+          in: query
+          description: Delete only sessions with this interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Delete only the session with this ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string for additional filtering.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Delete only sessions with this tag.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Sessions deleted.
+        "400":
+          description: Error reading interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user/interviews:
+    get:
+      tags: [Interviews]
+      summary: List interview sessions of the API owner
+      operationId: listCurrentUserInterviews
+      description: |
+        Returns a filterable, paginated list of interview sessions belonging
+        to the user who owns the API key.
+      parameters:
+        - name: secret
+          in: query
+          description: Decryption secret.
+          schema:
+            type: string
+        - name: i
+          in: query
+          description: Filter by interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Filter by session ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter by tag.
+          schema:
+            type: string
+        - name: include_dictionary
+          in: query
+          description: Set to 1 to include interview answers.
+          schema:
+            type: integer
+            enum: [0, 1]
+        - name: next_id
+          in: query
+          description: Pagination token.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of interview sessions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSessionList"
+        "400":
+          description: Error reading interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Interviews]
+      summary: Delete interview sessions of the API owner
+      operationId: deleteCurrentUserInterviews
+      description: Deletes interview sessions belonging to the API owner.
+      parameters:
+        - name: i
+          in: query
+          description: Delete only sessions for this interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Delete only the session with this ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Delete only sessions with this tag.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Sessions deleted.
+        "400":
+          description: Error reading interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/users/interviews:
+    get:
+      tags: [Interviews]
+      summary: List interview sessions across all users (admin)
+      operationId: listUsersInterviews
+      description: |
+        Returns a filterable, paginated list of interview sessions across all
+        users. Requires `admin`, `advocate`, or the `access_sessions` permission.
+      parameters:
+        - name: user_id
+          in: query
+          description: Filter by user ID.
+          schema:
+            type: integer
+        - name: secret
+          in: query
+          description: Decryption secret.
+          schema:
+            type: string
+        - name: i
+          in: query
+          description: Filter by interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Filter by session ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter by tag.
+          schema:
+            type: string
+        - name: include_dictionary
+          in: query
+          description: Set to 1 to include interview answers.
+          schema:
+            type: integer
+            enum: [0, 1]
+        - name: next_id
+          in: query
+          description: Pagination token.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of interview sessions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSessionList"
+        "400":
+          description: Error getting interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Interviews]
+      summary: Delete interview sessions across all users (admin)
+      operationId: deleteUsersInterviews
+      description: |
+        Deletes interview sessions across all users. Requires `admin`, `advocate`,
+        or the `access_sessions` permission.
+      parameters:
+        - name: user_id
+          in: query
+          description: Delete only sessions for this user ID.
+          schema:
+            type: integer
+        - name: i
+          in: query
+          description: Delete only sessions for this interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Delete only the session with this ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Delete only sessions with this tag.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Sessions deleted.
+        "400":
+          description: Error reading interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/user/{user_id}/interviews:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: Integer user ID.
+        schema:
+          type: integer
+    get:
+      tags: [Interviews]
+      summary: List interview sessions of a user by ID
+      operationId: listUserInterviewsById
+      description: |
+        Returns a filterable, paginated list of interview sessions for the user
+        with the given `user_id`. Requires `admin`, `advocate`, the same user ID
+        as the API owner, or the `access_sessions` permission.
+      parameters:
+        - name: secret
+          in: query
+          description: Decryption secret.
+          schema:
+            type: string
+        - name: i
+          in: query
+          description: Filter by interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Filter by session ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Filter by tag.
+          schema:
+            type: string
+        - name: include_dictionary
+          in: query
+          description: Set to 1 to include interview answers.
+          schema:
+            type: integer
+            enum: [0, 1]
+        - name: next_id
+          in: query
+          description: Pagination token.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of interview sessions.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewSessionList"
+        "400":
+          description: Error reading interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Interviews]
+      summary: Delete interview sessions of a user by ID
+      operationId: deleteUserInterviewsById
+      description: |
+        Deletes interview sessions for the user with the given `user_id`.
+        Requires `admin`, `advocate`, the same user ID as the API owner, or the
+        `edit_sessions` permission.
+      parameters:
+        - name: i
+          in: query
+          description: Delete only sessions for this interview filename.
+          schema:
+            type: string
+        - name: session
+          in: query
+          description: Delete only the session with this ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: Session query string.
+          schema:
+            type: string
+        - name: tag
+          in: query
+          description: Delete only sessions with this tag.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Sessions deleted.
+        "400":
+          description: Error reading interview list.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/interview_data:
+    get:
+      tags: [Interviews]
+      summary: Obtain information about an interview's variables
+      operationId: getInterviewData
+      description: |
+        Returns information about the Python names used in the given interview.
+        Useful for building autocomplete or variable-inspection tools.
+        Requires `admin`, `developer`, or the `interview_data` permission.
+      parameters:
+        - name: i
+          in: query
+          required: true
+          description: Interview filename.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Variable and vocabulary information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  names:
+                    type: object
+                    additionalProperties: true
+                  vocabulary:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # Packages
+  # ---------------------------------------------------------------------------
+
+  /api/package:
+    get:
+      tags: [Packages]
+      summary: List installed packages
+      operationId: listPackages
+      description: |
+        Returns the list of Python packages installed on the system.
+        Requires `admin` or `developer`.
+      responses:
+        "200":
+          description: List of installed packages.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PackageInfo"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Packages]
+      summary: Install or update a package
+      operationId: installPackage
+      description: |
+        Installs or updates a package from PyPI, GitHub, or a ZIP upload.
+        Exactly one of `update`, `github_url`, `pip`, or `zip` must be provided.
+        Returns a `task_id` for polling with `/api/package_update_status`.
+        Requires `admin` or `developer`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                update:
+                  type: string
+                  description: Name of an already-installed package to update.
+                github_url:
+                  type: string
+                  description: GitHub URL of a package to install.
+                branch:
+                  type: string
+                  description: Branch to install from (when `github_url` is provided).
+                pip:
+                  type: string
+                  description: PyPI package name (optionally with version specifier).
+                restart:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+                  description: Set to 0 to skip restarting the server after install.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                update:
+                  type: string
+                github_url:
+                  type: string
+                branch:
+                  type: string
+                pip:
+                  type: string
+                restart:
+                  type: integer
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                zip:
+                  type: string
+                  format: binary
+                  description: ZIP file containing the package.
+                restart:
+                  type: integer
+      responses:
+        "200":
+          description: Package installation started.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Packages]
+      summary: Uninstall a package
+      operationId: uninstallPackage
+      description: |
+        Uninstalls an installed package. Returns a `task_id` for polling.
+        Requires `admin` or `developer`.
+      parameters:
+        - name: package
+          in: query
+          required: true
+          description: Name of the package to uninstall.
+          schema:
+            type: string
+        - name: restart
+          in: query
+          description: Set to 0 to skip restarting the server.
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        "200":
+          description: Uninstallation started.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/package_update_status:
+    get:
+      tags: [Packages]
+      summary: Poll the status of a package update
+      operationId: getPackageUpdateStatus
+      description: |
+        Returns the status of a background package installation or uninstallation.
+        Requires `admin`, `developer`, or the `manage_packages` permission.
+      parameters:
+        - name: task_id
+          in: query
+          required: true
+          description: Task ID returned by POST/DELETE /api/package.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status of the package update operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PackageUpdateStatus"
+        "400":
+          description: Missing task_id.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # Playground
+  # ---------------------------------------------------------------------------
+
+  /api/playground:
+    get:
+      tags: [Playground]
+      summary: List files or download a file from the Playground
+      operationId: getPlaygroundFiles
+      description: |
+        Returns a list of filenames in the specified Playground folder, or
+        returns the contents of a specific file. If `folder` is `packages` and
+        `filename` is provided, returns a ZIP of the package.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      parameters:
+        - name: folder
+          in: query
+          description: Playground folder name (default `static`).
+          schema:
+            type: string
+            enum: [questions, sources, static, templates, modules, packages]
+            default: static
+        - name: project
+          in: query
+          description: Playground project name (default `default`).
+          schema:
+            type: string
+            default: default
+        - name: user_id
+          in: query
+          description: User ID whose Playground to read (default is API owner).
+          schema:
+            type: integer
+        - name: filename
+          in: query
+          description: Name of a specific file to download.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of filenames or file contents.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: File not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Playground]
+      summary: Upload files to the Playground
+      operationId: uploadPlaygroundFiles
+      description: |
+        Saves one or more uploaded files to the specified Playground folder.
+        Returns 200 with `task_id` if a server restart is needed, or 204 if not.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                folder:
+                  type: string
+                  enum: [questions, sources, static, templates, modules]
+                  default: static
+                project:
+                  type: string
+                  default: default
+                user_id:
+                  type: integer
+                restart:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload (may also be named `files[]`).
+      responses:
+        "200":
+          description: Files saved; server restart initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "204":
+          description: Files saved; no restart needed.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Playground]
+      summary: Delete a file from the Playground
+      operationId: deletePlaygroundFile
+      description: |
+        Deletes the specified file from the Playground folder. Returns 200 with
+        `task_id` if a server restart is needed, or 204 if not.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      parameters:
+        - name: filename
+          in: query
+          required: true
+          description: Name of the file to delete.
+          schema:
+            type: string
+        - name: folder
+          in: query
+          description: Playground folder (default `static`).
+          schema:
+            type: string
+            enum: [questions, sources, static, templates, modules]
+            default: static
+        - name: project
+          in: query
+          description: Playground project (default `default`).
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          description: User ID whose Playground to use.
+          schema:
+            type: integer
+        - name: restart
+          in: query
+          description: Set to 0 to skip server restart (relevant when folder=modules).
+          schema:
+            type: integer
+            enum: [0, 1]
+      responses:
+        "200":
+          description: File deleted; server restart initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "204":
+          description: File deleted; no restart needed.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/playground/project:
+    get:
+      tags: [Playground]
+      summary: List Playground projects
+      operationId: listPlaygroundProjects
+      description: |
+        Returns a list of Playground project names (excluding the default project).
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      parameters:
+        - name: user_id
+          in: query
+          description: User ID whose Playground to inspect.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of project names.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        "400":
+          description: Invalid user_id.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Playground]
+      summary: Create a Playground project
+      operationId: createPlaygroundProject
+      description: |
+        Creates a new project in the Playground.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project]
+              properties:
+                project:
+                  type: string
+                  description: Name of the new project (alphanumeric, must not start with a digit).
+                user_id:
+                  type: integer
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [project]
+              properties:
+                project:
+                  type: string
+                user_id:
+                  type: integer
+      responses:
+        "204":
+          description: Project created.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags: [Playground]
+      summary: Delete a Playground project
+      operationId: deletePlaygroundProject
+      description: |
+        Deletes a project from the Playground (cannot delete the default project).
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      parameters:
+        - name: project
+          in: query
+          required: true
+          description: Name of the project to delete.
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          description: User ID whose Playground to use.
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Project deleted.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/playground_install:
+    post:
+      tags: [Playground]
+      summary: Install a package ZIP into the Playground
+      operationId: playgroundInstall
+      description: |
+        Installs one or more package ZIP files into the Playground. Returns 200
+        with `task_id` if a server restart is needed, or 204 if not.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                project:
+                  type: string
+                  default: default
+                user_id:
+                  type: integer
+                restart:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+                file:
+                  type: string
+                  format: binary
+                  description: ZIP package file(s) (may also be named `files[]`).
+      responses:
+        "200":
+          description: Package installed; server restart initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "204":
+          description: Package installed; no restart needed.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/playground_pull:
+    post:
+      tags: [Playground]
+      summary: Pull a package into the Playground
+      operationId: playgroundPull
+      description: |
+        Pulls a package from GitHub or PyPI into the Playground. Returns 200
+        with `task_id` if a server restart is needed, or 204 if not.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                github_url:
+                  type: string
+                  description: GitHub URL of the package to pull.
+                branch:
+                  type: string
+                  description: Branch to pull from.
+                pip:
+                  type: string
+                  description: PyPI package name to pull.
+                project:
+                  type: string
+                  default: default
+                user_id:
+                  type: integer
+                restart:
+                  type: integer
+                  enum: [0, 1]
+                  default: 1
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                github_url:
+                  type: string
+                branch:
+                  type: string
+                pip:
+                  type: string
+                project:
+                  type: string
+                user_id:
+                  type: integer
+                restart:
+                  type: integer
+      responses:
+        "200":
+          description: Pull completed; server restart initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "204":
+          description: Pull completed; no restart needed.
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/clear_cache:
+    post:
+      tags: [Playground]
+      summary: Clear the interview cache
+      operationId: clearCache
+      description: |
+        Clears the interview cache so that YAML files are re-read on the next
+        request. Requires `admin`, `developer`, or the `playground_control` permission.
+      responses:
+        "204":
+          description: Cache cleared.
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # Configuration
+  # ---------------------------------------------------------------------------
+
+  /api/config:
+    get:
+      tags: [Configuration]
+      summary: Get the server configuration
+      operationId: getConfig
+      description: Returns the server configuration as a JSON object. Requires `admin`.
+      responses:
+        "200":
+          description: Server configuration.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "400":
+          description: Could not parse Configuration.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags: [Configuration]
+      summary: Write the server configuration
+      operationId: setConfig
+      description: |
+        Replaces the entire server configuration and restarts the system.
+        Returns a `task_id` for polling with `/api/restart_status`. Requires `admin`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [config]
+              properties:
+                config:
+                  type: object
+                  additionalProperties: true
+                  description: New configuration object.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [config]
+              properties:
+                config:
+                  type: string
+                  description: JSON-encoded configuration object.
+      responses:
+        "200":
+          description: Configuration saved; restart initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      tags: [Configuration]
+      summary: Update specific configuration directives
+      operationId: patchConfig
+      description: |
+        Merges the provided key/value pairs into the existing configuration
+        and restarts the server. Only top-level directives can be patched.
+        Requires `admin`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [config_changes]
+              properties:
+                config_changes:
+                  type: object
+                  additionalProperties: true
+                  description: Key/value pairs to merge into the existing configuration.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [config_changes]
+              properties:
+                config_changes:
+                  type: string
+                  description: JSON-encoded object of changes.
+      responses:
+        "200":
+          description: Configuration patched; restart initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # Files
+  # ---------------------------------------------------------------------------
+
+  /api/file/{file_number}:
+    get:
+      tags: [Files]
+      summary: Retrieve a stored file
+      operationId: getFile
+      description: Returns the contents of the stored file identified by `file_number`.
+      parameters:
+        - name: file_number
+          in: path
+          required: true
+          description: Integer file number.
+          schema:
+            type: integer
+        - name: extension
+          in: query
+          description: Return a specific file extension variant of the file.
+          schema:
+            type: string
+        - name: filename
+          in: query
+          description: Return a specific filename from the file's directory.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: File contents.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: File not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/fields:
+    post:
+      tags: [Files]
+      summary: Extract fields from a template file
+      operationId: extractFields
+      description: |
+        Accepts a PDF, DOCX, or Markdown template file and returns information
+        about the fields it contains. Requires `admin`, `developer`, or the
+        `template_parse` permission.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [template]
+              properties:
+                template:
+                  type: string
+                  format: binary
+                  description: Template file (PDF, DOCX, or Markdown).
+                format:
+                  type: string
+                  enum: [json, yaml]
+                  default: json
+                  description: Output format.
+      responses:
+        "200":
+          description: Field information in the requested format.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fields:
+                    type: array
+                    items: {}
+                  default_values:
+                    type: object
+                    additionalProperties: true
+                  locations:
+                    type: object
+                    additionalProperties: true
+                  types:
+                    type: object
+                    additionalProperties:
+                      type: string
+            text/plain:
+              schema:
+                type: string
+                description: YAML draft question block (when format=yaml).
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/convert_file:
+    post:
+      tags: [Files]
+      summary: Convert a file to Markdown
+      operationId: convertFile
+      description: |
+        Converts an uploaded file (DOCX, DOC, RTF, ODT) to Markdown text.
+        No special privileges required.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to convert.
+                format:
+                  type: string
+                  enum: [md]
+                  default: md
+      responses:
+        "200":
+          description: Markdown text.
+          content:
+            text/plain:
+              schema:
+                type: string
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------------------------------------------------------------------------
+  # System
+  # ---------------------------------------------------------------------------
+
+  /api/restart:
+    post:
+      tags: [System]
+      summary: Trigger a server restart
+      operationId: restartServer
+      description: |
+        Causes the server to restart and returns a `task_id` for polling.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      responses:
+        "200":
+          description: Restart initiated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskId"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/restart_status:
+    get:
+      tags: [System]
+      summary: Poll the status of a server restart
+      operationId: getRestartStatus
+      description: |
+        Returns the status of a server restart operation.
+        Requires `admin`, `developer`, or the `playground_control` permission.
+      parameters:
+        - name: task_id
+          in: query
+          required: true
+          description: Task ID returned by a restart-triggering endpoint.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status of the restart.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestartStatus"
+        "400":
+          description: Missing task_id.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/stash_data:
+    post:
+      tags: [System]
+      summary: Temporarily stash encrypted data
+      operationId: stashData
+      description: |
+        Accepts a JSON object, encrypts it, stores it temporarily, and returns
+        the `stash_key` and `secret` needed to retrieve it later.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  description: Data to stash (any JSON value).
+                expire:
+                  type: integer
+                  description: Seconds to keep the data (default 7776000 = 90 days).
+                raw:
+                  type: integer
+                  enum: [0, 1]
+                  description: Set to 1 to skip date/DAObject conversion.
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [data]
+              properties:
+                data:
+                  type: string
+                  description: JSON-encoded data.
+                expire:
+                  type: integer
+                raw:
+                  type: integer
+      responses:
+        "200":
+          description: Data stashed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stash_key:
+                    type: string
+                  secret:
+                    type: string
+                required:
+                  - stash_key
+                  - secret
+        "400":
+          description: Bad request.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/retrieve_stashed_data:
+    get:
+      tags: [System]
+      summary: Retrieve temporarily stashed data
+      operationId: retrieveStashedData
+      description: Retrieves data previously stored with `/api/stash_data`.
+      parameters:
+        - name: stash_key
+          in: query
+          required: true
+          description: The stash key returned by `/api/stash_data`.
+          schema:
+            type: string
+        - name: secret
+          in: query
+          required: true
+          description: The decryption secret returned by `/api/stash_data`.
+          schema:
+            type: string
+        - name: delete
+          in: query
+          description: Set to 1 to delete the data after retrieval.
+          schema:
+            type: integer
+            enum: [0, 1]
+        - name: refresh
+          in: query
+          description: New expiration in seconds from now.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Retrieved data.
+          content:
+            application/json:
+              schema: {}
+        "400":
+          description: Bad request or data not found.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Access denied.
+          content:
+            text/plain:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

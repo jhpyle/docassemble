@@ -1782,13 +1782,15 @@ a `True` value, a [PDF/A] will be produced.
 If `pdf/a` is not specified, the default behavior is determined by the
 interview's [`pdf/a` features setting].
 
-<a name="tagged pdf"></a>When using [`docx template file`], you also
-have the option of creating a "tagged PDF" which is similar to
-[PDF/A].
+## <a name="tagged pdf"></a>Producing tagged PDF files
+
+You have the option of creating a "tagged PDF," which includes tags
+that are helpful for accessibility, document conversion, and text
+extraction.
 
 {% include demo-side-by-side.html demo="tagged-pdf" %}
 
-You can also set it to [Python] code.  If the code evaluates to
+You can also set it to [Python] code. If the code evaluates to
 a `True` value, a tagged PDF will be produced.
 
 If `tagged pdf` is not specified, the default behavior is determined

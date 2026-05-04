@@ -4412,11 +4412,11 @@ the [`code`] block. (Block "0" is the [`metadata`] block.)  So the
 
 ## <a name="vim"></a><a name="keymap">Changing the mode of the editor in the Playground
 
-If the `keymap` directive is set to `vim`, `emacs`, or `sublime`, then
+If the `keymap` directive is set to `vim`, `emacs`, or `vscode`, then
 the in-browser text editors in the [Playground] will emulate [Vim],
-[Emacs], or [Sublime Text], respectively. This uses the [Vim bindings
-option], [Emacs bindings option], and [Sublime Text bindings option]
-of [CodeMirror].
+[Emacs], or [VS Code], respectively. It implements this using the
+packages [@replit/codemirror-vim], [@replit/codemirror-emacs], and
+[@replit/codemirror-vscode-keymap].
 
 For [Vim]:
 
@@ -4430,10 +4430,10 @@ For [Emacs]:
 keymap: emacs
 {% endhighlight %}
 
-For [Sublime Text]:
+For [VS Code]:
 
 {% highlight yaml %}
-keymap: sublime
+keymap: vscode
 {% endhighlight %}
 
 ## <a name="external hostname"></a>URL to the site
@@ -4805,17 +4805,17 @@ If you need to specify a different path, you can do so in the configuration:
 pandoc: /opt/pandoc/bin/pandoc
 {% endhighlight %}
 
-By default, **docassemble** uses [LibreOffice] through [unoconv] to
+By default, **docassemble** uses [LibreOffice] through [unoserver] to
 convert DOCX templates to PDF format. If your **docassemble** server
-was created many years ago, you may need to enable [unoconv] with the
-[`enable unoconv`] directive; otherwise, **docassemble** will call
+was created many years ago, you may need to enable [unoserver] with
+the [`enable unoconv`] directive; otherwise, **docassemble** will call
 [LibreOffice] directly.
 
-Instead of using [unoconv], you can use an external [Gotenberg] server
-for DOCX to PDF conversion. If you have a [Gotenberg] server that is
-accessible from within the **docassemble** container on hostname
-`mygotenberg`, port 3000, you would disable [unoconv] and set the
-`gotenberg url` to the following:
+Instead of using [unoserver], you can use an external [Gotenberg]
+server for DOCX to PDF conversion. If you have a [Gotenberg] server
+that is accessible from within the **docassemble** container on
+hostname `mygotenberg`, port 3000, you would disable [unoserver] and
+set the `gotenberg url` to the following:
 
 {% highlight yaml %}
 enable unoconv: false
@@ -4878,7 +4878,7 @@ The [`GOTENBERGUSERNAME`] and [`GOTENBERGPASSWORD`] environment
 variables can also be set to connect to a gotenberg server with
 basic auth.
 
-Disabling [unoconv] when using [Gotenberg] is important not only to
+Disabling [unoserver] when using [Gotenberg] is important not only to
 save memory but to prevent any conflicts between [Gotenberg]'s use of
 [LibreOffice] and the **docassemble**'s use of [LibreOffice], if the
 containers are running on the same host. After you change `enable
@@ -4959,21 +4959,23 @@ default rendering font: /usr/share/fonts/truetype/msttcorefonts/Arial.ttf
 
 For more information about what font file to use, see [`rendering font`].
 
-## <a name="enable unoconv"></a>Using unoconv instead of LibreOffice for processing DOCX files
+## <a name="enable unoconv"></a>Using unoserver instead of LibreOffice for processing DOCX files
 
 {% include docker.html %}
 
-Starting with system version 1.3.18, a [unoconv] listener is available
-in the `jhpyle/docassemble` [Docker] image, which keeps LibreOffice in
-memory and uses it to convert files with a client/server
-model. **docassemble** uses LibreOffice to convert DOCX to PDF and
-other formats, as well as to update references within a DOCX after
-`docx template file` is used to assemble a document.
+Starting with system version 1.3.18, a [unoconv] listener was
+available in the `jhpyle/docassemble` [Docker] image, which keeps
+LibreOffice in memory and uses it to convert files with a
+client/server model. Starting with system version 1.9.9, [unoserver]
+(a rewrite of [unoconv]) was substituted. **docassemble** uses
+LibreOffice to convert DOCX to PDF and other formats, as well as to
+update references within a DOCX after `docx template file` is used to
+assemble a document.
 
-The [unoconv] listener will run only if `enable unoconv` is set to
+The [unoserver] listener will run only if `enable unoconv` is set to
 `True` in your Configuration. If `enable unoconv` is missing or is not
-set to `True`, `unoconv` will not be used. If you started using
-**docassemble** before 1.3.18 and you want to use [unoconv], set the
+set to `True`, `unoserver` will not be used. If you started using
+**docassemble** before 1.3.18 and you want to use [unoserver], set the
 following in your Configuration, and then do a [system upgrade].
 
 {% highlight yaml %}
@@ -4987,9 +4989,6 @@ After changing `enable unoconv`, you need to restart your system with
 `docker stop`/`docker start`.
 
 See also the [`ENABLEUNOCONV`] environment variable.
-
-Unfortunately, [unoconv] is no longer under active development. Using
-[Gotenberg](#gotenberg url) is recommended.
 
 ## <a name="maximum image size"></a>Limiting size of uploaded images
 
@@ -6759,10 +6758,10 @@ and Facebook API keys.
 [packages folder]: {{ site.baseurl }}/docs/playground.html#packages
 [Vim]: https://www.vim.org/
 [Emacs]: https://www.gnu.org/software/emacs/
-[Sublime Text]: https://www.sublimetext.com/
-[Vim bindings option]: https://codemirror.net/demo/vim.html
-[Emacs bindings option]: https://codemirror.net/demo/emacs.html
-[Sublime Text bindings option]: https://codemirror.net/demo/sublime.html
+[VS Code]: https://en.wikipedia.org/wiki/Visual_Studio_Code
+[@replit/codemirror-emacs]: https://github.com/replit/codemirror-emacs
+[@replit/codemirror-vim]: https://github.com/replit/codemirror-vim
+[@replit/codemirror-vscode-keymap]: https://github.com/replit/codemirror-vscode-keymap
 [CodeMirror]: https://codemirror.net/
 [e-mail receiving]: {{ site.baseurl }}/docs/background.html#email
 [`external hostname`]: #external hostname
@@ -6999,6 +6998,7 @@ and Facebook API keys.
 [`cross site domains`]: #cross site domains
 [YAML preprocessor]: {{ site.baseurl }}/docs/interviews.html#jinja2
 [unoconv]: https://github.com/unoconv/unoconv
+[unoserver]: https://github.com/unoconv/unoserver
 [system upgrade]: {{ site.baseurl }}/docs/docker.html#upgrading
 [`/api/login_url`]: {{ site.baseurl }}/docs/api.html#login_url
 [managing certificates with Docker]: {{ site.baseurl }}/docs/docker.html#own certificates

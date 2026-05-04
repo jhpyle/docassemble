@@ -5,8 +5,13 @@ short_title: API
 ---
 
 Many features in **docassemble** can be controlled through an
-HTTP-based [Application Program Interface] (API).  All requests must
+HTTP-based [Application Program Interface] (API). All requests must
 be authenticated using an [API key](#manage_api).
+
+The **docassemble** API specification is available in
+[OpenAPI](https://www.openapis.org/) format. You can import the
+[`openapi.yaml`](/assets/openapi.yaml) file into
+[Postman](https://web.postman.co) or [explore the API using Redocly](/api/).
 
 # <a name="manage_api"></a>Obtaining an API key
 
