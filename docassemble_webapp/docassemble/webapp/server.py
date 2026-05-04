@@ -2093,8 +2093,10 @@ def get_pg_code_cache():
         with open(documentation['fullpath'], 'r', encoding='utf-8') as fp:
             content = fp.read()
             content = fix_tabs.sub('  ', content)
+            if not content:
+                return {}
             return safeyaml.load(content)
-    return None
+    return {}
 
 
 def get_documentation_dict():

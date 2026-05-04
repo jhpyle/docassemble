@@ -2752,11 +2752,11 @@ class SafeYaml:
     def dump_to_bytes(self, *pargs, **kwargs):
         return self._get_yaml().dump_to_bytes(*pargs, **kwargs)
 
-safeyaml = SafeYaml('yaml_safeyaml')
-altyaml = SafeYaml('yaml_altyaml')
-prettyyaml = SafeYaml('yaml_prettyyaml')
-bytesyaml = SafeYaml('yaml_bytesyaml')
-altyamlstring = SafeYaml('yaml_altyamlstring')
+safeyaml = SafeYaml('safeyaml')
+altyaml = SafeYaml('altyaml')
+prettyyaml = SafeYaml('prettyyaml')
+bytesyaml = SafeYaml('bytesyaml')
+altyamlstring = SafeYaml('altyamlstring')
 
 
 def ordinal_function_en(i, **kwargs):
