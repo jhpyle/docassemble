@@ -2713,26 +2713,26 @@ class SafeYaml:
 
     def _get_yaml(self):
         if self._yaml_type not in this_thread.misc:
-            if self._yaml_type == 'bytesyaml':
+            if self._yaml_type == 'yaml_bytesyaml':
                 the_yaml = ruamel.yaml.YAML(typ=['safe', 'bytes'])
             else:
                 the_yaml = ruamel.yaml.YAML(typ=['safe', 'string'])
-            if self._yaml_type == 'prettyyaml':
+            if self._yaml_type == 'yaml_prettyyaml':
                 the_yaml.indent(mapping=2, sequence=4, offset=2)
                 the_yaml.default_flow_style = False
                 the_yaml.default_style = '|'
                 the_yaml.allow_unicode = True
-            elif self._yaml_type == 'altyaml':
+            elif self._yaml_type == 'yaml_altyaml':
                 the_yaml.indent(mapping=2, sequence=4, offset=2)
                 the_yaml.default_flow_style = False
                 the_yaml.default_style = '|'
                 the_yaml.allow_unicode = True
-            elif self._yaml_type == 'bytesyaml':
+            elif self._yaml_type == 'yaml_bytesyaml':
                 the_yaml.default_flow_style = False
                 the_yaml.default_style = '"'
                 the_yaml.allow_unicode = True
                 the_yaml.width = 10000
-            elif self._yaml_type == 'altyamlstring':
+            elif self._yaml_type == 'yaml_altyamlstring':
                 the_yaml.default_flow_style = False
                 the_yaml.default_style = '"'
                 the_yaml.allow_unicode = True
@@ -2752,11 +2752,11 @@ class SafeYaml:
     def dump_to_bytes(self, *pargs, **kwargs):
         return self._get_yaml().dump_to_bytes(*pargs, **kwargs)
 
-safeyaml = SafeYaml('safeyaml')
-altyaml = SafeYaml('altyaml')
-prettyyaml = SafeYaml('prettyyaml')
-bytesyaml = SafeYaml('bytesyaml')
-altyamlstring = SafeYaml('altyamlstring')
+safeyaml = SafeYaml('yaml_safeyaml')
+altyaml = SafeYaml('yaml_altyaml')
+prettyyaml = SafeYaml('yaml_prettyyaml')
+bytesyaml = SafeYaml('yaml_bytesyaml')
+altyamlstring = SafeYaml('yaml_altyamlstring')
 
 
 def ordinal_function_en(i, **kwargs):
