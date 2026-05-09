@@ -46,6 +46,7 @@ TypeType = type(type(None))
 locale.setlocale(locale.LC_ALL, '')
 contains_volatile = re.compile(r'^(x\.|x\[|.*\[[ijklmn]\])')
 match_brackets_or_dot = re.compile(r'(\[.+?\]|\.[a-zA-Z_][a-zA-Z0-9_]*)')
+python313 = sys.version_info >= (3, 13)
 
 __all__ = ['alpha', 'roman', 'item_label', 'ordinal', 'ordinal_number', 'comma_list', 'word', 'get_language', 'set_language', 'get_dialect', 'set_country', 'get_country', 'get_locale', 'set_locale', 'comma_and_list', 'need', 'nice_number', 'quantity_noun', 'currency_symbol', 'verb_past', 'verb_present', 'noun_plural', 'noun_singular', 'indefinite_article', 'capitalize', 'space_to_underscore', 'force_ask', 'period_list', 'name_suffix', 'currency', 'static_image', 'title_case', 'url_of', 'process_action', 'url_action', 'get_info', 'set_info', 'get_config', 'prevent_going_back', 'qr_code', 'action_menu_item', 'from_b64_json', 'defined', 'value', 'message', 'response', 'json_response', 'command', 'background_response', 'background_response_action', 'single_paragraph', 'quote_paragraphs', 'location_returned', 'location_known', 'user_lat_lon', 'interview_url', 'interview_url_action', 'interview_url_as_qr', 'interview_url_action_as_qr', 'interview_email', 'get_emails', 'action_arguments', 'action_argument', 'get_default_timezone', 'user_logged_in', 'user_privileges', 'user_has_privilege', 'user_info', 'current_context', 'background_action', 'background_response', 'background_response_action', 'us', 'set_live_help_status', 'chat_partners_available', 'phone_number_in_e164', 'phone_number_formatted', 'phone_number_is_valid', 'countries_list', 'country_name', 'write_record', 'read_records', 'delete_record', 'variables_as_json', 'all_variables', 'language_from_browser', 'device', 'plain', 'bold', 'italic', 'subdivision_type', 'indent', 'raw', 'fix_punctuation', 'set_progress', 'get_progress', 'referring_url', 'undefine', 'invalidate', 'dispatch', 'yesno', 'noyes', 'phone_number_part', 'log', 'encode_name', 'decode_name', 'interview_list', 'interview_menu', 'server_capabilities', 'session_tags', 'get_chat_log', 'get_user_list', 'get_user_info', 'set_user_info', 'get_user_secret', 'create_user', 'invite_user', 'create_session', 'get_session_variables', 'set_session_variables', 'go_back_in_session', 'manage_privileges', 'redact', 'forget_result_of', 're_run_logic', 'reconsider', 'get_question_data', 'set_save_status', 'single_to_double_newlines', 'verbatim', 'add_separators', 'store_variables_snapshot', 'update_terms', 'set_variables', 'language_name', 'run_action_in_session']
 
@@ -5802,19 +5803,7 @@ def invalidate(*pargs):
     undefine(*pargs, invalidate=True)
 
 
-def undefine(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
-    """Delete one or more interview variables, making them undefined.
-
-    If a variable is not defined, this function does nothing (no error is
-    raised).  Multiple variable names can be passed at once.
-
-    Args:
-        *pargs: Variable name strings to undefine.
-        invalidate (bool, optional): Internal flag; when ``True``, also
-            saves the current value for use as a default. Use
-            :func:`invalidate` instead of setting this directly. Defaults
-            to ``False``.
-    """
+def _undefine_internal_old(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
     vars_to_delete = []
     the_pargs = unpack_pargs(pargs)
     for var in the_pargs:
@@ -5856,6 +5845,75 @@ def undefine(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
         except:
             pass
     this_thread.probing = False
+
+
+def _undefine_internal_new(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
+    vars_to_delete = []
+    the_pargs = unpack_pargs(pargs)
+    for var in the_pargs:
+        str(var)
+        if not isinstance(var, str):
+            raise DAError("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
+        try:
+            eval(var, {})
+            continue
+        except:
+            vars_to_delete.append(var)
+        components = components_of(var)
+        if len(components) == 0 or len(components[0]) < 2:
+            raise DAError("undefine: variable " + repr(var) + " is not a valid variable name")
+    if len(vars_to_delete) == 0:
+        return
+    frame = sys._getframe(1)
+    the_user_dict = frame.f_locals
+    the_user_dict_g = frame.f_globals
+    while '_internal' not in the_user_dict:
+        frame = frame.f_back
+        if frame is None:
+            return
+        if 'user_dict' in frame.f_locals:
+            the_user_dict = frame.f_locals['user_dict']
+            the_user_dict_g = frame.f_globals
+            if '_internal' in the_user_dict:
+                break
+            return
+        the_user_dict = frame.f_locals
+        the_user_dict_g = frame.f_globals
+    this_thread.probing = True
+    if invalidate:
+        for var in vars_to_delete:
+            try:
+                exec("_internal['dirty'][" + repr(var) + "] = " + var, the_user_dict_g, the_user_dict)
+            except:
+                pass
+    for var in vars_to_delete:
+        try:
+            exec('del ' + var, the_user_dict_g, the_user_dict)
+        except:
+            pass
+    this_thread.probing = False
+
+
+if python313:
+    _undefine_internal = _undefine_internal_new
+else:
+    _undefine_internal = _undefine_internal_old
+
+
+def undefine(*pargs, invalidate=False):  # pylint: disable=redefined-outer-name
+    """Delete one or more interview variables, making them undefined.
+
+    If a variable is not defined, this function does nothing (no error is
+    raised).  Multiple variable names can be passed at once.
+
+    Args:
+        *pargs: Variable name strings to undefine.
+        invalidate (bool, optional): Internal flag; when ``True``, also
+            saves the current value for use as a default. Use
+            :func:`invalidate` instead of setting this directly. Defaults
+            to ``False``.
+    """
+    _undefine_internal(*pargs, invalidate=invalidate)
 
 
 def dispatch(var):
@@ -5963,7 +6021,7 @@ def _defined_internal_with_prior(var, caller: DefCaller, alt=None):
         return _defined_internal(var, caller, alt=alt)
 
 
-def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
+def _defined_internal_old(var, caller: DefCaller, alt=None, prior=False):
     """Checks if a variable is defined at all in the stack. Used by defined(),
     value(), and showifdef(). `var` is the name of the variable to check,
     `caller` is the name of the function calling (which determines what to do
@@ -6089,6 +6147,143 @@ def _defined_internal(var, caller: DefCaller, alt=None, prior=False):
     if caller.is_predicate():
         return True
     return eval(cum_variable, the_user_dict)
+
+
+def _defined_internal_new(var, caller: DefCaller, alt=None, prior=False):
+    """Checks if a variable is defined at all in the stack. Used by defined(),
+    value(), and showifdef(). `var` is the name of the variable to check,
+    `caller` is the name of the function calling (which determines what to do
+    if the variable is found to be defined or not).
+
+    if caller is:
+    * DEFINED, then True/False is returned depending on if the variable is defined
+    * VALUE, then the actual value of the variable is returned, after asking the
+      user all of the questions necessary to answer it
+    * SHOWIFDEF, then the value if returned, but only if no questions have to be asked
+    """
+    frame = sys._getframe(1)
+    components = components_of(var)
+    if len(components) == 0 or len(components[0]) < 2:
+        raise DAError("defined: variable " + repr(var) + " is not a valid variable name")
+    variable = components[0][1]
+    the_user_dict = frame.f_locals
+    the_user_dict_g = frame.f_globals
+    failure_val = False if caller.is_predicate() else alt
+    user_dict_name = 'old_user_dict' if prior else 'user_dict'
+    while (variable not in the_user_dict) or prior:
+        frame = frame.f_back
+        if frame is None:
+            if caller.is_pure():
+                return failure_val
+            force_ask_nameerror(variable)
+        if user_dict_name in frame.f_locals:
+            the_user_dict = frame.f_locals[user_dict_name]
+            the_user_dict_g = frame.f_globals
+            if variable in the_user_dict:
+                break
+            if caller.is_pure():
+                return failure_val
+            force_ask_nameerror(variable)
+        else:
+            the_user_dict = frame.f_locals
+            the_user_dict_g = frame.f_globals
+    if variable not in the_user_dict:
+        if caller.is_pure():
+            return failure_val
+        force_ask_nameerror(variable)
+    if len(components) == 1:
+        if caller.is_predicate():
+            return True
+        return eval(variable, the_user_dict_g, the_user_dict)
+    cum_variable = ''
+    if caller.is_pure():
+        this_thread.probing = True
+    has_random_instance_name = False
+    for elem in components:
+        if elem[0] == 'name':
+            cum_variable = elem[1]
+            continue
+        if elem[0] == 'attr':
+            base_var = cum_variable
+            to_eval = "hasattr(" + cum_variable + ", " + repr(elem[1]) + ")"
+            cum_variable += '.' + elem[1]
+            try:
+                result = eval(to_eval, the_user_dict_g, the_user_dict)
+            except:
+                if caller.is_pure():
+                    this_thread.probing = False
+                    return failure_val
+                force_ask_nameerror(base_var)
+            if result:
+                continue
+            if caller.is_pure():
+                this_thread.probing = False
+                return failure_val
+            the_cum = eval(base_var, the_user_dict_g, the_user_dict)
+            try:
+                if not the_cum.has_nonrandom_instance_name:
+                    has_random_instance_name = True
+            except:
+                pass
+            if has_random_instance_name:
+                force_ask_nameerror(cum_variable)
+            getattr(the_cum, elem[1])
+        elif elem[0] == 'index':
+            try:
+                the_index = eval(elem[1], the_user_dict_g, the_user_dict)
+            except:
+                if caller.is_pure():
+                    this_thread.probing = False
+                    return failure_val
+                value(elem[1])
+            try:
+                the_cum = eval(cum_variable, the_user_dict_g, the_user_dict)
+            except:
+                if caller.is_pure():
+                    this_thread.probing = False
+                    return failure_val
+                force_ask_nameerror(cum_variable)
+            if hasattr(the_cum, 'instanceName') and hasattr(the_cum, 'elements'):
+                var_elements = cum_variable + '.elements'
+            else:
+                var_elements = cum_variable
+            if isinstance(the_index, int):
+                to_eval = 'len(' + var_elements + ') > ' + str(the_index)
+            else:
+                to_eval = elem[1] + " in " + var_elements
+            cum_variable += '[' + elem[1] + ']'
+            try:
+                result = eval(to_eval, the_user_dict_g, the_user_dict)
+            except:
+                # the evaluation probably will never fail because we know the base variable is defined
+                if caller.is_pure():
+                    this_thread.probing = False
+                    return failure_val
+                force_ask_nameerror(cum_variable)
+            if result:
+                continue
+            if caller.is_pure():
+                this_thread.probing = False
+                return failure_val
+            try:
+                if not the_cum.has_nonrandom_instance_name:
+                    has_random_instance_name = True
+            except:
+                pass
+            if has_random_instance_name:
+                force_ask_nameerror(cum_variable)
+            the_cum[the_index]  # pylint: disable=pointless-statement
+    if caller.is_pure():
+        this_thread.probing = False
+    if caller.is_predicate():
+        return True
+    return eval(cum_variable, the_user_dict_g, the_user_dict)
+
+
+if python313:
+    _defined_internal = _defined_internal_new
+else:
+    _defined_internal = _defined_internal_old
 
 
 def value(var: str, prior=False):

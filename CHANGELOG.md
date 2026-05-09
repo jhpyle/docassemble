@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.9.11] - 2026-05-08
+
+### Fixed
+
+- Issue with `value()` and `undefine()` on systems running Python 3.13
+  or above.
+
 ## [1.9.10] - 2026-05-03
 
 ### Fixed
