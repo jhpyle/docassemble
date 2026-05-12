@@ -83,7 +83,7 @@ dependencies = [
   "flask-cors==6.0.2",
   "Flask-Login==0.6.3",
   "Flask-Mail==0.10.0",
-  "Flask-SocketIO==5.6.0",
+  "Flask-SocketIO==5.6.1",
   "Flask-SQLAlchemy==3.1.1",
   "Flask-WTF==1.2.2",
   "fonttools==4.61.1",
