@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.12](https://github.com/jhpyle/docassemble/releases/tag/v1.9.12) - 2026-05-11
+
+
+### Fixed
+
+- Issue with `Flask.SocketIO`.
+
 ## [1.9.11](https://github.com/jhpyle/docassemble/releases/tag/v1.9.11) - 2026-05-08
 
 
