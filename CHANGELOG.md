@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.9.12] - 2026-05-11
+
+### Fixed
+
+- Issue with `Flask.SocketIO`.
+
 ## [1.9.11] - 2026-05-08
 
 ### Fixed
