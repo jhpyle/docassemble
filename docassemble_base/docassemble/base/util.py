@@ -13784,6 +13784,7 @@ class DAOAuth(DAObject):
                 return credentials
             except Exception as err:
                 log("DAOAuth: token refresh failed for " + str(self.appname) + ": " + repr(err))
+                self._save_credentials(storage, credentials)
                 return credentials
             self._save_credentials(storage, credentials)
         return credentials
