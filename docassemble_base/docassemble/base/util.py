@@ -13688,6 +13688,10 @@ class DAOAuth(DAObject):
     Attributes:
         url_args (dict): URL query parameters received from the OAuth2
             callback (must be passed as a keyword argument at construction).
+        extra_auth_args (dict): Additional keyword arguments to pass to the
+            OAuth authorization URL.
+        url_style_short (bool): If true, use the short interview URL style for
+            OAuth redirect URIs. Defaults to false.
     """
 
     def init(self, *pargs, **kwargs):
@@ -13695,6 +13699,8 @@ class DAOAuth(DAObject):
             raise DAError("DAOAuth: you must pass the url_args as a keyword parameter")
         self.url_args = kwargs['url_args']
         del kwargs['url_args']
+        self.extra_auth_args = kwargs.pop('extra_auth_args', {})
+        self.url_style_short = kwargs.pop('url_style_short', False)
         super().init(*pargs, **kwargs)
 
     def _get_flow(self):
@@ -13703,8 +13709,9 @@ class DAOAuth(DAObject):
         client_secret = app_credentials.get('secret', None)
         if client_id is None or client_secret is None:
             raise DAError('The application ' + self.appname + " is not configured in the Configuration")
+        redirect_uri = interview_url(style='short') if self.url_style_short else interview_url()
         return OAuth2Session(client_id,
-                             redirect_uri=re.sub(r'\?.*', '', interview_url()),
+                             redirect_uri=re.sub(r'\?.*', '', redirect_uri),
                              scope=self.scope)
 
     def _setup(self):
@@ -13846,7 +13853,11 @@ class DAOAuth(DAObject):
         credentials = self._get_stored_credentials(refresh=True)
         if not self._credentials_are_authorized(credentials):
             flow = self._get_flow()
-            uri, state_string = flow.authorization_url(self.auth_uri, access_type='offline', prompt='consent')
+            auth_args = {'access_type': 'offline', 'prompt': 'consent'}
+            extra_auth_args = getattr(self, 'extra_auth_args', {})
+            if isinstance(extra_auth_args, dict):
+                auth_args.update(extra_auth_args)
+            uri, state_string = flow.authorization_url(self.auth_uri, **auth_args)
             pipe = r.pipeline()
             pipe.set(r_key, state_string)
             pipe.expire(r_key, 300)
