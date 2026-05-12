@@ -13700,6 +13700,7 @@ class DAOAuth(DAObject):
         self.url_args = kwargs['url_args']
         del kwargs['url_args']
         self.extra_auth_args = kwargs.pop('extra_auth_args', {})
+        self._validate_extra_auth_args()
         self.url_style_short = kwargs.pop('url_style_short', False)
         super().init(*pargs, **kwargs)
 
@@ -13755,6 +13756,15 @@ class DAOAuth(DAObject):
             storage.put(credentials)
         except Exception as err:
             log("DAOAuth: could not save credentials for " + str(self.appname) + ": " + repr(err))
+
+    def _validate_extra_auth_args(self):
+        if not isinstance(self.extra_auth_args, dict):
+            raise DAError("DAOAuth: extra_auth_args must be a dictionary")
+        reserved_keys = {'redirect_uri', 'state'}
+        reserved_extra_auth_args = reserved_keys.intersection(self.extra_auth_args)
+        if reserved_extra_auth_args:
+            raise DAError("DAOAuth: extra_auth_args contains reserved OAuth parameter(s): " + ', '.join(sorted(reserved_extra_auth_args)))
+        return self.extra_auth_args
 
     def _get_stored_credentials(self, refresh=False):
         storage = self._get_redis_cred_storage()
@@ -13854,9 +13864,7 @@ class DAOAuth(DAObject):
         if not self._credentials_are_authorized(credentials):
             flow = self._get_flow()
             auth_args = {'access_type': 'offline', 'prompt': 'consent'}
-            extra_auth_args = getattr(self, 'extra_auth_args', {})
-            if isinstance(extra_auth_args, dict):
-                auth_args.update(extra_auth_args)
+            auth_args.update(self._validate_extra_auth_args())
             uri, state_string = flow.authorization_url(self.auth_uri, **auth_args)
             pipe = r.pipeline()
             pipe.set(r_key, state_string)
