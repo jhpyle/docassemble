@@ -13740,11 +13740,18 @@ class DAOAuth(DAObject):
         return bool(
             credentials
             and not getattr(credentials, 'invalid', True)
-            and not getattr(credentials, 'access_token_expired', True)
+            and not getattr(credentials, 'access_token_expired', False)
         )
 
+    def _save_credentials(self, storage, credentials):
+        try:
+            storage.put(credentials)
+        except Exception as err:
+            log("DAOAuth: could not save credentials for " + str(self.appname) + ": " + repr(err))
+
     def _get_stored_credentials(self, refresh=False):
-        credentials = self._get_redis_cred_storage().get()
+        storage = self._get_redis_cred_storage()
+        credentials = storage.get()
         if not refresh or not credentials:
             return credentials
         credentials_invalid = getattr(credentials, 'invalid', True)
@@ -13754,8 +13761,14 @@ class DAOAuth(DAObject):
         if credentials_can_refresh and credentials_need_refresh:
             try:
                 credentials.refresh(httplib2.Http())
-            except oauth2client.client.AccessTokenRefreshError:
+            except oauth2client.client.AccessTokenRefreshError as err:
+                log("DAOAuth: token refresh failed for " + str(self.appname) + ": " + repr(err))
+                self._save_credentials(storage, credentials)
                 return credentials
+            except Exception as err:
+                log("DAOAuth: token refresh failed for " + str(self.appname) + ": " + repr(err))
+                return credentials
+            self._save_credentials(storage, credentials)
         return credentials
 
     def _get_random_unique_id(self):
