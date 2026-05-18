@@ -36,7 +36,7 @@ dependencies = [
   "cachetools==5.5.2",
   "cairocffi==1.7.1",
   "CairoSVG==2.8.2",
-  "certifi==2025.11.12",
+  "certifi==2026.2.25",
   "cffi==2.0.0",
   "chardet==5.2.0",
   "charset-normalizer==3.4.4",
