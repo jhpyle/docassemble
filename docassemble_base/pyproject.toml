@@ -81,7 +81,7 @@ dependencies = [
   "httplib2==0.31.0",
   "Hyphenate==1.1.0",
   "id==1.5.0",
-  "idna==3.11",
+  "idna==3.15",
   "img2pdf==0.6.3",
   "importlib_metadata==8.7.1",
   "importlib_resources==6.5.2",
