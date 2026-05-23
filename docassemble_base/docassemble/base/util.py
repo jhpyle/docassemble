@@ -11446,6 +11446,7 @@ class Individual(Person):
             person = '3'
         else:
             person = str(kwargs.pop('person', self.get_point_of_view()))
+        gender = str(self.gender).casefold()
         if person == '2':
             output = your(target, **kwargs)
         elif person == '2p':
@@ -11454,12 +11455,12 @@ class Individual(Person):
             output = my_possessive(target, **kwargs)
         elif person == '1p':
             output = our_possessive(target, **kwargs)
-        elif self.gender == 'female':
+        elif gender == 'female':
             output = her(target, **kwargs)
-        elif self.gender == 'other':
-            output = their(target, **kwargs)
-        else:
+        elif gender == 'male':
             output = his(target, **kwargs)
+        else:
+            output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -11475,6 +11476,7 @@ class Individual(Person):
             str: Objective pronoun (e.g. ``'you'``, ``'her'``, ``'him'``).
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
+        gender = str(self.gender).casefold()
         if person == '2':
             output = you_objective(**kwargs)
         elif person == '2p':
@@ -11483,12 +11485,12 @@ class Individual(Person):
             output = me_objective(**kwargs)
         elif person == '1p':
             output = our_objective(**kwargs)
-        elif self.gender == 'female':
+        elif gender == 'female':
             output = her_objective(**kwargs)
-        elif self.gender == 'other':
-            output = genderless_objective(**kwargs)
-        else:
+        elif gender == 'male':
             output = him_objective(**kwargs)
+        else:
+            output = genderless_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -11517,6 +11519,7 @@ class Individual(Person):
             person = '3'
         else:
             person = str(kwargs.pop('person', self.get_point_of_view()))
+        gender = str(self.gender).casefold()
         if person == '2':
             output = you_subjective(**kwargs)
         elif person == '2p':
@@ -11525,12 +11528,12 @@ class Individual(Person):
             output = i_subjective(**kwargs)
         elif person == '1p':
             output = we_subjective(**kwargs)
-        elif self.gender == 'female':
+        elif gender == 'female':
             output = she_subjective(**kwargs)
-        elif self.gender == 'other':
-            output = genderless_subjective(**kwargs)
-        else:
+        elif gender == 'male':
             output = he_subjective(**kwargs)
+        else:
+            output = genderless_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -11547,6 +11550,7 @@ class Individual(Person):
                 ``'himself'``).
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
+        gender = str(self.gender).casefold()
         if person == '2':
             return yourself(**kwargs)
         if person == '2p':
@@ -11555,11 +11559,11 @@ class Individual(Person):
             return myself(**kwargs)
         if person == '1p':
             return ourselves(**kwargs)
-        if self.gender == 'female':
+        if gender == 'female':
             return herself(**kwargs)
-        if self.gender == 'other':
-            return genderless_self(**kwargs)
-        return himself(**kwargs)
+        if gender == 'male':
+            return himself(**kwargs)
+        return genderless_self(**kwargs)
 
     def __setattr__(self, attrname, the_value):
         if attrname == 'name' and isinstance(the_value, str):
