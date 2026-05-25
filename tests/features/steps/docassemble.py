@@ -613,9 +613,6 @@ def change_window_size(context, xdimen, ydimen):
 
 @step(r'I unfocus')
 def unfocus(context):
-    elem = WebDriverWait(context.browser, 10).until(
-        EC.element_to_be_clickable((By.ID, 'daMainQuestion'))
-    )
     context.browser.execute_script("document.activeElement.blur();")
 
 
