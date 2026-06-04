@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.9.13] - 2026-06-03
+
+### Fixed
+
+- Issue with converting fillable PDFs to PDF/A.
+
 ## [1.9.12] - 2026-05-11
 
 ### Fixed
