@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.9.13](https://github.com/jhpyle/docassemble/releases/tag/v1.9.13) - 2026-06-03
+
+
+### Fixed
+
+- Issue with converting fillable PDFs to PDF/A.
+
 ## [1.9.12](https://github.com/jhpyle/docassemble/releases/tag/v1.9.12) - 2026-05-11
 
 
