@@ -180,7 +180,7 @@ dependencies = [
   "pycryptodome==3.23.0",
   "pycryptodomex==3.23.0",
   "Pygments==2.20.0",
-  "PyJWT==2.12.1",
+  "PyJWT==2.13.0",
   "PyLaTeX==1.4.2",
   "pyotp==2.9.0",
   "pyparsing==3.3.1",
