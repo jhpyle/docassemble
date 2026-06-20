@@ -1424,9 +1424,9 @@ can accomplish this using the [`depends on`] feature.
 
 {% include demo-side-by-side.html demo="repeatable" %}
 
-When the variable `counter` is incremented by the `new_version`
+When the variable `version` is incremented by the `new_version`
 [action], all of the variables set by [`question`] blocks that use
-`depends on: counter` will be undefined, but the old values will be
+`depends on: version` will be undefined, but the old values will be
 remembered and offered as defaults when the [`question`] blocks are
 encountered again.
 
