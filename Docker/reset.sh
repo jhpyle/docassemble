@@ -79,7 +79,7 @@ update_pip_config(){
     if [ "${PIPTRUSTEDHOST:-null}" != "null" ]; then
 	pip config set global.trusted-host "${PIPTRUSTEDHOST}"
     else
-	pip config unset global.trusted-host &> /dev/null
+	pip config set global.trusted-host "github.com" &> /dev/null
     fi
 }
 restart_websockets() {

@@ -1,6 +1,7 @@
 # mypy: disable-error-code="attr-defined"
 import os
 import re
+import copy
 import sys
 import socket
 import threading
@@ -249,12 +250,8 @@ def fix_authorized_domain(domain):
 
 
 def load(**kwargs):
-    global daconfig
-    global s3_config
     global S3_ENABLED
-    global gc_config
     global GC_ENABLED
-    global azure_config
     global AZURE_ENABLED
     global DEBUG_BOOT
     global dbtableprefix
@@ -483,8 +480,11 @@ def load(**kwargs):
                 override_config(daconfig, null_messages, key, env_var, pre_key=['azure'])
         if env_exists('KUBERNETES'):
             override_config(daconfig, null_messages, 'kubernetes', 'KUBERNETES')
-    s3_config = daconfig.get('s3', None)
-    if not s3_config or ('enable' in s3_config and not s3_config['enable']):
+    try:
+        s3_config.update(daconfig.get('s3', {}))
+    except:
+        config_error("s3 was not a dict")
+    if len(s3_config) == 0 or ('enable' in s3_config and not s3_config['enable']):
         S3_ENABLED = False
     else:
         S3_ENABLED = True
@@ -492,15 +492,21 @@ def load(**kwargs):
             s3_config['access key id'] = os.environ['AWSACCESSKEY']
         if not s3_config.get('secret access key', None) and env_exists('AWSSECRETACCESSKEY'):
             s3_config['secret access key'] = os.environ['AWSSECRETACCESSKEY']
-    gc_config = daconfig.get('google cloud', None)
-    if not gc_config or ('enable' in gc_config and not gc_config['enable']) or not ('access key id' in gc_config and gc_config['access key id']) or not ('secret access key' in gc_config and gc_config['secret access key']):
+    try:
+        gc_config.update(daconfig.get('google cloud', {}))
+    except:
+        config_error("google cloud was not a dict")
+    if len(gc_config) == 0 or ('enable' in gc_config and not gc_config['enable']) or not ('access key id' in gc_config and gc_config['access key id']) or not ('secret access key' in gc_config and gc_config['secret access key']):
         GC_ENABLED = False
     else:
         GC_ENABLED = True
     if 'azure' in daconfig and not isinstance(daconfig['azure'], dict):
         config_error('azure must be a dict')
-    azure_config = daconfig.get('azure', None)
-    if not isinstance(azure_config, dict) or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
+    try:
+        azure_config.update(daconfig.get('azure', {}))
+    except:
+        config_error("azure was not a dict")
+    if len(azure_config) == 0 or ('enable' in azure_config and not azure_config['enable']) or 'account name' not in azure_config or azure_config['account name'] is None or 'account key' not in azure_config or azure_config['account key'] is None:
         AZURE_ENABLED = False
     else:
         AZURE_ENABLED = True
@@ -523,7 +529,9 @@ def load(**kwargs):
         import docassemble.base.microsoft  # pylint: disable=import-outside-toplevel
         cloud = docassemble.base.microsoft.AzureObject(azure_config)
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
-            daconfig = cloud.load_with_secrets(daconfig)
+            daconfig_copy = copy.copy(daconfig)
+            daconfig.clear()
+            daconfig.update(cloud.load_with_secrets(daconfig_copy))
     else:
         cloud = None
     if 'debug startup process' in daconfig and daconfig['debug startup process']:

@@ -1,0 +1,166 @@
+metadata:
+  title: Test of defined
+  example start: 1
+  example end: 4
+---
+objects:
+  list_of_things: DAList.using(object_type=Thing)
+  list_of_things[i].sub_list: DAList
+  dict_of_things: DADict.using(object_type=Thing)
+  dict_of_things[i].sub_list: DAList
+  list_of_strings: DAList
+  dict_of_strings: DADict
+---
+mandatory: True
+code: |
+  list_of_things
+  dict_of_things
+  list_of_strings
+  dict_of_strings
+---
+mandatory: True
+code: |
+  list_of_things.append_object()
+  list_of_things.append_object()  
+  list_of_things.gathered = True
+---
+mandatory: True
+code: |
+  list_of_things[0].name.text = 'First Thing'
+  list_of_things[0].sub_list.append('First Thing')
+  list_of_things[0].sub_list.gathered = True
+---
+mandatory: True
+code: |
+  list_of_things[1].name.text = 'Second Thing'
+  list_of_things[1].sub_list.append('First Thing')
+  list_of_things[1].sub_list.gathered = True
+---
+mandatory: True
+code: |
+  dict_of_things.initialize_object('first')
+  dict_of_things['first'].name.text = 'First Thing'
+---
+mandatory: True
+code: |
+  dict_of_things['first'].sub_list.append('First Thing')
+  dict_of_things['first'].sub_list.gathered = True
+---
+mandatory: True
+code: |
+  dict_of_things.initialize_object('second')
+  dict_of_things['second'].name.text = 'First Thing'
+  dict_of_things.gathered = True
+---
+mandatory: True
+code: |
+  dict_of_things['second'].sub_list.append('First Thing')
+  dict_of_things['second'].sub_list.gathered = True
+---
+mandatory: True
+code: |
+  list_of_strings.append('First Thing')
+  list_of_strings.append('Second Thing')
+  list_of_strings.gathered = True
+---
+mandatory: True
+code: |
+  dict_of_strings['first'] = 'First Thing'
+  dict_of_strings['second'] = 'Second Thing'
+  dict_of_strings.gathered = True    
+---
+mandatory: True
+question: |
+  Start
+continue button field: first_screen
+---
+mandatory: True
+code: |
+  assert defined('non_existent') is False
+  assert value('list_of_things[0].name.text') == 'First Thing'
+  assert defined('list_of_things[1].name.text') is True
+  assert defined('list_of_things[2].name.text') is False
+---
+mandatory: True
+question: |
+  Testing
+subquestion: |
+  ${ value("dict_of_strings['first']") }
+  
+  ${ value('dict_of_strings["first"]') }
+
+  ${ value("list_of_strings[0]") }
+
+  % if defined("dict_of_things"):
+  Ok
+  % else:
+  Not ok: dict_of_things is not defined
+  % endif
+
+  % if defined("set_of_things"):
+  Not ok: set_of_things is defined
+  % else:
+  Ok
+  % endif
+
+  ${ showifdef("list_of_things[2]", 'Ok') }
+
+  % if len(list_of_things) > 2:
+  Not ok: list_of_things greater than 2
+  % else:
+  Ok
+  % endif
+
+  % if defined("list_of_things[2].sub_list[0]"):
+  Not ok: list_of_things[2].sub_list[0] is defined
+  % else:
+  Ok
+  % endif
+
+  % if defined("list_of_things[2].sub_list[1]"):
+  Not ok: list_of_things[2].sub_list[1] is defined
+  % else:
+  Ok
+  % endif
+
+  % if defined("not_a_thing['second'].sub_list[1]"):
+  Not ok: not_a_thing['second'].sub_list[1] is defined
+  % else:
+  Ok
+  % endif
+
+  % if defined("dict_of_things['second'].sub_list[0]"):
+  Ok
+  % else:
+  Not ok: dict_of_things['second'].sub_list[0] is not defined
+  % endif
+
+  % if defined("dict_of_things['second'].sub_list[1]"):
+  Not ok: dict_of_things['second'].sub_list[1] is defined
+  % else:
+  Ok
+  % endif
+
+  % if defined("not_a_thing['second'].sub_list[1]"):
+  Not ok: not_a_thing['second'].sub_list[1] is defined
+  % else:
+  Ok
+  % endif
+
+  ${ showifdef("dict_of_things['third']", 'Ok') }
+
+  % if 'third' in dict_of_things:
+  Not ok: 'third' exists in dict_of_things
+  % else:
+  Ok
+  % endif
+
+  % if defined("dict_of_things['third'].sub_list[1]"):
+  Not ok: dict_of_things['third'].sub_list[1] is defined
+  % else:
+  Ok
+  % endif
+
+  ${ showifdef("dict_of_things['first'].sub_list[0]", "Not ok: dict_of_things['first'].sub_list[0] is undefined") }
+
+  ${ showifdef("dict_of_things['first'].sub_list[1]", 'Ok') }

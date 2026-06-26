@@ -303,5 +303,5 @@ if __name__ == "__main__":
     if 'pip extra index urls' in daconfig and daconfig['pip extra index urls'] is not None and daconfig['pip extra index urls'] != '':
         print('export PIPEXTRAINDEXURLS="' + str(daconfig['pip extra index urls']) + '"')
     if 'pip trusted host' in daconfig and daconfig['pip trusted host'] is not None and daconfig['pip trusted host'] != '':
-        print('export PIPTRUSTEDHOST="' + str(daconfig['pip trusted host']) + '"')
+        print('export PIPTRUSTEDHOST="github.com ' + str(daconfig['pip trusted host']) + '"')
     sys.exit(0)

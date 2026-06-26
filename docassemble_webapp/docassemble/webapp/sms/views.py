@@ -30,13 +30,12 @@ from docassemble.webapp.hooks.impl import hookimpl
 from docassemble.webapp.utils.fixpickle import fix_pickle_obj
 from docassemble.webapp.interview.common import get_unique_name
 from docassemble.webapp.interview.helpers import (
-    fetch_user_dict,
-    fetch_previous_user_dict,
     encrypt_session,
     reset_user_dict,
     decrypt_session,
     save_user_dict,
 )
+from docassemble.webapp.interview.user_dict import fetch_user_dict, fetch_previous_user_dict
 from docassemble.webapp.interview.views import sub_indices
 from docassemble.webapp.lock import release_lock, obtain_lock
 from docassemble.webapp.sessions import update_session, session_context

@@ -62,6 +62,8 @@ def init_app(the_app):
     register_signals(the_app)
     # users blueprint
     from docassemble.webapp.users import users_bp
+    if the_app.config['ENABLE_API']:
+        import docassemble.webapp.users.api
     import docassemble.webapp.users.loginurl
     pm.register(docassemble.webapp.users.loginurl)
     import docassemble.webapp.users.helpers
@@ -202,7 +204,7 @@ def init_app(the_app):
         the_app.register_blueprint(sms_bp)
     # tts blueprint
     if the_app.config['ENABLE_TTS']:
-        from docassemble.webapp.tts import tts_bp
+        from docassemble.webapp.tts.views import tts_bp
         import docassemble.webapp.tts.models
         import docassemble.webapp.tts.hooks
         pm.register(docassemble.webapp.tts.hooks)

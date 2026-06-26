@@ -38,7 +38,6 @@ PANDOC_OLD = False
 PANDOC_ENGINE = '--pdf-engine=' + daconfig.get('pandoc engine', 'pdflatex')
 if daconfig.get('pandoc with celery', False):
     PANDOC_MODE = REMOTE
-    from docassemble.pandoc.tasks import run_pandoc  # pylint: disable=import-error,no-name-in-module
 elif PANDOC_PATH and shutil.which(PANDOC_PATH):
     PANDOC_MODE = LOCAL
 else:
@@ -48,7 +47,6 @@ LIBREOFFICE_MACRO_PATH = daconfig.get('libreoffice macro file', '/var/www/.confi
 LIBREOFFICE_INITIALIZED = False
 if daconfig.get('libreoffice with celery', False):
     LIBREOFFICE_MODE = REMOTE
-    from docassemble.libreoffice.tasks import run_libreoffice  # pylint: disable=import-error,no-name-in-module
 elif LIBREOFFICE_PATH and shutil.which(PANDOC_PATH):
     LIBREOFFICE_MODE = LOCAL
 else:
@@ -315,6 +313,7 @@ class MyPandoc:
             except subprocess.CalledProcessError as err:
                 raise DAException("Failed to assemble file: " + err.output.decode()) from err
         elif PANDOC_MODE == REMOTE:
+            from docassemble.pandoc.tasks import run_pandoc  # pylint: disable=import-error,no-name-in-module
             result = run_pandoc.delay(subprocess_arguments[2:], tempfile.gettempdir(), mode=0).get(disable_sync_subtasks=False)  # pylint: disable=possibly-used-before-assignment
             if result.ok:
                 msg = result.content
@@ -388,6 +387,7 @@ class MyPandoc:
                 self.output_content = self.output_content.decode()
             elif PANDOC_MODE == REMOTE:
                 self.output_filename = None
+                from docassemble.pandoc.tasks import run_pandoc  # pylint: disable=import-error,no-name-in-module
                 result = run_pandoc.delay(subprocess_arguments[2:], tempfile.gettempdir(), input_content=self.input_content, mode=1).get(disable_sync_subtasks=False)
                 if result.ok:
                     self.output_content = result.content
@@ -554,6 +554,7 @@ def word_to_pdf(in_file, in_format, out_file, pdfa=False, password=None, owner_p
                 logmessage("Finished libreoffice after {:.4f} seconds.".format(time.time() - start_time))
                 applock('release', 'libreoffice')
             elif LIBREOFFICE_MODE == REMOTE:
+                from docassemble.libreoffice.tasks import run_libreoffice  # pylint: disable=import-error,no-name-in-module
                 result = run_libreoffice.delay(subprocess_arguments[1:], tempfile.gettempdir()).get(disable_sync_subtasks=False)  # pylint: disable=possibly-used-before-assignment
                 if result == 1234:
                     result = 1
@@ -655,6 +656,7 @@ def rtf_to_docx(in_file, out_file):
             if result != 0:
                 logmessage("rtf_to_docx: call to LibreOffice returned non-zero response")
         else:
+            from docassemble.libreoffice.tasks import run_libreoffice  # pylint: disable=import-error,no-name-in-module
             result = run_libreoffice.delay(subprocess_arguments[1:], tempfile.gettempdir()).get(disable_sync_subtasks=False)
             if result == 1234:
                 result = 1
@@ -729,6 +731,7 @@ def convert_file(in_file, out_file, input_extension, output_extension):
             if result != 0:
                 logmessage("convert_file: call to LibreOffice returned non-zero response")
         else:
+            from docassemble.libreoffice.tasks import run_libreoffice  # pylint: disable=import-error,no-name-in-module
             result = run_libreoffice.delay(subprocess_arguments[1:], tempfile.gettempdir()).get(disable_sync_subtasks=False)
             if result == 1234:
                 result = 1
@@ -813,6 +816,7 @@ def word_to_markdown(in_file, in_format):
                 if result != 0:
                     logmessage("word_to_markdown: call to LibreOffice returned non-zero response")
             elif LIBREOFFICE_MODE == REMOTE:
+                from docassemble.libreoffice.tasks import run_libreoffice  # pylint: disable=import-error,no-name-in-module
                 result = run_libreoffice.delay(subprocess_arguments[1:], tempfile.gettempdir()).get(disable_sync_subtasks=False)
                 if result == 1234:
                     result = 1
@@ -852,6 +856,7 @@ def word_to_markdown(in_file, in_format):
         except subprocess.TimeoutExpired:
             result = 1
     elif PANDOC_MODE == REMOTE:
+        from docassemble.pandoc.tasks import run_pandoc  # pylint: disable=import-error,no-name-in-module
         result = run_pandoc.delay(subprocess_arguments[2:], tempfile.gettempdir(), mode=2).get(disable_sync_subtasks=False)
     else:
         raise DAException("Pandoc not installed.")
@@ -904,6 +909,7 @@ def update_references(filename):
                 tries = 5
             applock('release', 'libreoffice')
         else:
+            from docassemble.libreoffice.tasks import run_libreoffice  # pylint: disable=import-error,no-name-in-module
             result = run_libreoffice.delay(subprocess_arguments[1:], tempfile.gettempdir()).get(disable_sync_subtasks=False)
             if result == 1234:
                 result = 1

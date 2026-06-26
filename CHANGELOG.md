@@ -1,6 +1,6 @@
 # Change Log
 
-## [1.10.0] - 2026-06-20
+## [1.10.0] - 2026-06-28
 
 ### Added
 
@@ -26,6 +26,13 @@
 - SQLAlchemy models now inherit from `sqlalchemy.org.DeclarativeBase`
   rather than `db.model`.
 - Celery tasks are now invoked using signatures.
+- Added a dependency on `pyopenssl` not because it is needed, but
+  because a version conflict with `cryptography` will prevent the
+  web application from starting.
+
+### Fixed
+
+- Issue with `list collect` and `input type: hidden`.
 
 ## [1.9.13] - 2026-06-03
 

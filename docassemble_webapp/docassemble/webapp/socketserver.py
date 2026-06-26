@@ -27,7 +27,7 @@ from docassemble.base.thread_context import this_thread
 from docassemble.webapp.config import daconfig
 from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset, r_store
 from docassemble.webapp.database import alchemy_connection_string, connect_args
-from docassemble.webapp.interview.helpers import fetch_user_dict
+from docassemble.webapp.interview.user_dict import fetch_user_dict
 # from docassemble.webapp.lock import obtain_lock, release_lock
 from docassemble.webapp.monitor.hooks import get_chat_log
 from docassemble.webapp.monitor.models import ChatLog

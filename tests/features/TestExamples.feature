@@ -4291,12 +4291,6 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "Result of question"
 
-  Scenario: Test the interview "Sign in button"
-    Given I start the interview "docassemble.base:data/questions/examples/signin.yml"
-    Then I should see the phrase "Please sign in"
-    And I click the button "Sign in"
-    Then I should see the phrase "Password"
-
   Scenario: Test the interview "Spacing"
     Given I start the interview "docassemble.base:data/questions/examples/single-spacing.yml"
     Then I should see the phrase "Here is your document."
@@ -5474,16 +5468,6 @@ Feature: Example interviews
     Given I start the interview "docassemble.base:data/questions/examples/server-capabilities.yml"
     Then I should see the phrase "Server capabilities"
 
-  Scenario: Test the interview "Interviews" 1
-    Given I start the interview "docassemble.base:data/questions/examples/session-interview-redirect.yml"
-    And I wait 3 seconds
-    Then I should see the phrase "Sign in"
-
-  Scenario: Test the interview "Interviews" 2
-    Given I start the interview "docassemble.base:data/questions/examples/session-interview.yml"
-    And I wait 3 seconds
-    Then I should see the phrase "Sign in"
-
   Scenario: Test the interview "Logo title"
     Given I start the interview "docassemble.base:data/questions/examples/set-logo-title.yml"
     Then I should see the phrase "Welcome to the Example Inc. interview!"
@@ -6149,15 +6133,6 @@ Feature: Example interviews
     And I click the button "Continue"
     Then I should see the phrase "All done"
     And I should see the phrase "You like apple, potato, and button mushroom."
-
-  Scenario: Test the interview "Require user to log in"
-    Given I start the interview "docassemble.base:data/questions/examples/user-logged-in.yml"
-    Then I should see the phrase "What is your favorite fruit?"
-    And I set "Fruit" to "apple"
-    And I click the button "Continue"
-    Then I should see the phrase "You need to log in to finish this interview."
-    And I click the button "Log in"
-    Then I should see the phrase "Password"
 
   Scenario: Test the interview ".docx include with parameters"
     Given I start the interview "docassemble.demo:data/questions/examples/subdoc-params.yml"
@@ -10459,3 +10434,34 @@ Feature: Example interviews
     Then I should see the phrase "Thank you for that information."
     And I should see the phrase "I will make lots of money by selling your food preferences to data brokers so that you will receive targeted advertising about apples, potatoes, and beans in your Instagram feed."
 
+  Scenario: Test the interview "Test of defined"
+    Given I start the interview "docassemble.base:data/questions/examples/def-test.yml"
+    Then I should see the phrase "Start"
+    And I click the button "Continue"
+    Then I should not see the phrase "Not ok"
+    And I should not see the phrase "Second Thing"
+
+  Scenario: Test the interview "Sign in button"
+    Given I start the interview "docassemble.base:data/questions/examples/signin.yml"
+    Then I should see the phrase "Please sign in"
+    And I click the button "Sign in"
+    Then I should see the phrase "Password"
+
+  Scenario: Test the interview "Interviews" 1
+    Given I start the interview "docassemble.base:data/questions/examples/session-interview-redirect.yml"
+    And I wait 3 seconds
+    Then I should see the phrase "Sign in"
+
+  Scenario: Test the interview "Interviews" 2
+    Given I start the interview "docassemble.base:data/questions/examples/session-interview.yml"
+    And I wait 3 seconds
+    Then I should see the phrase "Sign in"
+
+  Scenario: Test the interview "Require user to log in"
+    Given I start the interview "docassemble.base:data/questions/examples/user-logged-in.yml"
+    Then I should see the phrase "What is your favorite fruit?"
+    And I set "Fruit" to "apple"
+    And I click the button "Continue"
+    Then I should see the phrase "You need to log in to finish this interview."
+    And I click the button "Log in"
+    Then I should see the phrase "Password"

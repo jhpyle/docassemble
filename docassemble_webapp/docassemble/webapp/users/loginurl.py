@@ -6,7 +6,8 @@ from docassemble.base.thread_context import this_thread
 from docassemble.webapp.config import daconfig
 from docassemble.webapp.extensions import db
 from docassemble.webapp.hooks.impl import hookimpl
-from docassemble.webapp.interview.helpers import fetch_user_dict, user_interviews
+from docassemble.webapp.interview.helpers import user_interviews
+from docassemble.webapp.interview.user_dict import fetch_user_dict
 from docassemble.webapp.daredis import r
 from docassemble.webapp.utils.encryption import encrypt_dictionary
 from docassemble.webapp.utils.helpers import (

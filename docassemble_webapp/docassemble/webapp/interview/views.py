@@ -163,11 +163,9 @@ from docassemble.webapp.utils.logger import logmessage
 from .blueprint import interview_bp
 from .helpers import (
     update_current_info_with_session_info,
-    fetch_user_dict,
     refresh_or_continue,
     standard_app_values,
     get_existing_session,
-    fetch_previous_user_dict,
     remove_i_from_dict,
     encrypt_session,
     reset_user_dict,
@@ -179,6 +177,7 @@ from .helpers import (
     get_part,
     process_set_variable,
 )
+from .user_dict import fetch_user_dict, fetch_previous_user_dict
 from .config import main_page_parts, INDEX_PATH, HTML_INDEX_PATH
 
 @interview_bp.route("/checkout", methods=['POST'])
@@ -2525,10 +2524,7 @@ def index(action_argument=None, refer=None):
                 ga_ids = google_config.get('analytics id')
             else:
                 ga_ids = None
-            if 'segment id' in daconfig:
-                segment_id = daconfig['segment id']
-            else:
-                segment_id = None
+            segment_id = daconfig.get('segment id')
         else:
             ga_ids = None
             segment_id = None

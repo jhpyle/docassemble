@@ -92,7 +92,8 @@ from docassemble.webapp.files.savedfile import (
     publish_package,
     make_package_zip,
 )
-from docassemble.webapp.interview.helpers import fetch_user_dict, read_fields
+from docassemble.webapp.interview.helpers import read_fields
+from docassemble.webapp.interview.user_dict import fetch_user_dict
 from docassemble.webapp.mail.da_flask_mail import Message
 from docassemble.webapp.mail.hooks import da_send_mail
 from docassemble.webapp.main.hooks import get_default_timezone

@@ -418,10 +418,6 @@ REMOTE = 2
 TESSERACT_PATH = 'tesseract'
 if daconfig.get('tesseract with celery', False):
     TESSERACT_MODE = REMOTE
-    from docassemble.tesseract.tasks import (  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
-        run_tesseract,
-        run_gs,
-    )
 elif TESSERACT_PATH and shutil.which(TESSERACT_PATH):
     TESSERACT_MODE = LOCAL
 else:
@@ -2468,6 +2464,8 @@ class DAList(DAObject):
             delattr(self, 'new_object_type')
         return newobject
 
+    initialize_object = initializeObject
+
     def set_object_type(self, object_type):
         """Set the object type used when creating new list items.
 
@@ -2838,6 +2836,8 @@ class DAList(DAObject):
         if object_function is None and self.ask_object_type and hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         return newobject
+
+    append_object = appendObject
 
     def append(self, *pargs, **kwargs):
         """Add one or more items to the end of the list.
@@ -4239,6 +4239,8 @@ class DADict(DAObject):
         if object_function is None and self.ask_object_type and hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         return newobject
+
+    initialize_object = initializeObject
 
     def new(self, *pargs, **kwargs):
         """Initialize new dictionary entries as DAObject instances.
@@ -12562,6 +12564,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
             except subprocess.CalledProcessError as err:
                 raise DAError("ocr_file: failed to OCR file: " + str(err) + " " + str(err.output.decode()))
         elif TESSERACT_MODE == REMOTE:
+            from docassemble.tesseract.tasks import run_tesseract  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
             result = run_tesseract.delay(['stdin', 'stdout', '-l', str(lang), '--psm', str(psm)], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)  # pylint: disable=possibly-used-before-assignment
             if not result.ok:
                 raise DAError("ocr_file: failed to OCR file")
@@ -13998,6 +14001,7 @@ def get_available_languages():
         except subprocess.CalledProcessError as err:
             raise DAError("get_available_languages: failed to list available languages: " + str(err))
     elif TESSERACT_MODE == REMOTE:
+        from docassemble.tesseract.tasks import run_tesseract  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
         result = run_tesseract.delay(['--list-langs'], mode=1).get(disable_sync_subtasks=False)
         if not result.ok:
             raise DAError("get_available_languages: failed to list available languages")
@@ -14174,6 +14178,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
                     result = 1
                     logmessage("ocr_pdf: call to gs took too long")
             elif TESSERACT_MODE == REMOTE:
+                from docassemble.tesseract.tasks import run_gs  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
                 result = run_gs.delay(params[1:]).get(disable_sync_subtasks=False)  # pylint: disable=possibly-used-before-assignment
                 if result is None:
                     result = 1
@@ -14190,6 +14195,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
                     result = 1
                     logmessage("ocr_pdf: call to tesseract took too long")
             elif TESSERACT_MODE == REMOTE:
+                from docassemble.tesseract.tasks import run_tesseract  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
                 result = run_tesseract.delay(params[1:], mode=2).get(disable_sync_subtasks=False)
                 if result.ok:
                     result = result.content
@@ -14209,6 +14215,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
                     result = 1
                     logmessage("ocr_pdf: call to tesseract took too long")
             elif TESSERACT_MODE == REMOTE:
+                from docassemble.tesseract.tasks import run_tesseract  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
                 result = run_tesseract.delay(params[1:], mode=2).get(disable_sync_subtasks=False)
                 if result.ok:
                     result = result.content
@@ -14305,6 +14312,7 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
             except subprocess.CalledProcessError as err:
                 raise DAError("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
         elif TESSERACT_MODE == REMOTE:
+            from docassemble.tesseract.tasks import run_tesseract  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
             result = run_tesseract.delay(params[1:], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)
             if result.ok:
                 text = result.content
@@ -14323,6 +14331,7 @@ def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resoluti
         except subprocess.CalledProcessError as err:
             raise DAError("ocr_page: failed to run tesseract with command " + " ".join(params) + ": " + str(err) + " " + str(err.output.decode()))
     elif TESSERACT_MODE == REMOTE:
+        from docassemble.tesseract.tasks import run_tesseract  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
         result = run_tesseract.delay(params[1:], mode=0, file_path=file_to_read.name).get(disable_sync_subtasks=False)
         if result.ok:
             text = result.content

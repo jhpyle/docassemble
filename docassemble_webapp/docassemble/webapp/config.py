@@ -7,10 +7,10 @@ import re
 import tempfile
 import tzlocal
 import packaging
-from docassemble.base import __version__ as da_version
 import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load(arguments=sys.argv)
+from docassemble.base import __version__ as da_version
 from docassemble.base.config import (
     daconfig,
     s3_config,

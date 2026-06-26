@@ -987,6 +987,14 @@ else
             su -c "source \"${DA_ACTIVATE}\" && pip config unset global.extra-index-url" www-data &> /dev/null
         fi
 
+        echo "initialize: Checking to see if pip trusted host is used" >&2
+
+	if [ "${PIPTRUSTEDHOST:-null}" != "null" ]; then
+	    su -c "source \"${DA_ACTIVATE}\" && pip config set global.trusted-host \"${PIPTRUSTEDHOST}\"" www-data
+	else
+	    su -c "source \"${DA_ACTIVATE}\" && pip config set global.trusted-host github.com" www-data &> /dev/null
+	fi
+
         if [ -n "$PYTHONPACKAGES" ]; then
             echo "initialize: Installing Python packages specified in the Configuration" >&2
             for PACKAGE in "${PYTHONPACKAGES[@]}"; do
@@ -1017,6 +1025,14 @@ else
             echo "initialize: Not using extra pip index urls" >&2
             pip config unset global.extra-index-url &> /dev/null
         fi
+
+        echo "initialize: Checking to see if pip trusted host is used" >&2
+
+	if [ "${PIPTRUSTEDHOST:-null}" != "null" ]; then
+	    pip config set global.trusted-host "${PIPTRUSTEDHOST}"
+	else
+	    pip config set global.trusted-host "github.com" &> /dev/null
+	fi
 
         if [ -n "$PYTHONPACKAGES" ]; then
             echo "initialize: Installing Python packages specified in the Configuration" >&2

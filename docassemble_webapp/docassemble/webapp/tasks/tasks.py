@@ -45,10 +45,10 @@ from docassemble.webapp.files.file_access import get_info_from_file_number
 from docassemble.webapp.files.savedfile import SavedFile
 from docassemble.webapp.flask_app import flaskapp
 from docassemble.webapp.interview.helpers import (
-    fetch_user_dict,
     save_user_dict,
     reset_user_dict,
 )
+from docassemble.webapp.interview.user_dict import fetch_user_dict
 from docassemble.webapp.lock import obtain_lock_patiently, release_lock
 from docassemble.webapp.mail.da_flask_mail import Message
 from docassemble.webapp.mail.hooks import da_send_mail

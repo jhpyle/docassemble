@@ -7,7 +7,8 @@ from docassemble.base.parse import InterviewStatus
 from docassemble.base.save_status import SS_NEW, SS_IGNORE
 from docassemble.base.thread_context import this_thread
 from docassemble.webapp.errors import error_notification
-from docassemble.webapp.interview.helpers import fetch_user_dict, save_user_dict
+from docassemble.webapp.interview.helpers import save_user_dict
+from docassemble.webapp.interview.user_dict import fetch_user_dict
 from docassemble.webapp.lock import obtain_lock, release_lock
 from docassemble.webapp.tasks.app import celery_app
 
