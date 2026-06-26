@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """user last login
 
 Revision ID: c2ef4831ef76

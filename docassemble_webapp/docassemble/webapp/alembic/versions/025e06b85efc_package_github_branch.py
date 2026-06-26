@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """package github branch
 
 Revision ID: 025e06b85efc

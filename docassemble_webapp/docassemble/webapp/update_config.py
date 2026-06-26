@@ -1,13 +1,8 @@
-import sys
-import docassemble.base.config
-if __name__ == "__main__":
-    docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig
-import docassemble.webapp.cloud
-
+from docassemble.webapp.config import daconfig
+from docassemble.webapp.cloud.utils import get_cloud
 
 def check_for_config():
-    cloud = docassemble.webapp.cloud.get_cloud()
+    cloud = get_cloud()
     if cloud is not None:
         key = cloud.get_key('config.yml')
         if key.does_exist:

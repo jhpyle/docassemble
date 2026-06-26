@@ -1,5 +1,11 @@
 # do not pre-load
-from docassemble.base.util import store_variables_snapshot, DAObject, current_context, start_time, variables_snapshot_connection
+from docassemble.base.util import (
+    store_variables_snapshot,
+    DAObject,
+    current_context,
+    start_time,
+    variables_snapshot_connection,
+)
 
 __all__ = ['MyIndex']
 

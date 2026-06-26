@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 import ast
 import re
 
@@ -7,7 +8,7 @@ fix_assign = re.compile(r'\.(\[[^\]]*\])')
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
 
 
-class myextract(ast.NodeVisitor):
+class MyExtract(ast.NodeVisitor):
 
     def __init__(self):
         self.stack = []
@@ -66,7 +67,7 @@ class myextract(ast.NodeVisitor):
             self.in_subscript -= 1
 
 
-class myvisitnode(ast.NodeVisitor):
+class MyVisitNode(ast.NodeVisitor):
 
     def __init__(self):
         self.names = {}
@@ -90,7 +91,7 @@ class myvisitnode(ast.NodeVisitor):
 
     def visit_Subscript(self, node):
         if node not in self.calls:
-            crawler = myextract()
+            crawler = MyExtract()
             crawler.visit(node)
             if not crawler.seen_complexity:
                 self.names[fix_assign.sub(r'\1', (".".join(reversed(crawler.stack))))] = 1
@@ -98,7 +99,7 @@ class myvisitnode(ast.NodeVisitor):
 
     def visit_Attribute(self, node):
         if node not in self.calls:
-            crawler = myextract()
+            crawler = MyExtract()
             crawler.visit(node)
             if not crawler.seen_complexity:
                 self.names[fix_assign.sub(r'\1', (".".join(reversed(crawler.stack))))] = 1
@@ -117,11 +118,11 @@ class myvisitnode(ast.NodeVisitor):
                 for subnode in val:
                     if isinstance(subnode, ast.Tuple):
                         for subsubnode in subnode.elts:
-                            crawler = myextract()
+                            crawler = MyExtract()
                             crawler.visit(subsubnode)
                             self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
                     else:
-                        crawler = myextract()
+                        crawler = MyExtract()
                         crawler.visit(subnode)
                         self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
         self.depth += 1
@@ -132,7 +133,7 @@ class myvisitnode(ast.NodeVisitor):
     def visit_AugAssign(self, node):
         for key, val in ast.iter_fields(node):
             if key == 'target':
-                crawler = myextract()
+                crawler = MyExtract()
                 crawler.visit(val)
                 self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
         self.depth += 1
@@ -143,7 +144,7 @@ class myvisitnode(ast.NodeVisitor):
     def visit_AnnAssign(self, node):
         for key, val in ast.iter_fields(node):
             if key == 'target':
-                crawler = myextract()
+                crawler = MyExtract()
                 crawler.visit(val)
                 self.targets[fix_assign.sub(r'\1', ".".join(reversed(crawler.stack)))] = 1
         self.depth += 1
@@ -241,7 +242,7 @@ class myvisitnode(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-class detectIllegal(ast.NodeVisitor):
+class DetectIllegal(ast.NodeVisitor):
 
     def __init__(self):
         self.illegal = False
@@ -467,7 +468,7 @@ class detectIllegal(ast.NodeVisitor):
         ast.NodeVisitor.generic_visit(self, node)
 
 
-class detectIllegalQuery(ast.NodeVisitor):
+class DetectIllegalQuery(ast.NodeVisitor):
 
     def __init__(self):
         self.illegal = False

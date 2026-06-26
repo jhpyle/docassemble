@@ -16,4 +16,6 @@ source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.ba
 set -- $LOCALE
 export LANG=$1
 
-exec nice -n 19 su -c "source \"$DA_ACTIVATE\" && python -m docassemble.webapp.cron \"$DA_CONFIG_FILE\" -type $CRONTYPE" www-data
+export IN_CRON=true
+
+exec nice -n 19 su -c "source \"$DA_ACTIVATE\" && flask --app docassemble.webapp.server cron run $CRONTYPE" www-data

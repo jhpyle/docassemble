@@ -1,0 +1,13 @@
+{%- set footer_content = get_part('global footer') %}
+{% extends 'flask_user/public_base.html' %}
+
+{% block content %}
+<h1>{{ word("Sign in") }}</h1>
+
+{% if config['USE_GOOGLE_LOGIN'] %}
+<div id="g_id_onload" data-client_id="{{ config['OAUTH_CREDENTIALS']['google']['id'] }}" data-ux_mode="redirect" data-login_uri="{{ url_for('auth.oauth_callback', provider='google', _external=True) }}"></div>
+<div class="g_id_signin" data-type="standard"></div>
+<script defer src="https://accounts.google.com/gsi/client"></script>
+{% endif %}
+
+{% endblock %}

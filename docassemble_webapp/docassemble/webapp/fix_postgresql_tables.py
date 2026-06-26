@@ -1,12 +1,10 @@
+# pylint: disable=wrong-import-position
 import os
 import sys
 from pathlib import Path
 import importlib.resources
 import psycopg2
-import docassemble.base.config
-if __name__ == "__main__":
-    docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig
+from docassemble.webapp.config import daconfig
 from docassemble.base.logger import logmessage
 
 
@@ -95,19 +93,19 @@ def main():
     commands = []
     if db_table_prefix + 'shortener' in existing_columns and db_table_prefix + 'email' not in existing_columns:
         commands.append("drop table if exists " + db_table_prefix + "shortener;")
-    for table_name in desired_columns:
+    for table_name, table_info in desired_columns.items():
         if db_table_prefix + table_name in existing_columns:
-            for column_name in desired_columns[table_name]:
+            for column_name in table_info:
                 if column_name not in existing_columns[db_table_prefix + table_name]:
-                    output = "alter table \"" + db_table_prefix + table_name + "\" add column \"" + column_name + "\" " + desired_columns[table_name][column_name]['type']
-                    if desired_columns[table_name][column_name]['size']:
-                        output += "(" + desired_columns[table_name][column_name]['size'] + ")"
-                    if desired_columns[table_name][column_name]['default']:
-                        output += " default " + desired_columns[table_name][column_name]['default']
+                    output = "alter table \"" + db_table_prefix + table_name + "\" add column \"" + column_name + "\" " + table_info[column_name]['type']
+                    if table_info[column_name]['size']:
+                        output += "(" + table_info[column_name]['size'] + ")"
+                    if table_info[column_name]['default']:
+                        output += " default " + table_info[column_name]['default']
                     output += ";"
                     commands.append(output)
 
-    if len(commands):
+    if len(commands) > 0:
         for command in commands:
             try:
                 cur.execute(command)

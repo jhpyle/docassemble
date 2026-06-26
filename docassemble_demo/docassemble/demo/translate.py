@@ -1,7 +1,7 @@
 # do not pre-load
 import re
-from docassemble.base.util import log, get_config
 from googleapiclient.discovery import build
+from docassemble.base.util import log, get_config
 
 __all__ = ['translate_phrase']
 
@@ -15,7 +15,7 @@ def translate_phrase(phrase, source_language, target_language):
     try:
         service = build('translate', 'v2',
                         developerKey=api_key)
-        resp = service.translations().list(
+        resp = service.translations().list(  # pylint: disable=no-member
             source=source_language,
             target=target_language,
             q=[phrase]

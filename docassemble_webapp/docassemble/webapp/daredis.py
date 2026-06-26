@@ -1,5 +1,5 @@
 import redis
-from docassemble.base.config import parse_redis_uri
+from docassemble.webapp.config import parse_redis_uri
 
 (redis_host, redis_port, redis_username, redis_password, redis_offset, redis_cli, ssl_opts) = parse_redis_uri()
 

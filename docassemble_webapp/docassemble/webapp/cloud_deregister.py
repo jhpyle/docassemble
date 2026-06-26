@@ -1,17 +1,17 @@
 import os
-import sys
 import re
+import sys
+import docassemble.base.config
 if __name__ == "__main__":
-    import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
-import docassemble.webapp.cloud
+from docassemble.webapp.cloud.utils import get_cloud  # pylint: disable=wrong-import-position
 
 
 def main():
     roles = os.environ.get('CONTAINERROLE', None)
     if roles is None:
         return
-    cloud = docassemble.webapp.cloud.get_cloud()
+    cloud = get_cloud()
     if cloud is not None:
         roles = re.sub(r'^:+|:+$', r'', roles)
         role_list = roles.split(":")

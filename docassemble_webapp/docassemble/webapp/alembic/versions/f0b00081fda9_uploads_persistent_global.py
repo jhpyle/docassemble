@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """uploads persistent global
 
 Revision ID: f0b00081fda9

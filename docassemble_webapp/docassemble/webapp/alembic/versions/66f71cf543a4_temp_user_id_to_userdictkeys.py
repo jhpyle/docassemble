@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """temp_user_id_to_userdictkeys
 
 Revision ID: 66f71cf543a4

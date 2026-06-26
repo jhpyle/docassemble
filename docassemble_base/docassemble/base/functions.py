@@ -1,5 +1,10 @@
+# ruff: noqa: F401
+# pylint: disable=unused-import
+# mypy: disable-error-code="var-annotated"
 import re
 import types
+import traceback
+from types import SimpleNamespace
 import os
 import locale
 import decimal
@@ -10,36 +15,165 @@ import base64
 import json
 import ast
 import datetime
-import threading
 import random
 from collections.abc import Iterable
 from unicodedata import normalize
 from enum import Enum
 from pathlib import Path
 import importlib.resources
-import sys
 import astunparse
-import tzlocal
 import us
 import pycountry
-import markdown
 import ruamel.yaml
-from types import SimpleNamespace
-from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
-from docassemble.base.pattern import pattern_en, pattern_es, pattern_de, pattern_fr, pattern_it, pattern_nl
-
 from pylatex.utils import escape_latex
 # import operator
-import titlecase
 from user_agents import parse as ua_parse
 import phonenumbers
 import werkzeug.utils
-import num2words
-from jinja2.runtime import Undefined
-from docassemble.base.logger import logmessage  # pylint: disable=ungrouped-imports
-from docassemble.base.error import ForcedNameError, QuestionError, ResponseError, CommandError, BackgroundResponseError, BackgroundResponseActionError, ForcedReRun, DAError, DANameError, DAInvalidFilename
+from docassemble.base.background import bg_action
+from docassemble.base.error import (
+    ForcedNameError,
+    QuestionError,
+    ResponseError,
+    CommandError,
+    BackgroundResponseError,
+    BackgroundResponseActionError,
+    ForcedReRun,
+    DAError,
+    DANameError,
+    DAInvalidFilename,
+)
 from docassemble.base.generate_key import random_string
+from docassemble.base.hooks import (
+    absolute_filename,
+    add_privilege,
+    chat_partners_available as server_chat_partners_available,
+    delete_record,
+    get_button_class_prefix,
+    get_chat_log as server_get_chat_log,
+    get_configuration,
+    get_debug_status,
+    get_default_timezone,
+    get_hostname,
+    get_login_url,
+    get_permissions_of_privilege,
+    get_privileges_list,
+    get_referer,
+    get_server_redis,
+    get_short_code,
+    get_url,
+    navigation_bar,
+    read_records,
+    release_lock,
+    remove_privilege,
+    retrieve_emails,
+    server_create_session,
+    server_create_user,
+    server_get_question_data,
+    server_get_secret,
+    server_get_session_variables,
+    server_get_user_info,
+    server_get_user_list,
+    server_go_back_in_session,
+    server_interview_menu,
+    server_invite_user,
+    server_run_action_in_session,
+    server_set_session_variables,
+    server_set_user_info,
+    transform_json_variables,
+    url_finder,
+    url_for,
+    user_interviews,
+    write_answer_json,
+    write_record,
+)
+from docassemble.base.language.capitalization import capitalize  # noqa: F401 # pylint: disable=unused-import
+from docassemble.base.language.control import (
+    get_language,
+    set_language,
+    set_country,
+    get_country,
+    get_dialect,
+    get_voice,
+    set_locale,
+    get_locale,
+    update_locale,
+)
+from docassemble.base.language.core import (
+    language_functions,
+    ensure_definition,
+    language_function_constructor,
+    update_language_function,
+)
+from docassemble.base.language.currency import (
+    currency,
+    currency_symbol,
+    get_currency_symbol,
+)
+from docassemble.base.language.language import (
+    comma_list,
+    comma_and_list,
+    quantity_noun,
+    verb_past,
+    verb_present,
+    noun_plural,
+    noun_singular,
+    indefinite_article,
+    period_list,
+    name_suffix,
+    title_case,
+    add_separators,
+    its,
+    the,
+    her,
+    does_a_b,
+    was_a_b,
+    do_you,
+    this,
+    their,
+    possessify,
+    did_you,
+    salutation,
+    his,
+    a_in_the_b,
+    some,
+    these,
+    have_you,
+    your,
+    did_a_b,
+    possessify_long,
+    were_you,
+    is_word,
+    has_a_b,
+)
+from docassemble.base.language.numbers import (
+    number_to_word,
+    ordinal,
+    nice_number,
+    ordinal_functions,
+    ordinal_number,
+    update_nice_numbers,
+    update_ordinal_numbers,
+    update_ordinal_function,
+    string_to_number,
+)
+from docassemble.base.language.utils import fix_punctuation
+from docassemble.base.language.words import (
+    words,
+    word,
+    update_word_collection,
+    word_collection,
+)
+from docassemble.base.logger import logmessage
+from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
+from docassemble.base.thread_context import (
+    this_thread,
+    get_current_user_dict,
+    get_old_user_dict,
+)
 import docassemble.base.astparser
+
+ordinal_function = ordinal
 FileType = IOBase
 equals_byte = bytes('=', 'utf-8')
 TypeType = type(type(None))
@@ -179,22 +313,22 @@ def wrap_up():
         file_object.commit()
 
 
-def set_gathering_mode(mode, instanceName):
-    # logmessage("set_gathering_mode: " + str(instanceName) + " with mode " + str(mode))
+def set_gathering_mode(mode, instance_name):
+    # logmessage("set_gathering_mode: " + str(instance_name) + " with mode " + str(mode))
     if mode:
-        if instanceName not in this_thread.gathering_mode:
+        if instance_name not in this_thread.gathering_mode:
             # logmessage("set_gathering_mode: using " + str(get_current_variable()))
-            this_thread.gathering_mode[instanceName] = get_current_variable()
+            this_thread.gathering_mode[instance_name] = get_current_variable()
     else:
         try:
-            del this_thread.gathering_mode[instanceName]
+            del this_thread.gathering_mode[instance_name]
         except KeyError:
             pass
 
 
-def get_gathering_mode(instanceName):
-    # logmessage("get_gathering_mode: " + str(instanceName))
-    if instanceName not in this_thread.gathering_mode:
+def get_gathering_mode(instance_name):
+    # logmessage("get_gathering_mode: " + str(instance_name))
+    if instance_name not in this_thread.gathering_mode:
         # logmessage("get_gathering_mode: returning False")
         return False
     # logmessage("get_gathering_mode: returning True")
@@ -208,9 +342,9 @@ def reset_gathering_mode(*pargs):
         return
     var = pargs[0]
     todel = []
-    for instanceName, curVar in this_thread.gathering_mode.items():
-        if curVar == var:
-            todel.append(instanceName)
+    for instance_name, current_var in this_thread.gathering_mode.items():
+        if current_var == var:
+            todel.append(instance_name)
     # logmessage("reset_gathering_mode: deleting " + repr([y for y in todel]))
     for item in todel:
         try:
@@ -246,7 +380,7 @@ def get_chat_log(utc=False, timezone=None):
     Returns:
         list: A list of chat messages for the current interview session.
     """
-    return server.get_chat_log(this_thread.current_info.get('yaml_filename', None), this_thread.current_info.get('session', None), this_thread.current_info.get('secret', None), utc=utc, timezone=timezone)
+    return server_get_chat_log(this_thread.current_info.get('yaml_filename', None), this_thread.current_info.get('session', None), this_thread.current_info.get('secret', None), utc=utc, timezone=timezone)
 
 
 def get_current_package():
@@ -847,7 +981,7 @@ def user_has_privilege(*pargs):
     return False
 
 
-class AttachmentInfo:
+class AttachmentInfo(SimpleNamespace):
     pass
 
 
@@ -899,7 +1033,7 @@ class TheContext:
     @property
     def current_section(self):
         try:
-            return this_thread.current_section or get_user_dict()['nav'].current
+            return this_thread.current_section or get_current_user_dict()['nav'].current
         except:
             return None
 
@@ -913,7 +1047,7 @@ class TheContext:
     @property
     def request_url(self):
         try:
-            info = server.get_url()
+            info = get_url()
         except:
             info = {}
         return info
@@ -1049,7 +1183,7 @@ class TheUser:
     def permissions(self):
         enabled_privileges = set()
         for privilege in user_privileges():
-            enabled_privileges.update(server.get_permissions_of_privilege(privilege, privileged=True))
+            enabled_privileges.update(get_permissions_of_privilege(privilege, privileged=True))
         return list(enabled_privileges)
 
     @property
@@ -1106,7 +1240,7 @@ class TheUser:
     def current_section(self):
         warn_if_not_warned('user_info', 'current_section', 'current_context')
         try:
-            return this_thread.current_section or get_user_dict()['nav'].current
+            return this_thread.current_section or get_current_user_dict()['nav'].current
         except:
             return None
 
@@ -1272,7 +1406,7 @@ def chat_partners_available(*pargs, **kwargs):
     if the_user_id == 'tNone':
         logmessage("chat_partners_available: unable to get temporary user id")
         return {'peer': 0, 'help': 0}
-    return server.chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles)
+    return server_chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles)
 
 
 def interview_email(key=None, index=None):
@@ -1293,8 +1427,8 @@ def interview_email(key=None, index=None):
     """
     if key is None and index is not None:
         raise DAError("interview_email: if you provide an index you must provide a key")
-    domain = server.daconfig.get('incoming mail domain', server.daconfig.get('external hostname', server.hostname))
-    return server.get_short_code(key=key, index=index) + '@' + domain
+    domain = get_configuration().get('incoming mail domain', get_configuration().get('external hostname', get_hostname()))
+    return get_short_code({"key": key, "index": index}) + '@' + domain
 
 
 def get_emails(key=None, index=None):
@@ -1313,7 +1447,7 @@ def get_emails(key=None, index=None):
         list: A list of objects representing e-mail addresses and their received
             messages.
     """
-    return server.retrieve_emails(key=key, index=index)
+    return retrieve_emails(key=key, index=index)
 
 
 def modify_i_argument(args):
@@ -1384,7 +1518,7 @@ def interview_url(**kwargs):
             is_new = False
         url = None
         if the_style == 'short':
-            for k, v in server.daconfig.get('dispatch').items():
+            for k, v in get_configuration().get('dispatch').items():
                 if v == args['i']:
                     args['dispatch'] = k
                     del args['i']
@@ -1425,12 +1559,13 @@ def interview_url(**kwargs):
 
 
 def temp_redirect(url, expire_seconds, do_local, one_time):
+    redis_server = get_server_redis()
     while True:
         code = random_string(32)
         the_key = 'da:temporary_url:' + code
-        if server.server_redis.get(the_key) is None:
+        if redis_server.get(the_key) is None:
             break
-    pipe = server.server_redis.pipeline()
+    pipe = redis_server.pipeline()
     if one_time:
         pipe.set(the_key, json.dumps({'url': url, 'once': True}))
     else:
@@ -1438,8 +1573,8 @@ def temp_redirect(url, expire_seconds, do_local, one_time):
     pipe.expire(the_key, expire_seconds)
     pipe.execute()
     if do_local:
-        return server.url_for('run_temp', c=code)
-    return server.url_for('run_temp', c=code, _external=True)
+        return url_for('main.run_temp', c=code)
+    return url_for('main.run_temp', c=code, _external=True)
 
 
 def set_parts(**kwargs):
@@ -1680,7 +1815,7 @@ def interview_url_action(action, **kwargs):
             pass
         url = None
         if the_style == 'short':
-            for k, v in server.daconfig.get('dispatch').items():
+            for k, v in get_configuration().get('dispatch').items():
                 if v == args['i']:
                     args['dispatch'] = k
                     del args['i']
@@ -1886,7 +2021,7 @@ def set_save_status(status):
                 this_thread.misc['save_status'] = SS_OVERWRITE
             if status == 'ignore':
                 this_thread.misc['save_status'] = SS_IGNORE
-                server.release_lock(this_thread.current_info['session'], this_thread.current_info['yaml_filename'])
+                release_lock(this_thread.current_info['session'], this_thread.current_info['yaml_filename'])
 
 
 class DANav:
@@ -2055,194 +2190,144 @@ class DANav:
         if style == "inline":
             the_class = 'danavlinks dainline'
             interior_class = 'dainlineinside'
-            a_class = "btn " + server.button_class_prefix + "secondary danavlink "
+            a_class = "btn " + get_button_class_prefix() + "secondary danavlink "
         else:
             if not self.visible():
                 return ''
             the_class = 'danavlinks'
             interior_class = None
             a_class = None
-        return '  <div class="dasections"><div class="' + the_class + '">' + "\n" + server.navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True) + '  </div></div>' + "\n"
+        return '  <div class="dasections"><div class="' + the_class + '">' + "\n" + navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True) + '  </div></div>' + "\n"
 
 # word('This field is required.')
 # word('Country Code')
 # word('First Subdivision')
 # word('Second Subdivision')
 # word('Third Subdivision')
-word_collection = {
-    'en': {
-        'This field is required.': 'You need to fill this in.',
-        "Country Code": 'Country Code (e.g., "us")',
-        "First Subdivision": 'State Abbreviation (e.g., "NY")',
-        "Second Subdivision": "County",
-        "Third Subdivision": "Municipality",
-    }
-}
-
-ordinal_numbers = {
-}
-
-nice_numbers = {
-}
 
 
-class WebFunc:
-    pass
-server = WebFunc()
+# class WebFunc:
+#     pass
+# server = WebFunc()
 
 
-def null_func(*pargs, **kwargs):  # pylint: disable=unused-argument
-    return None
+# def null_func(*pargs, **kwargs):  # pylint: disable=unused-argument
+#     return None
 
 
-def null_func_dict(*pargs, **kwargs):  # pylint: disable=unused-argument
-    return {}
+# def null_func_dict(*pargs, **kwargs):  # pylint: disable=unused-argument
+#     return {}
 
 
-def null_func_str(*pargs, **kwargs):  # pylint: disable=unused-argument
-    return ''
+# def null_func_str(*pargs, **kwargs):  # pylint: disable=unused-argument
+#     return ''
 
 
-def null_func_obj(*pargs, **kwargs):  # pylint: disable=unused-argument
-    return WebFunc()
+# def null_func_obj(*pargs, **kwargs):  # pylint: disable=unused-argument
+#     return WebFunc()
 
 
-def null_func_func(*pargs, **kwargs):  # pylint: disable=unused-argument
-    return null_func
+# def null_func_func(*pargs, **kwargs):  # pylint: disable=unused-argument
+#     return null_func
 
-server.SavedFile = null_func_obj
-server.absolute_filename = null_func
-server.add_privilege = null_func
-server.add_user_privilege = null_func
-server.alchemy_url = null_func_str
-server.connect_args = null_func_str
-server.applock = null_func
-server.bg_action = null_func
-server.ocr_google_in_background = null_func
-server.button_class_prefix = 'btn-'
-server.chat_partners_available = null_func
-server.chord = null_func_func
-server.create_user = null_func
-server.invite_user = null_func
-server.daconfig = {}
-server.debug = False
-server.debug_status = False
-server.default_country = 'US'
-server.default_dialect = 'us'
-server.default_voice = None
-server.default_language = 'en'
-server.default_locale = 'US.utf8'
-try:
-    server.default_timezone = tzlocal.get_localzone_name()
-except:
-    server.default_timezone = 'America/New_York'
-server.delete_answer_json = null_func
-server.delete_record = null_func
-server.fg_make_pdf_for_word_path = null_func
-server.fg_make_png_for_pdf = null_func
-server.fg_make_png_for_pdf_path = null_func
-server.file_finder = null_func_dict
-server.file_number_finder = null_func_dict
-server.file_privilege_access = null_func
-server.file_set_attributes = null_func
-server.file_user_access = null_func
-server.fix_pickle_obj = null_func_dict
-server.generate_csrf = null_func
-server.get_chat_log = null_func
-server.get_ext_and_mimetype = null_func
-server.get_new_file_number = null_func
-server.get_privileges_list = null_func
-server.get_question_data = null_func
-server.get_secret = null_func
-server.get_session_variables = null_func
-server.get_short_code = null_func
-server.get_sms_session = null_func_dict
-server.get_user_info = null_func
-server.get_user_list = null_func
-server.get_user_object = null_func_obj
-server.go_back_in_session = null_func
-server.hostname = 'localhost'
-server.initiate_sms_session = null_func
-server.interview_menu = null_func
-server.main_page_parts = {}
-server.make_png_for_pdf = null_func
-server.make_user_inactive = null_func
-server.navigation_bar = null_func
-server.ocr_finalize = null_func
-server.ocr_page = null_func
-server.path_from_reference = null_func_str
-server.read_answer_json = null_func
-server.read_records = null_func
-server.remove_privilege = null_func
-server.remove_user_privilege = null_func
-server.retrieve_emails = null_func
-server.save_numbered_file = null_func
-server.send_fax = null_func
-server.send_mail = null_func
-server.server_redis = None
-server.server_redis_user = None
-server.server_sql_defined = null_func
-server.server_sql_delete = null_func
-server.server_sql_get = null_func
-server.server_sql_keys = null_func
-server.server_sql_set = null_func
-server.create_session = null_func
-server.set_session_variables = null_func
-server.set_user_info = null_func
-server.sms_body = null_func_dict
-server.task_ready = null_func
-server.terminate_sms_session = null_func
-server.twilio_config = {}
-server.url_finder = null_func_dict
-server.url_for = null_func
-server.user_id_dict = null_func
-server.user_interviews = null_func
-server.variables_snapshot_connection = null_func
-server.wait_for_task = null_func
-server.worker_convert = null_func
-server.write_answer_json = null_func
-server.write_record = null_func
-server.to_text = null_func_str
-server.transform_json_variables = null_func
-server.get_login_url = null_func_dict
-server.run_action_in_session = null_func_dict
-server.invite_user = null_func
-server.get_url = null_func_dict
-
-
-def write_record(key, data):
-    """Store data in the SQL database under the given key.
-
-    Args:
-        key (str): A string key to associate with the record.
-        data: The data to store. Must be pickleable.
-
-    Returns:
-        int: The unique integer ID of the saved record.
-    """
-    return server.write_record(key, data)
-
-
-def read_records(key):
-    """Return all records stored under the given key.
-
-    Args:
-        key (str): The string key used when calling ``write_record()``.
-
-    Returns:
-        dict: A dictionary mapping unique integer record IDs to the stored data.
-    """
-    return server.read_records(key)
-
-
-def delete_record(key, the_id):
-    """Delete a record from the SQL database by key and ID.
-
-    Args:
-        key (str): The string key associated with the record.
-        the_id (int): The unique integer ID of the record to delete.
-    """
-    return server.delete_record(key, the_id)
+# server.SavedFile = null_func_obj
+# server.absolute_filename = null_func
+# server.add_privilege = null_func
+# server.add_user_privilege = null_func
+# server.alchemy_url = null_func_str
+# server.connect_args = null_func_str
+# server.applock = null_func
+# server.bg_action = null_func
+# server.ocr_google_in_background = null_func
+# server.button_class_prefix = 'btn-'
+# server.chat_partners_available = null_func
+# server.chord = null_func_func
+# server.create_user = null_func
+# server.invite_user = null_func
+# server.daconfig = {}
+# server.debug = False
+# server.debug_status = False
+# server.default_country = 'US'
+# server.default_dialect = 'us'
+# server.default_voice = None
+# server.default_language = 'en'
+# server.default_locale = 'US.utf8'
+# try:
+#     server.default_timezone = tzlocal.get_localzone_name()
+# except:
+#     server.default_timezone = 'America/New_York'
+# server.delete_answer_json = null_func
+# server.delete_record = null_func
+# server.fg_make_pdf_for_word_path = null_func
+# server.fg_make_png_for_pdf = null_func
+# server.fg_make_png_for_pdf_path = null_func
+# server.file_finder = null_func_dict
+# server.file_number_finder = null_func_dict
+# server.file_privilege_access = null_func
+# server.file_set_attributes = null_func
+# server.file_user_access = null_func
+# server.fix_pickle_obj = null_func_dict
+# server.generate_csrf = null_func
+# server.get_chat_log = null_func
+# server.get_ext_and_mimetype = null_func
+# server.get_new_file_number = null_func
+# server.get_privileges_list = null_func
+# server.get_question_data = null_func
+# server.get_secret = null_func
+# server.get_session_variables = null_func
+# server.get_short_code = null_func
+# server.get_sms_session = null_func_dict
+# server.get_user_info = null_func
+# server.get_user_list = null_func
+# server.get_user_object = null_func_obj
+# server.go_back_in_session = null_func
+# server.hostname = 'localhost'
+# server.initiate_sms_session = null_func
+# server.interview_menu = null_func
+# server.main_page_parts = {}
+# server.make_png_for_pdf = null_func
+# server.make_user_inactive = null_func
+# server.navigation_bar = null_func
+# server.ocr_finalize = null_func
+# server.ocr_page = null_func
+# server.path_from_reference = null_func_str
+# server.read_answer_json = null_func
+# server.read_records = null_func
+# server.remove_privilege = null_func
+# server.remove_user_privilege = null_func
+# server.retrieve_emails = null_func
+# server.save_numbered_file = null_func
+# server.send_fax = null_func
+# server.send_mail = null_func
+# server.server_redis = None
+# server.server_redis_user = None
+# server.server_sql_defined = null_func
+# server.server_sql_delete = null_func
+# server.server_sql_get = null_func
+# server.server_sql_keys = null_func
+# server.server_sql_set = null_func
+# server.create_session = null_func
+# server.set_session_variables = null_func
+# server.set_user_info = null_func
+# server.sms_body = null_func_dict
+# server.task_ready = null_func
+# server.terminate_sms_session = null_func
+# server.twilio_config = {}
+# server.url_finder = null_func_dict
+# server.url_for = null_func
+# server.user_id_dict = null_func
+# server.user_interviews = null_func
+# server.variables_snapshot_connection = null_func
+# server.wait_for_task = null_func
+# server.worker_convert = null_func
+# server.write_answer_json = null_func
+# server.write_record = null_func
+# server.to_text = null_func_str
+# server.transform_json_variables = null_func
+# server.get_login_url = null_func_dict
+# server.run_action_in_session = null_func_dict
+# server.invite_user = null_func
+# server.get_url = null_func_dict
 
 
 def url_of(file_reference, **kwargs):
@@ -2289,7 +2374,7 @@ def url_of(file_reference, **kwargs):
         for param in ('expire', 'url_args', 'next', 'i', 'session', 'resume_existing'):
             if param in kwargs and kwargs[param] is not None:
                 info[param] = kwargs[param]
-        result = server.get_login_url(**info)
+        result = get_login_url(**info)
         if result['status'] == 'success':
             return result['url']
         raise DAError("url_of: " + result['message'])
@@ -2299,7 +2384,7 @@ def url_of(file_reference, **kwargs):
         kwargs['_question'] = get_current_question()
     if kwargs.get('attachment', False):
         kwargs['_attachment'] = True
-    return server.url_finder(file_reference, **kwargs)
+    return url_finder(file_reference, **kwargs)
 
 
 def server_capabilities():
@@ -2315,20 +2400,20 @@ def server_capabilities():
         dict: A dictionary mapping capability names to True/False values.
     """
     result = {'sms': False, 'fax': False, 'google_login': False, 'facebook_login': False, 'auth0_login': False, 'keycloak_login': False, 'authentik_login': False, 'azure_login': False, 'miniorange_login': False, 'phone_login': False, 'voicerss': False, 's3': False, 'azure': False, 'github': False, 'pypi': False, 'googledrive': False, 'google_maps': False}
-    if 'twilio' in server.daconfig and isinstance(server.daconfig['twilio'], (list, dict)):
-        if isinstance(server.daconfig['twilio'], list):
-            tconfigs = server.daconfig['twilio']
+    if 'twilio' in get_configuration() and isinstance(get_configuration()['twilio'], (list, dict)):
+        if isinstance(get_configuration()['twilio'], list):
+            tconfigs = get_configuration()['twilio']
         else:
-            tconfigs = [server.daconfig['twilio']]
+            tconfigs = [get_configuration()['twilio']]
         for tconfig in tconfigs:
             if 'enable' in tconfig and not tconfig['enable']:
                 continue
             result['sms'] = True
             if tconfig.get('fax', False):
                 result['fax'] = True
-            if 'phone login' in server.daconfig:
+            if 'phone login' in get_configuration():
                 result['phone_login'] = True
-    if 'oauth' in server.daconfig and isinstance(server.daconfig['oauth'], dict):
+    if 'oauth' in get_configuration() and isinstance(get_configuration()['oauth'], dict):
         oauth_providers = [
             ('google', 'google_login'),
             ('facebook', 'facebook_login'),
@@ -2341,35 +2426,35 @@ def server_capabilities():
             ('github', 'github')
         ]
         for provider, result_key in oauth_providers:
-            if provider in server.daconfig['oauth'] and isinstance(server.daconfig['oauth'][provider], dict) and ('enable' not in server.daconfig['oauth'][provider] or server.daconfig['oauth'][provider]['enable']):
+            if provider in get_configuration()['oauth'] and isinstance(get_configuration()['oauth'][provider], dict) and ('enable' not in get_configuration()['oauth'][provider] or get_configuration()['oauth'][provider]['enable']):
                 result[result_key] = True
-    if 'pypi' in server.daconfig and server.daconfig['pypi'] is True:
+    if 'pypi' in get_configuration() and get_configuration()['pypi'] is True:
         result['pypi'] = True
-    if 'google' in server.daconfig and isinstance(server.daconfig['google'], dict) and ('google maps api key' in server.daconfig['google'] or 'api key' in server.daconfig['google']):
+    if 'google' in get_configuration() and isinstance(get_configuration()['google'], dict) and ('google maps api key' in get_configuration()['google'] or 'api key' in get_configuration()['google']):
         result['google_maps'] = True
     for key in ['voicerss', 's3', 'azure']:
-        if key in server.daconfig and isinstance(server.daconfig[key], dict):
-            if not ('enable' in server.daconfig[key] and not server.daconfig[key]['enable']):
+        if key in get_configuration() and isinstance(get_configuration()[key], dict):
+            if not ('enable' in get_configuration()[key] and not get_configuration()[key]['enable']):
                 result[key] = True
     return result
 
 # def generate_csrf(*pargs, **kwargs):
-#     return server.generate_csrf(*pargs, **kwargs)
+#     return generate_csrf(*pargs, **kwargs)
 # def chat_partners(*pargs, **kwargs):
 #     return dict(peer=0, help=0)
 # def absolute_filename(*pargs, **kwargs):
-#     return server.absolute_filename(*pargs, **kwargs)
+#     return absolute_filename(*pargs, **kwargs)
 
 
-def update_server(**kwargs):
-    for arg, func in kwargs.items():
-        # logmessage("Setting " + str(arg))
-        if arg == 'bg_action':
-            def worker_wrapper(action, ui_notification, the_func=func, **kwargs):
-                return worker_caller(the_func, ui_notification, {'action': action, 'arguments': kwargs})
-            setattr(server, arg, worker_wrapper)
-        else:
-            setattr(server, arg, func)
+# def update_server(**kwargs):
+#     for arg, func in kwargs.items():
+#         # logmessage("Setting " + str(arg))
+#         if arg == 'bg_action':
+#             def worker_wrapper(action, ui_notification, the_func=func, **kwargs):
+#                 return worker_caller(the_func, ui_notification, {'action': action, 'arguments': kwargs})
+#             setattr(server, arg, worker_wrapper)
+#         else:
+#             setattr(server, arg, func)
 
 # the_write_record = basic_write_record
 
@@ -2447,10 +2532,10 @@ class GenericObject:
         self.role = 'user'
 
 # class ThreadVariables(threading.local):
-#     language = server.default_language
-#     dialect = server.default_dialect
-#     country = server.default_country
-#     locale = server.default_locale
+#     language = get_default_language()
+#     dialect = get_default_dialect()
+#     country = get_default_country()
+#     locale = get_default_locale()
 #     current_info = {}
 #     internal = {}
 #     # user_dict = None
@@ -2481,75 +2566,75 @@ class GenericObject:
 #         self.initialized = True
 #         self.__dict__.update(kw)
 
-this_thread = threading.local()
 
-def populate_this_thread_defaults():
-    this_thread.language = server.default_language
-    this_thread.dialect = server.default_dialect
-    this_thread.voice = server.default_voice
-    this_thread.country = server.default_country
-    this_thread.locale = server.default_locale
-    this_thread.current_info = {}
-    this_thread.internal = {}
-    this_thread.initialized = False
-    this_thread.session_id = None
-    this_thread.current_package = None
-    this_thread.interview = None
-    this_thread.interview_status = None
-    this_thread.evaluation_context = None
-    this_thread.gathering_mode = {}
-    this_thread.global_vars = GenericObject()
-    this_thread.current_variable = []
-    this_thread.open_files = set()
-    this_thread.markdown = markdown.Markdown(extensions=['smarty', 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
-    this_thread.saved_files = {}
-    this_thread.message_log = []
-    this_thread.misc = {}
-    this_thread.probing = False
-    this_thread.prevent_going_back = False
-    this_thread.current_question = None
-    this_thread.current_section = None
+# exec with user_dict
+# docassemble_base/docassemble/base/parse.py
+# docassemble_base/docassemble/base/functions.py
+# docassemble_webapp/docassemble/webapp/tasks/worker_tasks.py
+# docassemble_webapp/docassemble/webapp/interview/helpers.py
+# docassemble_webapp/docassemble/webapp/interview/views.py
+# docassemble_webapp/docassemble/webapp/sms/views.py
 
-populate_this_thread_defaults()
+# reset_local_variables:
+# docassemble_base/docassemble/base/parse.py
+#   - commented out
+# docassemble_base/docassemble/base/functions.py
+#   - function definition
+# docassemble_webapp/docassemble/webapp/cron.py
+#   - before running assemble
+# docassemble_webapp/docassemble/webapp/tasks/worker_tasks.py
+#   - within each task
+# docassemble_webapp/docassemble/webapp/tasks/worker_common.py
+#   - bg_context contextmanager
+# docassemble_webapp/docassemble/webapp/main/views.py
+#   - before_request
 
-
-def enable_threading():
-    global this_thread
-    this_thread = SimpleNamespace()
-    populate_this_thread_defaults()
-
-
-def backup_thread_variables():
-    reset_context()
-    for key in ('pending_error', 'docx_subdocs', 'dbcache'):
-        if key in this_thread.misc:
-            del this_thread.misc[key]
-    backup = {}
-    for key in ('interview', 'interview_status', 'open_files', 'current_question'):
-        if hasattr(this_thread, key):
-            backup[key] = getattr(this_thread, key)
-    for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'current_package', 'interview', 'interview_status', 'evaluation_context', 'gathering_mode', 'global_vars', 'current_variable', 'saved_files', 'message_log', 'misc', 'probing', 'prevent_going_back', 'current_question']:
-        if hasattr(this_thread, key):
-            backup[key] = getattr(this_thread, key)
-            if key == 'global_vars':
-                this_thread.global_vars = GenericObject()
-            elif key == 'misc':
-                for key in [item for item in this_thread.misc.keys() if item.startswith('yaml_')]:
-                    del this_thread.misc[key]
-                setattr(this_thread, key, copy.deepcopy(this_thread.misc))
-            elif key == 'current_info':
-                setattr(this_thread, key, copy.deepcopy(getattr(this_thread, key)))
-            elif key in ('internal', 'gathering_mode', 'saved_files'):
-                setattr(this_thread, key, {})
-            elif key in ('current_variable', 'message_log'):
-                setattr(this_thread, key, [])
-    return backup
+# backup_thread_variables:
+# docassemble_base/docassemble/base/functions.py
+#  - function definition
+# docassemble_webapp/docassemble/webapp/interview/helpers.py
+#  - get_session_variables
+#  - go_back_in_session
+#  - set_session_variables
+#  - create_new_interview
+#  - get_question_data
+#  - run_action_in_session
+# docassemble_webapp/docassemble/webapp/sms/helpers.py
+#  - sms_body, before calling do_sms. Called by send_sms_invite
 
 
-def restore_thread_variables(backup):
-    # logmessage("restore_thread_variables")
-    for key in list(backup.keys()):
-        setattr(this_thread, key, backup[key])
+
+# def backup_thread_variables():
+#     reset_context()
+#     for key in ('pending_error', 'docx_subdocs', 'dbcache'):
+#         if key in this_thread.misc:
+#             del this_thread.misc[key]
+#     backup = {}
+#     for key in ('interview', 'interview_status', 'open_files', 'current_question'):
+#         if hasattr(this_thread, key):
+#             backup[key] = getattr(this_thread, key)
+#     for key in ['language', 'dialect', 'country', 'locale', 'current_info', 'internal', 'initialized', 'session_id', 'current_package', 'interview', 'interview_status', 'evaluation_context', 'gathering_mode', 'global_vars', 'current_variable', 'saved_files', 'message_log', 'misc', 'probing', 'prevent_going_back', 'current_question']:
+#         if hasattr(this_thread, key):
+#             backup[key] = getattr(this_thread, key)
+#             if key == 'global_vars':
+#                 this_thread.global_vars = GenericObject()
+#             elif key == 'misc':
+#                 for key in [item for item in this_thread.misc.keys() if item.startswith('yaml_')]:
+#                     del this_thread.misc[key]
+#                 setattr(this_thread, key, copy.deepcopy(this_thread.misc))
+#             elif key == 'current_info':
+#                 setattr(this_thread, key, copy.deepcopy(getattr(this_thread, key)))
+#             elif key in ('internal', 'gathering_mode', 'saved_files'):
+#                 setattr(this_thread, key, {})
+#             elif key in ('current_variable', 'message_log'):
+#                 setattr(this_thread, key, [])
+#     return backup
+
+
+# def restore_thread_variables(backup):
+#     # logmessage("restore_thread_variables")
+#     for key in list(backup.keys()):
+#         setattr(this_thread, key, backup[key])
 
 
 def background_response(*pargs, **kwargs):
@@ -2619,69 +2704,19 @@ def background_action(*pargs, **kwargs):
         ui_notification = pargs[1]
     else:
         ui_notification = None
-    return server.bg_action(action, ui_notification, **kwargs)
+    return bg_action(action, ui_notification, **kwargs)
 
 
-class BackgroundResult:
-
-    def __init__(self, result):
-        for attr in ('value', 'error_type', 'error_trace', 'error_message', 'variables'):
-            if hasattr(result, attr):
-                setattr(self, attr, getattr(result, attr))
-            else:
-                setattr(self, attr, None)
-
-
-class MyAsyncResult:
-
-    def wait(self):
-        if not hasattr(self, '_cached_result'):
-            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
-        return True
-
-    def failed(self):
-        if not hasattr(self, '_cached_result'):
-            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
-        if self._cached_result.error_type is not None:
-            return True
-        return False
-
-    def ready(self):
-        return server.worker_convert(self.obj).ready()
-
-    def result(self):
-        if not hasattr(self, '_cached_result'):
-            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
-        return self._cached_result
-
-    def get(self):
-        if not hasattr(self, '_cached_result'):
-            self._cached_result = BackgroundResult(server.worker_convert(self.obj).get())
-        return self._cached_result.value
-
-    def revoke(self, terminate=True):
-        return server.worker_convert(self.obj).revoke(terminate=terminate)
-
-    def status(self):
-        return server.worker_convert(self.obj).status
-
-    def state(self):
-        return server.worker_convert(self.obj).state
-
-    def date_done(self):
-        return server.worker_convert(self.obj).date_done
-
-
-def worker_caller(func, ui_notification, action):
-    # logmessage("Got to worker_caller in functions")
-    result = MyAsyncResult()
-    result.obj = func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action, extra=ui_notification)
-    if ui_notification is not None:
-        worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
-        # logmessage("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key)
-        server.server_redis.rpush(worker_key, result.obj.id)
-    # logmessage("worker_caller: id is " + str(result.obj.id))
-    return result
+# def worker_caller(func, ui_notification, action):
+#     # logmessage("Got to worker_caller in functions")
+#     result = MyAsyncResult()
+#     result.obj = func.delay(this_thread.current_info['yaml_filename'], this_thread.current_info['user'], this_thread.current_info['session'], this_thread.current_info['secret'], this_thread.current_info['url'], this_thread.current_info['url_root'], action, extra=ui_notification)
+#     if ui_notification is not None:
+#         worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
+#         # logmessage("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key)
+#         get_server_redis().rpush(worker_key, result.obj.id)
+#     # logmessage("worker_caller: id is " + str(result.obj.id))
+#     return result
 
 # def null_chat_partners(*pargs, **kwargs):
 #     return dict(peer=0, help=0)
@@ -2758,58 +2793,6 @@ altyaml = SafeYaml('yaml_altyaml')
 prettyyaml = SafeYaml('yaml_prettyyaml')
 bytesyaml = SafeYaml('yaml_bytesyaml')
 altyamlstring = SafeYaml('yaml_altyamlstring')
-
-
-def ordinal_function_en(i, **kwargs):
-    try:
-        i = int(i)
-    except:
-        i = 0
-    use_word = kwargs.get('use_word', None)
-    if use_word is True:
-        kwargs['function'] = 'ordinal'
-    elif use_word is False:
-        kwargs['function'] = 'ordinal_num'
-    else:
-        if i < 11:
-            kwargs['function'] = 'ordinal'
-        else:
-            kwargs['function'] = 'ordinal_num'
-    return number_to_word(i, **kwargs)
-
-ordinal_functions = {
-    'en': ordinal_function_en,
-    '*': ordinal_function_en
-}
-
-
-def fix_punctuation(text, mark=None, other_marks=None):
-    """Ensure the text ends with a punctuation mark, adding one if necessary.
-
-    Args:
-        text (str): The text to check.
-        mark (str, optional): The punctuation mark to append if none is
-            present. Defaults to ``'.'``.
-        other_marks (list, optional): A list of punctuation marks that are
-            considered acceptable endings. Defaults to ``['.', '?', '!']``.
-
-    Returns:
-        str: The text, possibly with a punctuation mark appended.
-    """
-    ensure_definition(text, mark, other_marks)
-    if other_marks is None:
-        other_marks = ['.', '?', '!']
-    if not isinstance(other_marks, list):
-        other_marks = list(other_marks)
-    if mark is None:
-        mark = '.'
-    text = text.rstrip()
-    if mark == '':
-        return text
-    for end_mark in set([mark] + other_marks):
-        if text.endswith(end_mark):
-            return text
-    return text + mark
 
 
 def item_label(num, level=None, punctuation=True):
@@ -2919,154 +2902,8 @@ def roman(num, case=None):
     return result
 
 
-def words():
-    return word_collection[this_thread.language]
 
 
-class LazyWord:
-
-    def __init__(self, *args, **kwargs):
-        if len(kwargs) > 0:
-            self.original = args[0] % kwargs
-        else:
-            self.original = args[0]
-
-    def __mod__(self, other):
-        return word(self.original) % other
-
-    def __str__(self):
-        return word(self.original)
-
-
-class LazyArray:
-
-    def __init__(self, array):
-        self.original = array
-
-    def compute(self):
-        return [word(item) for item in self.original]
-
-    def copy(self):
-        return self.compute().copy()
-
-    def pop(self, *pargs):
-        return str(self.original.pop(*pargs))
-
-    def __add__(self, other):
-        return self.compute() + other
-
-    def index(self, *pargs, **kwargs):
-        return self.compute().index(*pargs, **kwargs)
-
-    def clear(self):
-        self.original = []
-
-    def append(self, other):
-        self.original.append(other)
-
-    def remove(self, other):
-        self.original.remove(other)
-
-    def extend(self, other):
-        self.original.extend(other)
-
-    def __contains__(self, item):
-        return self.compute().__contains__(item)
-
-    def __iter__(self):
-        return self.compute().__iter__()
-
-    def __len__(self):
-        return self.compute().__len__()
-
-    def __delitem__(self, index):
-        self.original.__delitem__(index)
-
-    def __reversed__(self):
-        return self.compute().__reversed__()
-
-    def __setitem__(self, index, the_value):
-        return self.original.__setitem__(index, the_value)
-
-    def __getitem__(self, index):
-        return self.compute()[index]
-
-    def __str__(self):
-        return str(self.compute())
-
-    def __repr__(self):
-        return repr(self.compute())
-
-    def __eq__(self, other):
-        return self.original == other
-
-
-def word(the_word, **kwargs):
-    """Return the word translated into the current language.
-
-    If no translation is found for the current language, the input is
-    returned unchanged.  Used throughout docassemble to support
-    multilingual interviews.
-
-    Args:
-        the_word (str): The word or phrase to translate.
-        **kwargs: Optional keyword arguments.  Pass ``language`` to
-            look up a translation for a specific language, or
-            ``capitalize=True`` to capitalize the result.
-
-    Returns:
-        str: The translated (or original) word.
-    """
-    # Currently, no kwargs are used, but in the future, this function could be
-    # expanded to use kwargs.  For example, for languages with gendered words,
-    # the gender could be passed as a keyword argument.
-    if the_word is True:
-        the_word = 'yes'
-    elif the_word is False:
-        the_word = 'no'
-    elif the_word is None:
-        the_word = "I don't know"
-    if isinstance(the_word, LazyWord):
-        the_word = the_word.original
-    try:
-        the_word = word_collection[kwargs.get('language', this_thread.language)][the_word]
-    except:
-        the_word = str(the_word)
-    if kwargs.get('capitalize', False):
-        return capitalize(the_word)
-    return the_word
-
-
-def update_language_function(lang, term, func):
-    if term not in language_functions:
-        language_functions[term] = {}
-    language_functions[term][lang] = func
-
-
-def update_nice_numbers(lang, defs):
-    if lang not in nice_numbers:
-        nice_numbers[lang] = {}
-    for number, the_word in defs.items():
-        nice_numbers[lang][str(number)] = the_word
-
-
-def update_ordinal_numbers(lang, defs):
-    if lang not in ordinal_numbers:
-        ordinal_numbers[lang] = {}
-    for number, the_word in defs.items():
-        ordinal_numbers[lang][str(number)] = the_word
-
-
-def update_ordinal_function(lang, func):
-    ordinal_functions[lang] = func
-
-
-def update_word_collection(lang, defs):
-    if lang not in word_collection:
-        word_collection[lang] = {}
-    for the_word, translation in defs.items():
-        if translation is not None:
-            word_collection[lang][the_word] = translation
 
 # def set_da_config(config):
 #     global daconfig
@@ -3085,7 +2922,7 @@ def get_config(key, none_value=None):
         The configuration value associated with the key, or ``none_value``
             if the key is not present.
     """
-    return server.daconfig.get(key, none_value)
+    return get_configuration().get(key, none_value)
 
 # def set_default_language(lang):
 #     global default_language
@@ -3107,17 +2944,6 @@ def get_config(key, none_value=None):
 #     return
 
 
-def get_default_timezone():
-    """Return the default timezone string for the server.
-
-    Returns the server's local timezone unless a default timezone is configured
-    in the docassemble configuration.
-
-    Returns:
-        str: A timezone string such as ``'America/New_York'``.
-    """
-    return server.default_timezone
-
 # def reset_thread_local():
 #     this_thread.open_files = set()
 #     this_thread.temporary_resources = set()
@@ -3127,33 +2953,33 @@ def get_default_timezone():
 #     this_thread.message_log = []
 
 
-def reset_local_variables():
-    # logmessage("reset_local_variables")
-    this_thread.language = server.default_language
-    this_thread.dialect = server.default_dialect
-    this_thread.voice = server.default_voice
-    this_thread.country = server.default_country
-    this_thread.locale = server.default_locale
-    this_thread.session_id = None
-    this_thread.interview = None
-    this_thread.interview_status = None
-    this_thread.evaluation_context = None
-    this_thread.gathering_mode = {}
-    this_thread.global_vars = GenericObject()
-    this_thread.current_variable = []
-    # this_thread.template_vars = []
-    this_thread.open_files = set()
-    this_thread.saved_files = {}
-    this_thread.message_log = []
-    this_thread.misc = {}
-    this_thread.probing = False
-    this_thread.current_info = {}
-    this_thread.current_package = None
-    this_thread.current_question = None
-    this_thread.current_section = None
-    this_thread.internal = {}
-    this_thread.markdown = markdown.Markdown(extensions=['smarty', 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
-    this_thread.prevent_going_back = False
+# def reset_local_variables():
+#     # logmessage("reset_local_variables")
+#     this_thread.language = server.default_language
+#     this_thread.dialect = server.default_dialect
+#     this_thread.voice = server.default_voice
+#     this_thread.country = server.default_country
+#     this_thread.locale = server.default_locale
+#     this_thread.session_id = None
+#     this_thread.interview = None
+#     this_thread.interview_status = None
+#     this_thread.evaluation_context = None
+#     this_thread.gathering_mode = {}
+#     this_thread.global_vars = GenericObject()
+#     this_thread.current_variable = []
+#     # this_thread.template_vars = []
+#     this_thread.open_files = set()
+#     this_thread.saved_files = {}
+#     this_thread.message_log = []
+#     this_thread.misc = {}
+#     this_thread.probing = False
+#     this_thread.current_info = {}
+#     this_thread.current_package = None
+#     this_thread.current_question = None
+#     this_thread.current_section = None
+#     this_thread.internal = {}
+#     this_thread.markdown = markdown.Markdown(extensions=['smarty', 'markdown.extensions.sane_lists', 'markdown.extensions.tables', 'markdown.extensions.attr_list', 'markdown.extensions.md_in_html', 'footnotes'], output_format='html5')
+#     this_thread.prevent_going_back = False
 
 
 def prevent_going_back():
@@ -3165,262 +2991,11 @@ def prevent_going_back():
     this_thread.prevent_going_back = True
 
 
-def set_language(lang, dialect=None, voice=None):
-    """Set the language used for linguistic functions and the web application.
-
-    Does not change the Python locale; call ``update_locale()`` for that.
-    Should be called in an ``initial`` code block so it takes effect on every
-    page load.
-
-    Args:
-        lang (str): A lowercase ISO-639-1 or ISO-639-3 language code
-            (e.g., ``'en'``, ``'es'``, ``'fr'``).
-        dialect (str, optional): A dialect code for the text-to-speech engine.
-            Defaults to None.
-        voice (str, optional): A voice name for the text-to-speech engine.
-            Defaults to None.
-    """
-    try:
-        if dialect:
-            this_thread.dialect = dialect
-        elif lang != this_thread.language:
-            this_thread.dialect = None
-    except:
-        pass
-    try:
-        if voice:
-            this_thread.voice = voice
-        elif lang != this_thread.language:
-            this_thread.voice = None
-    except:
-        pass
-    this_thread.language = lang
-
-
-def get_language():
-    """Return the current language code.
-
-    Returns:
-        str: The current language code (e.g., ``'en'``, ``'es'``).
-    """
-    return this_thread.language
-
-
-def set_country(country):
-    """Set the current country used for phone number formatting and other locale features.
-
-    Args:
-        country (str): A two-letter uppercase ISO 3166-1 alpha-2 country code
-            (e.g., ``'US'``, ``'GB'``, ``'DE'``).
-    """
-    this_thread.country = country
-
-
-def get_country():
-    """Return the current country code.
-
-    Returns:
-        str: A two-letter uppercase ISO 3166-1 alpha-2 country code
-            (e.g., ``'US'``). Defaults to ``'US'`` unless configured otherwise.
-    """
-    return this_thread.country
-
-
-def get_dialect():
-    """Return the current dialect.
-
-    Returns:
-        str: The dialect code set by the ``dialect`` keyword argument to
-            :func:`set_language`, or ``None`` if no dialect has been set.
-    """
-    return this_thread.dialect
-
-
-def get_voice():
-    """Return the current voice.
-
-    Returns:
-        str: The voice name set by the ``voice`` keyword argument to
-            :func:`set_language`, or ``None`` if no voice has been set.
-    """
-    return this_thread.voice
-
-
-def set_locale(*pargs, **kwargs):
-    """Set the current locale string and/or locale convention overrides.
-
-    Calling ``set_locale('FR.utf8')`` stores the locale string so that
-    :func:`get_locale` returns it.  The actual Python locale does not change
-    until :func:`update_locale` is called.  Keyword arguments such as
-    ``currency_symbol`` override individual locale conventions used by
-    functions like :func:`currency` and :func:`currency_symbol`.
-
-    Args:
-        *pargs: An optional locale string (e.g. ``'FR.utf8'``).
-        **kwargs: Locale convention overrides (e.g. ``currency_symbol='€'``).
-    """
-    if len(pargs) == 1:
-        this_thread.locale = pargs[0]
-    if len(kwargs):
-        this_thread.misc['locale_overrides'] = kwargs
-
-
-def get_locale(*pargs):
-    """Return the current locale setting or a specific locale convention.
-
-    With no arguments, returns the locale string previously set with
-    :func:`set_locale`.  With one argument, returns the value of the named
-    locale convention (e.g. ``'currency_symbol'``), taking into account any
-    overrides set with :func:`set_locale`.
-
-    Args:
-        *pargs: An optional locale convention name (e.g.
-            ``'currency_symbol'``).
-
-    Returns:
-        str or None: The locale string when called with no arguments, or the
-            value of the requested locale convention (``None`` if not found).
-    """
-    if len(pargs) == 1:
-        if 'locale_overrides' in this_thread.misc and pargs[0] in this_thread.misc['locale_overrides']:
-            return this_thread.misc['locale_overrides'][pargs[0]]
-        return locale.localeconv().get(pargs[0], None)
-    return this_thread.locale
-
-
-def get_currency_symbol():
-    """Returns the current setting for the currency symbol if there is
-    one, and otherwise returns the default currency symbol.
-
-    """
-    if 'locale_overrides' in this_thread.misc and 'currency_symbol' in this_thread.misc['locale_overrides']:
-        return this_thread.misc['locale_overrides']['currency_symbol']
-    return currency_symbol()
-
-
-def update_locale():
-    """Update the Python locale based on the current language and locale settings.
-
-    Applies the locale string previously set with :func:`set_locale` (combined
-    with the current language from :func:`get_language` when necessary) so that
-    Python's ``locale`` module reflects the desired locale.  This is required
-    for functions like :func:`currency` and :func:`currency_symbol` to produce
-    locale-appropriate formatting.
-    """
-    if '_' in this_thread.locale:
-        the_locale = str(this_thread.locale)
-    else:
-        the_locale = str(this_thread.language) + '_' + str(this_thread.locale)
-    try:
-        locale.setlocale(locale.LC_ALL, the_locale)
-    except BaseException as err:
-        logmessage("update_locale error: unable to set the locale to " + the_locale)
-        logmessage(err.__class__.__name__ + ": " + str(err))
-        locale.setlocale(locale.LC_ALL, 'en_US.utf8')
-
-
-def comma_list_en(*pargs, **kwargs):
-    """Returns the arguments separated by commas.  If the first argument is a list,
-    that list is used.  Otherwise, the arguments are treated as individual items.
-    See also comma_and_list()."""
-    ensure_definition(*pargs, **kwargs)
-    comma_string = kwargs.get('comma_string', ', ')
-    the_list = []
-    for parg in pargs:
-        if isinstance(parg, str):
-            the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
-            for sub_parg in parg:
-                the_list.append(str(sub_parg))
-        else:
-            the_list.append(str(parg))
-    return comma_string.join(the_list)
-
-
-def comma_and_list_es(*pargs, **kwargs):
-    if 'and_string' not in kwargs:
-        kwargs['and_string'] = 'y'
-    return comma_and_list_en(*pargs, **kwargs)
-
-
-def comma_and_list_de(*pargs, **kwargs):
-    if 'and_string' not in kwargs:
-        kwargs['and_string'] = 'und'
-    if 'oxford' not in kwargs:
-        kwargs['oxford'] = False
-    return comma_and_list_en(*pargs, **kwargs)
-
-
-def comma_and_list_en(*pargs, **kwargs):
-    """Returns an English-language listing of the arguments.  If the first argument is a list,
-    that list is used.  Otherwise, the arguments are treated as individual items in the list.
-    Use the optional argument oxford=False if you do not want a comma before the "and."
-    See also comma_list()."""
-    ensure_definition(*pargs, **kwargs)
-    and_string = kwargs.get('and_string', word('and'))
-    comma_string = kwargs.get('comma_string', ', ')
-    if 'oxford' in kwargs and kwargs['oxford'] is False:
-        extracomma = ""
-    else:
-        extracomma = comma_string.strip()
-    before_and = kwargs.get('before_and', ' ')
-    after_and = kwargs.get('after_and', ' ')
-    the_list = []
-    for parg in pargs:
-        if isinstance(parg, str):
-            the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
-            for sub_parg in parg:
-                the_list.append(str(sub_parg))
-        else:
-            the_list.append(str(parg))
-    if len(the_list) == 0:
-        return str('')
-    if len(the_list) == 1:
-        return the_list[0]
-    if len(the_list) == 2:
-        return the_list[0] + before_and + and_string + after_and + the_list[1]
-    return comma_string.join(the_list[:-1]) + extracomma + before_and + and_string + after_and + the_list[-1]
-
-
 def manual_line_breaks(text):
     """Replaces newlines with manual line breaks."""
     if this_thread.evaluation_context == 'docx':
         return re.sub(r' *\r?\n *', '</w:t><w:br/><w:t xml:space="preserve">', str(text))
     return re.sub(r' *\r?\n *', ' [BR] ', str(text))
-
-
-def add_separators_en(*pargs, **kwargs):
-    """Accepts a list and returns a list, with semicolons after each item,
-    except "and" after the penultimate item and a period after the
-    last.
-
-    """
-    ensure_definition(*pargs, **kwargs)
-    separator = kwargs.get('separator', ';')
-    last_separator = kwargs.get('last_separator', '; ' + word("and"))
-    end_mark = kwargs.get('end_mark', '.')
-    the_list = []
-    for parg in pargs:
-        if isinstance(parg, str):
-            the_list.append(parg.rstrip())
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')) or isinstance(parg, Iterable):
-            for sub_parg in parg:
-                the_list.append(str(sub_parg).rstrip())
-        else:
-            the_list.append(str(parg).rstrip())
-    if len(the_list) == 0:
-        return the_list
-    if len(the_list) == 1:
-        return [fix_punctuation(the_list[0], mark=end_mark)]
-    for indexno in range(len(the_list) - 2):  # for 4: 0, 1; for 3: 0; for 2: []
-        the_list[indexno] = the_list[indexno].rstrip(',')
-        the_list[indexno] = fix_punctuation(the_list[indexno], mark=separator)
-    if not the_list[-2].endswith(last_separator):
-        the_list[-2] = the_list[-2].rstrip(last_separator[0])
-        the_list[-2] += last_separator
-    the_list[-1] = fix_punctuation(the_list[-1], mark=end_mark)
-    return the_list
 
 
 def need(*pargs):
@@ -3452,1369 +3027,6 @@ def pickleable_objects(input_dict):
             continue
         output_dict[key] = input_dict[key]
     return output_dict
-
-
-def ordinal_number_default(the_number, **kwargs):
-    """Returns the "first," "second," "third," etc. for a given number.
-    ordinal_number(1) returns "first."  For a function that can be used
-    on index numbers that start with zero, see ordinal()."""
-    num = str(the_number)
-    if kwargs.get('use_word', True):
-        if this_thread.language in ordinal_numbers and num in ordinal_numbers[this_thread.language]:
-            return ordinal_numbers[this_thread.language][num]
-        if '*' in ordinal_numbers and num in ordinal_numbers['*']:
-            return ordinal_numbers['*'][num]
-    if this_thread.language in ordinal_functions:
-        language_to_use = this_thread.language
-    elif '*' in ordinal_functions:
-        language_to_use = '*'
-    else:
-        language_to_use = 'en'
-    return ordinal_functions[language_to_use](the_number, **kwargs)
-
-
-def salutation_default(indiv, **kwargs):
-    """Returns Mr., Ms., etc. for an individual."""
-    with_name = kwargs.get('with_name', False)
-    with_name_and_punctuation = kwargs.get('with_name_and_punctuation', False)
-    ensure_definition(indiv, with_name, with_name_and_punctuation)
-    used_gender = False
-    if hasattr(indiv, 'salutation_to_use') and indiv.salutation_to_use is not None:
-        salut = indiv.salutation_to_use
-    elif hasattr(indiv, 'is_doctor') and indiv.is_doctor:
-        salut = 'Dr.'
-    elif hasattr(indiv, 'is_judge') and indiv.is_judge:
-        salut = 'Judge'
-    elif hasattr(indiv, 'name') and hasattr(indiv.name, 'suffix') and indiv.name.suffix in ('MD', 'PhD'):
-        salut = 'Dr.'
-    elif hasattr(indiv, 'name') and hasattr(indiv.name, 'suffix') and indiv.name.suffix == 'J':
-        salut = 'Judge'
-    elif indiv.gender == 'female':
-        used_gender = True
-        salut = 'Ms.'
-    else:
-        used_gender = True
-        salut = 'Mr.'
-    if with_name_and_punctuation or with_name:
-        if used_gender and indiv.gender not in ('male', 'female'):
-            salut_and_name = indiv.name.full()
-        else:
-            salut_and_name = salut + ' ' + indiv.name.last
-        if with_name_and_punctuation:
-            if hasattr(indiv, 'is_friendly') and indiv.is_friendly:
-                punct = ','
-            else:
-                punct = ':'
-            return salut_and_name + punct
-        if with_name:
-            return salut_and_name
-    return salut
-
-
-def string_to_number(number):
-    try:
-        float_number = float(number)
-        int_number = int(number)
-        if float_number == int_number:
-            return int_number
-        return float_number
-    except:
-        return number
-
-
-def number_to_word(number, **kwargs):
-    language = kwargs.get('language', None)
-    capitalize_arg = kwargs.get('capitalize', False)
-    function = kwargs.get('function', None)
-    raise_on_error = kwargs.get('raise_on_error', False)
-    if function not in ('ordinal', 'ordinal_num'):
-        function = 'cardinal'
-    if language is None:
-        language = get_language()
-    for lang, loc in (('en', 'en_GB'), ('en', 'en_IN'), ('es', 'es_CO'), ('es', 'es_VE'), ('fr', 'fr_CH'), ('fr', 'fr_BE'), ('fr', 'fr_DZ'), ('pt', 'pt_BR')):
-        if language == lang and this_thread.locale.startswith(loc):
-            language = loc
-            break
-    number = string_to_number(number)
-    if raise_on_error:
-        the_word = num2words.num2words(number, lang=language, to=function)
-    else:
-        try:
-            the_word = num2words.num2words(number, lang=language, to=function)
-        except NotImplementedError:
-            the_word = str(number)
-    if capitalize_arg:
-        return capitalize_function(the_word)
-    return the_word
-
-
-def ordinal_default(the_number, **kwargs):
-    """Returns the "first," "second," "third," etc. for a given number, which is expected to
-    be an index starting with zero.  ordinal(0) returns "first."  For a more literal ordinal
-    number function, see ordinal_number()."""
-    result = ordinal_number(int(float(the_number)) + 1, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(result)
-    return result
-
-
-def nice_number_default(the_number, **kwargs):
-    """Returns the number as a word in the current language."""
-    capitalize_arg = kwargs.get('capitalize', False)
-    language = kwargs.get('language', None)
-    use_word = kwargs.get('use_word', None)
-    ensure_definition(the_number, capitalize_arg, language)
-    if language is None:
-        language = this_thread.language
-    if language in nice_numbers:
-        language_to_use = language
-    elif '*' in nice_numbers:
-        language_to_use = '*'
-    else:
-        language_to_use = 'en'
-    if isinstance(the_number, float):
-        the_number = float(decimal.Context(prec=8).create_decimal_from_float(the_number))
-    if int(float(the_number)) == float(the_number):
-        the_number = int(float(the_number))
-        is_integer = True
-    else:
-        is_integer = False
-    if language_to_use in nice_numbers and str(the_number) in nice_numbers[language_to_use]:
-        the_word = nice_numbers[language_to_use][str(the_number)]
-        if capitalize_arg:
-            return capitalize_function(the_word)
-        return the_word
-    if use_word or (is_integer and 0 <= the_number < 11 and use_word is not False):
-        try:
-            return number_to_word(the_number, **kwargs)
-        except:
-            pass
-    if isinstance(the_number, int):
-        return str(locale.format_string("%d", the_number, grouping=True))
-    return str(locale.format_string("%.2f", float(the_number), grouping=True)).rstrip('0')
-
-
-def quantity_noun_default(the_number, noun, **kwargs):
-    as_integer = kwargs.get('as_integer', True)
-    capitalize_arg = kwargs.get('capitalize', False)
-    language = kwargs.get('language', None)
-    ensure_definition(the_number, noun, as_integer, capitalize_arg, language)
-    if as_integer:
-        the_number = int(round(the_number))
-    result = nice_number(the_number, language=language) + " " + noun_plural(noun, the_number, language=language)
-    if capitalize_arg:
-        return capitalize_function(result)
-    return result
-
-
-def capitalize_default(a, **kwargs):  # pylint: disable=unused-argument
-    ensure_definition(a)
-    if not isinstance(a, str):
-        a = str(a)
-    if a and len(a) > 1:
-        return a[0].upper() + a[1:]
-    return a
-
-
-def currency_symbol_default(**kwargs):  # pylint: disable=unused-argument
-    """Returns the currency symbol for the current locale."""
-    return str(locale.localeconv()['currency_symbol'])
-
-
-def currency_default(the_value, **kwargs):
-    """Returns the value as a currency, according to the conventions of
-    the current locale.  Use the optional keyword argument
-    decimals=False if you do not want to see decimal places in the
-    number, and the optional currency_symbol for a different symbol
-    than the default.
-
-    """
-    decimals = kwargs.get('decimals', True)
-    symbol = kwargs.get('symbol', None)
-    symbol_precedes = kwargs.get('symbol_precedes', None)
-    ensure_definition(the_value, decimals, symbol)
-    obj_type = type(the_value).__name__
-    if obj_type in ['FinancialList', 'PeriodicFinancialList']:
-        the_value = the_value.total()
-    elif obj_type in ['Value', 'PeriodicValue']:
-        if the_value.exists:
-            the_value = the_value.amount()
-        else:
-            the_value = 0
-    elif obj_type == 'DACatchAll':
-        the_value = float(the_value)
-    try:
-        float(the_value)
-    except:
-        return ''
-    the_float_value = float(the_value)
-    the_symbol = None
-    if symbol is not None:
-        the_symbol = symbol
-    elif 'locale_overrides' in this_thread.misc and 'currency_symbol' in this_thread.misc['locale_overrides']:
-        the_symbol = this_thread.misc['locale_overrides']['currency_symbol']
-    elif language_functions['currency_symbol']['*'] is not currency_symbol_default:
-        the_symbol = currency_symbol()
-    the_symbol_precedes = None
-    if symbol_precedes is not None:
-        the_symbol_precedes = symbol_precedes
-    elif 'locale_overrides' in this_thread.misc and the_float_value < 0 and 'n_cs_precedes' in this_thread.misc['locale_overrides']:
-        the_symbol_precedes = bool(this_thread.misc['locale_overrides']['n_cs_precedes'])
-    elif 'locale_overrides' in this_thread.misc and 'p_cs_precedes' in this_thread.misc['locale_overrides']:
-        the_symbol_precedes = bool(this_thread.misc['locale_overrides']['p_cs_precedes'])
-    if the_symbol is None and the_symbol_precedes is None and decimals:
-        return str(locale.currency(the_float_value, symbol=True, grouping=True))
-    if the_symbol is None:
-        the_symbol = currency_symbol()
-    if the_symbol_precedes is None:
-        if the_float_value < 0:
-            the_symbol_precedes = bool(get_locale('n_cs_precedes'))
-        else:
-            the_symbol_precedes = bool(get_locale('p_cs_precedes'))
-    output = ''
-    if the_symbol_precedes:
-        output += the_symbol
-        if the_float_value < 0:
-            if get_locale('n_sep_by_space'):
-                output += ' '
-        elif get_locale('p_sep_by_space'):
-            output += ' '
-    if decimals:
-        output += locale.format_string('%.' + str(server.daconfig.get('currency decimal places', locale.localeconv()['frac_digits'])) + 'f', the_float_value, grouping=True, monetary=True)
-    else:
-        output += locale.format_string("%d", int(the_float_value), grouping=True, monetary=True)
-    if not the_symbol_precedes:
-        if the_float_value < 0:
-            if get_locale('n_sep_by_space'):
-                output += ' '
-        elif get_locale('p_sep_by_space'):
-            output += ' '
-        output += the_symbol
-    return output
-
-
-def prefix_constructor(prefix):
-
-    def func(the_word, **kwargs):
-        ensure_definition(the_word, **kwargs)
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(str(prefix)) + str(the_word)
-        return str(prefix) + str(the_word)
-    return func
-
-
-def double_prefix_constructor_reverse(prefix_one, prefix_two):
-
-    def func(word_one, word_two, **kwargs):
-        ensure_definition(word_one, word_two, **kwargs)
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(str(prefix_one)) + str(word_two) + str(prefix_two) + str(word_one)
-        return str(prefix_one) + str(word_two) + str(prefix_two) + str(word_one)
-    return func
-
-
-def prefix_constructor_two_arguments(prefix, **kwargs):  # pylint: disable=unused-argument
-
-    def func(word_one, word_two, **kwargs):
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(str(prefix)) + str(word_one) + ' ' + str(word_two)
-        return str(prefix) + str(word_one) + ' ' + str(word_two)
-    return func
-
-
-def middle_constructor(middle, **kwargs):  # pylint: disable=unused-argument
-
-    def func(a, b, **kwargs):
-        ensure_definition(a, b, **kwargs)
-        if 'capitalize' in kwargs and kwargs['capitalize']:
-            return capitalize(str(a)) + str(middle) + str(b)
-        return str(a) + str(middle) + str(b)
-    return func
-
-
-def possessify_en(a, b, **kwargs):
-    ensure_definition(a, b, **kwargs)
-    if this_thread.evaluation_context == 'docx':
-        apostrophe = "’"
-    else:
-        apostrophe = "'"
-    if 'plural' in kwargs and kwargs['plural']:
-        middle = apostrophe + " "
-    else:
-        middle = apostrophe + "s "
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(str(a)) + str(middle) + str(b)
-    return str(a) + str(middle) + str(b)
-
-
-def a_preposition_b_default(a, b, **kwargs):
-    ensure_definition(a, b, **kwargs)
-    if hasattr(a, 'preposition'):
-        preposition = word(a.preposition)
-    else:
-        preposition = word('in the')
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(str(a)) + str(' ' + preposition + ' ') + str(b)
-    return str(a) + str(' ' + preposition + ' ') + str(b)
-
-
-def verb_present_en(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(str(arg))
-    if len(new_args) < 2:
-        new_args.append('3sg')
-    output = pattern_en.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_past_en(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sgp')
-    output = pattern_en.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def number_or_length(target):
-    if isinstance(target, (int, float)):
-        return target
-    if isinstance(target, (list, dict, set, tuple)) or (hasattr(target, 'elements') and isinstance(target.elements, (list, dict, set))):
-        return len(target)
-    if target:
-        return 2
-    return 1
-
-
-def noun_plural_en(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if kwargs.get('noun_is_singular', False):
-        noun = pargs[0]
-    else:
-        noun = noun_singular_en(pargs[0])
-    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
-        return str(noun)
-    output = pattern_en.pluralize(str(noun))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_singular_en(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
-        return pargs[0]
-    output = pattern_en.singularize(str(pargs[0]))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def indefinite_article_en(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    output = pattern_en.article(str(pargs[0]).lower()) + " " + str(pargs[0])
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_present_es(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(str(arg))
-    if len(new_args) < 2:
-        new_args.append('3sg')
-    if new_args[1] == 'pl':
-        new_args[1] = '3pl'
-    output = pattern_es.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_past_es(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sgp')
-    if new_args[1] == 'ppl':
-        new_args[1] = '3ppl'
-    output = pattern_es.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_plural_es(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if kwargs.get('noun_is_singular', False):
-        noun = pargs[0]
-    else:
-        noun = noun_singular_es(pargs[0])
-    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
-        return str(noun)
-    output = pattern_es.pluralize(str(noun))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_singular_es(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
-        return pargs[0]
-    output = pattern_es.singularize(str(pargs[0]))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def indefinite_article_es(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    output = pattern_es.article(str(pargs[0]).lower()) + " " + str(pargs[0])
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_present_de(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(str(arg))
-    if len(new_args) < 2:
-        new_args.append('3sg')
-    if new_args[1] == 'pl':
-        new_args[1] = '3pl'
-    output = pattern_de.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_past_de(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sgp')
-    if new_args[1] == 'ppl':
-        new_args[1] = '3ppl'
-    output = pattern_de.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_plural_de(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if kwargs.get('noun_is_singular', False):
-        noun = pargs[0]
-    else:
-        noun = noun_singular_de(pargs[0])
-    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
-        return str(noun)
-    output = pattern_de.pluralize(str(noun))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_singular_de(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
-        return pargs[0]
-    output = pattern_de.singularize(str(pargs[0]))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def indefinite_article_de(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    output = pattern_de.article(str(pargs[0]).lower()) + " " + str(pargs[0])
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_present_fr(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(str(arg))
-    if len(new_args) < 2:
-        new_args.append('3sg')
-    if new_args[1] == 'pl':
-        new_args[1] = '3pl'
-    output = pattern_fr.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_past_fr(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sgp')
-    if new_args[1] == 'ppl':
-        new_args[1] = '3ppl'
-    output = pattern_fr.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_plural_fr(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if kwargs.get('noun_is_singular', False):
-        noun = pargs[0]
-    else:
-        noun = noun_singular_fr(pargs[0])
-    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
-        return str(noun)
-    output = pattern_fr.pluralize(str(noun))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_singular_fr(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
-        return pargs[0]
-    output = pattern_fr.singularize(str(pargs[0]))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def indefinite_article_fr(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    output = pattern_fr.article(str(pargs[0]).lower()) + " " + str(pargs[0])
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_present_it(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(str(arg))
-    if len(new_args) < 2:
-        new_args.append('3sg')
-    if new_args[1] == 'pl':
-        new_args[1] = '3pl'
-    output = pattern_it.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_past_it(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sgp')
-    if new_args[1] == 'ppl':
-        new_args[1] = '3ppl'
-    output = pattern_it.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_plural_it(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if kwargs.get('noun_is_singular', False):
-        noun = pargs[0]
-    else:
-        noun = noun_singular_it(pargs[0])
-    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
-        return str(noun)
-    output = pattern_it.pluralize(str(noun))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_singular_it(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
-        return pargs[0]
-    output = pattern_it.singularize(str(pargs[0]))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def indefinite_article_it(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    output = pattern_it.article(str(pargs[0]).lower()) + " " + str(pargs[0])
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_present_nl(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(str(arg))
-    if len(new_args) < 2:
-        new_args.append('3sg')
-    if new_args[1] == 'pl':
-        new_args[1] = '3pl'
-    output = pattern_nl.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def verb_past_nl(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    new_args = []
-    for arg in pargs:
-        new_args.append(arg)
-    if len(new_args) < 2:
-        new_args.append('3sgp')
-    if new_args[1] == 'ppl':
-        new_args[1] = '3ppl'
-    output = pattern_nl.conjugate(*new_args, **kwargs)
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_plural_nl(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if kwargs.get('noun_is_singular', False):
-        noun = pargs[0]
-    else:
-        noun = noun_singular_nl(pargs[0])
-    if len(pargs) >= 2 and number_or_length(pargs[1]) == 1:
-        return str(noun)
-    output = pattern_nl.pluralize(str(noun))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def noun_singular_nl(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    if len(pargs) >= 2 and number_or_length(pargs[1]) != 1:
-        return pargs[0]
-    output = pattern_nl.singularize(str(pargs[0]))
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def indefinite_article_nl(*pargs, **kwargs):
-    ensure_definition(*pargs, **kwargs)
-    output = pattern_nl.article(str(pargs[0]).lower()) + " " + str(pargs[0])
-    if 'capitalize' in kwargs and kwargs['capitalize']:
-        return capitalize(output)
-    return output
-
-
-def titlecasestr(text):
-    return titlecase.titlecase(str(text))
-
-language_functions = {
-    'in_the': {
-        'en': prefix_constructor('in the ')
-    },
-    'a_preposition_b': {
-        'en': a_preposition_b_default
-    },
-    'a_in_the_b': {
-        'en': middle_constructor(' in the ')
-    },
-    'i_subjective': {
-        'en': lambda *pargs, **kwargs: word('I', **kwargs)
-    },
-    'he_subjective': {
-        'en': lambda *pargs, **kwargs: word('he', **kwargs)
-    },
-    'she_subjective': {
-        'en': lambda *pargs, **kwargs: word('she', **kwargs)
-    },
-    'genderless_subjective': {
-        'en': lambda *pargs, **kwargs: word('they', **kwargs)
-    },
-    'myself': {
-        'en': lambda *pargs, **kwargs: word('myself', **kwargs)
-    },
-    'itself': {
-        'en': lambda *pargs, **kwargs: word('itself', **kwargs)
-    },
-    'herself': {
-        'en': lambda *pargs, **kwargs: word('herself', **kwargs)
-    },
-    'himself': {
-        'en': lambda *pargs, **kwargs: word('himself', **kwargs)
-    },
-    'themselves': {
-        'en': lambda *pargs, **kwargs: word('themselves', **kwargs)
-    },
-    'genderless_self': {
-        'en': lambda *pargs, **kwargs: word('themself', **kwargs)
-    },
-    'yourself': {
-        'en': lambda *pargs, **kwargs: word('yourself', **kwargs)
-    },
-    'yourselves': {
-        'en': lambda *pargs, **kwargs: word('yourselves', **kwargs)
-    },
-    'ourselves': {
-        'en': lambda *pargs, **kwargs: word('ourselves', **kwargs)
-    },
-    'you_subjective': {
-        'en': lambda *pargs, **kwargs: word('you', **kwargs)
-    },
-    'you_subjective_plural': {
-        'en': lambda *pargs, **kwargs: word('you', **kwargs)
-    },
-    'we_subjective': {
-        'en': lambda *pargs, **kwargs: word('we', **kwargs)
-    },
-    'they_subjective': {
-        'en': lambda *pargs, **kwargs: word('they', **kwargs)
-    },
-    'it_subjective': {
-        'en': lambda *pargs, **kwargs: word('it', **kwargs)
-    },
-    'it_objective': {
-        'en': lambda *pargs, **kwargs: word('it', **kwargs)
-    },
-    'them_objective': {
-        'en': lambda *pargs, **kwargs: word('them', **kwargs)
-    },
-    'genderless_objective': {
-        'en': lambda *pargs, **kwargs: word('them', **kwargs)
-    },
-    'me_objective': {
-        'en': lambda *pargs, **kwargs: word('me', **kwargs)
-    },
-    'him_objective': {
-        'en': lambda *pargs, **kwargs: word('him', **kwargs)
-    },
-    'her_objective': {
-        'en': lambda *pargs, **kwargs: word('her', **kwargs)
-    },
-    'you_objective': {
-        'en': lambda *pargs, **kwargs: word('you', **kwargs)
-    },
-    'you_objective_plural': {
-        'en': lambda *pargs, **kwargs: word('you', **kwargs)
-    },
-    'us_objective': {
-        'en': lambda *pargs, **kwargs: word('us', **kwargs)
-    },
-    'are_we': {
-        'en': lambda *pargs, **kwargs: word('are we', **kwargs)
-    },
-    'are_you': {
-        'en': lambda *pargs, **kwargs: word('are you', **kwargs)
-    },
-    'are_you_plural': {
-        'en': lambda *pargs, **kwargs: word('are you', **kwargs)
-    },
-    'am_i': {
-        'en': lambda *pargs, **kwargs: word('am I', **kwargs)
-    },
-    'her': {
-        'en': prefix_constructor('her ')
-    },
-    'his': {
-        'en': prefix_constructor('his ')
-    },
-    'are_word': {
-        'en': prefix_constructor('are ')
-    },
-    'is_word': {
-        'en': prefix_constructor('is ')
-    },
-    'their': {
-        'en': prefix_constructor('their ')
-    },
-    'my_possessive': {
-        'en': prefix_constructor('my ')
-    },
-    'our_possessive': {
-        'en': prefix_constructor('our ')
-    },
-    'of_the': {
-        'en': prefix_constructor('of the ')
-    },
-    'your': {
-        'en': prefix_constructor('your ')
-    },
-    'your_plural': {
-        'en': prefix_constructor('your ')
-    },
-    'some': {
-        'en': prefix_constructor('some ')
-    },
-    'its': {
-        'en': prefix_constructor('its ')
-    },
-    'the': {
-        'en': prefix_constructor('the ')
-    },
-    'these': {
-        'en': prefix_constructor('these ')
-    },
-    'this': {
-        'en': prefix_constructor('this ')
-    },
-    'does_a_b': {
-        'en': prefix_constructor_two_arguments('does ')
-    },
-    'do_a_b': {
-        'en': prefix_constructor_two_arguments('do ')
-    },
-    'did_a_b': {
-        'en': prefix_constructor_two_arguments('did ')
-    },
-    'did_a_b_plural': {
-        'en': prefix_constructor_two_arguments('did ')
-    },
-    'do_i': {
-        'en': prefix_constructor('do I ')
-    },
-    'do_we': {
-        'en': prefix_constructor('do we ')
-    },
-    'do_you': {
-        'en': prefix_constructor('do you ')
-    },
-    'do_you_plural': {
-        'en': prefix_constructor('do you ')
-    },
-    'did_i': {
-        'en': prefix_constructor('did I ')
-    },
-    'did_we': {
-        'en': prefix_constructor('did we ')
-    },
-    'did_you': {
-        'en': prefix_constructor('did you ')
-    },
-    'did_you_plural': {
-        'en': prefix_constructor('did you ')
-    },
-    'was_i': {
-        'en': prefix_constructor('was I ')
-    },
-    'were_we': {
-        'en': prefix_constructor('were we ')
-    },
-    'were_you': {
-        'en': prefix_constructor('were you ')
-    },
-    'were_you_plural': {
-        'en': prefix_constructor('were you ')
-    },
-    'was_a_b': {
-        'en': prefix_constructor_two_arguments('was ')
-    },
-    'were_a_b': {
-        'en': prefix_constructor_two_arguments('were ')
-    },
-    'were_a_b_plural': {
-        'en': prefix_constructor_two_arguments('were ')
-    },
-    'have_i': {
-        'en': prefix_constructor('have I ')
-    },
-    'have_we': {
-        'en': prefix_constructor('have we ')
-    },
-    'have_you': {
-        'en': prefix_constructor('have you ')
-    },
-    'have_you_plural': {
-        'en': prefix_constructor('have you ')
-    },
-    'has_a_b': {
-        'en': prefix_constructor_two_arguments('has ')
-    },
-    'have_a_b': {
-        'en': prefix_constructor_two_arguments('have ')
-    },
-    'verb_past': {
-        'en': verb_past_en,
-        'es': verb_past_es,
-        'de': verb_past_de,
-        'fr': verb_past_fr,
-        'it': verb_past_it,
-        'nl': verb_past_nl
-    },
-    'verb_present': {
-        'en': verb_present_en,
-        'es': verb_present_es,
-        'de': verb_present_de,
-        'fr': verb_present_fr,
-        'it': verb_present_it,
-        'nl': verb_present_nl
-    },
-    'noun_plural': {
-        'en': noun_plural_en,
-        'es': noun_plural_es,
-        'de': noun_plural_de,
-        'fr': noun_plural_fr,
-        'it': noun_plural_it,
-        'nl': noun_plural_nl
-    },
-    'noun_singular': {
-        'en': noun_singular_en,
-        'es': noun_singular_es,
-        'de': noun_singular_de,
-        'fr': noun_singular_fr,
-        'it': noun_singular_it,
-        'nl': noun_singular_nl
-    },
-    'indefinite_article': {
-        'en': indefinite_article_en,
-        'es': indefinite_article_es,
-        'de': indefinite_article_de,
-        'it': indefinite_article_it
-    },
-    'currency_symbol': {
-        '*': currency_symbol_default
-    },
-    'period_list': {
-        '*': lambda: [[12, word("Per Month")], [1, word("Per Year")], [52, word("Per Week")], [24, word("Twice Per Month")], [26, word("Every Two Weeks")]]
-    },
-    'name_suffix': {
-        '*': lambda: ['Jr', 'Sr', 'II', 'III', 'IV', 'V', 'VI']
-    },
-    'currency': {
-        '*': currency_default
-    },
-    'possessify': {
-        'en': possessify_en
-    },
-    'possessify_long': {
-        'en': double_prefix_constructor_reverse('the ', ' of the ')
-    },
-    'comma_and_list': {
-        'en': comma_and_list_en,
-        'es': comma_and_list_es,
-        'de': comma_and_list_de
-    },
-    'comma_list': {
-        'en': comma_list_en
-    },
-    'add_separators': {
-        'en': add_separators_en
-    },
-    'nice_number': {
-        '*': nice_number_default
-    },
-    'quantity_noun': {
-        '*': quantity_noun_default
-    },
-    'ordinal_number': {
-        '*': ordinal_number_default
-    },
-    'ordinal': {
-        '*': ordinal_default
-    },
-    'capitalize': {
-        '*': capitalize_default
-    },
-    'title_case': {
-        '*': titlecasestr
-    },
-    'salutation': {
-        '*': salutation_default
-    }
-}
-
-
-def language_function_constructor(term):
-
-    def func(*args, **kwargs):
-        ensure_definition(*args, **kwargs)
-        language = kwargs.get('language', None)
-        if language is None:
-            language = this_thread.language
-        if language in language_functions[term]:
-            return language_functions[term][language](*args, **kwargs)
-        if '*' in language_functions[term]:
-            return language_functions[term]['*'](*args, **kwargs)
-        if 'en' in language_functions[term]:
-            logmessage("Term " + str(term) + " is not defined for language " + str(language))
-            return language_functions[term]['en'](*args, **kwargs)
-        raise SystemError("term " + str(term) + " not defined in language_functions for English or *")
-    return func
-
-in_the = language_function_constructor('in_the')
-a_preposition_b = language_function_constructor('a_preposition_b')
-a_in_the_b = language_function_constructor('a_in_the_b')
-i_subjective = language_function_constructor('i_subjective')
-he_subjective = language_function_constructor('he_subjective')
-she_subjective = language_function_constructor('she_subjective')
-genderless_subjective = language_function_constructor('genderless_subjective')
-myself = language_function_constructor('myself')
-itself = language_function_constructor('itself')
-herself = language_function_constructor('herself')
-himself = language_function_constructor('himself')
-themselves = language_function_constructor('themselves')
-genderless_self = language_function_constructor('genderless_self')
-yourself = language_function_constructor('yourself')
-yourselves = language_function_constructor('yourselves')
-ourselves = language_function_constructor('ourselves')
-you_subjective = language_function_constructor('you_subjective')
-you_subjective_plural = language_function_constructor('you_subjective_plural')
-we_subjective = language_function_constructor('we_subjective')
-they_subjective = language_function_constructor('they_subjective')
-it_subjective = language_function_constructor('it_subjective')
-it_objective = language_function_constructor('it_objective')
-them_objective = language_function_constructor('them_objective')
-genderless_objective = language_function_constructor('genderless_objective')
-me_objective = language_function_constructor('me_objective')
-him_objective = language_function_constructor('him_objective')
-her_objective = language_function_constructor('her_objective')
-you_objective = language_function_constructor('you_objective')
-you_objective_plural = language_function_constructor('you_objective_plural')
-us_objective = language_function_constructor('us_objective')
-are_we = language_function_constructor('are_we')
-are_you = language_function_constructor('are_you')
-are_you_plural = language_function_constructor('are_you_plural')
-am_i = language_function_constructor('am_i')
-her = language_function_constructor('her')
-his = language_function_constructor('his')
-are_word = language_function_constructor('are_word')
-is_word = language_function_constructor('is_word')
-their = language_function_constructor('their')
-my_possessive = language_function_constructor('my_possessive')
-our_possessive = language_function_constructor('our_possessive')
-of_the = language_function_constructor('of_the')
-your = language_function_constructor('your')
-your_plural = language_function_constructor('your_plural')
-some = language_function_constructor('some')
-its = language_function_constructor('its')
-the = language_function_constructor('the')
-these = language_function_constructor('these')
-this = language_function_constructor('this')
-does_a_b = language_function_constructor('does_a_b')
-do_a_b = language_function_constructor('do_a_b')
-did_a_b = language_function_constructor('did_a_b')
-did_a_b_plural = language_function_constructor('did_a_b_plural')
-do_i = language_function_constructor('do_i')
-do_we = language_function_constructor('do_we')
-do_you = language_function_constructor('do_you')
-do_you_plural = language_function_constructor('do_you_plural')
-did_i = language_function_constructor('did_i')
-did_we = language_function_constructor('did_we')
-did_you = language_function_constructor('did_you')
-did_you_plural = language_function_constructor('did_you_plural')
-was_i = language_function_constructor('was_i')
-were_we = language_function_constructor('were_we')
-were_you = language_function_constructor('were_you')
-were_you_plural = language_function_constructor('were_you_plural')
-was_a_b = language_function_constructor('was_a_b')
-were_a_b = language_function_constructor('were_a_b')
-were_a_b_plural = language_function_constructor('were_a_b_plural')
-have_i = language_function_constructor('have_i')
-have_we = language_function_constructor('have_we')
-have_you = language_function_constructor('have_you')
-have_you_plural = language_function_constructor('have_you_plural')
-has_a_b = language_function_constructor('has_a_b')
-have_a_b = language_function_constructor('have_a_b')
-verb_past = language_function_constructor('verb_past')
-verb_present = language_function_constructor('verb_present')
-noun_plural = language_function_constructor('noun_plural')
-noun_singular = language_function_constructor('noun_singular')
-indefinite_article = language_function_constructor('indefinite_article')
-period_list = language_function_constructor('period_list')
-name_suffix = language_function_constructor('name_suffix')
-currency = language_function_constructor('currency')
-currency_symbol = language_function_constructor('currency_symbol')
-possessify = language_function_constructor('possessify')
-possessify_long = language_function_constructor('possessify_long')
-comma_list = language_function_constructor('comma_list')
-comma_and_list = language_function_constructor('comma_and_list')
-add_separators = language_function_constructor('add_separators')
-nice_number = language_function_constructor('nice_number')
-quantity_noun = language_function_constructor('quantity_noun')
-capitalize = language_function_constructor('capitalize')
-capitalize_function = capitalize
-title_case = language_function_constructor('title_case')
-ordinal_number = language_function_constructor('ordinal_number')
-ordinal = language_function_constructor('ordinal')
-salutation = language_function_constructor('salutation')
-
-if verb_past.__doc__ is None:
-    verb_past.__doc__ = """Return the past tense of a verb.
-
-    Args:
-        verb (str): The verb to conjugate.
-        **kwargs: Optional conjugation parameters passed to the underlying
-            language function (e.g. ``'3gp'`` for third-person past tense).
-
-    Returns:
-        str: The past-tense form of the verb (e.g. ``verb_past('help')``
-            returns ``'helped'``).
-    """
-if verb_present.__doc__ is None:
-    verb_present.__doc__ = """Return the present tense of a verb.
-
-    Args:
-        verb (str): The verb to conjugate (may be in any tense).
-        **kwargs: Optional conjugation parameters passed to the underlying
-            language function (e.g. ``'3sg'`` for third-person singular).
-
-    Returns:
-        str: The present-tense form of the verb (e.g.
-            ``verb_present('helped', '3sg')`` returns ``'helps'``).
-    """
-if noun_plural.__doc__ is None:
-    noun_plural.__doc__ = """Return the plural form of a noun.
-
-    Args:
-        noun (str): The noun to pluralize.
-        *pargs: An optional quantity (number, list, dict, or set). When the
-            quantity is exactly ``1`` the singular form is returned instead.
-        **kwargs: Pass ``noun_is_singular=True`` to skip singularization
-            before pluralizing.
-
-    Returns:
-        str: The plural form of the noun, or the singular form if the
-            optional quantity equals ``1``.
-    """
-if noun_singular.__doc__ is None:
-    noun_singular.__doc__ = """Return the singular form of a noun.
-
-    Args:
-        noun (str): The noun to singularize.
-        *pargs: An optional quantity (number, list, dict, or set). When the
-            quantity is not ``1`` the original noun is returned unchanged.
-
-    Returns:
-        str: The singular form of the noun, or the original noun when the
-            optional quantity is not ``1``.
-    """
-if indefinite_article.__doc__ is None:
-    indefinite_article.__doc__ = """Return a noun preceded by the appropriate indefinite article.
-
-    Args:
-        noun (str): The noun phrase to precede with an article.
-        **kwargs: Additional keyword arguments passed to the underlying
-            language function.
-
-    Returns:
-        str: The noun prefixed with ``'a'`` or ``'an'`` as appropriate
-            (e.g. ``indefinite_article('apple')`` returns ``'an apple'``).
-    """
-if capitalize.__doc__ is None:
-    capitalize.__doc__ = """Return the input string with the first letter capitalized.
-
-    Args:
-        a (str): The string to capitalize.
-        **kwargs: Additional keyword arguments passed to the underlying
-            language function.
-
-    Returns:
-        str: The input string with its first character converted to
-            upper case.
-    """
-if period_list.__doc__ is None:
-    period_list.__doc__ = """Return a list of per-year period options for use in multiple-choice fields.
-
-    Returns:
-        list: A list of ``[number, label]`` pairs representing common
-            payment periods (e.g. ``[[12, 'Per Month'], [1, 'Per Year'],
-            [52, 'Per Week'], ...]``).
-    """
-if name_suffix.__doc__ is None:
-    name_suffix.__doc__ = """Return a list of common name suffixes for use in multiple-choice fields.
-
-    Returns:
-        list: A list of name suffix strings such as
-            ``['Jr', 'Sr', 'II', 'III', 'IV', 'V', 'VI']``.
-    """
-if currency.__doc__ is None:
-    currency.__doc__ = """Format a number as a currency value using the current locale.
-
-    Args:
-        value: The numeric value to format.
-        **kwargs: Optional keyword arguments including ``decimals`` (bool,
-            default ``True``), ``symbol`` (str override for the currency
-            symbol), and ``symbol_precedes`` (bool controlling symbol
-            position).
-
-    Returns:
-        str: The formatted currency string (e.g. ``currency(45.2)`` returns
-            ``'$45.20'`` for a US locale).
-    """
-if currency_symbol.__doc__ is None:
-    currency_symbol.__doc__ = """Return the currency symbol for the current locale.
-
-    Returns:
-        str: The currency symbol (e.g. ``'$'`` for a US locale). Respects
-            overrides set via :func:`set_locale` or the ``currency symbol``
-            configuration setting.
-    """
-if possessify.__doc__ is None:
-    possessify.__doc__ = """Return the possessive phrase combining two arguments.
-
-    Args:
-        a: The possessor.
-        b: The thing possessed.
-        **kwargs: Additional keyword arguments passed to the underlying
-            language function.
-
-    Returns:
-        str: A possessive phrase such as ``"a's b"``.
-    """
-if possessify_long.__doc__ is None:
-    possessify_long.__doc__ = """Return the long possessive phrase combining two arguments.
-
-    Args:
-        a: The possessor.
-        b: The thing possessed.
-        **kwargs: Additional keyword arguments passed to the underlying
-            language function.
-
-    Returns:
-        str: A possessive phrase of the form ``"the b of a"``.
-    """
-if comma_list.__doc__ is None:
-    comma_list.__doc__ = """Return the items joined by commas.
-
-    Args:
-        *pargs: Items to join, or a single iterable as the first argument.
-        **kwargs: Optional ``comma_string`` (default ``', '``) to customize
-            the separator.
-
-    Returns:
-        str: The items separated by commas (e.g.
-            ``comma_list('lions', 'tigers', 'bears')`` returns
-            ``'lions, tigers, bears'``).
-    """
-if comma_and_list.__doc__ is None:
-    comma_and_list.__doc__ = """Return the items joined by commas with "and" before the last item.
-
-    Args:
-        *pargs: Items to join, or a single iterable as the first argument.
-        **kwargs: Optional keyword arguments including ``oxford`` (bool,
-            default ``True``), ``and_string`` (default ``'and'``),
-            ``comma_string``, ``before_and``, and ``after_and``.
-
-    Returns:
-        str: An English-language listing such as ``'lions, tigers, and
-            bears'``.
-    """
-if add_separators.__doc__ is None:
-    add_separators.__doc__ = """Return the list items as strings with separators appended.
-
-    Appends ``;`` to all items except the penultimate, which gets
-    ``'; and'``, and the last, which gets ``'.'``.
-
-    Args:
-        the_list: The list of items to process.
-        separator (str, optional): Separator appended to middle items.
-            Defaults to ``';'``.
-        last_separator (str, optional): Separator appended to the
-            penultimate item. Defaults to ``'; and'``.
-        end_mark (str, optional): Mark appended to the final item.
-            Defaults to ``'.'``.
-
-    Returns:
-        list: A list of strings with separators appended.
-    """
-if nice_number.__doc__ is None:
-    nice_number.__doc__ = """Return a number expressed as a word for small values, or as a formatted numeral.
-
-    Args:
-        num: The number to convert.
-        **kwargs: Optional keyword arguments including ``capitalize``
-            (bool), ``language`` (str), and ``use_word`` (bool, default
-            ``False``).
-
-    Returns:
-        str: The number as a word (e.g. ``nice_number(4)`` returns
-            ``'four'``) or as a locale-formatted numeral for larger values.
-    """
-if quantity_noun.__doc__ is None:
-    quantity_noun.__doc__ = """Return a number combined with a noun in the appropriate singular or plural form.
-
-    Combines :func:`nice_number` and :func:`noun_plural`. Rounds the number
-    to the nearest integer unless ``as_integer=False`` is passed.
-
-    Args:
-        num: The quantity.
-        noun (str): The singular noun.
-        **kwargs: Optional keyword arguments including ``as_integer``
-            (bool, default ``True``) and other arguments accepted by
-            :func:`nice_number`.
-
-    Returns:
-        str: The quantity and noun combined (e.g. ``quantity_noun(2,
-            'apple')`` returns ``'two apples'``).
-    """
-if title_case.__doc__ is None:
-    title_case.__doc__ = """Return the input string with the first letter of each word capitalized.
-
-    Args:
-        a (str): The string to convert to title case.
-        **kwargs: Additional keyword arguments passed to the underlying
-            language function.
-
-    Returns:
-        str: The title-cased string (e.g. ``title_case('the importance of
-            being ernest')`` returns ``'The Importance of Being Ernest'``).
-    """
-if ordinal_number.__doc__ is None:
-    ordinal_number.__doc__ = """Return the ordinal form of a cardinal number.
-
-    Args:
-        num: The cardinal number (1-based).
-        **kwargs: Optional keyword arguments including ``capitalize``
-            (bool) and ``use_word`` (bool, default depends on the value).
-
-    Returns:
-        str: The ordinal form (e.g. ``ordinal_number(8)`` returns
-            ``'eighth'``; ``ordinal_number(8, use_word=False)`` returns
-            ``'8th'``).
-    """
-if ordinal.__doc__ is None:
-    ordinal.__doc__ = """Return the ordinal form of a zero-based index.
-
-    Equivalent to ``ordinal_number(num + 1)``. This is useful when working
-    with zero-based list indexes.
-
-    Args:
-        num: The zero-based index.
-        **kwargs: Optional keyword arguments passed to :func:`ordinal_number`.
-
-    Returns:
-        str: The ordinal form (e.g. ``ordinal(0)`` returns ``'first'``;
-            ``ordinal(22)`` returns ``'23rd'``).
-    """
 
 
 def underscore_to_space(a):
@@ -4929,10 +3141,10 @@ def store_variables_snapshot(data=None, include_internal=False, key=None, persis
     if key is not None and not isinstance(key, str):
         raise DAError("store_variables_snapshot: key must be a string")
     if data is None:
-        the_data = serializable_dict(get_user_dict(), include_internal=include_internal)
+        the_data = serializable_dict(get_current_user_dict(), include_internal=include_internal)
     else:
         the_data = safe_json(data)
-    server.write_answer_json(session, filename, the_data, tags=key, persistent=bool(persistent))
+    write_answer_json(session, filename, the_data, tags=key, persistent=bool(persistent))
 
 
 def all_variables(simplify=True, include_internal=False, special=False, make_copy=False):
@@ -4960,18 +3172,18 @@ def all_variables(simplify=True, include_internal=False, special=False, make_cop
             when ``special='tags'``.
     """
     if special == 'titles':
-        return this_thread.interview.get_title(get_user_dict(), adapted=True)
+        return this_thread.interview.get_title(get_current_user_dict(), adapted=True)
     if special == 'metadata':
         return copy.deepcopy(this_thread.interview.consolidated_metadata)
     if special == 'tags':
         session_tags()
         return copy.deepcopy(this_thread.internal['tags'])
     if simplify:
-        return serializable_dict(get_user_dict(), include_internal=include_internal)
+        return serializable_dict(get_current_user_dict(), include_internal=include_internal)
     if make_copy:
-        new_dict = copy.deepcopy(pickleable_objects(get_user_dict()))
+        new_dict = copy.deepcopy(pickleable_objects(get_current_user_dict()))
     else:
-        new_dict = pickleable_objects(get_user_dict())
+        new_dict = pickleable_objects(get_current_user_dict())
     if not include_internal and '_internal' in new_dict:
         new_dict = copy.copy(new_dict)
         del new_dict['_internal']
@@ -5031,7 +3243,7 @@ def force_ask(*pargs, **kwargs):
         for item in the_pargs:
             if isinstance(item, str) and illegal_variable_name(item):
                 raise DAError("Illegal variable name")
-        raise ForcedNameError(*the_pargs, user_dict=get_user_dict(), evaluate=kwargs.get('evaluate', False))
+        raise ForcedNameError(*the_pargs, user_dict=get_current_user_dict(), evaluate=kwargs.get('evaluate', False))
     force_ask_nameerror(the_pargs[0])
 
 
@@ -5062,7 +3274,7 @@ def force_gather(*pargs, forget_prior=False, evaluate=False):
         unique_id = this_thread.current_info['user']['session_uid']
         if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
             this_thread.internal['event_stack'][unique_id] = []
-    the_user_dict = get_user_dict()
+    the_user_dict = get_current_user_dict()
     the_context = {}
     for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
         if var_name in the_user_dict:
@@ -5088,7 +3300,7 @@ def static_filename_path(filereference, return_nonexistent=False):
     else:
         result = package_data_filename(static_filename(filereference), return_nonexistent=return_nonexistent)
     # if result is None or not os.path.isfile(result):
-    #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filereference)).path
+    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', filereference)).path
     return result
 
 
@@ -5189,7 +3401,7 @@ def package_template_filename(the_file, **kwargs):
         m = re.search(r'^docassemble\.playground([0-9]+)([A-Za-z]?[A-Za-z0-9]*)$', parts[0])
         if m:
             parts[1] = re.sub(r'^data/templates/', '', parts[1])
-            abs_file = server.absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))  # pylint: disable=assignment-from-none
+            abs_file = absolute_filename("/playgroundtemplate/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))  # pylint: disable=assignment-from-none
             if abs_file is None:
                 return None
             return abs_file.path
@@ -5236,12 +3448,12 @@ def package_data_filename(the_file, return_nonexistent=False):
         if m:
             if re.search(r'^data/sources/', parts[1]):
                 parts[1] = re.sub(r'^data/sources/', '', parts[1])
-                abs_file = server.absolute_filename("/playgroundsources/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))  # pylint: disable=assignment-from-none
+                abs_file = absolute_filename("/playgroundsources/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))  # pylint: disable=assignment-from-none
                 if abs_file is None:
                     return None
                 return abs_file.path
             parts[1] = re.sub(r'^data/static/', '', parts[1])
-            abs_file = server.absolute_filename("/playgroundstatic/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))  # pylint: disable=assignment-from-none
+            abs_file = absolute_filename("/playgroundstatic/" + m.group(1) + '/' + (m.group(2) or 'default') + '/' + re.sub(r'[^A-Za-z0-9\-\_\. ]', '', parts[1]))  # pylint: disable=assignment-from-none
             if abs_file is None:
                 return None
             return abs_file.path
@@ -5256,7 +3468,7 @@ def package_data_filename(the_file, return_nonexistent=False):
         else:
             result = None
     # if result is None or not os.path.isfile(result):
-    #    result = server.absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
+    #    result = absolute_filename("/playgroundstatic/" + re.sub(r'[^A-Za-z0-9\-\_\.]', '', the_file)).path
     return result
 
 
@@ -5336,7 +3548,7 @@ def process_action():
             else:
                 # logmessage("process_action: doing a gather of " + variable_name)
                 if len(variable_dict['context']) > 0:
-                    the_user_dict = get_user_dict()
+                    the_user_dict = get_current_user_dict()
                     for var_name, var_val in variable_dict['context'].items():
                         the_user_dict[var_name] = var_val
                     del the_user_dict
@@ -5351,7 +3563,7 @@ def process_action():
                 this_thread.current_info.update(event_info)
                 the_context = event_info.get('context', {})
                 if len(the_context) > 0:
-                    the_user_dict = get_user_dict()
+                    the_user_dict = get_current_user_dict()
                     for var_name, var_val in the_context.items():
                         the_user_dict[var_name] = var_val
                     del the_user_dict
@@ -5406,7 +3618,7 @@ def process_action():
         for variable_name in this_thread.current_info['arguments']['variables']:
             if variable_name not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
                 the_context = {}
-                the_user_dict = get_user_dict()
+                the_user_dict = get_current_user_dict()
                 for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
                     if var_name in the_user_dict:
                         the_context[var_name] = the_user_dict[var_name]
@@ -5616,7 +3828,7 @@ def process_action():
                     for var in this_thread.current_info['arguments'][key]:
                         if var not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
                             the_context = {}
-                            the_user_dict = get_user_dict()
+                            the_user_dict = get_current_user_dict()
                             for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
                                 if var_name in the_user_dict:
                                     the_context[var_name] = the_user_dict[var_name]
@@ -5624,7 +3836,7 @@ def process_action():
                             this_thread.internal['gather'].append({'var': var, 'context': the_context})
                 elif this_thread.current_info['arguments'][key] not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
                     the_context = {}
-                    the_user_dict = get_user_dict()
+                    the_user_dict = get_current_user_dict()
                     for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
                         if var_name in the_user_dict:
                             the_context[var_name] = the_user_dict[var_name]
@@ -5689,7 +3901,7 @@ def myb64unquote(text):
 
 
 def debug_status():
-    return server.debug
+    return get_debug_status()
 # grep -E -R -o -h "word\(['\"][^\)]+\)" * | sed "s/^[^'\"]+['\"]//g"
 
 
@@ -5743,20 +3955,20 @@ def repad_byte(text):
     return text + (equals_byte * ((4 - len(text) % 4) % 4))
 
 
-class lister(ast.NodeVisitor):
+class Lister(ast.NodeVisitor):
 
     def __init__(self):
         self.stack = []
 
-    def visit_Name(self, node):
+    def visit_Name(self, node):  # pylint: disable=invalid-name
         self.stack.append(['name', node.id])
         ast.NodeVisitor.generic_visit(self, node)
 
-    def visit_Attribute(self, node):
+    def visit_Attribute(self, node):  # pylint: disable=invalid-name
         self.stack.append(['attr', node.attr])
         ast.NodeVisitor.generic_visit(self, node)
 
-    def visit_Subscript(self, node):
+    def visit_Subscript(self, node):  # pylint: disable=invalid-name
         self.stack.append(['index', re.sub(r'\n', '', astunparse.unparse(node.slice))])
         ast.NodeVisitor.generic_visit(self, node)
     # def visit_BinOp(self, node):
@@ -5768,7 +3980,7 @@ class lister(ast.NodeVisitor):
 
 def components_of(full_variable):
     node = ast.parse(full_variable, mode='eval')
-    crawler = lister()
+    crawler = Lister()
     crawler.visit(node)
     components = list(reversed(crawler.stack))
     start_index = 0
@@ -5778,18 +3990,8 @@ def components_of(full_variable):
     return components[start_index:]
 
 
-def get_user_dict():
-    frame = sys._getframe(1)
-    while frame is not None:
-        f_locals = frame.f_locals
-        if 'user_dict' in f_locals:
-            user_dict = f_locals['user_dict']
-            if isinstance(user_dict, dict) and '_internal' in user_dict:
-                return user_dict
-        if '_internal' in f_locals:
-            return f_locals
-        frame = frame.f_back
-    return {}
+get_user_dict = get_current_user_dict
+
 
 def invalidate(*pargs):
     """Make one or more variables undefined while remembering their prior values as defaults.
@@ -5820,18 +4022,7 @@ def _undefine_internal_old(*pargs, invalidate=False):  # pylint: disable=redefin
             raise DAError("undefine: variable " + repr(var) + " is not a valid variable name")
     if len(vars_to_delete) == 0:
         return
-    frame = sys._getframe(1)
-    the_user_dict = frame.f_locals
-    while '_internal' not in the_user_dict:
-        frame = frame.f_back
-        if frame is None:
-            return
-        if 'user_dict' in frame.f_locals:
-            the_user_dict = frame.f_locals['user_dict']
-            if '_internal' in the_user_dict:
-                break
-            return
-        the_user_dict = frame.f_locals
+    the_user_dict = get_current_user_dict()
     this_thread.probing = True
     if invalidate:
         for var in vars_to_delete:
@@ -5960,11 +4151,11 @@ def set_variables(variables, process_objects=False):
         variables = variables.elements
     if not isinstance(variables, dict):
         raise DAError("set_variables: argument must be a dictionary")
-    user_dict = get_user_dict()
+    user_dict = get_current_user_dict()
     if user_dict is None:
         raise DAError("set_variables: could not find interview answers")
     if process_objects:
-        variables = server.transform_json_variables(variables)  # pylint: disable=assignment-from-none
+        variables = transform_json_variables(variables)  # pylint: disable=assignment-from-none
     for var, val in variables.items():
         exec(var + " = None", user_dict)
         user_dict['__define_val'] = val
@@ -5987,7 +4178,7 @@ def define(var, val):
     ensure_definition(var, val)
     if not isinstance(var, str) or not re.search(r'^[A-Za-z_]', var):
         raise DAError("define() must be given a string as the variable name")
-    user_dict = get_user_dict()
+    user_dict = get_current_user_dict()
     if user_dict is None:
         raise DAError("define: could not find interview answers")
     # Trigger exceptions for the left hand side before creating __define_val
@@ -6033,30 +4224,13 @@ def _defined_internal_old(var, caller: DefCaller, alt=None, prior=False):
       user all of the questions necessary to answer it
     * SHOWIFDEF, then the value if returned, but only if no questions have to be asked
     """
-    frame = sys._getframe(1)
     components = components_of(var)
     if len(components) == 0 or len(components[0]) < 2:
         raise DAError("defined: variable " + repr(var) + " is not a valid variable name")
     variable = components[0][1]
-    the_user_dict = frame.f_locals
+    the_user_dict = get_old_user_dict() if prior else get_current_user_dict()
     failure_val = False if caller.is_predicate() else alt
-    user_dict_name = 'old_user_dict' if prior else 'user_dict'
-    while (variable not in the_user_dict) or prior:
-        frame = frame.f_back
-        if frame is None:
-            if caller.is_pure():
-                return failure_val
-            force_ask_nameerror(variable)
-        if user_dict_name in frame.f_locals:
-            the_user_dict = frame.f_locals[user_dict_name]
-            if variable in the_user_dict:
-                break
-            if caller.is_pure():
-                return failure_val
-            force_ask_nameerror(variable)
-        else:
-            the_user_dict = frame.f_locals
-    if variable not in the_user_dict:
+    if the_user_dict is None or variable not in the_user_dict:
         if caller.is_pure():
             return failure_val
         force_ask_nameerror(variable)
@@ -6385,7 +4559,7 @@ def illegal_variable_name(var):
         t = ast.parse(var)
     except:
         return True
-    detector = docassemble.base.astparser.detectIllegal()
+    detector = docassemble.base.astparser.DetectIllegal()
     detector.visit(t)
     return detector.illegal
 
@@ -6697,12 +4871,12 @@ def referring_url(default=None, current=False):
             URL.
     """
     if current:
-        url = server.get_referer()
+        url = get_referer()
     else:
         url = this_thread.internal.get('referer', None)
     if url is None:
         if default is None:
-            default = server.daconfig.get('exitpage', 'https://docassemble.org')
+            default = get_configuration().get('exitpage', 'https://docassemble.org')
         url = default
     return url
 
@@ -6789,11 +4963,6 @@ def italic(text, default=None):
             return ''
         return '_' + str(default) + '_'
     return '_' + re.sub(r'\_', '', str(text)) + '_'
-
-# def inspector():
-#     frame = inspect.stack()[1][0]
-#     for key in frame.__dict__.keys():
-#         logmessage(str(key))
 
 
 def indent(text, by=None):
@@ -7064,11 +5233,11 @@ def interview_list(exclude_invalid=True, action=None, filename=None, session=Non
                     raise DAError("interview_list: invalid next_id.")
             else:
                 start_id = None
-            (the_list, start_id) = server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, start_id=start_id, query=query)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+            (the_list, start_id) = user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, start_id=start_id, query=query)  # pylint: disable=assignment-from-none,unpacking-non-sequence
             if start_id is None:
                 return (the_list, None)
             return (the_list, myb64quote(str(start_id)))
-        return server.user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, query=query)
+        return user_interviews(user_id=user_id, secret=this_thread.current_info['secret'], exclude_invalid=exclude_invalid, action=action, filename=filename, session=session, include_dict=include_dict, delete_shared=delete_shared, query=query)
     return None
 
 
@@ -7080,7 +5249,7 @@ def interview_menu(*pargs, **kwargs):
             keys such as ``title``, ``filename``, ``link``, ``tags``,
             and ``metadata``.
     """
-    return server.interview_menu(*pargs, **kwargs)
+    return server_interview_menu(*pargs, **kwargs)
 
 
 def get_user_list(include_inactive=False, next_id=None):
@@ -7106,7 +5275,7 @@ def get_user_list(include_inactive=False, next_id=None):
                 raise DAError("get_user_list: invalid next_id.")
         else:
             start_id = None
-        (the_list, start_id) = server.get_user_list(include_inactive=include_inactive, start_id=start_id)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+        (the_list, start_id) = server_get_user_list(include_inactive=include_inactive, start_id=start_id)  # pylint: disable=assignment-from-none,unpacking-non-sequence
         if start_id is None:
             return (the_list, None)
         return (the_list, myb64quote(str(start_id)))
@@ -7137,19 +5306,19 @@ def manage_privileges(*pargs):
         else:
             the_command = arglist.pop(0)
         if the_command == 'list':
-            return server.get_privileges_list()
+            return get_privileges_list()
         if the_command == 'inspect':
             if len(arglist) != 1:
                 raise DAError("manage_privileges: invalid number of arguments")
-            return server.get_permissions_of_privilege(arglist[0])
+            return get_permissions_of_privilege(arglist[0])
         if the_command == 'add':
             for priv in arglist:
-                server.add_privilege(priv)
+                add_privilege(priv)
             if len(arglist) > 0:
                 return True
         elif the_command == 'remove':
             for priv in arglist:
-                server.remove_privilege(priv)
+                remove_privilege(priv)
             if len(arglist) > 0:
                 return True
         else:
@@ -7175,7 +5344,7 @@ def get_user_info(user_id=None, email=None):
     """
     if this_thread.current_info['user']['is_authenticated'] and user_id is None and email is None:
         user_id = this_thread.current_info['user']['the_user_id']
-    return server.get_user_info(user_id=user_id, email=email)
+    return server_get_user_info(user_id=user_id, email=email)
 
 
 def set_user_info(**kwargs):
@@ -7193,7 +5362,7 @@ def set_user_info(**kwargs):
     """
     user_id = kwargs.get('user_id', None)
     email = kwargs.get('email', None)
-    server.set_user_info(**kwargs)
+    server_set_user_info(**kwargs)
     if 'privileges' in kwargs and isinstance(kwargs['privileges'], (list, tuple)) and len(kwargs['privileges']) > 0:
         this_thread.current_info['user']['roles'] = list(kwargs['privileges'])
     if (user_id is None and email is None) or (user_id is not None and user_id == this_thread.current_info['user']['theid']) or (email is not None and email == this_thread.current_info['user']['email']):
@@ -7222,7 +5391,7 @@ def create_user(email, password, privileges=None, info=None):
     Returns:
         int: The user ID of the newly created account.
     """
-    return server.create_user(email, password, privileges=privileges, info=info)
+    return server_create_user(email, password, privileges=privileges, info=info)
 
 
 def invite_user(email_address, privilege=None, send=True):
@@ -7243,7 +5412,7 @@ def invite_user(email_address, privilege=None, send=True):
         str or None: The registration URL when ``send=False``, otherwise
             ``None``.
     """
-    return server.invite_user(email_address, privilege=privilege, send=send)
+    return server_invite_user(email_address, privilege=privilege, send=send)
 
 
 def get_user_secret(username, password):
@@ -7261,7 +5430,7 @@ def get_user_secret(username, password):
         str or None: The decryption key string if the credentials are valid,
             otherwise ``None``.
     """
-    return server.get_secret(username, password)
+    return server_get_secret(username, password)
 
 
 def create_session(yaml_filename, secret=None, url_args=None):
@@ -7280,7 +5449,7 @@ def create_session(yaml_filename, secret=None, url_args=None):
     """
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
-    (encrypted, session_id) = server.create_session(yaml_filename, secret, url_args=url_args)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+    (encrypted, session_id) = server_create_session(yaml_filename, secret, url_args=url_args)  # pylint: disable=assignment-from-none,unpacking-non-sequence
     if secret is None and encrypted:
         raise DAError("create_session: the interview is encrypted but you did not provide a secret.")
     return session_id
@@ -7306,7 +5475,7 @@ def get_session_variables(yaml_filename, session_id, secret=None, simplify=True)
         raise DAError("You cannot get variables from the current interview session")
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
-    return server.get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
+    return server_get_session_variables(yaml_filename, session_id, secret=secret, simplify=simplify)
 
 
 def set_session_variables(yaml_filename, session_id, variables, secret=None, question_name=None, overwrite=False, process_objects=False, delete=None):
@@ -7339,7 +5508,7 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, que
             delete = [delete]
         else:
             delete = list(delete)
-    server.set_session_variables(yaml_filename, session_id, variables, secret=secret, del_variables=delete, question_name=question_name, post_setting=not overwrite, process_objects=process_objects)
+    server_set_session_variables(yaml_filename, session_id, variables, secret=secret, del_variables=delete, question_name=question_name, post_setting=not overwrite, process_objects=process_objects)
 
 
 def run_action_in_session(yaml_filename, session_id, action, arguments=None, secret=None, persistent=False, overwrite=False, read_only=False):
@@ -7372,7 +5541,7 @@ def run_action_in_session(yaml_filename, session_id, action, arguments=None, sec
         arguments = {}
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
-    result = server.run_action_in_session(i=yaml_filename, session=session_id, secret=secret, action=action, persistent=persistent, overwrite=overwrite, read_only=read_only, arguments=arguments)
+    result = server_run_action_in_session(i=yaml_filename, session=session_id, secret=secret, action=action, persistent=persistent, overwrite=overwrite, read_only=read_only, arguments=arguments)
     if isinstance(result, dict):
         if result['status'] == 'success':
             return True
@@ -7398,7 +5567,7 @@ def get_question_data(yaml_filename, session_id, secret=None):
         raise DAError("You cannot get question data from the current interview session")
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
-    return server.get_question_data(yaml_filename, session_id, secret)
+    return server_get_question_data(yaml_filename, session_id, secret)
 
 
 def go_back_in_session(yaml_filename, session_id, secret=None):
@@ -7416,7 +5585,7 @@ def go_back_in_session(yaml_filename, session_id, secret=None):
         raise DAError("You cannot go back in the current interview session")
     if secret is None:
         secret = this_thread.current_info.get('secret', None)
-    server.go_back_in_session(yaml_filename, session_id, secret=secret)
+    server_go_back_in_session(yaml_filename, session_id, secret=secret)
 
 
 def turn_to_at_sign(match):
@@ -7487,15 +5656,6 @@ def redact(text):
         if len(current_word) > 0:
             output += '[REDACTION_WORD ' + str(current_word) + ']'
     return output
-
-
-def ensure_definition(*pargs, **kwargs):
-    for val in pargs:
-        if isinstance(val, Undefined):
-            str(val)
-    for val in kwargs.values():
-        if isinstance(val, Undefined):
-            str(val)
 
 
 def verbatim(text):
@@ -7580,7 +5740,7 @@ def re_run_logic():
 
 def intrinsic_name_of(var_name, the_user_dict=None):
     if the_user_dict is None:
-        the_user_dict = get_user_dict()
+        the_user_dict = get_current_user_dict()
     from docassemble.base.util import DAObject  # pylint: disable=import-outside-toplevel
     expression_as_list = [x for x in match_brackets_or_dot.split(var_name) if x != '']
     n = len(expression_as_list)
@@ -7600,7 +5760,7 @@ def intrinsic_name_of(var_name, the_user_dict=None):
 
 def intrinsic_names_of(*pargs, the_user_dict=None):
     if the_user_dict is None:
-        the_user_dict = get_user_dict()
+        the_user_dict = get_current_user_dict()
     output = []
     for parg in pargs:
         if isinstance(parg, str):
@@ -7762,10 +5922,15 @@ class CustomDataType(metaclass=CustomDataTypeRegister):
 
 
 class ServerContext:
-    pass
+    """Class with one attribute, context, which indicates whether the web server or the websockets server is running"""
+    def __init__(self, context):
+        self.context = context
 
-server_context = ServerContext()
-server_context.context = 'web'
+    def set_context(self, context):
+        self.context = context
+
+
+server_context = ServerContext('web')
 
 
 def get_action_stack():

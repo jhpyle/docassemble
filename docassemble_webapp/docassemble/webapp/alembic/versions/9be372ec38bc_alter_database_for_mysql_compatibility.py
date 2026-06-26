@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """alter database for mysql compatibility
 
 Revision ID: 9be372ec38bc

@@ -1,9 +1,6 @@
 import os
-import docassemble.base.config
-if not docassemble.base.config.loaded:
-    docassemble.base.config.load()
+from docassemble.webapp.config import daconfig
 from docassemble.base.error import DAError
-from docassemble.base.config import daconfig
 
 if 'db' not in daconfig:
     daconfig['db'] = {}
@@ -14,6 +11,10 @@ if dbhost is None and dbuser is not None:
     dbhost = 'localhost'
 dbport = daconfig['db'].get('port', None)
 dbprefix = daconfig['db'].get('prefix', 'postgresql+psycopg2://')
+if daconfig.get('variables snapshot db'):
+    json_dbprefix = daconfig['variables snapshot db'].get('prefix', 'postgresql+psycopg2://')
+else:
+    json_dbprefix = dbprefix
 dbname = daconfig['db'].get('name', 'docassemble')
 dbtableprefix = daconfig['db'].get('table prefix', None)
 if not dbtableprefix:

@@ -1,8 +1,12 @@
-from docassemble.webapp.db_object import db, UserMixin
-from docassemble.base.config import dbtableprefix, allowed
+from datetime import datetime
+from typing import Optional
 from flask_login import AnonymousUserMixin
-from sqlalchemy import Index
-
+from sqlalchemy import Integer, String, ForeignKey, DateTime, text, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
+from docassemble_flask_user import UserMixin
+from docassemble.webapp.config import allowed
+from docassemble.webapp.database import dbtableprefix
+from docassemble.webapp.db_base import Base
 
 class AnonymousUserModel(AnonymousUserMixin):
 
@@ -30,32 +34,31 @@ class AnonymousUserModel(AnonymousUserMixin):
         return bool('anonymous' in allowed and task in allowed['anonymous'])
 
 
-class UserModel(db.Model, UserMixin):
+class UserModel(Base, UserMixin):
     __tablename__ = dbtableprefix + 'user'
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    social_id = db.Column(db.String(255), nullable=False, unique=True)
-    nickname = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(255), nullable=True, unique=True, index=True)
-    confirmed_at = db.Column(db.DateTime())
-    active = db.Column('active', db.Boolean(), nullable=False, server_default='0')
-    first_name = db.Column(db.String(255), nullable=False, server_default='')
-    last_name = db.Column(db.String(255), nullable=False, server_default='')
-    country = db.Column(db.String(3))
-    subdivisionfirst = db.Column(db.String(255))
-    subdivisionsecond = db.Column(db.String(255))
-    subdivisionthird = db.Column(db.String(255))
-    organization = db.Column(db.String(255))
-    timezone = db.Column(db.String(64))
-    language = db.Column(db.String(64))
-    user_auth = db.relationship('UserAuthModel', uselist=False, primaryjoin="UserAuthModel.user_id==UserModel.id", back_populates="user")
-    roles = db.relationship('Role', secondary=dbtableprefix + 'user_roles', backref=db.backref(dbtableprefix + 'user', lazy='dynamic'))
-    password = db.Column(db.String(255), nullable=False, server_default='')  # work around a bug
-    otp_secret = db.Column(db.String(255), nullable=True)
-    pypi_username = db.Column(db.String(255), nullable=True)
-    pypi_password = db.Column(db.String(255), nullable=True)
-    modified_at = db.Column(db.DateTime())
-    last_login = db.Column(db.DateTime())
-    # email_is_phone_number = db.Column(db.Boolean(), nullable=True, server_default='0')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    social_id: Mapped[str] = mapped_column(String(255), unique=True)
+    nickname: Mapped[str] = mapped_column(String(255))
+    email: Mapped[Optional[str]] = mapped_column(String(255), unique=True, index=True)
+    confirmed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    active: Mapped[bool] = mapped_column(Boolean, server_default="0")
+    first_name: Mapped[str] = mapped_column(String(255), server_default=text("''"))
+    last_name: Mapped[str] = mapped_column(String(255), server_default=text("''"))
+    country: Mapped[Optional[str]] = mapped_column(String(3))
+    subdivisionfirst: Mapped[Optional[str]] = mapped_column(String(255))
+    subdivisionsecond: Mapped[Optional[str]] = mapped_column(String(255))
+    subdivisionthird: Mapped[Optional[str]] = mapped_column(String(255))
+    organization: Mapped[Optional[str]] = mapped_column(String(255))
+    timezone: Mapped[Optional[str]] = mapped_column(String(64))
+    language: Mapped[Optional[str]] = mapped_column(String(64))
+    user_auth: Mapped[Optional["UserAuthModel"]] = relationship(primaryjoin="UserAuthModel.user_id==UserModel.id", back_populates="user")
+    roles: Mapped[list["Role"]] = relationship(secondary=dbtableprefix + 'user_roles', backref=backref(dbtableprefix + 'user', lazy='dynamic'))
+    password: Mapped[str] = mapped_column(String(255), server_default=text("''"))
+    otp_secret: Mapped[Optional[str]] = mapped_column(String(255))
+    pypi_username: Mapped[Optional[str]] = mapped_column(String(255))
+    pypi_password: Mapped[Optional[str]] = mapped_column(String(255))
+    modified_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    last_login: Mapped[Optional[datetime]] = mapped_column(DateTime)
     limited_api = False
 
     def same_as(self, user_id):
@@ -90,8 +93,8 @@ class UserModel(db.Model, UserMixin):
         if hasattr(self, 'roles'):
             the_roles = self.roles
         else:
-            if hasattr(self, 'user_profile') and hasattr(self.user_profile, 'roles'):
-                the_roles = self.user_profile.roles
+            if hasattr(self, 'user_profile') and hasattr(self.user_profile, 'roles'):  # pylint: disable=no-member
+                the_roles = self.user_profile.roles  # pylint: disable=no-member
             else:
                 the_roles = None
         for role in the_roles:
@@ -100,82 +103,59 @@ class UserModel(db.Model, UserMixin):
         return False
 
 
-class UserAuthModel(db.Model, UserMixin):
+class UserAuthModel(Base, UserMixin):
     __tablename__ = dbtableprefix + 'user_auth'
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
-    password = db.Column(db.String(255), nullable=False, server_default='')
-    reset_password_token = db.Column(db.String(100), nullable=False, server_default='')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "user.id", ondelete="CASCADE"),
+        index=True
+    )
+    password: Mapped[str] = mapped_column(String(255), server_default="''")
+    reset_password_token: Mapped[str] = mapped_column(String(100), server_default="''")
     # active = db.Column(db.Boolean(), nullable=False, server_default='0')
-    user = db.relationship('UserModel', uselist=False, primaryjoin="UserModel.id==UserAuthModel.user_id", back_populates="user_auth")
+    user: Mapped[Optional["UserModel"]] = relationship(primaryjoin="UserModel.id==UserAuthModel.user_id", back_populates="user_auth")
 
 
-class Role(db.Model):
+class Role(Base):
     __tablename__ = dbtableprefix + 'role'
-    id = db.Column(db.Integer(), primary_key=True, unique=True)
-    name = db.Column(db.String(50), unique=True, index=True)
-    description = db.Column(db.String(255))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[Optional[str]] = mapped_column(String(50), unique=True, index=True)
+    description: Mapped[Optional[str]] = mapped_column(String(255))
 
 
-class UserRoles(db.Model):
+class UserRoles(Base):
     __tablename__ = dbtableprefix + 'user_roles'
-    id = db.Column(db.Integer(), primary_key=True, unique=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
-    role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'), index=True)
-
-
-class UserDict(db.Model):
-    __tablename__ = dbtableprefix + "userdict"
-    __table_args__ = (
-        Index(dbtableprefix + 'ix_userdict_key_filename', 'key', 'filename'),
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "user.id", ondelete="CASCADE"),
+        index=True
     )
-    indexno = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.String(255), index=True)
-    key = db.Column(db.String(250), index=True)
-    dictionary = db.Column(db.Text())
-    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
-    modtime = db.Column(db.DateTime())
-
-
-class UserDictKeys(db.Model):
-    __tablename__ = dbtableprefix + "userdictkeys"
-    __table_args__ = (
-        Index(dbtableprefix + 'ix_userdictkeys_key_filename', 'key', 'filename'),
+    role_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "role.id", ondelete="CASCADE"),
+        index=True
     )
-    indexno = db.Column(db.Integer(), primary_key=True)
-    filename = db.Column(db.String(255), index=True)
-    key = db.Column(db.String(250), index=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'), index=True)
-    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'), index=True)
 
 
-class TempUser(db.Model):
+class TempUser(Base):
     __tablename__ = dbtableprefix + 'tempuser'
-    id = db.Column(db.Integer, primary_key=True, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
 
-class ChatLog(db.Model):
-    __tablename__ = dbtableprefix + "chatlog"
-    id = db.Column(db.Integer(), primary_key=True, unique=True)
-    filename = db.Column(db.String(255), index=True)
-    key = db.Column(db.String(250), index=True)
-    message = db.Column(db.Text())
-    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
-    temp_user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
-    owner_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
-    temp_owner_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'tempuser.id', ondelete='CASCADE'))
-    open_to_peer = db.Column(db.Boolean(), nullable=False, server_default='0')
-    encrypted = db.Column(db.Boolean(), nullable=False, server_default='1')
-    modtime = db.Column(db.DateTime())
-
-
-class MyUserInvitation(db.Model):
+class MyUserInvitation(Base):
     __tablename__ = dbtableprefix + 'user_invite'
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    email = db.Column(db.String(255), nullable=False)
-    role_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'role.id', ondelete='CASCADE'))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(255))
+    role_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "role.id", ondelete="CASCADE"),
+    )
     # save the user of the invitee
-    invited_by_user_id = db.Column(db.Integer, db.ForeignKey(dbtableprefix + 'user.id'))
+    invited_by_user_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "user.id", ondelete="CASCADE"),
+    )
     # token used for registration page to identify user registering
-    token = db.Column(db.String(100), nullable=False, server_default='')
+    token: Mapped[str] = mapped_column(String(100), server_default="''")

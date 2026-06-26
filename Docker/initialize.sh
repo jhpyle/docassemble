@@ -1339,8 +1339,10 @@ if [ "${DAWEBSERVER:-nginx}" = "none" ]; then
     ${SUPERVISORCMD} stop nascent &> /dev/null
     NASCENTRUNNING=false;
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-        echo "initialize: Starting websockets" >&2
-        ${SUPERVISORCMD} start websockets
+	if [ "${ENABLEMONITOR:-true}" = "true" ]; then
+            echo "initialize: Starting websockets" >&2
+            ${SUPERVISORCMD} start websockets
+	fi
         echo "initialize: Starting uwsgi" >&2
         ${SUPERVISORCMD} start uwsgi
     fi
@@ -1427,8 +1429,10 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
         fi
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
-        echo "initialize: Starting websockets" >&2
-        ${SUPERVISORCMD} start websockets
+	if [ "${ENABLEMONITOR:-true}" = "true" ]; then
+            echo "initialize: Starting websockets" >&2
+            ${SUPERVISORCMD} start websockets
+	fi
         echo "initialize: Starting uwsgi" >&2
         ${SUPERVISORCMD} start uwsgi
     fi
@@ -1575,7 +1579,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
         a2ensite docassemble-log
     fi
 
-    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+    if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "${ENABLEMONITOR:-true}" = "true" ]; then
         echo "initialize: Starting websockets" >&2
         ${SUPERVISORCMD} start websockets
     fi
@@ -1628,81 +1632,83 @@ if [ "$CRONRUNNING" == "false" ]; then
     ${SUPERVISORCMD} start cron
 fi
 
-if exiwhat 2> /dev/null | grep -q listening; then
-    EXIM4RUNNING=true
-else
-    EXIM4RUNNING=false
-fi
-
-if [ "$EXIM4RUNNING" == "false" ] && [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE = "postgresql" || $DBTYPE = "mysql") ]]; then
-    echo "initialize: Starting exim4" >&2
-    if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
-        if [ -f /usr/share/docassemble/config/exim4-update ] && [ "${DAHOSTNAME}" != "localhost" ]; then
-            sed "s/dc_other_hostnames='\**'/dc_other_hostnames='${DAHOSTNAME}'/" /usr/share/docassemble/config/exim4-update > /tmp/temp-exim4-update
-            if [ ! -f /etc/exim4/update-exim4.conf.conf ] || ! cmp -s /tmp/temp-exim4-update /etc/exim4/update-exim4.conf.conf; then
-                cp /tmp/temp-exim4-update /etc/exim4/update-exim4.conf.conf
-                update-exim4.conf
-            fi
-            rm -f /tmp/temp-exim4-update
-        fi
-        rm -f /etc/cron.daily/exim4-base
-        ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base
-        if [ "${DBTYPE}" = "postgresql" ]; then
-            cp "${DA_ROOT}/config/exim4-router-postgresql" /etc/exim4/dbrouter
-            if [ "${DBHOST:-null}" != "null" ]; then
-                echo -n 'hide pgsql_servers = '${DBHOST} > /etc/exim4/dbinfo
-            else
-                echo -n 'hide pgsql_servers = localhost' > /etc/exim4/dbinfo
-            fi
-            if [ "${DBPORT:-null}" != "null" ]; then
-                echo -n '::'${DBPORT} >> /etc/exim4/dbinfo
-            fi
-            echo '/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} >> /etc/exim4/dbinfo
-        fi
-        if [ "$DBTYPE" = "mysql" ]; then
-            cp "${DA_ROOT}/config/exim4-router-mysql" /etc/exim4/dbrouter
-            if [ "${DBHOST:-null}" != "null" ]; then
-                echo -n 'hide mysql_servers = '${DBHOST} > /etc/exim4/dbinfo
-            else
-                echo -n 'hide mysql_servers = localhost' > /etc/exim4/dbinfo
-            fi
-            if [ "${DBPORT:-null}" != "null" ]; then
-                echo -n '::'${DBPORT} >> /etc/exim4/dbinfo
-            fi
-            echo '/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} >> /etc/exim4/dbinfo
-        fi
-        if [ "${DBTYPE}" = "postgresql" ]; then
-            echo 'DAQUERY = select short from '${DBTABLEPREFIX}"shortener where short='\${quote_pgsql:\$local_part}'" >> /etc/exim4/dbinfo
-        fi
-        if [ "${DBTYPE}" = "mysql" ]; then
-            echo 'DAQUERY = select short from '${DBTABLEPREFIX}"shortener where short='\${quote_mysql:\$local_part}'" >> /etc/exim4/dbinfo
-        fi
-        if [ -f /etc/ssl/docassemble/exim.crt ] && [ -f /etc/ssl/docassemble/exim.key ]; then
-            cp /etc/ssl/docassemble/exim.crt /etc/exim4/exim.crt
-            cp /etc/ssl/docassemble/exim.key /etc/exim4/exim.key
-            chown root:Debian-exim /etc/exim4/exim.crt
-            chown root:Debian-exim /etc/exim4/exim.key
-            chmod 640 /etc/exim4/exim.crt
-            chmod 640 /etc/exim4/exim.key
-            echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/dbinfo
-        elif [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f "/etc/letsencrypt/live/${DAHOSTNAME}/cert.pem" ] && [ -f "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" ]; then
-            cp "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" /etc/exim4/exim.crt
-            cp "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" /etc/exim4/exim.key
-            chown root:Debian-exim /etc/exim4/exim.crt
-            chown root:Debian-exim /etc/exim4/exim.key
-            chmod 640 /etc/exim4/exim.crt
-            chmod 640 /etc/exim4/exim.key
-            echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/dbinfo
-        else
-            echo 'MAIN_TLS_ENABLE = no' >> /etc/exim4/dbinfo
-        fi
-        chmod og-rwx /etc/exim4/dbinfo
+if [ "${ENABLEEMAILSERVER:-true}" == "true" ]; then
+    if exiwhat 2> /dev/null | grep -q listening; then
+	EXIM4RUNNING=true
+    else
+	EXIM4RUNNING=false
     fi
-    ${SUPERVISORCMD} start exim4
-elif [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
-    echo "initialize: Disabling exim4 cron" >&2
-    rm -f /etc/cron.daily/exim4-base
-    ln -s /usr/share/docassemble/cron/donothing /etc/cron.daily/exim4-base
+
+    if [ "$EXIM4RUNNING" == "false" ] && [[ $CONTAINERROLE =~ .*:(all|mail):.* && ($DBTYPE = "postgresql" || $DBTYPE = "mysql") ]]; then
+	echo "initialize: Starting exim4" >&2
+	if [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
+	    if [ -f /usr/share/docassemble/config/exim4-update ] && [ "${DAHOSTNAME}" != "localhost" ]; then
+		sed "s/dc_other_hostnames='\**'/dc_other_hostnames='${DAHOSTNAME}'/" /usr/share/docassemble/config/exim4-update > /tmp/temp-exim4-update
+		if [ ! -f /etc/exim4/update-exim4.conf.conf ] || ! cmp -s /tmp/temp-exim4-update /etc/exim4/update-exim4.conf.conf; then
+		    cp /tmp/temp-exim4-update /etc/exim4/update-exim4.conf.conf
+		    update-exim4.conf
+		fi
+		rm -f /tmp/temp-exim4-update
+	    fi
+	    rm -f /etc/cron.daily/exim4-base
+	    ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base
+	    if [ "${DBTYPE}" = "postgresql" ]; then
+		cp "${DA_ROOT}/config/exim4-router-postgresql" /etc/exim4/dbrouter
+		if [ "${DBHOST:-null}" != "null" ]; then
+		    echo -n 'hide pgsql_servers = '${DBHOST} > /etc/exim4/dbinfo
+		else
+		    echo -n 'hide pgsql_servers = localhost' > /etc/exim4/dbinfo
+		fi
+		if [ "${DBPORT:-null}" != "null" ]; then
+		    echo -n '::'${DBPORT} >> /etc/exim4/dbinfo
+		fi
+		echo '/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} >> /etc/exim4/dbinfo
+	    fi
+	    if [ "$DBTYPE" = "mysql" ]; then
+		cp "${DA_ROOT}/config/exim4-router-mysql" /etc/exim4/dbrouter
+		if [ "${DBHOST:-null}" != "null" ]; then
+		    echo -n 'hide mysql_servers = '${DBHOST} > /etc/exim4/dbinfo
+		else
+		    echo -n 'hide mysql_servers = localhost' > /etc/exim4/dbinfo
+		fi
+		if [ "${DBPORT:-null}" != "null" ]; then
+		    echo -n '::'${DBPORT} >> /etc/exim4/dbinfo
+		fi
+		echo '/'${DBNAME}'/'${DBUSER}'/'${DBPASSWORD} >> /etc/exim4/dbinfo
+	    fi
+	    if [ "${DBTYPE}" = "postgresql" ]; then
+		echo 'DAQUERY = select short from '${DBTABLEPREFIX}"shortener where short='\${quote_pgsql:\$local_part}'" >> /etc/exim4/dbinfo
+	    fi
+	    if [ "${DBTYPE}" = "mysql" ]; then
+		echo 'DAQUERY = select short from '${DBTABLEPREFIX}"shortener where short='\${quote_mysql:\$local_part}'" >> /etc/exim4/dbinfo
+	    fi
+	    if [ -f /etc/ssl/docassemble/exim.crt ] && [ -f /etc/ssl/docassemble/exim.key ]; then
+		cp /etc/ssl/docassemble/exim.crt /etc/exim4/exim.crt
+		cp /etc/ssl/docassemble/exim.key /etc/exim4/exim.key
+		chown root:Debian-exim /etc/exim4/exim.crt
+		chown root:Debian-exim /etc/exim4/exim.key
+		chmod 640 /etc/exim4/exim.crt
+		chmod 640 /etc/exim4/exim.key
+		echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/dbinfo
+	    elif [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "${USELETSENCRYPT:-false}" == "true" ] && [ -f "/etc/letsencrypt/live/${DAHOSTNAME}/cert.pem" ] && [ -f "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" ]; then
+		cp "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" /etc/exim4/exim.crt
+		cp "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" /etc/exim4/exim.key
+		chown root:Debian-exim /etc/exim4/exim.crt
+		chown root:Debian-exim /etc/exim4/exim.key
+		chmod 640 /etc/exim4/exim.crt
+		chmod 640 /etc/exim4/exim.key
+		echo 'MAIN_TLS_ENABLE = yes' >> /etc/exim4/dbinfo
+	    else
+		echo 'MAIN_TLS_ENABLE = no' >> /etc/exim4/dbinfo
+	    fi
+	    chmod og-rwx /etc/exim4/dbinfo
+	fi
+	${SUPERVISORCMD} start exim4
+    elif [ "${DAREADONLYFILESYSTEM:-false}" == "false" ]; then
+	echo "initialize: Disabling exim4 cron" >&2
+	rm -f /etc/cron.daily/exim4-base
+	ln -s /usr/share/docassemble/cron/donothing /etc/cron.daily/exim4-base
+    fi
 fi
 
 if [[ $CONTAINERROLE =~ .*:(log):.* ]] || [ "$OTHERLOGSERVER" == "true" ]; then

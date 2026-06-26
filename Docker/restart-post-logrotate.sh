@@ -39,7 +39,7 @@ if [[ $CONTAINERROLE =~ .*:(all|celery):.* ]]; then
     ${SUPERVISORCMD} start celerysingle > /dev/null || exit 1
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "${ENABLEMONITOR:-true}" = "true" ]; then
     ${SUPERVISORCMD} stop websockets > /dev/null || exit 1
     sleep 1
     ${SUPERVISORCMD} start websockets > /dev/null || exit 1

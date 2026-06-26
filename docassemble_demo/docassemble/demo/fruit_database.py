@@ -24,7 +24,7 @@ def get_fruit_names():
 
 def fruit_info(fruit):
     if fruit not in fruit_info_by_name:
-        raise Exception("Reference to invalid fruit " + fruit)
+        raise ValueError("Reference to invalid fruit " + fruit)
     return fruit_info_by_name[fruit]
 
 read_data('docassemble.demo:data/sources/fruit_data.xlsx')

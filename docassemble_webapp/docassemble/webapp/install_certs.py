@@ -1,3 +1,4 @@
+# pylint: disable=wrong-import-position
 import sys
 import os
 import stat
@@ -8,10 +9,16 @@ from pwd import getpwnam
 if __name__ == "__main__":
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig, S3_ENABLED, s3_config, AZURE_ENABLED, azure_config
-from docassemble.base.logger import logmessage
 import docassemble.base.amazon
 import docassemble.base.microsoft
+from docassemble.webapp.config import (
+    daconfig,
+    S3_ENABLED,
+    s3_config,
+    AZURE_ENABLED,
+    azure_config,
+)
+from docassemble.webapp.utils.logger import logmessage
 
 
 def main():
@@ -21,26 +28,26 @@ def main():
     if S3_ENABLED:
         my_config = copy.deepcopy(s3_config)
         if certs_location is None:
-            cloud = docassemble.base.amazon.s3object(my_config)
+            cloud = docassemble.base.amazon.S3Object(my_config)
             prefix = 'certs/'
         else:
             m = re.search(r'^s3://([^/]+)/(.*)', certs_location)
             if m:
                 prefix = m.group(2)
                 my_config['bucket'] = m.group(1)
-                cloud = docassemble.base.amazon.s3object(my_config)
+                cloud = docassemble.base.amazon.S3Object(my_config)
     elif AZURE_ENABLED:
         my_config = copy.deepcopy(azure_config)
         if certs_location is None:
             prefix = 'certs/'
-            cloud = docassemble.base.microsoft.azureobject(my_config)
+            cloud = docassemble.base.microsoft.AzureObject(my_config)
         else:
             m = re.search(r'^blob://([^/]+)/([^/]+)/(.*)', certs_location)
             if m:
                 my_config['account name'] = m.group(1)
                 my_config['container'] = m.group(2)
                 prefix = m.group(3)
-                cloud = docassemble.base.microsoft.azureobject(my_config)
+                cloud = docassemble.base.microsoft.AzureObject(my_config)
     if cloud is not None and prefix is not None:
         success = False
         if not re.search(r'/$', prefix):

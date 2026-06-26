@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """add a column for the VoiceRSS voice
 
 Revision ID: fd1547c94c46

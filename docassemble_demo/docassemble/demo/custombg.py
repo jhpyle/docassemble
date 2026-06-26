@@ -1,13 +1,14 @@
 # do not pre-load
-from docassemble.webapp.worker_common import workerapp, bg_context, worker_controller as wc
+from docassemble.webapp.tasks.app import celery_app
+from docassemble.webapp.tasks.context import bg_context
+from docassemble.base.util import comma_and_list
 
-
-@workerapp.task
+@celery_app.task
 def custom_add_four(operand):
     return operand + 4
 
 
-@workerapp.task
+@celery_app.task
 def custom_comma_and_list(*pargs):
     with bg_context():
-        return wc.util.comma_and_list(*pargs)
+        return comma_and_list(*pargs)

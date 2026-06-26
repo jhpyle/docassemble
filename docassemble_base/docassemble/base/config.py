@@ -1,3 +1,4 @@
+# mypy: disable-error-code="attr-defined"
 import os
 import re
 import sys
@@ -12,8 +13,10 @@ import yaml
 import httplib2
 from docassemble.base.generate_key import random_string
 
+re._MAXCACHE = 10000  # pylint: disable=protected-access
+re._MAXCACHE2 = 5000  # pylint: disable=protected-access
 START_TIME = time.time()
-dbtableprefix = None
+dbtableprefix = None  # pylint: disable=invalid-name
 daconfig = {}
 s3_config = {}
 S3_ENABLED = False
@@ -21,10 +24,10 @@ gc_config = {}
 GC_ENABLED = False
 azure_config = {}
 AZURE_ENABLED = False
-hostname = None
-loaded = False
-in_celery = False
-in_cron = False
+hostname = None  # pylint: disable=invalid-name
+loaded = False  # pylint: disable=invalid-name
+in_celery = False  # pylint: disable=invalid-name
+in_cron = False  # pylint: disable=invalid-name
 errors = []
 env_messages = []
 allowed = {}
@@ -274,7 +277,7 @@ def load(**kwargs):
         filename = kwargs.get('filename', os.getenv('DA_CONFIG_FILE', '/usr/share/docassemble/config/config.yml'))
     if 'in_celery' in kwargs and kwargs['in_celery']:
         in_celery = True
-    if 'in_cron' in kwargs and kwargs['in_cron']:
+    if ('in_cron' in kwargs and kwargs['in_cron']) or env_translate('IN_CRON'):
         in_cron = True
     if not os.path.isfile(filename):
         if not os.access(os.path.dirname(filename), os.W_OK):
@@ -515,10 +518,10 @@ def load(**kwargs):
         hostname = os.getenv('SERVERHOSTNAME', socket.gethostname())
     if S3_ENABLED:
         import docassemble.base.amazon  # pylint: disable=import-outside-toplevel
-        cloud = docassemble.base.amazon.s3object(s3_config)
+        cloud = docassemble.base.amazon.S3Object(s3_config)
     elif AZURE_ENABLED:
         import docassemble.base.microsoft  # pylint: disable=import-outside-toplevel
-        cloud = docassemble.base.microsoft.azureobject(azure_config)
+        cloud = docassemble.base.microsoft.AzureObject(azure_config)
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
             daconfig = cloud.load_with_secrets(daconfig)
     else:
@@ -975,6 +978,12 @@ def load(**kwargs):
             if new_filename:
                 new_delete_days[new_filename] = days
         daconfig['interview delete days by filename'] = new_delete_days
+    if 'celery result retention days' in daconfig:
+        if not isinstance(daconfig['celery result retention days'], (int, float)) and daconfig['celery result retention days'] >= 0:
+            config_error('celery result retention days must be an int or a float greater than or equal to zero')
+            daconfig['celery result retention days'] = 1
+    else:
+        daconfig['celery result retention days'] = 1
     for key in ('default interview', 'session list interview', 'dispatch interview', 'auto resume interview'):
         if key in daconfig:
             if isinstance(daconfig[key], str):

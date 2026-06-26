@@ -26,10 +26,10 @@ class Conversation(DAObject):
         if self.stage == 0:
             self.bg_action = background_action(self.attr_name('bg_ask'), prompt=prompt)
             self.stage = 1
-            self.wait
+            self.wait  # pylint: disable=pointless-statement
         if self.stage == 1:
             if not self.bg_action.ready():
-                self.wait
+                self.wait  # pylint: disable=pointless-statement
             response = self.bg_action.get()
             self.conversation.append({"role": "user", "content": prompt})
             self.conversation.append({"role": "assistant", "content": response})

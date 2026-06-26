@@ -29,7 +29,7 @@
 
 {%- endif %}
 {%- if show_debug and yaml_filename %}
-<p><a target="_blank" href="{{ url_for('get_variables', i=yaml_filename) }}">{{ word('Show variables and values') }}</a></p>
+<p><a target="_blank" href="{{ url_for('develop.get_variables', i=yaml_filename) }}">{{ word('Show variables and values') }}</a></p>
 {%- endif %}
 
 {%- if show_debug and logtext != 'None' %}

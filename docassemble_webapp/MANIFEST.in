@@ -2,7 +2,18 @@ include README.md
 graft docassemble/webapp/data
 graft docassemble/webapp/alembic
 include docassemble/webapp/alembic.ini
+graft docassemble/webapp/admin/templates
+graft docassemble/webapp/api/templates
+graft docassemble/webapp/auth/templates
+graft docassemble/webapp/develop/templates
+graft docassemble/webapp/logs/templates
+graft docassemble/webapp/main/templates
+graft docassemble/webapp/ml/templates
+graft docassemble/webapp/monitor/templates
+graft docassemble/webapp/packages/templates
+graft docassemble/webapp/phonelogin/templates
 graft docassemble/webapp/templates
+graft docassemble/webapp/users/templates
 graft docassemble/webapp/static
 recursive-exclude * *.egg-info
 recursive-exclude .git *

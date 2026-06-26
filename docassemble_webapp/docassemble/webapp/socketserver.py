@@ -1,47 +1,72 @@
+# ruff: noqa: E402
+# pylint: disable=wrong-import-position, c-extension-no-member
 from contextlib import contextmanager
 import datetime
 import json
 import random
+from typing import Any
 import re
 import sys
 import time
-# import trio  # noqa: E402,F401 # pylint: disable=unused-import
 from gevent import monkey
 monkey.patch_all()
-import docassemble.base.config  # noqa: E402
+from flask import session, request, Flask
+from flask_socketio import SocketIO, join_room
+import netifaces as ni  # pylint: disable=import-error
+import redis
+from simplekv.memory.redisstore import RedisStore
+from sqlalchemy import select, create_engine
+from sqlalchemy.orm import joinedload, sessionmaker
+from docassemblekvsession import KVSessionExtension
+import docassemble.base.config
 docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig  # noqa: E402
-import docassemble.base.functions  # noqa: E402
-import docassemble.base.util  # noqa: E402
-docassemble.base.functions.server_context.context = 'websockets'
-from docassemble.base.functions import get_default_timezone, word  # noqa: E402,F401 # pylint: disable=unused-import
-from docassemble.base.logger import logmessage  # noqa: E402
-import docassemble.webapp.daredis  # noqa: E402
-from docassemble.webapp.app_socket import app, db, socketio  # noqa: E402
-from docassemble.webapp.backend import nice_utc_date, fetch_user_dict, get_chat_log, encrypt_phrase, pack_phrase, fix_pickle_obj, get_session  # noqa: E402
-from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset  # noqa: E402
-from docassemble.webapp.users.models import UserModel, ChatLog  # noqa: E402
-from docassemblekvsession import KVSessionExtension  # noqa: E402
-from flask import session, request  # noqa: E402
-from flask_socketio import join_room  # noqa: E402
-from simplekv.memory.redisstore import RedisStore  # noqa: E402
-from sqlalchemy import select  # noqa: E402
-from sqlalchemy.orm import sessionmaker, joinedload  # noqa: E402
-import netifaces as ni  # noqa: E402 # pylint: disable=import-error
-import redis  # noqa: E402
+from docassemble.base.functions import server_context
+from docassemble.base.language.words import word
+from docassemble.base.logger import logmessage
+from docassemble.base.thread_context import this_thread
+from docassemble.webapp.config import daconfig
+from docassemble.webapp.daredis import r as rr, redis_host, redis_port, redis_offset, r_store
+from docassemble.webapp.database import alchemy_connection_string, connect_args
+from docassemble.webapp.interview.helpers import fetch_user_dict
+# from docassemble.webapp.lock import obtain_lock, release_lock
+from docassemble.webapp.monitor.hooks import get_chat_log
+from docassemble.webapp.monitor.models import ChatLog
+from docassemble.webapp.users.models import UserModel
+from docassemble.webapp.utils.fixpickle import fix_pickle_obj
+from docassemble.webapp.utils.encryption import encrypt_phrase, pack_phrase
+from docassemble.webapp.utils.helpers import decode_dict, nice_utc_date, get_session
 
-store = RedisStore(docassemble.webapp.daredis.r_store)
-kv_session = KVSessionExtension(store, app)
-threads = {}
-secrets = {}
-Session = sessionmaker(bind=db)
+if 'cross site domains' in daconfig and isinstance(daconfig['cross site domains'], list) and len(daconfig['cross site domains']) > 0:
+    origins = daconfig['cross site domains']
+else:
+    origins = [daconfig.get('url root', '*')]
+
+alchemy_connect_string = alchemy_connection_string()
+if alchemy_connect_string.startswith('postgresql'):
+    engine = create_engine(alchemy_connect_string, connect_args=connect_args(), pool_pre_ping=True)
+else:
+    engine = create_engine(alchemy_connect_string, pool_pre_ping=True)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # pylint: disable=invalid-name
+
+socketio = SocketIO()
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87')
+socketio.init_app(app, async_mode='gevent', verify=False, logger=True, engineio_logger=True, cors_allowed_origins=origins)
+server_context.set_context('websockets')
+KVSessionExtension().init_app(app, session_kvstore=RedisStore(r_store))
+
+
+threads: dict[str, Any] = {}
+secrets: dict[str, Any] = {}
 
 
 @contextmanager
 def session_scope():
     """Provide a transactional scope around a series of operations."""
-    dbsession = Session()
-    db.session = dbsession
+    dbsession = SessionLocal()
     try:
         yield dbsession
         dbsession.commit()
@@ -52,39 +77,13 @@ def session_scope():
         dbsession.close()
 
 
-def obtain_lock(user_code, filename):
-    key = 'da:lock:' + user_code + ':' + filename
-    found = False
-    count = 4
-    while count > 0:
-        record = rr.get(key)
-        if record:
-            logmessage("obtain_lock: waiting for " + key)
-            time.sleep(1.0)
-        else:
-            found = False
-            break
-        found = True
-        count -= 1
-    if found:
-        logmessage("Request for " + key + " deadlocked")
-        release_lock(user_code, filename)
-    pipe = rr.pipeline()
-    pipe.set(key, 1)
-    pipe.expire(key, 4)
-    pipe.execute()
-
-
-def release_lock(user_code, filename):
-    key = 'da:lock:' + user_code + ':' + filename
-    rr.delete(key)
-
-# @app.teardown_appcontext
-# def close_db(error):
-#     # logmessage("Teardown of app context")
-#     if hasattr(db, 'engine'):
-#         # logmessage("Tearing down")
-#         db.engine.dispose()
+@contextmanager
+def get_dbsession():
+    dbsession = SessionLocal()
+    try:
+        yield dbsession
+    finally:
+        dbsession.close()
 
 
 def background_thread(sid=None, user_id=None, temp_user_id=None):
@@ -244,7 +243,7 @@ def chat_message(data):
         user_id = int(user_id)
     if temp_user_id is not None:
         temp_user_id = int(temp_user_id)
-    with session_scope() as dbsession:
+    with get_dbsession() as dbsession:
         user_dict = get_dict(yaml_filename)
         chat_mode = user_dict['_internal']['livehelp']['mode']
         open_to_peer = bool(chat_mode in ['peer', 'peerhelp'])
@@ -412,14 +411,14 @@ def get_dict(yaml_filename):
         logmessage('Attempt to get dictionary where session not defined')
         return None
     # obtain_lock(session_id, yaml_filename)
-    docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
+    this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
     except BaseException as err:
         # release_lock(session_id, yaml_filename)
         logmessage('get_dict: attempt to get dictionary failed: ' + str(err))
         return None
-    docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
+    this_thread.current_info['encrypted'] = is_encrypted
     # release_lock(session_id, yaml_filename)
     return user_dict
 
@@ -437,14 +436,14 @@ def get_dict_encrypt(yaml_filename):
         logmessage('Attempt to get dictionary where session not defined')
         return None, None
     # obtain_lock(session_id, yaml_filename)
-    docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
+    this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     try:
         steps, user_dict, is_encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
     except BaseException as err:
         # release_lock(session_id, yaml_filename)
         logmessage('get_dict_encrypt: attempt to get dictionary failed: ' + str(err))
         return None, None
-    docassemble.base.functions.this_thread.current_info['encrypted'] = is_encrypted
+    this_thread.current_info['encrypted'] = is_encrypted
     # release_lock(session_id, yaml_filename)
     return user_dict, is_encrypted
 
@@ -617,13 +616,6 @@ def monitor_unblock(data):
     socketio.emit('unblock', {'key': key}, namespace='/monitor', room=request.sid)
 
 
-def decode_dict(the_dict):
-    out_dict = {}
-    for k, v in the_dict.items():
-        out_dict[k.decode()] = v.decode()
-    return out_dict
-
-
 @socketio.on('updatemonitor', namespace='/monitor')
 def update_monitor(message):
     if 'monitor' not in session:
@@ -675,7 +667,7 @@ def update_monitor(message):
             times = 0
             while times < 1000:
                 times += 1
-                code = "%04d" % random.randint(1000, 9999)
+                code = f"{random.randint(1000, 9999):04d}"
                 if code in codes_in_use:
                     continue
                 the_code = code
@@ -808,7 +800,7 @@ def monitor_chat_message(data):
     if secret is not None:
         secret = str(secret)
     # obtain_lock(session_id, yaml_filename)
-    docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
+    this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
     with session_scope() as dbsession:
         try:
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
@@ -817,7 +809,7 @@ def monitor_chat_message(data):
             logmessage("monitor_chat_message: could not get dictionary: " + str(err))
             return
         # release_lock(session_id, yaml_filename)
-        docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
+        this_thread.current_info['encrypted'] = encrypted
         nowtime = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         if encrypted:
             message = encrypt_phrase(data['data'], secret)
@@ -877,14 +869,14 @@ def monitor_chat_log(data):
         if secret is not None:
             secret = str(secret)
         # obtain_lock(session_id, yaml_filename)
-        docassemble.base.functions.this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
+        this_thread.current_info = get_current_info(yaml_filename, session_id, secret)
         try:
             steps, user_dict, encrypted = fetch_user_dict(session_id, yaml_filename, secret=secret)  # pylint: disable=unused-variable
         except BaseException as err:
             # release_lock(session_id, yaml_filename)
             logmessage("monitor_chat_log: could not get dictionary: " + str(err))
             return
-        docassemble.base.functions.this_thread.current_info['encrypted'] = encrypted
+        this_thread.current_info['encrypted'] = encrypted
         # release_lock(session_id, yaml_filename)
         chat_mode = user_dict['_internal']['livehelp']['mode']
         m = re.match('t([0-9]+)', chat_user_id)

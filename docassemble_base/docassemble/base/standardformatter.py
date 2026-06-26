@@ -7,14 +7,32 @@ import datetime
 import locale
 from io import StringIO
 from html.parser import HTMLParser
-from docassemble.base.functions import word, get_currency_symbol, comma_and_list, server, custom_types, get_locale
+from docassemble.base.functions import (
+    get_currency_symbol,
+    comma_and_list,
+    custom_types,
+    get_locale,
+)
 from docassemble.base.util import format_date, format_datetime, format_time
-# from docassemble.base.generate_key import random_string
-from docassemble.base.filter import markdown_to_html, get_audio_urls, get_video_urls, audio_control, video_control, noquote, to_text, my_escape, process_target, get_icon_html
+from docassemble.base.filter.html import (
+    markdown_to_html,
+    get_audio_urls,
+    get_video_urls,
+    audio_control,
+    video_control,
+    noquote,
+    to_text,
+    my_escape,
+    process_target,
+    get_icon_html,
+)
 from docassemble.base.parse import Question
 from docassemble.base.logger import logmessage
 from docassemble.base.config import daconfig
 from docassemble.base.error import DAException
+from .language.words import word
+from .hooks import url_finder, file_finder, generate_csrf
+
 equals_byte = bytes('=', 'utf-8')
 
 NoneType = type(None)
@@ -106,7 +124,7 @@ def process_help(help_section, status, full_page=True):
 
 def tracker_tag(status):
     output = ''
-    output += '                <input type="hidden" name="csrf_token" value=' + json.dumps(server.generate_csrf()) + '/>\n'
+    output += '                <input type="hidden" name="csrf_token" value=' + json.dumps(generate_csrf()) + '/>\n'
     # restore this, maybe
     # if len(status.next_action):
     #    output += '                <input type="hidden" name="_next_action" value=' + myb64doublequote(json.dumps(status.next_action)) + '/>\n'
@@ -150,7 +168,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
             return icon if icon else ""
         if the_image.attribution is not None:
             status.attributions.add(the_image.attribution)
-        url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+        url = url_finder(str(the_image.package) + ':' + str(the_image.filename))
     else:
         is_decoration = False
         url = name['value']
@@ -158,7 +176,7 @@ def icon_html(status, name, width_value=1.0, width_units='em'):
         raise DAException("Could not find filename " + str(the_image.filename) + " for image " + str(name) + " in package " + str(the_image.package))
     sizing = 'width:' + str(width_value) + str(width_units) + ';'
     if is_decoration:
-        filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+        filename = file_finder(str(the_image.package) + ':' + str(the_image.filename))
         if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename and 'height' in filename:
             if filename['width'] and filename['height']:
                 sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
@@ -246,10 +264,10 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
     qoutput = ''
     if status.question.question_type == 'signature':
         qoutput += word('Sign Your Name') + "\n"
-    # logmessage("The question is " + status.questionText)
-    qoutput += to_text(markdown_to_html(status.questionText, trim=False, status=status, strip_newlines=True), terms, links)
-    if status.subquestionText:
-        qoutput += "\n" + to_text(markdown_to_html(status.subquestionText, status=status), terms, links)
+    # logmessage("The question is " + status.question_text)
+    qoutput += to_text(markdown_to_html(status.question_text, trim=False, status=status, strip_newlines=True), terms, links)
+    if status.subquestion_text:
+        qoutput += "\n" + to_text(markdown_to_html(status.subquestion_text, status=status), terms, links)
         # logmessage("output is: " + repr(qoutput))
     qoutput += "XXXXMESSAGE_AREAXXXX"
     if len(status.question.fields) > 0:
@@ -475,14 +493,14 @@ def as_sms(status, the_user_dict, links=None, menu_items=None):
         for (href, label) in links_orig:
             if re.search(r'action=', href):
                 links.append((href, label))
-    if len(status.helpText) > 0 or len(terms) > 0 or len(menu_items) > 0:
+    if len(status.help_text) > 0 or len(terms) > 0 or len(menu_items) > 0:
         houtput = ''
-        for help_section in status.helpText:
+        for help_section in status.help_text:
             if houtput != '':
                 houtput += "\n"
             if help_section['heading'] is not None:
                 houtput += '== ' + to_text(markdown_to_html(help_section['heading'], trim=False, status=status, strip_newlines=True), terms, links) + ' =='
-            elif len(status.helpText) > 1:
+            elif len(status.help_text) > 1:
                 houtput += '== ' + word('Help with this question') + ' =='
             houtput += "\n" + to_text(markdown_to_html(help_section['content'], trim=False, status=status, strip_newlines=True), terms, links)
         if len(terms) > 0:
@@ -786,7 +804,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     varnames = {}
     onchange = []
     autocomplete_info = []
-    showUnderText = 'underText' in status.extras and len(status.attachments) == 0
+    show_under_text = 'underText' in status.extras and len(status.attachments) == 0
     if status.using_navigation == 'vertical':
         grid_class = daconfig['grid classes']['vertical navigation']['body']
     else:
@@ -804,8 +822,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         status.extra_scripts.append({"type": "custom", "script": strip_script_tags(status.extras['script'])})
     if 'css' in status.extras and status.extras['css'] is not None:
         status.extra_css.append(status.extras['css'])
-    if status.continueLabel:
-        continue_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False, status=status)
+    if status.continue_label:
+        continue_label = markdown_to_html(status.continue_label, trim=True, do_terms=False, status=status)
     else:
         continue_label = word('Continue')
     if status.extras.get('hide_continue_button', False):
@@ -828,9 +846,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         back_button += '</button>'
     else:
         back_button = ''
-    if status.question.interview.question_help_button and len(status.helpText):
-        if status.helpText[0]['label']:
-            help_label = markdown_to_html(status.helpText[0]['label'], trim=True, do_terms=False, status=status)
+    if status.question.interview.question_help_button and len(status.help_text):
+        if status.help_text[0]['label']:
+            help_label = markdown_to_html(status.help_text[0]['label'], trim=True, do_terms=False, status=status)
         else:
             help_label = status.question.help()
         help_button = '\n                  <button type="button" class="btn ' + BUTTON_STYLE + (status.extras.get('help button color', None) or BUTTON_COLOR_QUESTION_HELP) + ' ' + BUTTON_CLASS + '  danonsubmit" data-bs-toggle="collapse" data-bs-target="#daquestionhelp" aria-expanded="false" aria-controls="daquestionhelp">' + help_label + '</button>'
@@ -838,7 +856,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             help_button_area = '<div class="d-none d-sm-block da-d-sm-block"><div class="collapse daquestionhelp" id="daquestionhelp">'
         else:
             help_button_area = '<div class="collapse daquestionhelp" id="daquestionhelp">'
-        for help_section in status.helpText:
+        for help_section in status.help_text:
             help_button_area += process_help(help_section, status, full_page=False)
         if status.question.question_type == "signature":
             help_button_area += '</div></div>'
@@ -902,11 +920,11 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             if 'image' in decoration:
                 the_image = status.question.interview.images.get(decoration['image'], None)
                 if the_image is not None:
-                    url = server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+                    url = url_finder(str(the_image.package) + ':' + str(the_image.filename))
                     width_value = DECORATION_SIZE
                     width_units = DECORATION_UNITS
                     sizing = 'width:' + str(width_value) + str(width_units) + ';'
-                    filename = server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+                    filename = file_finder(str(the_image.package) + ':' + str(the_image.filename))
                     if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename:
                         if filename['width'] and filename['height']:
                             sizing += 'height:' + str(width_value * (filename['height']/filename['width'])) + str(width_units) + ';'
@@ -950,22 +968,22 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         # else:
         back_clear_button = '<a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + BUTTON_COLOR_CLEAR + ' dasignav-left dasignavbutton dasigclear">' + word('Clear') + '</a>'
         output += '            <div class="dasigpage" id="dasigpage">\n              <div data-bs-theme="' + theme + '">\n                <div class="dasigshowsmallblock dasigheader d-block d-sm-none da-d-sm-none ' + inverse + '" id="dasigheader" role="banner">\n                  <div class="dasiginnerheader">\n                    ' + back_clear_button + '\n                    <a href="#" role="button" class="btn btn-sm ' + BUTTON_STYLE + continue_button_color + ' dasignav-right dasignavbutton dasigsave">' + continue_label + '</a>\n                    <div id="dasigtitle" class="dasigtitle">'
-        if status.questionText:
-            output += markdown_to_html(status.questionText, trim=True, status=status)
+        if status.question_text:
+            output += markdown_to_html(status.question_text, trim=True, status=status)
         else:
             output += word('Sign Your Name')
         output += '</div>\n                  </div>\n                </div>\n              </div>\n              <div class="dasigtoppart" id="dasigtoppart">\n                <div id="daerrormess" class="dasigerrormessage dasignotshowing">' + word("You must sign your name to continue.") + '</div>\n'
         if status.pre:
             output += '                <div class="d-none d-sm-block da-d-sm-block">' + markdown_to_html(status.pre, trim=False, status=status) + '</div>\n'
-        if status.questionText:
-            output += '                <div class="da-page-header d-none d-sm-block da-d-sm-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.question_text:
+            output += '                <div class="da-page-header d-none d-sm-block da-d-sm-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         output += '              </div>'
-        if status.subquestionText:
-            output += '                <div id="dasigmidpart" class="dasigmidpart da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        if status.subquestion_text:
+            output += '                <div id="dasigmidpart" class="dasigmidpart da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         else:
             output += '\n              <div id="dasigmidpart" class="dasigmidpart"></div>'
         output += '\n              <div id="dasigcontent"' + (' aria-required="true"' if status.extras['required'][0] else '') + '></div>\n              <div class="dasigbottompart" id="dasigbottompart">\n                '
-        if showUnderText:
+        if show_under_text:
             output += '                <div class="d-none d-sm-block da-d-sm-block">' + markdown_to_html(status.extras['underText'], trim=False, status=status) + '</div>\n                <div class="d-block d-sm-none da-d-sm-none">' + markdown_to_html(status.extras['underText'], trim=True, status=status) + '</div>'
         output += "\n              </div>"
         if status.submit:
@@ -993,9 +1011,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformyesno">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -1008,7 +1026,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += '\n                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -1021,9 +1039,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformnoyes">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -1035,7 +1053,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += help_button
         output += '\n                </fieldset>\n'
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -1138,9 +1156,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         fieldlist.append('                <div class="row da-review da-review-help"><div class="col">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformreview" method="POST">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         # fieldlist.append('                <input type="hidden" name="_event" value=' + myb64doublequote(json.dumps(list(status.question.fields_used))) + ' />\n')
@@ -1150,8 +1168,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += "".join(fieldlist)
             if tabular:
                 output += '</tbody></table>\n'
-        if status.continueLabel:
-            resume_button_label = markdown_to_html(status.continueLabel, trim=True, do_terms=False, status=status)
+        if status.continue_label:
+            resume_button_label = markdown_to_html(status.continue_label, trim=True, do_terms=False, status=status)
         else:
             resume_button_label = word('Resume')
         output += status.submit
@@ -1165,7 +1183,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '\n                <button class="btn ' + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + resume_button_label + '</button>'
             output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -1178,8 +1196,8 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         hiddens = {}
         ml_info = {}
         note_fields = {}
-        if status.subquestionText:
-            sub_question_text = markdown_to_html(status.subquestionText, status=status, embedder=embed_input)
+        if status.subquestion_text:
+            subquestion_text = markdown_to_html(status.subquestion_text, status=status, embedder=embed_input)
         if hasattr(status.question, 'fields_saveas'):
             datatypes[safeid(status.question.fields_saveas)] = "boolean"
         field_list = status.get_field_list()
@@ -1794,7 +1812,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     if hasattr(field, 'saveas'):
                         checkboxes[field.saveas] = 'None'
             if hasattr(field, 'inputtype') and field.inputtype == 'hidden':
-                fieldlist.append('                ' + input_for(status, field) + '\n')
+                fieldlist.append('                <div class="dahiddenfield' + class_def + '">' + input_for(status, field) + '</div>\n')  # PPP
                 continue
             if hasattr(field, 'saveas') and field.saveas in status.embedded:
                 continue
@@ -1854,9 +1872,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 fieldlist.append('                </div>\n')
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformfields" method="POST"' + enctype_string + autofill + '>\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + sub_question_text
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + subquestion_text
             output += '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
@@ -1894,7 +1912,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         if status.extras.get('list_collect_is_final', False):
@@ -1912,9 +1930,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         datatypes[status.question.fields[0].saveas] = "boolean"
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformcontinue">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -1924,7 +1942,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -1943,9 +1961,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformmultiplechoice">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         validation_rules['errorElement'] = "span"
@@ -2213,7 +2231,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += datatype_tag(datatypes)
@@ -2223,9 +2241,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += '            </form>\n'
     elif status.question.question_type == 'deadend':
         output += status.pre
-        output += indent_by(audio_text, 12) + '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        output += indent_by(audio_text, 12) + '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         if back_button != '' or help_button != '' or additional_buttons_after != '' or additional_buttons_before != '':
@@ -2233,7 +2251,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
             output += back_button + additional_buttons_before + additional_buttons_after + help_button + '</fieldset>\n'
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         if 'track_location' in status.extras and status.extras['track_location']:
             output += '            <form>\n'
@@ -2241,10 +2259,10 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '            </form>\n'
     elif status.question.question_type == 'wait':
         output += '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + markdown_to_html(status.questionText or word("Please wait . . ."), trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
-        if showUnderText:
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + markdown_to_html(status.question_text or word("Please wait . . ."), trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += '            </form>\n'
@@ -2252,9 +2270,9 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     else:
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.questionText, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
-        if status.subquestionText:
-            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestionText, status=status) + '                </div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        if status.subquestion_text:
+            output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
@@ -2264,7 +2282,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += additional_buttons_after + help_button + '\n                </fieldset>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
-        if showUnderText:
+        if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
         output += tracker_tag(status)
         output += '            </form>\n'
@@ -2352,22 +2370,22 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 if status.extras.get('describe_file_types', True) and multiple_formats:
                     output += '                  <p class="da-attachment-tab-download-intro">' + word('The document is available in the following formats:') + '</p>\n'
                 if attachment.get('raw', False):
-                    output += '                  <p class="da-attachment-tab-download-raw"><a href="' + server.url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fa-solid fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a>' + paren_phrase(status, word('for downloading')) + '</p>\n'
+                    output += '                  <p class="da-attachment-tab-download-raw"><a href="' + url_finder(attachment['file']['raw'], display_filename=attachment['filename'] + attachment['raw']) + '" target="_blank"><i class="fa-solid fa-code fa-fw"></i> ' + attachment['filename'] + attachment['raw'] + '</a>' + paren_phrase(status, word('for downloading')) + '</p>\n'
                 else:
                     if 'pdf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-pdf"><a href="' + server.url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fa-solid fa-print fa-fw"></i> PDF</a>' + paren_phrase(status, word('for printing; requires Adobe Reader or similar application')) + '</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-pdf"><a href="' + url_finder(attachment['file']['pdf'], display_filename=attachment['filename'] + '.pdf') + '" target="_blank"><i class="fa-solid fa-print fa-fw"></i> PDF</a>' + paren_phrase(status, word('for printing; requires Adobe Reader or similar application')) + '</p>\n'
                     if 'rtf' in attachment['valid_formats'] or '*' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-rtf"><a href="' + server.url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> RTF</a>' + paren_phrase(status, word('for editing; requires Microsoft Word, Wordpad, or similar application')) + '</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-rtf"><a href="' + url_finder(attachment['file']['rtf'], display_filename=attachment['filename'] + '.rtf') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> RTF</a>' + paren_phrase(status, word('for editing; requires Microsoft Word, Wordpad, or similar application')) + '</p>\n'
                     if 'docx' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a>' + paren_phrase(status, word('for editing; requires Microsoft Word or compatible application')) + '</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + url_finder(attachment['file']['docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a>' + paren_phrase(status, word('for editing; requires Microsoft Word or compatible application')) + '</p>\n'
                     if 'rtf to docx' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + server.url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a>' + paren_phrase(status, word('for editing; requires Microsoft Word or compatible application')) + '</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-docx"><a href="' + url_finder(attachment['file']['rtf to docx'], display_filename=attachment['filename'] + '.docx') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> DOCX</a>' + paren_phrase(status, word('for editing; requires Microsoft Word or compatible application')) + '</p>\n'
                     if 'tex' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-tex"><a href="' + server.url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> LaTeX</a>' + paren_phrase(status, word('for debugging PDF output')) + '</p>\n'
+                        output += '                  <p class="da-attachment-tab-download-tex"><a href="' + url_finder(attachment['file']['tex'], display_filename=attachment['filename'] + '.tex') + '" target="_blank"><i class="fa-solid fa-pencil-alt fa-fw"></i> LaTeX</a>' + paren_phrase(status, word('for debugging PDF output')) + '</p>\n'
                     if 'md' in attachment['valid_formats']:
-                        output += '                  <p class="da-attachment-tab-download-md"><a href="' + server.url_finder(attachment['file']['md'], display_filename=attachment['filename'] + '.md') + '" target="_blank"><i class="fa-brands fa-markdown fa-fw"></i> Markdown</a></p>\n'
+                        output += '                  <p class="da-attachment-tab-download-md"><a href="' + url_finder(attachment['file']['md'], display_filename=attachment['filename'] + '.md') + '" target="_blank"><i class="fa-brands fa-markdown fa-fw"></i> Markdown</a></p>\n'
                     for output_format in extra_formats:
-                        output += '                  <p class="da-attachment-tab-download-extra"><a href="' + server.url_finder(attachment['file'][output_format], display_filename=attachment['filename'] + '.' + output_format) + '" target="_blank"><i class="fa-solid fa-file fa-fw"></i> ' + attachment['filename'] + '.' + output_format + '</a></p>\n'
+                        output += '                  <p class="da-attachment-tab-download-extra"><a href="' + url_finder(attachment['file'][output_format], display_filename=attachment['filename'] + '.' + output_format) + '" target="_blank"><i class="fa-solid fa-file fa-fw"></i> ' + attachment['filename'] + '.' + output_format + '</a></p>\n'
                 output += '                </div>\n'
             if show_preview:
                 output += '                <div class="tab-pane da-attachment-tab-preview" id="dapreview' + str(attachment_index) + '" role="tabpanel" aria-labelledby="dapreview-tab' + str(attachment_index) + '">\n'
@@ -2438,7 +2456,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 output += """
                       <button class="btn """ + BUTTON_STYLE + BUTTON_COLOR_SEND + """" type="submit">""" + word('Send') + '</button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
                 output += """
-                      <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
+                      <input type="hidden" name="csrf_token" value=""" + json.dumps(generate_csrf()) + """/>
                     </form>
                   </div>
                 </div>
@@ -2466,7 +2484,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 output += """
                       <button class="btn """ + BUTTON_STYLE + BUTTON_COLOR_DOWNLOAD + """" type="submit">""" + word('Download All') + '</button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
                 output += """
-                      <input type="hidden" name="csrf_token" value=""" + json.dumps(server.generate_csrf()) + """/>
+                      <input type="hidden" name="csrf_token" value=""" + json.dumps(generate_csrf()) + """/>
                     </form>
                   </div>
                 </div>
@@ -2544,13 +2562,13 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
               </div>
             </div>
 """
-    if len(status.interviewHelpText) > 0 or (len(status.helpText) > 0 and not status.question.interview.question_help_button):
+    if len(status.interview_help_text) > 0 or (len(status.help_text) > 0 and not status.question.interview.question_help_button):
         if status.using_screen_reader and 'help' in status.screen_reader_links:
             output += '            <div class="daaudiovideo-control">\n' + indent_by(audio_control(status.screen_reader_links['help'], preload="none", title_text=word('Read this screen out loud')), 14) + '            </div>\n'
         if status.question.interview.question_help_button:
-            help_parts = status.interviewHelpText
+            help_parts = status.interview_help_text
         else:
-            help_parts = status.helpText + status.interviewHelpText
+            help_parts = status.help_text + status.interview_help_text
         for help_section in help_parts:
             output += process_help(help_section, status)
         # if len(status.attributions):
@@ -3472,7 +3490,7 @@ def input_for(status, field, embedded=False, floating_label=None):
             else:
                 defaultstring = ''
             if is_hidden and not is_disabled:
-                return '<input' + defaultstring + ' type="hidden" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '" />'
+                return '<input' + defaultstring + ' type="hidden" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"  />'
             input_type = field.datatype
             if field.datatype == 'datetime':
                 input_type = 'datetime-local'

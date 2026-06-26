@@ -161,7 +161,7 @@ class RichTraceback:
                 (line_map, template_lines, template_filename) = mods[filename]
             except KeyError:
                 try:
-                    info = mako.template._get_module_info(filename)
+                    info = docassemble.base.mako.template._get_module_info(filename)
                     module_source = info.code
                     template_source = info.source
                     template_filename = (
@@ -185,7 +185,7 @@ class RichTraceback:
 
                 template_ln = 1
 
-                mtm = mako.template.ModuleInfo
+                mtm = docassemble.base.mako.template.ModuleInfo
                 source_map = mtm.get_module_source_metadata(
                     module_source, full_line_map=True
                 )

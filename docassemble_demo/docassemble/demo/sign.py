@@ -1,7 +1,29 @@
 # do not pre-load
 import random
 import string
-from docassemble.base.util import DAObject, DAList, DAFileCollection, interview_url_action, DADict, word, today, current_datetime, Person, DAEmailRecipient, comma_and_list, interface, value, send_email, background_action, reconsider, force_ask, background_response, device, prevent_going_back
+from docassemble.base.error import DAException
+from docassemble.base.util import (
+    DAObject,
+    DAList,
+    DAFileCollection,
+    interview_url_action,
+    DADict,
+    word,
+    today,
+    current_datetime,
+    Person,
+    DAEmailRecipient,
+    comma_and_list,
+    interface,
+    value,
+    send_email,
+    background_action,
+    reconsider,
+    force_ask,
+    background_response,
+    device,
+    prevent_going_back,
+)
 
 __all__ = ['SigningProcess']
 
@@ -32,14 +54,14 @@ class SigningProcess(DAObject):
             self.documents = [self.documents]
         for document in self.documents:
             if not isinstance(document, str):
-                raise Exception("SigningProcess.notify: the document references must consist of text strings only")
+                raise DAException("SigningProcess.notify: the document references must consist of text strings only")
             if not isinstance(value(document), DAFileCollection):
-                raise Exception("SigningProcess.notify: the document references must refer to DAFileCollection objects only")
+                raise DAException("SigningProcess.notify: the document references must refer to DAFileCollection objects only")
         if not isinstance(self.additional_people_to_notify, (list, DAList)):
             self.additional_people_to_notify = [self.additional_people_to_notify]
         for person in self.additional_people_to_notify:
             if not isinstance(person, (Person, DAEmailRecipient)):
-                raise Exception("SigningProcess: an additional person to notify must be a person")
+                raise DAException("SigningProcess: an additional person to notify must be a person")
 
     def out_for_signature(self):
         if self.initial_notification_triggered or self.initial_notification_sent:
@@ -98,8 +120,8 @@ class SigningProcess(DAObject):
     def _verify_signer(self, signer):
         if not isinstance(signer, Person):
             if hasattr(signer, 'instanceName'):
-                raise Exception("There was a reference to a signer " + signer.instanceName + " that is not a person.")
-            raise Exception("There was a reference to a signer that is not a person.")
+                raise DAException("There was a reference to a signer " + signer.instanceName + " that is not a person.")
+            raise DAException("There was a reference to a signer that is not a person.")
         if signer not in [y['signer'] for y in self.info_by_code.values()]:
             code = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
             self.info_by_code[code] = {'signed': False, 'signer': signer}
@@ -109,7 +131,7 @@ class SigningProcess(DAObject):
         for code, info in self.info_by_code.items():
             if info['signer'] is signer:
                 return code
-        raise Exception("No code existed for signer")
+        raise DAException("No code existed for signer")
 
     def has_signed(self, signer):
         code = self._code_for(signer)
@@ -154,7 +176,7 @@ class SigningProcess(DAObject):
 
     def validate_signature(self, code):
         if code not in self.info_by_code:
-            raise Exception("Invalid code")
+            raise DAException("Invalid code")
         self.info_by_code[code]['signed'] = True
         self.info_by_code[code]['date'] = today()
         self.info_by_code[code]['datetime'] = current_datetime()

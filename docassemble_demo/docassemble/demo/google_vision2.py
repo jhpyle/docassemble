@@ -1,13 +1,13 @@
 # do not pre-load
 import io
-import docassemble.base.util
 from google.cloud import vision
+from docassemble.base.util import DAGoogleAPI
 
 __all__ = ['gv_ocr']
 
 
 def gv_ocr(the_file):
-    api = docassemble.base.util.DAGoogleAPI()
+    api = DAGoogleAPI()
     client = api.google_cloud_vision_client()
     image = vision.Image()
     with io.open(the_file.path(), 'rb') as image_file:
@@ -18,7 +18,7 @@ def gv_ocr(the_file):
     for text in response.text_annotations:
         output += text.description + "\n"
     if response.error.message:
-        raise Exception(response.error.message)
+        raise RuntimeError(response.error.message)
     return output
 
 # def async_detect_document(gcs_source_uri, gcs_destination_uri):

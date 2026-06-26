@@ -1,8 +1,8 @@
 from flask import session, request
 from flask_login import current_user
-from docassemble.base.functions import set_language, parse_accept_language
-from docassemble.base.config import daconfig
-DEFAULT_LANGUAGE = daconfig.get('language', 'en')
+from docassemble.base.language.control import set_language
+from docassemble.base.functions import parse_accept_language
+from docassemble.webapp.config import DEFAULT_LANGUAGE
 
 
 def setup_translation():

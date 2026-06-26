@@ -5,14 +5,25 @@ import re
 import shutil
 import types
 import yaml
-from docassemble.webapp.files import SavedFile, get_ext_and_mimetype, make_package_zip
-from docassemble.base.pandoc import word_to_markdown, convertible_mimetypes, convertible_extensions, can_convert_word_to_markdown
-from docassemble.base.util import DAObject, DADict, DAList
 from docassemble.base.error import DAError, DAException
-import docassemble.base.functions
-import docassemble.base.parse
-import docassemble.base.pdftk
-TypeType = type(type(None))
+from docassemble.base.functions import url_of, pickleable_objects
+from docassemble.base.interview_source import InterviewSourceString
+from docassemble.base.language.language import comma_and_list
+from docassemble.base.pandoc import (
+    word_to_markdown,
+    convertible_mimetypes,
+    convertible_extensions,
+    can_convert_word_to_markdown,
+)
+from docassemble.base.parse import Interview, InterviewStatus, get_initial_dict
+from docassemble.base.pdftk import read_fields
+from docassemble.base.thread_context import this_thread
+from docassemble.base.util import DAObject, DADict, DAList
+from docassemble.webapp.config import DEFAULT_TIMEZONE
+from docassemble.webapp.files.hooks import save_numbered_file
+from docassemble.webapp.files.savedfile import SavedFile, make_package_zip
+from docassemble.webapp.utils.filenames import get_ext_and_mimetype, directory_for
+from docassemble.webapp.utils.helpers import TypeType, docx_variable_fix
 
 __all__ = ['Playground', 'PlaygroundSection', 'indent_by', 'varname', 'DAField', 'DAFieldList', 'DAQuestion', 'DAQuestionDict', 'DAInterview', 'DAUpload', 'DAUploadMultiple', 'DAAttachmentList', 'DAAttachment', 'to_yaml_file', 'base_name', 'to_package_name', 'oneline']
 
@@ -55,12 +66,12 @@ class DAAttachmentList(DAList):
         output_list = []
         for x in self.elements:
             if x.type == 'md':
-                output_list.append('[`' + x.markdown_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", file=x.markdown_filename, project=project) + ')')
+                output_list.append('[`' + x.markdown_filename + '`](' + url_of("playgroundfiles", section="template", file=x.markdown_filename, project=project) + ')')
             elif x.type == 'pdf':
-                output_list.append('[`' + x.pdf_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", project=project) + ')')
+                output_list.append('[`' + x.pdf_filename + '`](' + url_of("playgroundfiles", section="template", project=project) + ')')
             elif x.type == 'docx':
-                output_list.append('[`' + x.docx_filename + '`](' + docassemble.base.functions.url_of("playgroundfiles", section="template", project=project) + ')')
-        return docassemble.base.functions.comma_and_list(output_list)
+                output_list.append('[`' + x.docx_filename + '`](' + url_of("playgroundfiles", section="template", project=project) + ')')
+        return comma_and_list(output_list)
 
 
 class DAUploadMultiple(DAObject):
@@ -162,7 +173,7 @@ class DAFieldList(DAList):
         super().init(*pargs, **kwargs)
 
     def __str__(self):
-        return docassemble.base.functions.comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
+        return comma_and_list(map(lambda x: '`' + x.variable + '`', self.elements))
 
 
 class DAQuestion(DAObject):
@@ -310,10 +321,10 @@ class DAQuestionDict(DADict):
 class PlaygroundSection:
 
     def __init__(self, section='', project='default'):
-        if docassemble.base.functions.this_thread.current_info['user']['is_anonymous']:
+        if this_thread.current_info['user']['is_anonymous']:
             raise DAError("Users must be logged in to create Playground objects")
-        self.user_id = docassemble.base.functions.this_thread.current_info['user']['theid']
-        self.current_info = docassemble.base.functions.this_thread.current_info
+        self.user_id = this_thread.current_info['user']['theid']
+        self.current_info = this_thread.current_info
         self.section = section
         self.project = project
         self._update_file_list()
@@ -420,7 +431,7 @@ class PlaygroundSection:
         return bool(extension == "pdf")
 
     def get_fields(self, filename):
-        return docassemble.base.pdftk.read_fields(self.get_file(filename))
+        return read_fields(self.get_file(filename))
 
     def convert_file_to_md(self, filename, convert_variables=True):
         extension, mimetype = get_ext_and_mimetype(filename)
@@ -454,7 +465,7 @@ class PlaygroundSection:
 class Playground(PlaygroundSection):
 
     def interview_url(self, filename):
-        return docassemble.base.functions.url_of('interview', i='docassemble.playground' + str(self.user_id) + project_name(self.project) + ":" + filename)
+        return url_of('interview', i='docassemble.playground' + str(self.user_id) + project_name(self.project) + ":" + filename)
 
     def write_package(self, pkgname, info):
         the_yaml = yaml.safe_dump(info, default_flow_style=False, default_style='|')
@@ -477,19 +488,19 @@ class Playground(PlaygroundSection):
         if self.current_info['user']['timezone']:
             the_timezone = self.current_info['user']['timezone']
         else:
-            the_timezone = docassemble.base.functions.get_default_timezone()
+            the_timezone = DEFAULT_TIMEZONE
         zip_file = make_package_zip(pkgname, info, author_info, the_timezone)
-        file_number, extension, mimetype = docassemble.base.parse.save_numbered_file('docassemble-' + str(pkgname) + '.zip', zip_file.name)  # pylint: disable=unused-variable
+        file_number, extension, mimetype = save_numbered_file('docassemble-' + str(pkgname) + '.zip', zip_file.name, None, None)  # pylint: disable=unused-variable
         return file_number
 
     def variables_from(self, content):
         the_directory = directory_for(self.get_area(), self.project)
-        interview_source = docassemble.base.parse.InterviewSourceString(content=content, directory=the_directory, path="docassemble.playground" + str(self.user_id) + project_name(self.project) + ":_temp.yml", package='docassemble.playground' + str(self.user_id) + project_name(self.project), testing=True)
-        interview = interview_source.get_interview()
+        interview_source = InterviewSourceString(content=content, directory=the_directory, path="docassemble.playground" + str(self.user_id) + project_name(self.project) + ":_temp.yml", package='docassemble.playground' + str(self.user_id) + project_name(self.project), testing=True)
+        interview = Interview(source=interview_source)
         temp_current_info = copy.deepcopy(self.current_info)
         temp_current_info['yaml_filename'] = "docassemble.playground" + str(self.user_id) + project_name(self.project) + ":_temp.yml"
-        interview_status = docassemble.base.parse.InterviewStatus(current_info=temp_current_info)
-        user_dict = docassemble.base.parse.get_initial_dict()
+        interview_status = InterviewStatus(current_info=temp_current_info)
+        user_dict = get_initial_dict()
         user_dict['_internal']['starttime'] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         user_dict['_internal']['modtime'] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         try:
@@ -520,7 +531,7 @@ class Playground(PlaygroundSection):
                 classes.add(val)
             elif isinstance(user_dict[val], types.ModuleType):
                 modules.add(val)
-        for val in docassemble.base.functions.pickleable_objects(user_dict):
+        for val in pickleable_objects(user_dict):
             names_used.add(val)
         for var in ['_internal']:
             names_used.discard(var)
@@ -585,18 +596,6 @@ def to_package_name(text):
 
 def repr_str(text):
     return remove_u.sub(r'', repr(text))
-
-
-def docx_variable_fix(variable):
-    variable = re.sub(r'\\', '', variable)
-    variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
-    return variable
-
-
-def directory_for(area, current_project):
-    if current_project == 'default':
-        return area.directory
-    return os.path.join(area.directory, current_project)
 
 
 def project_name(name):

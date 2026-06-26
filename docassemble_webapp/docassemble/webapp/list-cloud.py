@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 import sys
 import os
 import docassemble.base.amazon
@@ -16,14 +17,14 @@ def main():
         s3_config['server side encryption']['customer algorithm'] = os.environ.get('S3_SSE_CUSTOMER_ALGORITHM', None)
         s3_config['server side encryption']['customer key'] = os.environ.get('S3_SSE_CUSTOMER_KEY', None)
         s3_config['server side encryption']['KMS key ID'] = os.environ.get('S3_SSE_KMS_KEY_ID', None)
-        cloud = docassemble.base.amazon.s3object(s3_config)
+        cloud = docassemble.base.amazon.S3Object(s3_config)
     elif os.environ.get('AZUREENABLE', 'false') == 'true':
         azure_config = {}
         azure_config['enable'] = True
         azure_config['account name'] = os.environ.get('AZUREACCOUNTNAME', None)
         azure_config['account key'] = os.environ.get('AZUREACCOUNTKEY', None)
         azure_config['container'] = os.environ.get('AZURECONTAINER', None)
-        cloud = docassemble.base.microsoft.azureobject(azure_config)
+        cloud = docassemble.base.microsoft.AzureObject(azure_config)
     else:
         sys.exit(1)
     if len(sys.argv) > 1:

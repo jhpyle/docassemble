@@ -1,6 +1,6 @@
 # do not pre-load
-from docassemble.base.util import as_datetime, DAFile
 from ics import Calendar, Event, Attendee, Organizer
+from docassemble.base.util import as_datetime, DAFile
 
 __all__ = ['make_event']
 
@@ -9,15 +9,15 @@ def make_event(title=None, location=None, description=None, begin_date=None, beg
     if attendees is None:
         attendees = []
     if title is None:
-        raise Exception("make_event: a title parameter is required")
+        raise RuntimeError("make_event: a title parameter is required")
     if begin_date is None:
-        raise Exception("make_event: a begin_date parameter is required")
+        raise RuntimeError("make_event: a begin_date parameter is required")
     if begin_time is None:
-        raise Exception("make_event: a begin_time parameter is required")
+        raise RuntimeError("make_event: a begin_time parameter is required")
     if end_date is None:
-        raise Exception("make_event: an end_date parameter is required")
+        raise RuntimeError("make_event: an end_date parameter is required")
     if end_time is None:
-        raise Exception("make_event: an end_time parameter is required")
+        raise RuntimeError("make_event: an end_time parameter is required")
     c = Calendar()
     e = Event()
     if organizer is not None:

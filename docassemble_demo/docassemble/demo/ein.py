@@ -4,4 +4,4 @@ def retrieve_ein(name):
         return "54-54349343"
     if name.text == "XYZ Incorporated":
         return "32-84398493"
-    raise Exception("Could not retrieve EIN for " + name.text)
+    raise ValueError("Could not retrieve EIN for " + name.text)

@@ -1,39 +1,52 @@
-import docassemble.webapp.users.models  # pylint: disable=unused-import
-import docassemble.webapp.core.models  # noqa: F401 # pylint: disable=unused-import
-from docassemble.webapp.db_object import db
-from docassemble.base.config import dbtableprefix
+from typing import Optional
+from sqlalchemy import Integer, String, Text, ForeignKey, Boolean, text, true, false
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from docassemble.webapp.database import dbtableprefix
+from docassemble.webapp.db_base import Base
 
 
-class Package(db.Model):
+class Package(Base):
     __tablename__ = dbtableprefix + 'package'
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    name = db.Column(db.String(255), nullable=False)
-    type = db.Column(db.Text())  # github, zip, pip
-    giturl = db.Column(db.String(255), nullable=True)
-    gitsubdir = db.Column(db.Text(), nullable=True)
-    upload = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'uploads.indexno', ondelete='CASCADE'))
-    package_auth = db.relationship('PackageAuth', uselist=False, primaryjoin="PackageAuth.package_id==Package.id")
-    version = db.Column(db.Integer(), server_default='1')
-    packageversion = db.Column(db.Text())
-    limitation = db.Column(db.Text())
-    dependency = db.Column(db.Boolean(), nullable=False, server_default='0')
-    core = db.Column(db.Boolean(), nullable=False, server_default='0')
-    active = db.Column(db.Boolean(), nullable=False, server_default='1')
-    gitbranch = db.Column(db.String(255), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    type: Mapped[Optional[str]] = mapped_column(Text)  # github, zip, pip
+    giturl: Mapped[Optional[str]] = mapped_column(String(255))
+    gitsubdir: Mapped[Optional[str]] = mapped_column(Text)
+    upload: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "uploads.indexno", ondelete="CASCADE"),
+    )
+    package_auth: Mapped[Optional["PackageAuth"]] = relationship(primaryjoin="PackageAuth.package_id==Package.id")
+    version: Mapped[Optional[int]] = mapped_column(Integer, server_default=text('1'))
+    packageversion: Mapped[Optional[str]] = mapped_column(Text)
+    limitation: Mapped[Optional[str]] = mapped_column(Text)
+    dependency: Mapped[bool] = mapped_column(Boolean, server_default=false())
+    core: Mapped[bool] = mapped_column(Boolean, server_default=false())
+    active: Mapped[bool] = mapped_column(Boolean, server_default=true())
+    gitbranch: Mapped[Optional[str]] = mapped_column(String(255))
 
 
-class PackageAuth(db.Model):
+class PackageAuth(Base):
     __tablename__ = dbtableprefix + 'package_auth'
-    id = db.Column(db.Integer, primary_key=True, unique=True)
-    package_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'package.id', ondelete='CASCADE'))
-    user_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'user.id', ondelete='CASCADE'))
-    authtype = db.Column(db.String(255), server_default='owner')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    package_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "package.id", ondelete="CASCADE"),
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "user.id", ondelete="CASCADE"),
+    )
+    authtype: Mapped[Optional[str]] = mapped_column(String(255), server_default=text("'owner'"))
 
 
-class Install(db.Model):
+class Install(Base):
     __tablename__ = dbtableprefix + "install"
-    id = db.Column(db.Integer(), primary_key=True, unique=True)
-    hostname = db.Column(db.Text())
-    version = db.Column(db.Integer())
-    packageversion = db.Column(db.Text())
-    package_id = db.Column(db.Integer(), db.ForeignKey(dbtableprefix + 'package.id', ondelete='CASCADE'))
+    id: Mapped[int] = mapped_column(primary_key=True)
+    hostname: Mapped[Optional[str]] = mapped_column(Text)
+    version: Mapped[Optional[int]] = mapped_column(Integer)
+    packageversion: Mapped[Optional[str]] = mapped_column(Text)
+    package_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey(dbtableprefix + "package.id", ondelete="CASCADE"),
+    )

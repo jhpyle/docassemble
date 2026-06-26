@@ -42,15 +42,17 @@ if [[ $CONTAINERROLE =~ .*:(all):.* ]] && [ "${USEHTTPS:-false}" == "true" ] && 
 	cp /tmp/letsencrypt.tar.gz "${DA_ROOT}/backup/letsencrypt.tar.gz"
     fi
     rm -f /tmp/letsencrypt.tar.gz
-    if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
-	cp "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" /etc/exim4/exim.crt
-	cp "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" /etc/exim4/exim.key
-	chown root:Debian-exim /etc/exim4/exim.crt
-	chown root:Debian-exim /etc/exim4/exim.key
-	chmod 640 /etc/exim4/exim.crt
-	chmod 640 /etc/exim4/exim.key
-	supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 stop exim4
-	supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 start exim4
+    if [ "$ENABLEEMAILSERVER" == "true" ]; then
+	if [ ! -f /etc/ssl/docassemble/exim.crt ] && [ ! -f /etc/ssl/docassemble/exim.key ]; then
+	    cp "/etc/letsencrypt/live/${DAHOSTNAME}/fullchain.pem" /etc/exim4/exim.crt
+	    cp "/etc/letsencrypt/live/${DAHOSTNAME}/privkey.pem" /etc/exim4/exim.key
+	    chown root:Debian-exim /etc/exim4/exim.crt
+	    chown root:Debian-exim /etc/exim4/exim.key
+	    chmod 640 /etc/exim4/exim.crt
+	    chmod 640 /etc/exim4/exim.key
+	    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 stop exim4
+	    supervisorctl ${DASUPERVISOROPTS}--serverurl http://localhost:9001 start exim4
+	fi
     fi
 fi
 

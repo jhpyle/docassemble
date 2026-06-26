@@ -1,41 +1,108 @@
 import re
 import email.utils
-from docassemble_flask_user.forms import RegisterForm, LoginForm, password_validator, unique_email_validator
-from flask_wtf import FlaskForm
-from wtforms import DateField, StringField, SubmitField, ValidationError, BooleanField, SelectField, SelectMultipleField, HiddenField, validators, TextAreaField
+from wtforms import (
+    DateField,
+    StringField,
+    SubmitField,
+    ValidationError,
+    BooleanField,
+    SelectField,
+    SelectMultipleField,
+    HiddenField,
+    validators,
+    TextAreaField,
+)
 from wtforms.validators import DataRequired, Email, Optional
 from wtforms.widgets import PasswordInput
 from flask import flash, current_app, request, abort
 from flask_login import current_user
+from flask_wtf import FlaskForm
 from sqlalchemy import select
-from docassemble.base.functions import LazyWord as word, LazyArray
-from docassemble.base.config import daconfig
+from docassemble_flask_user.forms import (
+    RegisterForm,
+    LoginForm,
+    password_validator,
+    unique_email_validator,
+)
+from docassemble.base.language.words import LazyWord as word, word as non_lazy_word
 from docassemble.base.generate_key import random_alphanumeric
-from docassemble.base.logger import logmessage
+from docassemble.webapp.config import BAN_IP_ADDRESSES, daconfig
 from docassemble.webapp.daredis import r
-from docassemble.webapp.db_object import db
+from docassemble.webapp.extensions import db
 from docassemble.webapp.users.models import UserModel, Role
-from docassemble.webapp.validators import html_validator
+from docassemble.webapp.utils.logger import logmessage
+from docassemble.webapp.utils.request import get_requester_ip
+from docassemble.webapp.services.validators import html_validator
+
+
+class LazyArray:
+
+    def __init__(self, array):
+        self.original = array
+
+    def compute(self):
+        return [non_lazy_word(item) for item in self.original]
+
+    def copy(self):
+        return self.compute().copy()
+
+    def pop(self, *pargs):
+        return str(self.original.pop(*pargs))
+
+    def __add__(self, other):
+        return self.compute() + other
+
+    def index(self, *pargs, **kwargs):
+        return self.compute().index(*pargs, **kwargs)
+
+    def clear(self):
+        self.original = []
+
+    def append(self, other):
+        self.original.append(other)
+
+    def remove(self, other):
+        self.original.remove(other)
+
+    def extend(self, other):
+        self.original.extend(other)
+
+    def __contains__(self, item):
+        return self.compute().__contains__(item)
+
+    def __iter__(self):
+        return self.compute().__iter__()
+
+    def __len__(self):
+        return self.compute().__len__()
+
+    def __delitem__(self, index):
+        self.original.__delitem__(index)
+
+    def __reversed__(self):
+        return self.compute().__reversed__()
+
+    def __setitem__(self, index, the_value):
+        return self.original.__setitem__(index, the_value)
+
+    def __getitem__(self, index):
+        return self.compute()[index]
+
+    def __str__(self):
+        return str(self.compute())
+
+    def __repr__(self):
+        return repr(self.compute())
+
+    def __eq__(self, other):
+        return self.original == other
+
 try:
     import ldap
 except ImportError:
     if 'ldap login' not in daconfig:
         daconfig['ldap login'] = {}
     daconfig['ldap login']['enable'] = False
-
-HTTP_TO_HTTPS = daconfig.get('behind https load balancer', False)
-BAN_IP_ADDRESSES = daconfig.get('ip address ban enabled', True)
-
-
-def get_requester_ip(req):
-    if not req:
-        return '127.0.0.1'
-    if HTTP_TO_HTTPS:
-        if 'X-Real-Ip' in req.headers:
-            return req.headers['X-Real-Ip']
-        if 'X-Forwarded-For' in req.headers:
-            return req.headers['X-Forwarded-For']
-    return req.remote_addr
 
 
 def fix_nickname(form, field):
@@ -307,11 +374,6 @@ class PhoneUserProfileForm(UserProfileForm):
     email = StringField(word('E-mail'), validators=[Optional(), Email(word('Must be a valid e-mail address')), html_validator])
 
 
-class RequestDeveloperForm(FlaskForm):
-    reason = StringField(word('Reason for needing developer account (optional)'), validators=[html_validator])
-    submit = SubmitField(word('Submit'))
-
-
 class MyInviteForm(FlaskForm):
 
     def validate(self):  # pylint: disable=arguments-differ
@@ -344,45 +406,6 @@ class UserAddForm(FlaskForm):
     role_id = SelectMultipleField(word('Privileges'), coerce=int)
     password = StringField(word('Password'), widget=PasswordInput(hide_value=False), validators=[password_validator])
     submit = SubmitField(word('Add'))
-
-
-class PhoneLoginForm(FlaskForm):
-    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255), html_validator])
-    submit = SubmitField(word('Go'))
-
-
-class PhoneLoginVerifyForm(FlaskForm):
-    phone_number = StringField(word('Phone number'), [validators.Length(min=5, max=255), html_validator])
-    verification_code = StringField(word('Verification code'), [validators.Length(min=daconfig['verification code digits'], max=daconfig['verification code digits']), html_validator])
-    submit = SubmitField(word('Verify'))
-
-    def validate(self):  # pylint: disable=arguments-differ
-        result = True
-        if BAN_IP_ADDRESSES:
-            key = 'da:failedlogin:ip:' + str(get_requester_ip(request))
-            failed_attempts = r.get(key)
-            if failed_attempts is not None and int(failed_attempts) > daconfig['attempt limit']:
-                abort(404)
-        verification_key = 'da:phonelogin:' + str(self.phone_number.data) + ':code'
-        verification_code = r.get(verification_key)
-        # r.delete(verification_key)
-        supplied_verification_code = re.sub(r'[^0-9]', '', self.verification_code.data)
-        logmessage("Supplied code is " + str(supplied_verification_code))
-        if verification_code is None:
-            logmessage("Verification code with " + str(verification_key) + " is None")
-            result = False
-        elif verification_code.decode() != supplied_verification_code:
-            logmessage("Verification code with " + str(verification_key) + " which is " + str(verification_code.decode()) + " does not match supplied code, which is " + str(self.verification_code.data))
-            result = False
-        else:
-            logmessage("Code matched")
-        if result is False:
-            logmessage("Problem with form")
-            r.incr(key)
-            r.expire(key, 86400)
-        elif failed_attempts is not None:
-            r.delete(key)
-        return result
 
 
 class MFASetupForm(FlaskForm):
@@ -429,11 +452,3 @@ class MyResendConfirmEmailForm(FlaskForm):
 class ManageAccountForm(FlaskForm):
     confirm = StringField(word('Type \"delete my account\" here to confirm that you want to delete your account.'), [validators.AnyOf(LazyArray([word("delete my account")]), message=word('Since you did not type \"delete my account\" I did not delete your account.'))])
     delete = SubmitField(word('Delete Account'))
-
-
-class InterviewsListForm(FlaskForm):
-    i = StringField()
-    session = StringField()
-    tags = StringField()
-    delete = SubmitField()
-    delete_all = SubmitField()

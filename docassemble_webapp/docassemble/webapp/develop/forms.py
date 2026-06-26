@@ -1,0 +1,205 @@
+import re
+from flask_wtf import FlaskForm
+import packaging
+from wtforms import (
+    validators,
+    ValidationError,
+    StringField,
+    SubmitField,
+    TextAreaField,
+    SelectMultipleField,
+    SelectField,
+    FileField,
+    HiddenField,
+    BooleanField,
+)
+from docassemble.base.language.words import LazyWord as word
+import docassemble.webapp.spdx
+from docassemble.webapp.services.validators import html_validator
+
+
+class NonValidatingSelectField(SelectField):
+
+    def pre_validate(self, form):
+        pass
+
+
+def spdx_validator(form, field):  # pylint: disable=unused-argument
+    if field.data not in docassemble.webapp.spdx.LICENSES and not re.search(r'^LicenseRef-[A-Za-z\-0-9]+$', field.data) and field.data != '':
+        raise ValidationError(word("A valid SPDX identifier must be provided, e.g., MIT, GPL-3.0, Apache-2.0."))
+
+
+def validate_project_name(form, field):  # pylint: disable=unused-argument
+    if re.search(r'^[0-9]', field.data):
+        raise ValidationError(word('Project name cannot begin with a number'))
+    if re.search(r'[^A-Za-z0-9]', field.data):
+        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9'))
+
+
+def validate_name(form, field):  # pylint: disable=unused-argument
+    if re.search(r'[^A-Za-z0-9\-]', field.data):
+        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9, hyphen'))
+
+
+def validate_package_version(form, field):  # pylint: disable=unused-argument
+    try:
+        packaging.version.Version(field.data)
+    except packaging.version.InvalidVersion:
+        raise ValidationError(word('Version number does not conform to PEP 440'))  # pylint: disable=raise-missing-from
+
+
+def validate_package_name(form, field):  # pylint: disable=unused-argument
+    if re.search(r'[^A-Za-z0-9]', field.data):
+        raise ValidationError(word('Valid characters are: A-Z, a-z, 0-9'))
+
+
+class CreatePackageForm(FlaskForm):
+    name = StringField(word('Package name'), validators=[
+        validators.DataRequired(word('Package name is required')), validate_name, html_validator])
+    submit = SubmitField(word('Get template'))
+
+
+class CreatePlaygroundPackageForm(FlaskForm):
+    name = SelectField(word('Package'), validators=[
+        validators.DataRequired(word('Package name is required')), validate_name, html_validator])
+    submit = SubmitField(word('Get package'))
+
+
+class PlaygroundForm(FlaskForm):
+    status = StringField('Status')
+    original_playground_name = StringField(word('Original Name'))
+    playground_name = StringField(word('Name'), [validators.Length(min=1, max=255), html_validator])
+    playground_content = TextAreaField(word('Playground YAML'))
+    search_term = StringField(word('Search'))
+    submit = SubmitField(word('Save'))
+    run = SubmitField(word('Save and Run'))
+    delete = SubmitField(word('Delete'))
+
+
+class PlaygroundUploadForm(FlaskForm):
+    uploadfile = FileField(word('File to upload'))
+
+
+class PlaygroundFilesForm(FlaskForm):
+    purpose = StringField('Purpose')
+    section = StringField(word('Section'))
+    uploadfile = FileField(word('File to upload'))
+    submit = SubmitField(word('Upload'))
+
+
+class PlaygroundFilesEditForm(FlaskForm):
+    purpose = StringField('Purpose')
+    section = StringField(word('Section'))
+    original_file_name = StringField(word('Original Name'))
+    file_name = StringField(word('Name'), [validators.Length(min=1, max=255), html_validator])
+    search_term = StringField(word('Search'))
+    file_content = TextAreaField(word('File Text'))
+    active_file = StringField(word('Active File'))
+    submit = SubmitField(word('Save'))
+    delete = SubmitField(word('Delete'))
+
+
+class RenameProject(FlaskForm):
+    name = StringField(word('New Name'), validators=[
+        validators.DataRequired(word('Project name is required')), validate_project_name, html_validator])
+    submit = SubmitField(word('Rename'))
+
+
+class DeleteProject(FlaskForm):
+    submit = SubmitField(word('Delete'))
+
+
+class NewProject(FlaskForm):
+    name = StringField(word('Name'), validators=[
+        validators.DataRequired(word('Project name is required')), validate_project_name, html_validator])
+    submit = SubmitField(word('Save'))
+
+
+class PullPlaygroundPackage(FlaskForm):
+    github_url = StringField(word('GitHub URL'), validators=[html_validator])
+    github_branch = SelectField(word('GitHub Branch'), validators=[html_validator])
+    pypi = StringField(word('PyPI package'), validators=[html_validator])
+    pull = SubmitField(word('Pull'))
+    cancel = SubmitField(word('Cancel'))
+
+
+class PlaygroundPackagesForm(FlaskForm):
+    original_file_name = StringField(word('Original Name'), validators=[html_validator])
+    file_name = StringField(word('Package Name'), validators=[validators.Length(min=1, max=50),
+                                                              validators.DataRequired(word('Package Name is required')),
+                                                              validate_package_name, html_validator])
+    license = StringField(word('License'), default='MIT', validators=[validators.Length(min=0, max=255), html_validator, spdx_validator])
+    author_name = StringField(word('Author Name'), validators=[validators.Length(min=0, max=255), html_validator])
+    author_email = StringField(word('Author E-mail'), validators=[validators.Length(min=0, max=255), html_validator])
+    description = StringField(word('Description'), validators=[validators.Length(min=0, max=255), html_validator], default="A docassemble extension.")
+    version = StringField(word('Version'), validators=[validators.Length(min=0, max=255), validate_package_version, html_validator], default="0.0.1")
+    url = StringField(word('URL'), validators=[validators.Length(min=0, max=255), html_validator], default="")
+    dependencies = SelectMultipleField(word('Dependencies'))
+    interview_files = SelectMultipleField(word('Interview files'))
+    template_files = SelectMultipleField(word('Template files'))
+    module_files = SelectMultipleField(word('Modules'))
+    static_files = SelectMultipleField(word('Static files'))
+    sources_files = SelectMultipleField(word('Source files'))
+    readme = TextAreaField(word('README file'), default='')
+    github_branch = NonValidatingSelectField(word('Branch'))
+    github_branch_new = StringField(word('Name of new branch'), validators=[html_validator])
+    files_to_add = SelectMultipleField(word('Files to include'))
+    commit_message = StringField(word('Commit message'), default="")
+    pypi_also = BooleanField(word('Publish on PyPI also'))
+    install_also = BooleanField(word('Install package on this server also'))
+    submit = SubmitField(word('Save'))
+    download = SubmitField(word('Download'))
+    install = SubmitField(word('Install'))
+    pypi = SubmitField(word('PyPI'))
+    github = SubmitField(word('GitHub'))
+    cancel = SubmitField(word('Cancel'))
+    delete = SubmitField(word('Delete'))
+
+
+class GoogleDriveForm(FlaskForm):
+    folder = SelectField(word('Folder'))
+    submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Back to Profile'))
+
+
+class OneDriveForm(FlaskForm):
+    folder = SelectField(word('Folder'))
+    submit = SubmitField(word('Save'))
+    cancel = SubmitField(word('Back to Profile'))
+
+
+class GitHubForm(FlaskForm):
+    shared = BooleanField(word('Access shared repositories'))
+    orgs = BooleanField(word('Access organizational repositories'))
+    save = SubmitField(word('Save changes'))
+    configure = SubmitField(word('Configure'))
+    unconfigure = SubmitField(word('Disable'))
+    cancel = SubmitField(word('Back to Profile'))
+
+
+class AddinUploadForm(FlaskForm):
+    content = HiddenField()
+    filename = HiddenField()
+
+
+class FunctionFileForm(FlaskForm):
+    pass
+
+
+class Utilities(FlaskForm):
+    pdfdocxfile = FileField(word('PDF/DOCX File'))
+    scan = SubmitField(word('Scan'))
+    interview = StringField(word('Interview'))
+    interview_submit = SubmitField(word('Download'))
+    language = StringField(word('Language'))
+    tr_language = StringField(word('Language'))
+    systemfiletype = SelectField(word('Output Format'))
+    filetype = SelectField(word('Output Format'))
+    language_submit = SubmitField(word('Translate'))
+    officeaddin_version = StringField(word('Version'), default='0.0.0.1')
+    officeaddin_submit = SubmitField(word('Download'))
+
+
+class RequestDeveloperForm(FlaskForm):
+    reason = StringField(word('Reason for needing developer account (optional)'), validators=[html_validator])
+    submit = SubmitField(word('Submit'))

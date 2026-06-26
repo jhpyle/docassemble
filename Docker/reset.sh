@@ -75,6 +75,12 @@ update_pip_config(){
     else
 	pip config unset global.extra-index-url &> /dev/null
     fi
+
+    if [ "${PIPTRUSTEDHOST:-null}" != "null" ]; then
+	pip config set global.trusted-host "${PIPTRUSTEDHOST}"
+    else
+	pip config unset global.trusted-host &> /dev/null
+    fi
 }
 restart_websockets() {
     echo "`date` stopping websockets" >&2
@@ -108,7 +114,7 @@ if [ "${DAALLOWUPDATES:-true}" == "true" ]; then
     update_pip_config &
 fi
 
-if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
+if [[ $CONTAINERROLE =~ .*:(all|web):.* ]] && [ "${ENABLEMONITOR:-true}" = "true" ]; then
     restart_websockets &
 fi
 

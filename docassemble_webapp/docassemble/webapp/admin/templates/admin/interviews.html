@@ -1,0 +1,85 @@
+{%- set footer_content = get_part('interview page footer', get_part('global footer')) %}
+{%- set page_title = get_part('interview page title', word('Interviews')) %}
+{%- set tab_title = get_part('interview page tab title', word('Interviews')) %}
+{%- set extra_css = get_part('interview page extra css') %}
+{%- set extra_js = get_part('interview page extra javascript') %}
+{%- set navigation_bar_html = get_part('interview page navigation bar html') %}
+{%- extends 'flask_user/public_base.html' %}
+{%- block content %}
+            <h1 class="da-page-header dainterviewpage h3">{{ get_part('interview page heading', word('Resume an interview')) }}</h1>
+{{ get_part('interview page pre') }}
+            <form id="daform" action="{{ url_for('admin.interview_list') }}" method="POST" class="form" role="form">
+            {{ form.hidden_tag() }}
+            {%- if tag %}
+            <p>
+              {{ word('Showing interviews tagged with:') }} <a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a>.
+              <a href="?">{{ word("Show all") }}</a>
+              <input type="hidden" name="tags" value="{{ tag }}" />
+            </p>
+            {%- else %}
+            {%- if tags_used %}
+            <p>
+              {{ word('Filter by tag') }}:
+              {% for tag in tags_used %}<a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}
+              <input type="hidden" name="tags" value="" />
+            </p>
+            {%- endif %}
+            {%- endif %}
+
+            <p class="dainterviewpage">{{ word('Click interview title to resume an interview you already started.') }}</p>
+            <table class="table table-striped dainterviewpage">
+              <thead>
+                <tr>
+                  <th scope="col">{{ word('Title') }}</th>
+                  {%- if tags_used %}
+                  <th scope="col">{{ word('Tags') }}</th>
+                  {%- endif %}
+                  <th scope="col">{{ word('Started') }}</th>
+                  <th scope="col">{{ word('Delete') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+              {%- for interview in interviews %}
+              {%- if not interview['metadata'].get('hidden', False) %}
+                <tr>
+                  <td>{% if interview['valid'] %}<a href="{{ url_for('interview.index', i=interview['filename'], session=interview['session'], from_list=1) }}">{{ interview['title'] | safe }}</a>{% else %}{{ interview['title'] | safe }}{% endif %}{% if interview['subtitle'] %}<br><span class="text-body-secondary dainterviewsubtitle">{{ interview['subtitle'] | safe}}</span>{% endif %}</td>
+                  {%- if tags_used %}
+                  <td>{% for tag in interview['tags'] %}<a class="dabadge btn btn-primary da-label" href="?tag={{ tag }}">{{ tag }}</a> {% endfor %}</td>
+                  {%- endif %}
+                  <td>{{ interview['starttime'] }}</td>
+                  <td><button type="submit" class="btn btn-sm {{ config['BUTTON_STYLE'] }}warning dadeletebutton" name="delete" data-i="{{ interview['filename'] }}" data-session="{{ interview['session'] }}" value="1">{{ word('Delete') }}</button></td>
+                </tr>
+              {%- endif %}
+              {%- endfor %}
+              {%- if numinterviews > 0 %}
+                <tr>
+                  <td>&nbsp;</td>
+                  {%- if tags_used %}
+                  <td>&nbsp;</td>
+                  {%- endif %}
+                  <td>&nbsp;</td>
+                  <td><button type="submit" id="delete_all" class="btn btn-sm {{ config['BUTTON_STYLE'] }}danger" name="delete_all" value="1">{{ word('Delete All') }}</button></td>
+                </tr>
+              {%- endif %}
+              </tbody>
+            </table>
+            </form>
+            {%- if next_id or show_back %}
+            <div class="row">
+              <div class="col-xs-8 mx-auto">
+                <nav class="text-center">
+                  <ul class="pagination">
+                    {%- if show_back %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('admin.interview_list') }}" aria-label="{{ word('Back') }}"><i class="fa-solid fa-chevron-left"></i> {{ word('Back') }}</a></li>
+                    {%- endif %}
+                    {%- if next_id %}
+                    <li class="page-item"><a class="page-link" href="?next_id={{ next_id }}" aria-label="{{ word('Next') }}">{{ word('Next') }} <i class="fa-solid fa-chevron-right"></i></a></li>
+                    {%- endif %}
+                  </ul>
+                </nav>
+              </div>
+            </div>
+            {%- endif %}
+
+{{ get_part('interview page post') }}
+{% endblock %}

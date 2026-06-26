@@ -12,7 +12,7 @@ source /dev/stdin < <(su -c "source \"$DA_ACTIVATE\" && python -m docassemble.ba
 set -- $LOCALE
 export LANG=$1
 
-if [[ '$(dpkg --print-architecture)' == 'amd64' ]]; then
+if [[ $(dpkg --print-architecture) == 'amd64' ]]; then
     CURRENTARCH=x86_64
 else
     CURRENTARCH=aarch64

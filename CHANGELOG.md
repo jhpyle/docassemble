@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.10.0] - 2026-06-20
+
+### Added
+
+- The `enable api`, `enable email server`, `enable object storage`,
+  `enable daglobal`, `enable json storage`, `enable sms interface`,
+  `enable faxing`, and `enable tts` Configuration directives.
+- The `pip trusted host` Configuration directive.
+
+### Changed
+
+- The internal organization of the source code has changed
+  significantly. Documented functionality has not changed, but if your
+  code imports undocumented names, you may find that the name has
+  moved to another module. Testing your interviews on a development
+  server is recommended before upgrading a production server.
+- `pluggy` is now used to give `docassemble.base` access to
+  functionality in `docassemble.webapp`.
+- Flask blueprints are now used for features of
+  `docassemble.webapp`. Configuration directives like `enable
+  training` and `allow log viewing` will now prevent the importing of
+  the code underlying the disabled features. Turning off these
+  features can decrease uWSGI memory usage by 29%.
+- SQLAlchemy models now inherit from `sqlalchemy.org.DeclarativeBase`
+  rather than `db.model`.
+- Celery tasks are now invoked using signatures.
+
 ## [1.9.13] - 2026-06-03
 
 ### Fixed

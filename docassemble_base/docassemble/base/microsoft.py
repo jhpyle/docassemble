@@ -5,7 +5,12 @@ import os
 import re
 import logging
 import yaml
-from azure.storage.blob import BlobServiceClient, BlobSasPermissions, ContentSettings, generate_blob_sas
+from azure.storage.blob import (
+    BlobServiceClient,
+    BlobSasPermissions,
+    ContentSettings,
+    generate_blob_sas,
+)
 from azure.identity import ManagedIdentityCredential
 from azure.keyvault.secrets import SecretClient
 from docassemble.base.error import DAException
@@ -16,7 +21,7 @@ logger.setLevel(logging.WARNING)
 epoch = datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
 
 
-class azureobject:
+class AzureObject:
 
     def __init__(self, azure_config):
         if ('key vault name' in azure_config and azure_config['key vault name'] is not None and 'managed identity' in azure_config and azure_config['managed identity'] is not None):
@@ -43,7 +48,7 @@ class azureobject:
             raise DAException("Cannot connect to Azure without account name, account key, and container specified")
 
     def get_key(self, key_name):
-        new_key = azurekey(self, key_name, load=False)
+        new_key = AzureKey(self, key_name, load=False)
         if new_key.exists():
             new_key.get_properties()
             new_key.does_exist = True
@@ -54,17 +59,17 @@ class azureobject:
     def search_key(self, key_name):
         for blob in self.container_client.list_blobs(name_starts_with=key_name):
             if blob.name == key_name:
-                return azurekey(self, blob.name)
+                return AzureKey(self, blob.name)
         return None
 
     def list_keys(self, prefix):
         output = []
         for blob in self.container_client.list_blobs(name_starts_with=prefix):
-            output.append(azurekey(self, blob.name))
+            output.append(AzureKey(self, blob.name))
         return output
 
     def get_secret(self, key_vault_reference):
-        new_secret = azuresecret(self, key_vault_reference)
+        new_secret = AzureSecret(self, key_vault_reference)
         return new_secret.get_secret_as_string()
 
     def replace_secrets(self, match):
@@ -78,7 +83,7 @@ class azureobject:
         return loaded_config_with_secrets
 
 
-class azurekey:
+class AzureKey:
 
     def __init__(self, azure_object, key_name, load=True):
         self.azure_object = azure_object
@@ -161,7 +166,7 @@ class azurekey:
         return self.blob_client.url + '?' + token
 
 
-class azuresecret:
+class AzureSecret:
 
     def __init__(self, azure_object, key_vault_reference):
         self.azure_object = azure_object

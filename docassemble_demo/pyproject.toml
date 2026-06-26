@@ -28,3 +28,50 @@ Documentation = "https://docassemble.org/docs.html"
 Repository = "https://github.com/jhpyle/docassemble.git"
 "Bug Tracker" = "https://github.com/jhpyle/docassemble/issues"
 Changelog = "https://github.com/jhpyle/docassemble/blob/master/CHANGELOG.md"
+[tool.ruff]
+src = ["docassemble_base", "docassemble_webapp", "docassemble_demo"]
+
+[tool.ruff.lint]
+ignore = ["E722", "E226", "E24", "E501", "C901", "E305", "E306"]
+
+[tool.pylint.main]
+init-hook = """
+import sys
+sys.path.insert(0, '../docassemble_webapp')
+sys.path.insert(0, '../docassemble_base')
+sys.path.insert(0, '../docassemble_demo')
+"""
+
+[tool.pylint.messages_control]
+disable = [
+    "attribute-defined-outside-init",
+    "bare-except",
+    "broad-exception-caught",
+    "consider-using-f-string",
+    "consider-using-with",
+    "eval-used",
+    "exec-used",
+    "import-outside-toplevel",
+    "line-too-long",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "no-member",
+    "raise-missing-from",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-boolean-expressions",
+    "too-many-branches",
+    "too-many-function-args",
+    "too-many-lines",
+    "too-many-locals",
+    "too-many-nested-blocks",
+    "too-many-positional-arguments",
+    "too-many-public-methods",
+    "too-many-return-statements",
+    "too-many-statements",
+    "too-many-instance-attributes",
+]
+
+[tool.mypy]
+disable_error_code = ["var-annotated"]

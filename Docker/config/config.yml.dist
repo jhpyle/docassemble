@@ -149,3 +149,13 @@ gotenberg:
   password: {{GOTENBERGPASSWORD}}
 javascript defer: True
 use nginx to serve files: {{USENGINXTOSERVEFILES}}
+enable api: True
+enable daglobal: True
+enable email server: True
+enable faxing: True
+enable json storage: True
+enable monitor: True
+enable object storage: True
+enable sms interface: True
+enable training: True
+enable tts: True

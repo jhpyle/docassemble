@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 __all__ = []
 
 

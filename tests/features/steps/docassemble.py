@@ -4,7 +4,10 @@ import re
 import json
 import shutil
 from random import randint, random
-from behave import step, use_step_matcher  # pylint: disable=import-error,no-name-in-module
+from behave import (
+    step,
+    use_step_matcher,
+)  # pylint: disable=import-error,no-name-in-module
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait

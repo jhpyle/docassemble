@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """add indexes
 
 Revision ID: 4328f2c08f05

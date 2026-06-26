@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """length_of_subdivisionfirst
 
 Revision ID: eb61567ea005

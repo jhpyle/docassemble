@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """add unique constraints
 
 Revision ID: a8746ddab8cb

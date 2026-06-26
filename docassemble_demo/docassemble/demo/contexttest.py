@@ -1,5 +1,5 @@
 # do not pre-load
-from docassemble.base.util import current_context, Individual, log
+from docassemble.base.util import current_context, Individual
 
 __all__ = ['AltIndividual']
 

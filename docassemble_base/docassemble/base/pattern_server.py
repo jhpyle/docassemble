@@ -25,12 +25,12 @@ try:
         nltk.download('sentiwordnet')
 except:
     pass
-import docassemble_pattern.en  # pylint: disable=import-error,no-name-in-module
-import docassemble_pattern.es  # pylint: disable=import-error,no-name-in-module
-import docassemble_pattern.de  # pylint: disable=import-error,no-name-in-module
-import docassemble_pattern.fr  # pylint: disable=import-error,no-name-in-module
-import docassemble_pattern.it  # pylint: disable=import-error,no-name-in-module
-import docassemble_pattern.nl  # pylint: disable=import-error,no-name-in-module
+import docassemble_pattern.en  # pylint: disable=import-error,no-name-in-module,wrong-import-position
+import docassemble_pattern.es  # pylint: disable=import-error,no-name-in-module,wrong-import-position
+import docassemble_pattern.de  # pylint: disable=import-error,no-name-in-module,wrong-import-position
+import docassemble_pattern.fr  # pylint: disable=import-error,no-name-in-module,wrong-import-position
+import docassemble_pattern.it  # pylint: disable=import-error,no-name-in-module,wrong-import-position
+import docassemble_pattern.nl  # pylint: disable=import-error,no-name-in-module,wrong-import-position
 
 SOCKET_PATH = os.environ.get('NLTKSOCKET', '/var/run/nltk/da_nltk.sock')
 

@@ -3,11 +3,8 @@ import sys
 import os
 import subprocess
 import redis
-import docassemble.base.config
-if __name__ == "__main__":
-    docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig, parse_redis_uri
-from docassemble.webapp.cloud import get_cloud
+from docassemble.webapp.config import daconfig, parse_redis_uri
+from docassemble.webapp.cloud.utils import get_cloud
 from docassemble.base.logger import logmessage
 
 

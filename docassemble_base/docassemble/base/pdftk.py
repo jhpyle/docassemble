@@ -13,15 +13,15 @@ import pikepdf
 import img2pdf
 from pikepdf import Pdf
 from PIL import Image
-from docassemble.base.error import DAError, DAException
-from docassemble.base.pdfa import pdf_to_pdfa
-from docassemble.base.logger import logmessage
-from docassemble.base.functions import word
-from docassemble.base.config import daconfig
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdftypes import resolve1, PDFObjRef
 from pdfminer.pdfpage import PDFPage
+from docassemble.base.error import DAError, DAException
+from docassemble.base.pdfa import pdf_to_pdfa
+from docassemble.base.language.words import word
+from docassemble.base.logger import logmessage
+from docassemble.base.config import daconfig
 
 logging.getLogger('pdfminer').setLevel(logging.ERROR)
 

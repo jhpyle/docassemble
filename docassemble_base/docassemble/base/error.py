@@ -106,7 +106,7 @@ class ForcedNameError(NameError):
         if len(the_args) == 0:
             raise DAError("ForcedNameError must have at least one argument")
         the_context = {}
-        the_user_dict = kwargs.get('user_dict', {})
+        the_user_dict = kwargs.get('user_dict') or {}
         for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
             if var_name in the_user_dict:
                 the_context[var_name] = the_user_dict[var_name]

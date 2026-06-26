@@ -1,8 +1,9 @@
 # do not pre-load
-from docassemble.base.util import DAOAuth
 from googleapiclient.discovery import build
+from docassemble.base.util import DAOAuth
 
 __all__ = ['GoogleAuth']
+
 
 
 class GoogleAuth(DAOAuth):
@@ -16,10 +17,10 @@ class GoogleAuth(DAOAuth):
 
     def test(self):
         service = build('sheets', 'v4', http=self.get_http())
-        SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
-        SAMPLE_RANGE_NAME = 'Class Data!A2:E'
         sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                                    range=SAMPLE_RANGE_NAME).execute()
+        sample_spreadsheet_id = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
+        sample_range_name = 'Class Data!A2:E'
+        result = sheet.values().get(spreadsheetId=sample_spreadsheet_id,
+                                    range=sample_range_name).execute()
         values = result.get('values', [])
         return values

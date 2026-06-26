@@ -16,7 +16,7 @@
     {%- endif %}
     {{ render_select_field(form.role_id) }}
     {{ render_submit_field(form.submit) }}
-    <a role="button" class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('user_list') }}">{{ word('Cancel') }}</a>
+    <a role="button" class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('users.user_list') }}">{{ word('Cancel') }}</a>
 </form>
 
 {% endblock %}

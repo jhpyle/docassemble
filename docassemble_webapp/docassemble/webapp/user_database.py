@@ -1,8 +1,9 @@
 import os
-from docassemble.base.config import daconfig
 from docassemble.base.error import DAError, DAException
+from docassemble.webapp.config import daconfig
+from .hooks.impl import hookimpl
 
-
+@hookimpl
 def alchemy_url(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
         raise DAException("alchemy_url: missing or invalid configuration for " + db_config)
@@ -38,7 +39,7 @@ def alchemy_url(db_config):
 
     return alchemy_connect_string
 
-
+@hookimpl
 def connect_args(db_config):
     if db_config not in daconfig or (not isinstance(daconfig[db_config], dict)) or 'name' not in daconfig[db_config]:
         raise DAException("connect_args: missing or invalid configuration for " + db_config)

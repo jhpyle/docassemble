@@ -1,19 +1,16 @@
-import sys
+# pylint: disable=wrong-import-position
 from datetime import timedelta
 from simplekv.memory.redisstore import RedisStore
 from docassemblekvsession import KVSessionExtension
-from docassemble.webapp.app_object import app
-import docassemble.webapp.daredis
-import docassemble.base.util
-import docassemble.base.config
-if __name__ == "__main__":
-    docassemble.base.config.load(arguments=sys.argv)
-from docassemble.base.config import daconfig
+from docassemble.webapp.config import daconfig
+from docassemble.webapp.daredis import r_store
+from docassemble.webapp.app_object import flaskapp as app_stub
 
 if 'session lifetime seconds' in daconfig:
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=daconfig['session lifetime seconds'])
+    app_stub.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=daconfig['session lifetime seconds'])
 
-store = RedisStore(docassemble.webapp.daredis.r_store)
-kv_session = KVSessionExtension(store, app)
-with app.app_context():
-    kv_session.cleanup_sessions()
+kvsession = KVSessionExtension()
+kvsession.init_app(app_stub, session_kvstore=RedisStore(r_store))
+
+with app_stub.app_context():
+    kvsession.cleanup_sessions()

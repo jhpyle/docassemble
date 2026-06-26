@@ -1,9 +1,11 @@
 # do not pre-load
 from flask import request, jsonify
 from flask_cors import cross_origin
-from docassemble.webapp.app_object import app, csrf
-from docassemble.webapp.server import api_verify, jsonify_with_status
-from docassemble.webapp.worker_common import workerapp
+from docassemble.webapp.extensions import csrf
+from docassemble.webapp.app_object import flaskapp as app
+from docassemble.webapp.api.helpers import api_verify
+from docassemble.webapp.utils.helpers import jsonify_with_status
+from docassemble.webapp.tasks.app import celery_app
 from docassemble.base.config import in_celery
 if not in_celery:
     from docassemble.demo.custombg import custom_add_four, custom_comma_and_list
@@ -19,7 +21,7 @@ def start_process():
         operand = int(request.args['operand'])
     except:
         return jsonify_with_status({"success": False, "error_message": "Missing or invalid operand."}, 400)
-    task = custom_add_four.delay(operand)
+    task = custom_add_four.delay(operand)  # pylint: disable=possibly-used-before-assignment
     return jsonify({"success": True, 'task_id': task.id})
 
 
@@ -30,7 +32,7 @@ def poll_for_result():
     if not api_verify():
         return jsonify_with_status({"success": False, "error_message": "Access denied."}, 403)
     try:
-        result = workerapp.AsyncResult(id=request.args['task_id'])
+        result = celery_app.AsyncResult(id=request.args['task_id'])
     except:
         return jsonify_with_status({"success": False, "error_message": "Invalid task_id."}, 400)
     if not result.ready():
@@ -46,5 +48,5 @@ def poll_for_result():
 def start_process_2():
     if not api_verify():
         return jsonify_with_status({"success": False, "error_message": "Access denied."}, 403)
-    task = custom_comma_and_list.delay('foo', 'bar', 'foobar')
+    task = custom_comma_and_list.delay('foo', 'bar', 'foobar')  # pylint: disable=possibly-used-before-assignment
     return jsonify({"success": True, 'task_id': task.id})

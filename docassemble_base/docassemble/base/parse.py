@@ -6,7 +6,6 @@ import string
 import os
 import os.path
 import sys
-import datetime
 import time
 import operator
 import pprint
@@ -15,53 +14,116 @@ import codecs
 import array
 import tempfile
 import json
-import platform
 import textwrap
 from urllib.request import urlretrieve
 from io import StringIO
-from collections import abc, OrderedDict, namedtuple
+from collections import abc, OrderedDict
 from types import CodeType, FunctionType
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
-from itertools import groupby, chain
 import ruamel.yaml
-from jinja2 import ChainableUndefined
-from jinja2.runtime import StrictUndefined, UndefinedError
+from jinja2.runtime import UndefinedError
 from jinja2.exceptions import TemplateError
-from jinja2.environment import Environment
-from jinja2 import FileSystemLoader, select_autoescape, TemplateNotFound
 from jinja2 import meta as jinja2meta
-from jinja2.lexer import Token
-from jinja2.utils import internalcode, missing, object_type_repr
-from jinja2.ext import Extension
 from docxtpl import DocxTemplate
 import dateutil.parser
 try:
     import zoneinfo
 except ImportError:
-    from backports import zoneinfo
+    from backports import zoneinfo  # type: ignore[no-redef]
 from bs4 import BeautifulSoup
 from docassemble_textstat.textstat import textstat
 import qrcode
 import qrcode.image.svg
-from docassemble.base import __version__ as da_version
-import docassemble.base.filter
-import docassemble.base.pdftk
-import docassemble.base.file_docx
-from docassemble.base.error import DAError, DANotFoundError, MandatoryQuestion, DAErrorNoEndpoint, DAErrorMissingVariable, ForcedNameError, QuestionError, ResponseError, BackgroundResponseError, BackgroundResponseActionError, CommandError, CodeExecute, DAValidationError, ForcedReRun, LazyNameError, DAAttributeError, DAIndexError, DAException, DANameError, DASourceError
-import docassemble.base.functions
-import docassemble.base.util
-from docassemble.base.functions import pickleable_objects, word, get_language, RawValue, get_config, safeyaml, altyaml, prettyyaml
-from docassemble.base.logger import logmessage
-from docassemble.base.pandoc import MyPandoc
-from docassemble.base.mako.template import Template as MakoTemplate
-from docassemble.base.mako.exceptions import SyntaxException, CompileException
-from docassemble.base.astparser import myvisitnode
+from .astparser import DetectIllegal
+from .astparser import MyVisitNode
+from .dates import format_date
+from .error import (
+    BackgroundResponseActionError,
+    BackgroundResponseError,
+    CodeExecute,
+    CommandError,
+    DAAttributeError,
+    DAError,
+    DAErrorMissingVariable,
+    DAErrorNoEndpoint,
+    DAException,
+    DAIndexError,
+    DANameError,
+    DANotFoundError,
+    DASourceError,
+    DAValidationError,
+    ForcedNameError,
+    ForcedReRun,
+    LazyNameError,
+    MandatoryQuestion,
+    QuestionError,
+    ResponseError,
+)
+from .interview_source import interview_source_from_string, InterviewSourceString
+from .file_docx import transform_for_docx, concatenate_files, fix_docx
+from .filter.html import (
+    emoji_html,
+    emoji_insert,
+    get_audio_urls,
+    get_video_urls,
+    markdown_to_html,
+)
+from .filter.utils import convert_svg_to_png
+from .functions import (
+    DANav,
+    RawValue,
+    altyaml,
+    custom_types,
+    get_action_stack,
+    get_config,
+    get_language,
+    intrinsic_name_of,
+    package_data_filename,
+    package_template_filename,
+    pickleable_objects,
+    pop_current_variable,
+    pop_event_stack,
+    prettyyaml,
+    reconsider,
+    reset_context,
+    reset_gathering_mode,
+    safeyaml,
+    serializable_dict,
+    set_context,
+    set_current_variable,
+    single_paragraph,
+    space_to_underscore,
+    static_filename_path,
+    undefine,
+    url_action,
+    word,
+    wrap_up,
+)
+from .helpers import extract_missing_name, fix_quotes
+from .hooks import (
+    file_finder,
+    get_default_language,
+    get_default_timezone,
+    get_main_page_parts,
+    save_numbered_file,
+    secure_filename_unicode_ok,
+    to_text,
+    url_finder,
+)
+from .jinja import custom_jinja_env
+from .language.control import set_language
+from .logger import logmessage
+from .mako.exceptions import SyntaxException, CompileException
+from .mako.template import Template as MakoTemplate
+from .pandoc import MyPandoc, word_to_pdf, update_references
+from .pdftk import fill_template
+from .thread_context import this_thread
+from .util import objects_from_structure, objects_from_data
 
 equals_byte = bytes('=', 'utf-8')
 RangeType = type(range(1, 2))
 NoneType = type(None)
-da_arch = platform.machine()
 standard_types = set(['integer', 'number', 'currency', 'float', 'file', 'files', 'range', 'multiselect', 'checkboxes', 'object_multiselect', 'object_checkboxes', 'user', 'camera', 'environment', 'date', 'datetime', 'time', 'email', 'microphone', 'ml', 'mlarea', 'noyes', 'noyesmaybe', 'noyesradio', 'noyeswide', 'yesno', 'yesnomaybe', 'yesnoradio', 'yesnowide', 'text', 'password', 'object'])
 
 DEBUG = True
@@ -73,7 +135,6 @@ match_process_action = re.compile(r'process_action\(')
 match_mako = re.compile(r'<%|\${|% if|% for|% while|\#\#')
 emoji_match = re.compile(r':([^ ]+):')
 valid_variable_match = re.compile(r'^[^\d][A-Za-z0-9\_]*$')
-nameerror_match = re.compile(r'\'(.*)\' (is not defined|referenced before assignment|is undefined|where it is not)')
 document_match = re.compile(r'^--- *$', flags=re.MULTILINE)
 remove_trailing_dots = re.compile(r'[\n\r]+\.\.\.$')
 fix_tabs = re.compile(r'\t')
@@ -103,20 +164,20 @@ def textify(data, the_user_dict):
 
 # def set_absolute_filename(func):
 #     # logmessage("Running set_absolute_filename in parse")
-#     docassemble.base.functions.set_absolute_filename(func)
+#     set_absolute_filename(func)
 
 # def set_url_finder(func):
-#     docassemble.base.filter.set_url_finder(func)
-#     docassemble.base.functions.set_url_finder(func)
+#     set_url_finder(func)
+#     set_url_finder(func)
 
 # def set_url_for(func):
-#     docassemble.base.filter.set_url_for(func)
+#     set_url_for(func)
 
 # def set_file_finder(func):
-#     docassemble.base.filter.set_file_finder(func)
+#     set_file_finder(func)
 
 # def set_da_send_mail(func):
-#     docassemble.base.filter.set_da_send_mail(func)
+#     set_da_send_mail(func)
 
 # def blank_save_numbered_file(*args, **kwargs):
 #     return (None, None, None)
@@ -128,7 +189,7 @@ def textify(data, the_user_dict):
 #     # logmessage("set the save_numbered_file function to " + str(func))
 #     save_numbered_file = func
 
-INITIAL_DICT = {'_internal': {'session_local': {}, 'device_local': {}, 'user_local': {}, 'dirty': {}, 'progress': 0, 'tracker': 0, 'docvar': {}, 'doc_cache': {}, 'steps': 1, 'steps_offset': 0, 'secret': None, 'informed': {}, 'livehelp': {'availability': 'unavailable', 'mode': 'help', 'roles': [], 'partner_roles': []}, 'answered': set(), 'answers': {}, 'objselections': {}, 'starttime': None, 'modtime': None, 'accesstime': {}, 'tasks': {}, 'gather': [], 'event_stack': {}, 'misc': {}}, 'url_args': {}, 'nav': docassemble.base.functions.DANav()}
+INITIAL_DICT = {'_internal': {'session_local': {}, 'device_local': {}, 'user_local': {}, 'dirty': {}, 'progress': 0, 'tracker': 0, 'docvar': {}, 'doc_cache': {}, 'steps': 1, 'steps_offset': 0, 'secret': None, 'informed': {}, 'livehelp': {'availability': 'unavailable', 'mode': 'help', 'roles': [], 'partner_roles': []}, 'answered': set(), 'answers': {}, 'objselections': {}, 'starttime': None, 'modtime': None, 'accesstime': {}, 'tasks': {}, 'gather': [], 'event_stack': {}, 'misc': {}}, 'url_args': {}, 'nav': DANav()}
 
 
 def set_initial_dict(the_dict):
@@ -140,27 +201,6 @@ def get_initial_dict():
     return copy.deepcopy(INITIAL_DICT)
 
 
-class DAFileSystemLoader(FileSystemLoader):
-
-    def get_source(self, environment, template):
-        if ':' not in template:
-            return super().get_source(environment, template)
-        template_path = None
-        for the_filename in question_path_options(template):
-            if the_filename is not None:
-                template_path = the_filename
-                break
-        if template_path is None or not os.path.isfile(template_path):
-            raise TemplateNotFound(template)
-        fspath = os.fspath(os.path.dirname(template_path))
-        if fspath not in self.searchpath:
-            self.searchpath.append(fspath)
-        mtime = os.path.getmtime(template_path)
-        with open(template_path, 'r', encoding='utf-8') as fp:
-            source = fp.read()
-        return source, template_path, lambda: mtime == os.path.getmtime(template_path)
-
-
 class PackageImage:
 
     def __init__(self, **kwargs):
@@ -170,259 +210,11 @@ class PackageImage:
         self.package = kwargs.get('package', 'docassemble.base')
 
     def get_filename(self):
-        return docassemble.base.functions.static_filename_path(str(self.package) + ':' + str(self.filename))
+        return static_filename_path(str(self.package) + ':' + str(self.filename))
 
     def get_reference(self):
         # logmessage("get_reference is considering " + str(self.package) + ':' + str(self.filename))
         return str(self.package) + ':' + str(self.filename)
-
-
-class InterviewSource:
-
-    def __init__(self, **kwargs):
-        if not hasattr(self, 'package'):
-            self.package = kwargs.get('package', None)
-        self.language = kwargs.get('language', '*')
-        self.dialect = kwargs.get('dialect', None)
-        self.testing = kwargs.get('testing', False)
-        self.translating = kwargs.get('translating', False)
-
-    def __le__(self, other):
-        return str(self) <= (str(other) if isinstance(other, InterviewSource) else other)
-
-    def __ge__(self, other):
-        return str(self) >= (str(other) if isinstance(other, InterviewSource) else other)
-
-    def __gt__(self, other):
-        return str(self) > (str(other) if isinstance(other, InterviewSource) else other)
-
-    def __lt__(self, other):
-        return str(self) < (str(other) if isinstance(other, InterviewSource) else other)
-
-    def __eq__(self, other):
-        return self is other
-
-    def __ne__(self, other):
-        return self is not other
-
-    def __str__(self):
-        if hasattr(self, 'path'):
-            return str(self.path)
-        return 'interviewsource'
-
-    def __hash__(self):
-        if hasattr(self, 'path'):
-            return hash((self.path,))
-        return hash(('interviewsource',))
-
-    def set_path(self, path):
-        self.path = path
-
-    def get_name(self):
-        if ':' in self.path:
-            return self.path
-        return self.get_package() + ':data/questions/' + self.path
-
-    def get_index(self):
-        the_index = docassemble.base.functions.server.server_redis.get('da:interviewsource:' + self.path)
-        if the_index is None:
-            # logmessage("Updating index from get_index for " + self.path)
-            the_index = docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
-        return the_index
-
-    def update_index(self):
-        # logmessage("Updating index for " + self.path)
-        docassemble.base.functions.server.server_redis.incr('da:interviewsource:' + self.path)
-
-    def set_filepath(self, filepath):
-        self.filepath = filepath
-
-    def set_directory(self, directory):
-        self.directory = directory
-
-    def set_content(self, content):
-        self.content = content
-
-    def set_language(self, language):
-        self.language = language
-
-    def set_dialect(self, dialect):
-        self.dialect = dialect
-
-    def set_testing(self, testing):
-        self.testing = testing
-
-    def set_package(self, package):
-        self.package = package
-
-    def update(self, **kwargs):  # pylint: disable=unused-argument
-        return True
-
-    def get_modtime(self):
-        return self._modtime
-
-    def get_language(self):
-        return self.language
-
-    def get_dialect(self):
-        return self.dialect
-
-    def get_package(self):
-        return self.package
-
-    def get_testing(self):
-        return self.testing
-
-    def get_interview(self):
-        return Interview(source=self)
-
-    def append(self, path):  # pylint: disable=unused-argument
-        return None
-
-
-class InterviewSourceString(InterviewSource):
-
-    def __init__(self, **kwargs):
-        self.set_path(kwargs.get('path', None))
-        self.set_directory(kwargs.get('directory', None))
-        self.set_content(kwargs.get('content', None))
-        self._modtime = datetime.datetime.now(tz=datetime.timezone.utc)
-        super().__init__(**kwargs)
-
-
-class InterviewSourceFile(InterviewSource):
-
-    def __init__(self, **kwargs):
-        self.playground = None
-        if 'filepath' in kwargs:
-            if kwargs['filepath'].__class__.__name__.endswith('SavedFile'):
-                self.playground = kwargs['filepath']
-                if self.playground.subdir and self.playground.subdir != 'default':
-                    self.playground_file = os.path.join(self.playground.subdir, self.playground.filename)
-                else:
-                    self.playground_file = self.playground.filename
-                # logmessage("The path is " + repr(self.playground.path))
-                if os.path.isfile(self.playground.path) and os.access(self.playground.path, os.R_OK):
-                    self.set_filepath(self.playground.path)
-                else:
-                    logmessage("Details of playground path reference:")
-                    logmessage("Keyword arguments were " + repr(kwargs))
-                    for attribute in ['file_number', 'fixed', 'section', 'filename', 'extension', 'directory', 'path', 'modtimes', 'keydict', 'subdir']:
-                        if hasattr(self.playground, attribute):
-                            logmessage(attribute + " is " + repr(getattr(self.playground, attribute)))
-                        else:
-                            logmessage(attribute + " did not exist")
-                    if os.path.exists(self.playground.path):
-                        if os.path.isfile(self.playground.path):
-                            if os.access(self.playground.path, os.R_OK):
-                                logmessage("path is a file and is readable")
-                            else:
-                                logmessage("path is a file but is not readable")
-                        else:
-                            logmessage("path was not a file")
-                    else:
-                        logmessage("path did not exist")
-                    raise DANotFoundError("Reference to invalid playground path.")
-            else:
-                self.set_filepath(kwargs['filepath'])
-        else:
-            self.filepath = None
-        if 'path' in kwargs:
-            self.set_path(kwargs['path'])
-        super().__init__(**kwargs)
-
-    def set_path(self, path):
-        self.path = path
-        parts = path.split(":")
-        if len(parts) == 2:
-            self.package = parts[0]
-            self.basename = parts[1]
-        else:
-            self.package = None
-        # if self.package is None:
-        #     m = re.search(r'^/(playground\.[0-9]+)/', path)
-        #     if m:
-        #         self.package = m.group(1)
-        if self.filepath is None:
-            self.set_filepath(interview_source_from_string(self.path))
-        if self.package is None and re.search(r'docassemble.base.data.', self.filepath):
-            self.package = 'docassemble.base'
-
-    def set_filepath(self, filepath):
-        # logmessage("Called set_filepath with " + str(filepath))
-        self.filepath = filepath
-        if self.filepath is None:
-            self.directory = None
-        else:
-            self.set_directory(os.path.dirname(self.filepath))
-
-    def reset_modtime(self):
-        try:
-            with open(self.filepath, 'a', encoding='utf-8'):
-                os.utime(self.filepath, None)
-        except:
-            logmessage("InterviewSourceFile: could not reset modification time on interview")
-
-    def update(self, **kwargs):
-        try:
-            with open(self.filepath, 'r', encoding='utf-8') as the_file:
-                orig_text = the_file.read()
-        except:
-            return False
-        if not orig_text.startswith('# use jinja'):
-            self.set_content(orig_text)
-            return True
-        env = Environment(
-            loader=DAFileSystemLoader(self.directory),
-            autoescape=select_autoescape()
-        )
-        if kwargs.get('raise_jinja_errors', True):
-            template = env.get_template(os.path.basename(self.filepath))
-        else:
-            try:
-                template = env.get_template(os.path.basename(self.filepath))
-            except TemplateError:
-                self.set_content(orig_text)
-                return True
-        data = copy.deepcopy(get_config('jinja data'))
-        data['__config__'] = copy.deepcopy(docassemble.base.functions.server.daconfig)
-        data['__version__'] = da_version
-        data['__architecture__'] = da_arch
-        data['__filename__'] = self.path
-        data['__current_package__'] = self.package
-        data['__parent_filename__'] = kwargs.get('parent_source', self).path
-        data['__parent_package__'] = kwargs.get('parent_source', self).package
-        data['__interview_filename__'] = kwargs.get('interview_source', self).path
-        data['__interview_package__'] = kwargs.get('interview_source', self).package
-        data['__hostname__'] = get_config('external hostname', None) or 'localhost'
-        data['__debug__'] = bool(get_config('debug', True))
-        try:
-            self.set_content(template.render(data))
-        except BaseException as err:
-            self.set_content("__error__: " + repr("Jinja2 rendering error: " + err.__class__.__name__ + ": " + str(err)))
-        return True
-
-    def get_modtime(self):
-        # logmessage("get_modtime called in parse where path is " + str(self.path))
-        if self.playground is not None:
-            return self.playground.get_modtime(filename=self.playground_file)
-        self._modtime = os.path.getmtime(self.filepath)
-        return self._modtime
-
-    def append(self, path):
-        new_file = os.path.join(self.directory, path)
-        if os.path.isfile(new_file) and os.access(new_file, os.R_OK):
-            new_source = InterviewSourceFile()
-            new_source.path = path
-            new_source.directory = self.directory
-            new_source.basename = path
-            new_source.filepath = new_file
-            new_source.playground = self.playground
-            if hasattr(self, 'package'):
-                new_source.package = self.package
-            if new_source.update():
-                return new_source
-        return None
 
 
 def dummy_embed_input(status, variable):  # pylint: disable=unused-argument
@@ -781,13 +573,13 @@ class InterviewStatus:
 
     def populate(self, question_result):
         self.question = question_result['question']
-        self.questionText = question_result['question_text']
-        self.subquestionText = question_result['subquestion_text']
-        self.continueLabel = question_result['continue_label']
+        self.question_text = question_result['question_text']
+        self.subquestion_text = question_result['subquestion_text']
+        self.continue_label = question_result['continue_label']
         self.decorations = question_result['decorations']
         self.audiovideo = question_result['audiovideo']
-        self.helpText = question_result['help_text'] or []
-        self.interviewHelpText = question_result['interview_help_text'] or []
+        self.help_text = question_result['help_text'] or []
+        self.interview_help_text = question_result['interview_help_text'] or []
         self.attachments = question_result['attachments'] or []
         self.selectcompute = question_result['selectcompute']
         self.defaults = question_result['defaults']
@@ -860,8 +652,8 @@ class InterviewStatus:
     def convert_help(self, help_text, encode, debug):
         the_help = {}
         if 'audiovideo' in help_text and help_text['audiovideo'] is not None:
-            audio_result = docassemble.base.filter.get_audio_urls(help_text['audiovideo'])
-            video_result = docassemble.base.filter.get_video_urls(help_text['audiovideo'])
+            audio_result = get_audio_urls(help_text['audiovideo'])
+            video_result = get_video_urls(help_text['audiovideo'])
             if len(audio_result) > 0:
                 the_help['audio'] = [{'url': x[0], 'mime_type': x[1]} for x in audio_result]
             if len(video_result) > 0:
@@ -873,12 +665,12 @@ class InterviewStatus:
                     the_help['help'] = ''
                 the_help['help'] += '<p>' + the_help['heading'] + '</p>'
         if 'content' in help_text and help_text['content'] is not None:
-            the_help['content'] = docassemble.base.filter.markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=(not encode))
+            the_help['content'] = markdown_to_html(help_text['content'].rstrip(), status=self, verbatim=not encode)
             if debug:
                 if 'help' not in the_help:
                     the_help['help'] = ''
                 the_help['help'] += '<p>' + the_help['content'] + '</p>'
-        # elif len(self.helpText) > 1:
+        # elif len(self.help_text) > 1:
         #    the_help['heading'] = word('Help with this question')
         return the_help
 
@@ -895,7 +687,7 @@ class InterviewStatus:
             result['validation_messages'] = {}
         if 'reload_after' in self.extras:
             result['reload'] = 1000 * int(self.extras['reload_after'])
-        lang = docassemble.base.functions.get_language()
+        lang = get_language()
         if len(self.question.terms) > 0 or len(self.question.interview.terms) > 0:
             result['terms'] = {}
             if 'terms' in self.extras:
@@ -924,29 +716,28 @@ class InterviewStatus:
             result['additional_buttons'] = []
             for item in self.extras['action_buttons']:
                 new_item = copy.deepcopy(item)
-                new_item['label'] = docassemble.base.filter.markdown_to_html(item['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
+                new_item['label'] = markdown_to_html(item['label'], trim=True, do_terms=False, status=self, verbatim=not encode)
                 if debug:
                     output['question'] += '<p>' + new_item['label'] + '</p>'
-        for param in ('questionText',):
-            if hasattr(self, param) and getattr(self, param) is not None:
-                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, status=self, verbatim=(not encode))
-                if debug:
-                    output['question'] += '<p>' + result[param] + '</p>'
+        if hasattr(self, 'question_text') and getattr(self, 'question_text') is not None:
+            result['questionText'] = markdown_to_html(getattr(self, 'question_text').rstrip(), trim=True, status=self, verbatim=not encode)
+            if debug:
+                output['question'] += '<p>' + result['questionText'] + '</p>'
         if debug:
             if hasattr(self, 'breadcrumb') and self.breadcrumb is not None:
                 output['breadcrumb label'] = self.breadcrumb
-            output['breadcrumbs'] = docassemble.base.functions.get_action_stack()
-        if hasattr(self, 'subquestionText') and self.subquestionText is not None:
+            output['breadcrumbs'] = get_action_stack()
+        if hasattr(self, 'subquestion_text') and self.subquestion_text is not None:
             if self.question.question_type == "fields":
                 embedder = dummy_embed_input
             else:
                 embedder = None
-            result['subquestionText'] = docassemble.base.filter.markdown_to_html(self.subquestionText.rstrip(), status=self, verbatim=(not encode), embedder=embedder)
+            result['subquestionText'] = markdown_to_html(self.subquestion_text.rstrip(), status=self, verbatim=not encode, embedder=embedder)
             if debug:
                 output['question'] += result['subquestionText']
-        for param in ('continueLabel', 'helpLabel'):
-            if hasattr(self, param) and getattr(self, param) is not None:
-                result[param] = docassemble.base.filter.markdown_to_html(getattr(self, param).rstrip(), trim=True, do_terms=False, status=self, verbatim=(not encode))
+        for attr, param in (('continue_label', 'continueLabel'), ('help_label', 'helpLabel')):
+            if hasattr(self, attr) and getattr(self, attr) is not None:
+                result[param] = markdown_to_html(getattr(self, attr).rstrip(), trim=True, do_terms=False, status=self, verbatim=not encode)
                 if debug:
                     output['question'] += '<p>' + result[param] + '</p>'
         if 'menu_items' in self.extras and isinstance(self.extras['menu_items'], list):
@@ -956,10 +747,10 @@ class InterviewStatus:
                 result[param] = self.extras[param].rstrip()
         for param in ('back_button_label',):
             if param in self.extras and isinstance(self.extras[param], str):
-                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), trim=True, do_terms=False, status=self, verbatim=(not encode))
+                result[param] = markdown_to_html(self.extras[param].rstrip(), trim=True, do_terms=False, status=self, verbatim=not encode)
         for param in ('rightText', 'underText'):
             if param in self.extras and isinstance(self.extras[param], str):
-                result[param] = docassemble.base.filter.markdown_to_html(self.extras[param].rstrip(), status=self, verbatim=(not encode))
+                result[param] = markdown_to_html(self.extras[param].rstrip(), status=self, verbatim=not encode)
                 if debug:
                     output['question'] += result[param]
         if 'continueLabel' not in result:
@@ -1007,20 +798,20 @@ class InterviewStatus:
         if hasattr(self.question, 'id'):
             result['id'] = self.question.id
         if hasattr(self, 'audiovideo') and self.audiovideo is not None:
-            audio_result = docassemble.base.filter.get_audio_urls(self.audiovideo)
-            video_result = docassemble.base.filter.get_video_urls(self.audiovideo)
+            audio_result = get_audio_urls(self.audiovideo)
+            video_result = get_video_urls(self.audiovideo)
             if len(audio_result) > 0:
                 result['audio'] = [{'url': re.sub(r'.*"(http[^"]+)".*', r'\1', x)} if isinstance(x, str) else {'url': x[0], 'mime_type': x[1]} for x in audio_result]
             if len(video_result) > 0:
                 result['video'] = [{'url': re.sub(r'.*"(http[^"]+)".*', r'\1', x)} if isinstance(x, str) else {'url': x[0], 'mime_type': x[1]} for x in video_result]
-        if hasattr(self, 'helpText') and len(self.helpText) > 0:
+        if hasattr(self, 'help_text') and len(self.help_text) > 0:
             result['helpText'] = []
             result['helpBackLabel'] = word("Back to question")
-            for help_text in self.helpText:
+            for help_text in self.help_text:
                 result['helpText'].append(self.convert_help(help_text, encode, debug))
             result['help'] = {}
-            if self.helpText[0]['label']:
-                result['help']['label'] = docassemble.base.filter.markdown_to_html(self.helpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
+            if self.help_text[0]['label']:
+                result['help']['label'] = markdown_to_html(self.help_text[0]['label'], trim=True, do_terms=False, status=self, verbatim=not encode)
             else:
                 result['help']['label'] = self.question.help()
             result['help']['title'] = word("Help is available for this question")
@@ -1033,9 +824,9 @@ class InterviewStatus:
                     if 'help' in item:
                         output['help'] += '<div>' + item['help'] + '</div>'
                     output['help'] += '</div>'
-        if hasattr(self, 'interviewHelpText') and len(self.interviewHelpText) > 0:
+        if hasattr(self, 'interview_help_text') and len(self.interview_help_text) > 0:
             result['interviewHelpText'] = []
-            for help_text in self.interviewHelpText:
+            for help_text in self.interview_help_text:
                 result['interviewHelpText'].append(self.convert_help(help_text, encode, debug))
             if debug:
                 for item in result['interviewHelpText']:
@@ -1043,12 +834,12 @@ class InterviewStatus:
                         output['help'] += '<div>' + item['help'] + '</div>'
             if 'help' not in result:
                 result['help'] = {}
-            if self.interviewHelpText[0]['label']:
-                result['help']['interviewLabel'] = docassemble.base.filter.markdown_to_html(self.interviewHelpText[0]['label'], trim=True, do_terms=False, status=self, verbatim=(not encode))
+            if self.interview_help_text[0]['label']:
+                result['help']['interviewLabel'] = markdown_to_html(self.interview_help_text[0]['label'], trim=True, do_terms=False, status=self, verbatim=not encode)
             else:
                 result['help']['interviewLabel'] = self.question.help()
             result['help']['interviewTitle'] = word("Help is available")
-            if not (hasattr(self, 'helpText') and len(self.helpText) > 0):
+            if not (hasattr(self, 'help_text') and len(self.help_text) > 0):
                 result['help']['specific'] = False
         if 'questionText' not in result and self.question.question_type == "signature":
             result['questionText'] = '<p>' + word('Sign Your Name') + '</p>'
@@ -1080,9 +871,9 @@ class InterviewStatus:
                     result['decoration'] = {}
                     the_image = self.question.interview.images.get(decoration['image'], None)
                     if the_image is not None:
-                        the_url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+                        the_url = url_finder(str(the_image.package) + ':' + str(the_image.filename))
                         width = str(width_value) + str(width_units)
-                        filename = docassemble.base.functions.server.file_finder(str(the_image.package) + ':' + str(the_image.filename))
+                        filename = file_finder(str(the_image.package) + ':' + str(the_image.filename))
                         if 'extension' in filename and filename['extension'] == 'svg' and 'width' in filename:
                             if filename['width'] and filename['height']:
                                 height = str(width_value * (filename['height']/filename['width'])) + str(width_units)
@@ -1110,19 +901,19 @@ class InterviewStatus:
                     the_attachment['variable_name'] = attachment['orig_variable_name']
                 if 'name' in attachment:
                     if attachment['name']:
-                        the_attachment['name'] = docassemble.base.filter.markdown_to_html(attachment['name'], trim=True, status=self, verbatim=(not encode))
+                        the_attachment['name'] = markdown_to_html(attachment['name'], trim=True, status=self, verbatim=not encode)
                         if debug:
                             output['question'] += '<p>' + the_attachment['name'] + '</p>'
                 if 'description' in attachment:
                     if attachment['description']:
-                        the_attachment['description'] = docassemble.base.filter.markdown_to_html(attachment['description'], status=self, verbatim=(not encode))
+                        the_attachment['description'] = markdown_to_html(attachment['description'], status=self, verbatim=not encode)
                         if debug:
                             output['question'] += '<p>' + the_attachment['description'] + '</p>'
                 for key in ('valid_formats', 'filename', 'content', 'markdown', 'raw'):
                     if key in attachment and attachment[key]:
                         the_attachment[key] = attachment[key]
                 for the_format in attachment['file']:
-                    the_attachment['url'][the_format] = docassemble.base.functions.server.url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + extension_of_doc_format.get(the_format, the_format))
+                    the_attachment['url'][the_format] = url_finder(attachment['file'][the_format], filename=attachment['filename'] + '.' + extension_of_doc_format.get(the_format, the_format))
                     the_attachment['number'][the_format] = attachment['file'][the_format]
                     the_attachment['filename_with_extension'][the_format] = attachment['filename'] + '.' + extension_of_doc_format.get(the_format, the_format)
                 result['attachments'].append(the_attachment)
@@ -1210,26 +1001,26 @@ class InterviewStatus:
                 if field.datatype == 'date':
                     the_field['validation_messages']['date'] = field.validation_message('date', self, word("You need to enter a valid date."))
                     if hasattr(field, 'extras') and 'min' in field.extras and 'min' in self.extras and 'max' in field.extras and 'max' in self.extras and field.number in self.extras['min'] and field.number in self.extras['max']:
-                        the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(docassemble.base.util.format_date(self.extras['min'][field.number], format='medium'), docassemble.base.util.format_date(self.extras['max'][field.number], format='medium')))
+                        the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(format_date(self.extras['min'][field.number], format='medium'), format_date(self.extras['max'][field.number], format='medium')))
                     else:
                         was_defined = {}
                         for key in ['min', 'max']:
                             if hasattr(field, 'extras') and key in field.extras and key in self.extras and field.number in self.extras[key]:
                                 was_defined[key] = True
                                 if key == 'min':
-                                    the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([docassemble.base.util.format_date(self.extras[key][field.number], format='medium')]))
+                                    the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([format_date(self.extras[key][field.number], format='medium')]))
                                 elif key == 'max':
-                                    the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([docassemble.base.util.format_date(self.extras[key][field.number], format='medium')]))
+                                    the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([format_date(self.extras[key][field.number], format='medium')]))
                         if len(was_defined) == 0 and 'default date min' in self.question.interview.options and 'default date max' in self.question.interview.options:
-                            the_field['min'] = docassemble.base.util.format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
-                            the_field['max'] = docassemble.base.util.format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
-                            the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(docassemble.base.util.format_date(self.question.interview.options['default date min'], format='medium'), docassemble.base.util.format_date(self.question.interview.options['default date max'], format='medium')))
+                            the_field['min'] = format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
+                            the_field['max'] = format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['minmax'] = field.validation_message('date minmax', self, word("You need to enter a date between %s and %s."), parameters=(format_date(self.question.interview.options['default date min'], format='medium'), format_date(self.question.interview.options['default date max'], format='medium')))
                         elif 'max' not in was_defined and 'default date max' in self.question.interview.options:
-                            the_field['max'] = docassemble.base.util.format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
-                            the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([docassemble.base.util.format_date(self.question.interview.options['default date max'], format='medium')]))
+                            the_field['max'] = format_date(self.question.interview.options['default date max'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['max'] = field.validation_message('date max', self, word("You need to enter a date on or before %s."), parameters=tuple([format_date(self.question.interview.options['default date max'], format='medium')]))
                         elif 'min' not in was_defined and 'default date min' in self.question.interview.options:
-                            the_field['min'] = docassemble.base.util.format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
-                            the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([docassemble.base.util.format_date(self.question.interview.options['default date min'], format='medium')]))
+                            the_field['min'] = format_date(self.question.interview.options['default date min'], format='yyyy-MM-dd')
+                            the_field['validation_messages']['min'] = field.validation_message('date min', self, word("You need to enter a date on or after %s."), parameters=tuple([format_date(self.question.interview.options['default date min'], format='medium')]))
                 if field.datatype == 'time':
                     the_field['validation_messages']['time'] = field.validation_message('time', self, word("You need to enter a valid time."))
                 if field.datatype in ['datetime', 'datetime-local']:
@@ -1296,9 +1087,9 @@ class InterviewStatus:
                         if 'label' in item:
                             output['question'] += '<p>' + item['label'] + '</p>'
             if hasattr(field, 'aota'):
-                the_field['all_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['aota'][field.number], do_terms=False, status=self, verbatim=(not encode))
+                the_field['all_of_the_above'] = markdown_to_html(self.extras['aota'][field.number], do_terms=False, status=self, verbatim=not encode)
             if hasattr(field, 'nota'):
-                the_field['none_of_the_above'] = docassemble.base.filter.markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=(not encode))
+                the_field['none_of_the_above'] = markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=not encode)
             if field.number in self.extras['ok']:
                 the_field['active'] = self.extras['ok'][field.number]
             else:
@@ -1335,7 +1126,7 @@ class InterviewStatus:
                     if the_expression:
                         the_field['show_if_js'] = {'expression': the_expression, 'vars': field.extras['show_if_js']['vars'], 'sign': field.extras['show_if_js']['sign'], 'mode': field.extras['show_if_js']['mode']}
             if 'note' in self.extras and field.number in self.extras['note']:
-                the_field['note'] = docassemble.base.filter.markdown_to_html(self.extras['note'][field.number], status=self, verbatim=(not encode))
+                the_field['note'] = markdown_to_html(self.extras['note'][field.number], status=self, verbatim=not encode)
             if 'html' in self.extras and field.number in self.extras['html']:
                 the_field['html'] = self.extras['html'][field.number]
             if 'raw html' in self.extras and field.number in self.extras['raw html']:
@@ -1345,21 +1136,21 @@ class InterviewStatus:
                 if debug:
                     output['question'] += '<p>' + the_field['hint'] + '</p>'
             if field.number in self.labels:
-                the_field['label'] = docassemble.base.filter.markdown_to_html(self.labels[field.number], trim=True, status=self, verbatim=(not encode))
+                the_field['label'] = markdown_to_html(self.labels[field.number], trim=True, status=self, verbatim=not encode)
                 if debug:
                     output['question'] += '<p>' + the_field['label'] + '</p>'
             if field.number in self.helptexts:
-                the_field['helptext'] = docassemble.base.filter.markdown_to_html(self.helptexts[field.number], status=self, verbatim=(not encode))
+                the_field['helptext'] = markdown_to_html(self.helptexts[field.number], status=self, verbatim=not encode)
                 if debug:
                     output['question'] += '<p>' + the_field['helptext'] + '</p>'
             if self.question.question_type in ("yesno", "yesnomaybe"):
-                the_field['true_label'] = docassemble.base.filter.markdown_to_html(self.question.yes(), trim=True, do_terms=False, status=self, verbatim=(not encode))
-                the_field['false_label'] = docassemble.base.filter.markdown_to_html(self.question.no(), trim=True, do_terms=False, status=self, verbatim=(not encode))
+                the_field['true_label'] = markdown_to_html(self.question.yes(), trim=True, do_terms=False, status=self, verbatim=not encode)
+                the_field['false_label'] = markdown_to_html(self.question.no(), trim=True, do_terms=False, status=self, verbatim=not encode)
                 if debug:
                     output['question'] += '<p>' + the_field['true_label'] + '</p>'
                     output['question'] += '<p>' + the_field['false_label'] + '</p>'
             if self.question.question_type == 'yesnomaybe':
-                the_field['maybe_label'] = docassemble.base.filter.markdown_to_html(self.question.maybe(), trim=True, do_terms=False, status=self, verbatim=(not encode))
+                the_field['maybe_label'] = markdown_to_html(self.question.maybe(), trim=True, do_terms=False, status=self, verbatim=not encode)
                 if debug:
                     output['question'] += '<p>' + the_field['maybe_label'] + '</p>'
             result['fields'].append(the_field)
@@ -1381,7 +1172,7 @@ class InterviewStatus:
             for question_type in ('question', 'help'):
                 if question_type not in output:
                     continue
-                phrase = docassemble.base.functions.server.to_text('<div>' + output[question_type] + '</div>')
+                phrase = to_text('<div>' + output[question_type] + '</div>')
                 if (not phrase) or len(phrase) < 10:
                     phrase = "The sky is blue."
                 phrase = re.sub(r'[^A-Za-z 0-9\.\,\?\#\!\%\&\(\)]', r' ', phrase)
@@ -1449,7 +1240,7 @@ class InterviewStatus:
             return None
         if the_image.attribution is not None:
             self.attributions.add(the_image.attribution)
-        url = docassemble.base.functions.server.url_finder(str(the_image.package) + ':' + str(the_image.filename))
+        url = url_finder(str(the_image.package) + ':' + str(the_image.filename))
         return url
 
     def get_choices_data(self, field, defaultvalue, the_user_dict, encode=True):
@@ -1460,9 +1251,9 @@ class InterviewStatus:
             if self.question.question_type == "multiple_choice":
                 pairlist = list(self.selectcompute[field.number])
                 for pair in pairlist:
-                    item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': pair['key']}
+                    item = {'label': markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': pair['key']}
                     if 'help' in pair:
-                        item['help'] = docassemble.base.filter.markdown_to_html(pair['help'].rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
+                        item['help'] = markdown_to_html(pair['help'].rstrip(), trim=True, do_terms=False, status=self, verbatim=encode)
                     for standard_key in ('default', 'css class', 'color', 'group'):
                         if standard_key in pair:
                             item[standard_key] = pair[standard_key]
@@ -1486,7 +1277,7 @@ class InterviewStatus:
                     pairlist = []
                 if field.datatype in ('object_multiselect', 'object_checkboxes'):
                     for pair in pairlist:
-                        item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': from_safeid(pair['key'])}
+                        item = {'label': markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': from_safeid(pair['key'])}
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]) or (isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         for standard_key in ('help', 'css class', 'color'):
@@ -1499,7 +1290,7 @@ class InterviewStatus:
                             choice_list.append(item)
                 elif field.datatype in ('object', 'object_radio'):
                     for pair in pairlist:
-                        item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': from_safeid(pair['key'])}
+                        item = {'label': markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': from_safeid(pair['key'])}
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         if 'default' in pair:
@@ -1514,7 +1305,7 @@ class InterviewStatus:
                             choice_list.append(item)
                 elif field.datatype in ('multiselect', 'checkboxes'):
                     for pair in pairlist:
-                        item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'variable_name': saveas + "[" + repr(pair['key']) + "]", 'value': True}
+                        item = {'label': markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'variable_name': saveas + "[" + repr(pair['key']) + "]", 'value': True}
                         if encode:
                             item['variable_name_encoded'] = safeid(saveas + "[" + repr(pair['key']) + "]")
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (list, set)) and str(pair['key']) in defaultvalue) or (isinstance(defaultvalue, dict) and str(pair['key']) in defaultvalue and defaultvalue[str(pair['key'])]) or (isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
@@ -1529,7 +1320,7 @@ class InterviewStatus:
                             choice_list.append(item)
                 else:
                     for pair in pairlist:
-                        item = {'label': docassemble.base.filter.markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': pair['key']}
+                        item = {'label': markdown_to_html(pair['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'value': pair['key']}
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         choice_list.append(item)
@@ -1538,17 +1329,17 @@ class InterviewStatus:
                         formatted_item = word("All of the above")
                     else:
                         formatted_item = self.extras['aota'][field.number]
-                    choice_list.append({'label': docassemble.base.filter.markdown_to_html(formatted_item, trim=True, do_terms=False, status=self, verbatim=encode)})
+                    choice_list.append({'label': markdown_to_html(formatted_item, trim=True, do_terms=False, status=self, verbatim=encode)})
                 if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
                     if self.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
                     else:
                         formatted_item = self.extras['nota'][field.number]
-                    choice_list.append({'label': docassemble.base.filter.markdown_to_html(formatted_item, trim=True, do_terms=False, status=self, verbatim=encode)})
+                    choice_list.append({'label': markdown_to_html(formatted_item, trim=True, do_terms=False, status=self, verbatim=encode)})
         else:
             indexno = 0
             for choice in self.selectcompute[field.number]:
-                item = {'label': docassemble.base.filter.markdown_to_html(choice['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'variable_name': '_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', 'value': indexno}
+                item = {'label': markdown_to_html(choice['label'], trim=True, do_terms=False, status=self, verbatim=encode), 'variable_name': '_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']', 'value': indexno}
                 if encode:
                     item['variable_name_encoded'] = safeid('_internal["answers"][' + repr(question.extended_question_name(the_user_dict)) + ']')
                 if 'image' in choice:
@@ -1629,7 +1420,7 @@ class TextObject:
 
     def text(self, the_user_dict):
         if len(self.other_lang) > 0:
-            target_lang = docassemble.base.functions.get_language()
+            target_lang = get_language()
             if self.language != target_lang and target_lang in self.other_lang:
                 if self.uses_mako:
                     return self.other_lang[target_lang][1].render(**the_user_dict)
@@ -1869,7 +1660,7 @@ def recursive_eval_textobject(target, the_user_dict, question, tpl, skip_undefin
                 text = ''
         else:
             text = target.text(the_user_dict)
-        return docassemble.base.file_docx.transform_for_docx(text)
+        return transform_for_docx(text)
     raise DAError("recursive_eval_textobject: expected a TextObject, but found a " + str(type(target)))
 
 
@@ -1917,25 +1708,6 @@ def recursive_eval_textobject_or_primitive(target, the_user_dict):
     raise DAError("recursive_eval_textobject_or_primitive: expected a TextObject, but found a " + str(type(target)))
 
 
-def fix_quotes(match):
-    instring = match.group(1)
-    n = len(instring)
-    output = ''
-    i = 0
-    while i < n:
-        if instring[i] == '\u201c' or instring[i] == '\u201d':
-            output += '"'
-        elif instring[i] == '\u2018' or instring[i] == '\u2019':
-            output += "'"
-        elif instring[i] == '&' and i + 4 < n and instring[i:i+5] == '&amp;':
-            output += '&'
-            i += 4
-        else:
-            output += instring[i]
-        i += 1
-    return output
-
-
 def docx_variable_fix(variable):
     variable = re.sub(r'\\', '', variable)
     variable = re.sub(r'^([A-Za-z\_][A-Za-z\_0-9]*).*', r'\1', variable)
@@ -1950,7 +1722,7 @@ class FileInPackage:
 
     def __init__(self, fileref, area, package):
         if area == 'template' and not isinstance(fileref, dict):
-            docassemble.base.functions.package_template_filename(fileref, package=package)
+            package_template_filename(fileref, package=package)
         self.fileref = fileref
         if isinstance(self.fileref, dict):
             self.is_code = True
@@ -1991,9 +1763,9 @@ class FileInPackage:
                             raise DAError("FileInPackage: error downloading " + str(the_file_ref) + ": " + str(err))
                         the_file_ref = temp_template_file.name
                 if not str(the_file_ref).startswith('/'):
-                    the_file_ref = docassemble.base.functions.package_template_filename(str(the_file_ref), package=self.package)
+                    the_file_ref = package_template_filename(str(the_file_ref), package=self.package)
                 return the_file_ref
-            return docassemble.base.functions.package_template_filename(self.fileref, package=self.package)
+            return package_template_filename(self.fileref, package=self.package)
         return None
 
     def paths(self, the_user_dict=None):
@@ -2025,11 +1797,11 @@ class FileInPackage:
                     else:
                         result.append(the_file_ref)
             else:
-                result.append(docassemble.base.functions.package_template_filename(self.fileref, package=self.package))
+                result.append(package_template_filename(self.fileref, package=self.package))
             final_result = []
             for the_file_ref in result:
                 if not str(the_file_ref).startswith('/'):
-                    final_result.append(docassemble.base.functions.package_template_filename(str(the_file_ref), package=self.package))
+                    final_result.append(package_template_filename(str(the_file_ref), package=self.package))
                 else:
                     final_result.append(the_file_ref)
             return final_result
@@ -2043,7 +1815,7 @@ class FileOnServer:
         self.question = question
 
     def path(self):
-        info = docassemble.base.functions.server.file_finder(self.fileref, question=self.question)
+        info = file_finder(self.fileref, question=self.question)
         if 'fullpath' in info and info['fullpath']:
             return info['fullpath']
         raise DAError("Could not find the file " + str(self.fileref))
@@ -2171,7 +1943,7 @@ class Question:
             raise DASourceError("This block is missing a 'question' directive." + self.idebug(data))
         if self.interview.debug:
             for key in data:
-                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'describe file types', 'manual attachment list', 'breadcrumb', 'tabular', 'hide continue button', 'disable continue button', 'pen color', 'gathered', 'sort key', 'filter'):
+                if key not in ('features', 'scan for variables', 'only sets', 'question', 'code', 'event', 'translations', 'default language', 'on change', 'sections', 'progressive', 'auto open', 'section', 'machine learning storage', 'language', 'prevent going back', 'back button', 'usedefs', 'continue button label', 'continue button color', 'resume button label', 'resume button color', 'back button label', 'corner back button label', 'skip undefined', 'list collect', 'mandatory', 'attachment options', 'script', 'css', 'initial', 'default role', 'command', 'objects from file', 'use objects', 'data', 'variable name', 'data from code', 'objects', 'id', 'ga id', 'segment id', 'segment', 'supersedes', 'order', 'image sets', 'images', 'def', 'mako', 'interview help', 'default screen parts', 'default validation messages', 'generic object', 'generic list object', 'comment', 'metadata', 'modules', 'reset', 'imports', 'terms', 'auto terms', 'role', 'include', 'action buttons', 'if', 'validation code', 'require', 'orelse', 'attachment', 'attachments', 'attachment code', 'attachments code', 'allow emailing', 'allow downloading', 'email subject', 'email body', 'email template', 'email address default', 'progress', 'zip filename', 'action', 'backgroundresponse', 'response', 'binaryresponse', 'all_variables', 'response filename', 'content type', 'redirect url', 'null response', 'sleep', 'include_internal', 'css class', 'table css class', 'response code', 'subquestion', 'reload', 'help', 'audio', 'video', 'decoration', 'signature', 'under', 'pre', 'post', 'right', 'check in', 'yesno', 'noyes', 'yesnomaybe', 'noyesmaybe', 'sets', 'event', 'choices', 'buttons', 'dropdown', 'combobox', 'field', 'shuffle', 'review', 'need', 'depends on', 'target', 'table', 'rows', 'columns', 'require gathered', 'allow reordering', 'edit', 'delete buttons', 'confirm', 'read only', 'edit header', 'confirm', 'show if empty', 'template', 'content file', 'content', 'subject', 'reconsider', 'undefine', 'continue button field', 'fields', 'indent', 'url', 'default', 'datatype', 'extras', 'allowed to set', 'show incomplete', 'not available label', 'required', 'always include editable files', 'question metadata', 'include attachment notice', 'include download tab', 'describe file types', 'manual attachment list', 'breadcrumb', 'tabular', 'hide continue button', 'disable continue button', 'pen color', 'gathered', 'sort key', 'sort reverse', 'filter'):
                     logmessage("Ignoring unknown dictionary key '" + key + "'." + self.idebug(data))
         if 'features' in data:
             should_append = False
@@ -2262,7 +2034,7 @@ class Question:
                     data['features']['custom datatypes to load'] = [data['features']['custom datatypes to load']]
                 if isinstance(data['features']['custom datatypes to load'], list):
                     for item in data['features']['custom datatypes to load']:
-                        if isinstance(item, str) and item not in standard_types and item in docassemble.base.functions.custom_types:
+                        if isinstance(item, str) and item not in standard_types and item in custom_types:
                             self.interview.custom_data_types.add(item)
             if 'checkin interval' in data['features']:
                 if not isinstance(data['features']['checkin interval'], int):
@@ -2302,7 +2074,7 @@ class Question:
                     if not isinstance(data['features'][key], str):
                         raise DASourceError("A features section " + key + " entry must be plain text." + self.idebug(data))
                     try:
-                        self.interview.options[key] = dateutil.parser.parse(data['features'][key]).astimezone(zoneinfo.ZoneInfo(docassemble.base.functions.get_default_timezone()))
+                        self.interview.options[key] = dateutil.parser.parse(data['features'][key]).astimezone(zoneinfo.ZoneInfo(get_default_timezone()))
                     except:
                         raise DASourceError("The " + key + " in features did not contain a valid date." + self.idebug(data))
         if 'field' in data and not ('yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data or 'choices' in data or 'dropdown' in data or 'combobox' in data):
@@ -2351,7 +2123,7 @@ class Question:
             for item in tr_todo:
                 self.interview.translations.append(item)
                 if item.endswith(".xlsx"):
-                    the_xlsx_file = docassemble.base.functions.package_data_filename(item)
+                    the_xlsx_file = package_data_filename(item)
                     if not os.path.isfile(the_xlsx_file):
                         raise DAError("The translations file " + the_xlsx_file + " could not be found")
                     import pandas  # pylint: disable=import-outside-toplevel
@@ -2368,7 +2140,7 @@ class Question:
                             self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]] = {}
                         self.interview.translation_dict[df['orig_text'][indexno]][df['orig_lang'][indexno]][df['tr_lang'][indexno]] = df['tr_text'][indexno]
                 elif item.endswith(".xlf") or item.endswith(".xliff"):
-                    the_xlf_file = docassemble.base.functions.package_data_filename(item)
+                    the_xlf_file = package_data_filename(item)
                     if not os.path.isfile(the_xlf_file):
                         continue
                     tree = ET.parse(the_xlf_file)
@@ -3158,19 +2930,19 @@ class Question:
             if isinstance(data['include'], str):
                 data['include'] = [data['include']]
             if isinstance(data['include'], list):
-                for questionPath in data['include']:
+                for question_path in data['include']:
                     try:
-                        if ':' in questionPath:
-                            self.interview.read_from(interview_source_from_string(questionPath, interview_source=self.interview.source, parent_source=self.from_source))
+                        if ':' in question_path:
+                            self.interview.read_from(interview_source_from_string(question_path, interview_source=self.interview.source, parent_source=self.from_source))
                         else:
-                            new_source = self.from_source.append(questionPath)
+                            new_source = self.from_source.append(question_path)
                             if new_source is None:
-                                new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', questionPath), interview_source=self.interview.source, parent_source=self.from_source)
+                                new_source = interview_source_from_string('docassemble.base:data/questions/' + re.sub(r'^data/questions/', '', question_path), interview_source=self.interview.source, parent_source=self.from_source)
                                 if new_source is None:
-                                    raise DANotFoundError('Question file ' + questionPath + ' not found')
+                                    raise DANotFoundError('Question file ' + question_path + ' not found')
                             self.interview.read_from(new_source)
                     except DANotFoundError:
-                        raise DASourceError('An include section could not find the file ' + str(questionPath) + '.' + self.idebug(data))
+                        raise DASourceError('An include section could not find the file ' + str(question_path) + '.' + self.idebug(data))
             else:
                 raise DASourceError("An include section must be organized as a list." + self.idebug(data))
         if 'action buttons' in data:
@@ -3365,7 +3137,7 @@ class Question:
                 if hasattr(data['response filename'], 'mimetype') and data['response filename'].mimetype:
                     self.content_type = TextObject(data['response filename'].mimetype)
             else:
-                info = docassemble.base.functions.server.file_finder(data['response filename'], question=self)
+                info = file_finder(data['response filename'], question=self)
                 if 'fullpath' in info and info['fullpath']:
                     self.response_file = FileOnServer(data['response filename'], self)  # info['fullpath']
                 else:
@@ -3642,7 +3414,7 @@ class Question:
                 field_data['saveas'] = data['field']
                 if 'datatype' in data and 'type' not in field_data:
                     field_data['type'] = data['datatype']
-                    if data['datatype'] not in standard_types and data['datatype'] in docassemble.base.functions.custom_types:
+                    if data['datatype'] not in standard_types and data['datatype'] in custom_types:
                         self.interview.custom_data_types.add(data['datatype'])
                 elif is_boolean(field_data):
                     field_data['type'] = 'boolean'
@@ -3879,7 +3651,7 @@ class Question:
                 for content_file in data['content file']:
                     if not isinstance(content_file, str):
                         raise DASourceError('A content file must be specified as text, as a list of text filenames, or as a dictionary with code as the key' + self.idebug(data))
-                    file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
+                    file_to_read = package_template_filename(content_file, package=self.package)
                     # if file_to_read is not None and get_mimetype(file_to_read) != 'text/markdown':
                     #    raise DASourceError('The content file ' + str(data['content file']) + ' is not a markdown file ' + str(file_to_read) + self.idebug(data))
                     if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
@@ -3976,7 +3748,7 @@ class Question:
                 raise DASourceError("The fields must be written in the form of a list." + self.idebug(data))
             field_number = 0
             for field in data['fields']:
-                docassemble.base.functions.this_thread.misc['current_field'] = field_number
+                this_thread.misc['current_field'] = field_number
                 if not isinstance(field, dict):
                     raise DASourceError("Each individual field in a list of fields must be expressed as a dictionary item, e.g., ' - Fruit: user.favorite_fruit'." + self.idebug(data))
                 manual_keys = set()
@@ -4008,7 +3780,7 @@ class Question:
                         field['datatype'] = 'text'
                     if field['datatype'] in ('object', 'object_radio', 'multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and not ('choices' in field or 'code' in field):
                         raise DASourceError("A multiple choice field must refer to a list of choices." + self.idebug(data))
-                    if field['datatype'] in docassemble.base.functions.custom_types and field['datatype'] not in standard_types:
+                    if field['datatype'] in custom_types and field['datatype'] not in standard_types:
                         custom_data_type = True
                         self.interview.custom_data_types.add(field['datatype'])
                 if 'input type' in field:
@@ -4027,8 +3799,8 @@ class Question:
                     field_info['extras'] = {'fields_code': compile(field['code'], '<fields code>', 'eval')}
                     self.fields.append(Field(field_info))
                     field_number += 1
-                    if 'current_field' in docassemble.base.functions.this_thread.misc:
-                        del docassemble.base.functions.this_thread.misc['current_field']
+                    if 'current_field' in this_thread.misc:
+                        del this_thread.misc['current_field']
                     continue
                 if 'object labeler' in field and ('datatype' not in field or not field['datatype'].startswith('object')):
                     raise DASourceError("An object labeler can only be used with an object data type." + self.idebug(data))
@@ -4038,14 +3810,14 @@ class Question:
                     if key == 'default' and 'datatype' in field and field['datatype'] in ('object', 'object_radio', 'object_multiselect', 'object_checkboxes'):
                         continue
                     if custom_data_type:
-                        if key in docassemble.base.functions.custom_types[field['datatype']]['parameters']:
+                        if key in custom_types[field['datatype']]['parameters']:
                             if 'extras' not in field_info:
                                 field_info['extras'] = {}
                             if 'custom_parameters' not in field_info['extras']:
                                 field_info['extras']['custom_parameters'] = {}
                             field_info['extras']['custom_parameters'][key] = field[key]
                             continue
-                        if key in docassemble.base.functions.custom_types[field['datatype']]['code_parameters']:
+                        if key in custom_types[field['datatype']]['code_parameters']:
                             if 'extras' not in field_info:
                                 field_info['extras'] = {}
                             if 'custom_parameters_code' not in field_info['extras']:
@@ -4053,7 +3825,7 @@ class Question:
                             field_info['extras']['custom_parameters_code'][key] = {'compute': compile(str(field[key]), '<custom data type code>', 'eval'), 'sourcecode': str(field[key])}
                             self.find_fields_in(field[key])
                             continue
-                        if key in docassemble.base.functions.custom_types[field['datatype']]['mako_parameters']:
+                        if key in custom_types[field['datatype']]['mako_parameters']:
                             if 'extras' not in field_info:
                                 field_info['extras'] = {}
                             if 'custom_parameters_mako' not in field_info['extras']:
@@ -4648,8 +4420,8 @@ class Question:
                 else:
                     raise DASourceError("A field was listed without indicating a label or a variable name, and the field was not a note or raw HTML." + self.idebug(data) + " and field_info was " + repr(field_info))
                 field_number += 1
-                if 'current_field' in docassemble.base.functions.this_thread.misc:
-                    del docassemble.base.functions.this_thread.misc['current_field']
+                if 'current_field' in this_thread.misc:
+                    del this_thread.misc['current_field']
         if 'review' in data:
             self.question_type = 'review'
             if self.is_mandatory and 'continue button field' not in data:
@@ -5016,18 +4788,18 @@ class Question:
             for indexno, item in enumerate(iterators):
                 exec(list_of_indices[indexno] + " = " + item, the_user_dict)
         for the_field in [substitute_vars(item, is_generic, the_x, iterators) for item in self.undefine]:
-            docassemble.base.functions.undefine(the_field)
+            undefine(the_field)
         if len(self.reconsider) > 0:
-            docassemble.base.functions.reconsider(*[substitute_vars(item, is_generic, the_x, iterators) for item in self.reconsider])
+            reconsider(*[substitute_vars(item, is_generic, the_x, iterators) for item in self.reconsider])
         if self.need is not None:
             for need_code in self.need:
                 eval(need_code, the_user_dict)
 
     def exec_setup_mandatory(self, the_user_dict):
         for the_field in self.undefine:
-            docassemble.base.functions.undefine(the_field)
+            undefine(the_field)
         if len(self.reconsider) > 0:
-            docassemble.base.functions.reconsider(*self.reconsider)
+            reconsider(*self.reconsider)
         if self.need is not None:
             for need_code in self.need:
                 eval(need_code, the_user_dict)
@@ -5075,7 +4847,7 @@ class Question:
         return TextObject(str(target), question=self)
 
     def find_fields_in(self, code):
-        myvisitor = myvisitnode()
+        myvisitor = MyVisitNode()
         t = ast.parse(str(code))
         myvisitor.visit(t)
         predefines = set(globals().keys()) | set(locals().keys())
@@ -5150,7 +4922,7 @@ class Question:
             if 'name' not in target:
                 target['name'] = word("Document")
             if 'filename' not in target:
-                # target['filename'] = docassemble.base.functions.space_to_underscore(target['name'])
+                # target['filename'] = space_to_underscore(target['name'])
                 target['filename'] = ''
             if 'description' not in target:
                 target['description'] = ''
@@ -5271,7 +5043,7 @@ class Question:
                     for content_file in target['content file']:
                         if not isinstance(content_file, str):
                             raise DASourceError('A content file must be specified as text, a list of text filenames, or a dictionary where the one key is code' + self.idebug(target))
-                        file_to_read = docassemble.base.functions.package_template_filename(content_file, package=self.package)
+                        file_to_read = package_template_filename(content_file, package=self.package)
                         if file_to_read is not None and os.path.isfile(file_to_read) and os.access(file_to_read, os.R_OK):
                             with open(file_to_read, 'r', encoding='utf-8') as the_file:
                                 target['content'] += the_file.read()
@@ -5355,7 +5127,7 @@ class Question:
                         if len(template_files) == 1:
                             the_docx_path = template_files[0]
                         else:
-                            the_docx_path = docassemble.base.file_docx.concatenate_files(template_files)
+                            the_docx_path = concatenate_files(template_files)
                         try:
                             docx_template = DocxTemplate(the_docx_path)
                             docx_template.render_init()
@@ -5561,7 +5333,7 @@ class Question:
         if not isinstance(field_list, list):
             raise DAError("A code directive that defines items in fields must return a list")
         new_interview_source = InterviewSourceString(content='')
-        new_interview = new_interview_source.get_interview()
+        new_interview = Interview(source=new_interview_source)
         reproduce_basics(self.interview, new_interview)
         return Question({'question': 'n/a', 'fields': field_list}, new_interview, source=new_interview_source, package=self.package)
 
@@ -5587,7 +5359,7 @@ class Question:
 
     def ask(self, user_dict, old_user_dict, the_x, iterators, sought, orig_sought, process_list_collect=True, test_for_objects=True):
         # logmessage("ask: orig_sought is " + str(orig_sought) + " and q is " + self.name)
-        docassemble.base.functions.this_thread.current_question = self
+        this_thread.current_question = self
         if the_x != 'None':
             exec("x = " + the_x, user_dict)
         if len(iterators) > 0:
@@ -5598,18 +5370,18 @@ class Question:
             for need_code in self.need:
                 eval(need_code, user_dict)
         for the_field in self.undefine:
-            docassemble.base.functions.undefine(the_field)
+            undefine(the_field)
         if len(self.reconsider) > 0:
-            docassemble.base.functions.reconsider(*[substitute_vars(item, self.is_generic, the_x, iterators) for item in self.reconsider])
+            reconsider(*[substitute_vars(item, self.is_generic, the_x, iterators) for item in self.reconsider])
         if self.section:
-            docassemble.base.functions.this_thread.current_section = self.section.text(user_dict).strip()
+            this_thread.current_section = self.section.text(user_dict).strip()
         question_text = self.content.text(user_dict).rstrip()
         if self.breadcrumb is not None:
             breadcrumb = self.breadcrumb.text(user_dict).rstrip()
         else:
             breadcrumb = None
         try:
-            user_dict['_internal']['event_stack'][docassemble.base.functions.this_thread.current_info['user']['session_uid']][0]['breadcrumb'] = question_text if breadcrumb is None else breadcrumb
+            user_dict['_internal']['event_stack'][this_thread.current_info['user']['session_uid']][0]['breadcrumb'] = question_text if breadcrumb is None else breadcrumb
         except:
             pass
         # logmessage("Asking " + str(question_text))
@@ -5654,7 +5426,7 @@ class Question:
                         if forget_prior:
                             arguments = {'_action': action, '_arguments': arguments}
                             action = '_da_priority_action'
-                        action = docassemble.base.functions.url_action(action, **arguments)
+                        action = url_action(action, **arguments)
                     color = item['color'].text(user_dict).strip()
                     if item['target'] is not None:
                         target = item['target'].text(user_dict).strip()
@@ -5714,7 +5486,7 @@ class Question:
                             if forget_prior:
                                 arguments = {'_action': action, '_arguments': arguments}
                                 action = '_da_priority_action'
-                            action = docassemble.base.functions.url_action(action, **arguments)
+                            action = url_action(action, **arguments)
                         label = button['label']
                         extras['action_buttons'].append({'action': action, 'label': label, 'color': color, 'icon': icon, 'placement': placement, 'css_class': css_class, 'target': target})
             for item in extras['action_buttons']:
@@ -5797,7 +5569,7 @@ class Question:
             if key in ('pre', 'post', 'footer', 'submit', 'exit link', 'exit label', 'exit url', 'full', 'logo', 'short logo', 'title', 'subtitle', 'tab title', 'short title', 'title url', 'title url opens in other window', 'navigation bar html') and (key + ' text') not in extras:
                 extras[key + ' text'] = val
         if len(self.terms) > 0:
-            lang = docassemble.base.functions.get_language()
+            lang = get_language()
             extras['terms'] = {}
             for termitem, definition in self.terms.items():
                 if lang in definition['alt_terms']:
@@ -5805,7 +5577,7 @@ class Question:
                 else:
                     extras['terms'][termitem] = {'definition': definition['definition'].text(user_dict)}
         if len(self.autoterms) > 0:
-            lang = docassemble.base.functions.get_language()
+            lang = get_language()
             extras['autoterms'] = {}
             for termitem, definition in self.autoterms.items():
                 if lang in definition['alt_terms']:
@@ -6050,7 +5822,7 @@ class Question:
             else:
                 extras['allow_emailing'] = eval(self.allow_emailing, user_dict)
         if hasattr(self, 'zip_filename'):
-            extras['zip_filename'] = docassemble.base.functions.single_paragraph(self.zip_filename.text(user_dict))
+            extras['zip_filename'] = single_paragraph(self.zip_filename.text(user_dict))
         if hasattr(self, 'ga_id'):
             extras['ga_id'] = self.ga_id.text(user_dict)
         if hasattr(self, 'segment') and 'id' in self.segment:
@@ -6076,7 +5848,7 @@ class Question:
                 skip_undefined = True
             extras['ok'] = {}
             for field in self.fields:
-                docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                this_thread.misc['current_field'] = field.number
                 extras['ok'][field.number] = False
                 if hasattr(field, 'saveas_code'):
                     failed = False
@@ -6170,8 +5942,8 @@ class Question:
                     else:
                         labels[field.number] = field.label.text(user_dict)
                 extras['ok'][field.number] = True
-            if 'current_field' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['current_field']
+            if 'current_field' in this_thread.misc:
+                del this_thread.misc['current_field']
         else:
             if hasattr(self, 'list_collect') and process_list_collect and eval(self.list_collect, user_dict):
                 fields_to_scan = self.get_fields_and_sub_fields(user_dict)
@@ -6250,7 +6022,7 @@ class Question:
                         new_iterators[iterator_index] = str(list_indexno)
                     except IndexError:
                         raise DAException("list collect question needs iterator " + extras['list_iterator'] + " but it was asked in a context where there is no " + extras['list_iterator'])
-                    ask_result = self.ask(user_dict, old_user_dict, the_x, new_iterators, sought, orig_sought, process_list_collect=False, test_for_objects=(list_indexno < length_to_use))
+                    ask_result = self.ask(user_dict, old_user_dict, the_x, new_iterators, sought, orig_sought, process_list_collect=False, test_for_objects=list_indexno < length_to_use)
                     if hasattr(self, 'list_collect_label'):
                         extras['list_message'][list_indexno] = self.list_collect_label.text(user_dict)
                     else:
@@ -6304,7 +6076,7 @@ class Question:
                 for field in self.fields:
                     if hasattr(field, 'inputtype') and field.inputtype in ('combobox', 'datalist'):
                         only_empty_fields_exist = False
-                    docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                    this_thread.misc['current_field'] = field.number
                     if hasattr(field, 'has_code') and field.has_code:
                         # standalone multiple-choice questions
                         selectcompute[field.number] = []
@@ -6505,11 +6277,11 @@ class Question:
                             if complications.search(var) or var not in user_dict:
                                 eval(var, user_dict)
                     raise CodeExecute(commands_to_run, self)
-                if 'current_field' in docassemble.base.functions.this_thread.misc:
-                    del docassemble.base.functions.this_thread.misc['current_field']
+                if 'current_field' in this_thread.misc:
+                    del this_thread.misc['current_field']
                 extras['ok'] = {}
                 for field in self.fields:
-                    docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                    this_thread.misc['current_field'] = field.number
                     if hasattr(field, 'showif_code'):
                         result = eval(field.showif_code, user_dict)
                         if hasattr(field, 'extras') and 'show_if_sign_code' in field.extras and field.extras['show_if_sign_code'] == 0:
@@ -6795,8 +6567,8 @@ class Question:
                             hints[field.number] = field.hint.text(user_dict)
                     if hasattr(field, 'helptext'):
                         helptexts[field.number] = field.helptext.text(user_dict)
-                if 'current_field' in docassemble.base.functions.this_thread.misc:
-                    del docassemble.base.functions.this_thread.misc['current_field']
+                if 'current_field' in this_thread.misc:
+                    del this_thread.misc['current_field']
         if len(self.attachments) > 0 or self.compute_attachment is not None:
             if hasattr(self, 'email_default'):
                 the_email_address = self.email_default.text(user_dict).strip()
@@ -6805,7 +6577,7 @@ class Question:
             if hasattr(self, 'email_subject'):
                 extras['email_subject'] = re.sub(r'[\n\r]+', ' ', self.email_subject.text(user_dict).strip())
             if hasattr(self, 'email_body'):
-                extras['email_html'] = '<html><body>' + docassemble.base.filter.markdown_to_html(self.email_body.text(user_dict), status=docassemble.base.functions.this_thread.interview_status, question=self, external=True) + '</body></html>'
+                extras['email_html'] = '<html><body>' + markdown_to_html(self.email_body.text(user_dict), status=this_thread.interview_status, question=self, external=True) + '</body></html>'
                 extras['email_body'] = BeautifulSoup(extras['email_html'], "html.parser").get_text('\n')
             if hasattr(self, 'email_template') and ('email_subject' not in extras or 'email_html' not in extras):
                 template = eval(self.email_template, user_dict)
@@ -6824,7 +6596,7 @@ class Question:
             for field in self.fields:
                 if field.number in extras['ok'] and not extras['ok'][field.number]:
                     continue
-                docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                this_thread.misc['current_field'] = field.number
                 if hasattr(field, 'saveas'):
                     # m = re.match(r'(.*)\.[^\.]+', from_safeid(field.saveas))
                     # if m and m.group(1) != 'x':
@@ -6836,8 +6608,8 @@ class Question:
                         assumed_objects.add(parse_result['objects'][-1])
                     if len(parse_result['bracket_objects']) > 0:
                         assumed_objects.add(parse_result['bracket_objects'][-1])
-            if 'current_field' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['current_field']
+            if 'current_field' in this_thread.misc:
+                del this_thread.misc['current_field']
             for var in assumed_objects:
                 if complications.search(var) or var not in user_dict:
                     eval(var, user_dict)
@@ -6861,7 +6633,7 @@ class Question:
         if self.question_type == 'review' and sought is not None and not hasattr(self, 'review_saveas'):
             if 'event_stack' not in user_dict['_internal']:
                 user_dict['_internal']['event_stack'] = {}
-            session_uid = docassemble.base.functions.this_thread.current_info['user']['session_uid']
+            session_uid = this_thread.current_info['user']['session_uid']
             if session_uid not in user_dict['_internal']['event_stack']:
                 user_dict['_internal']['event_stack'][session_uid] = []
             already_there = False
@@ -7094,11 +6866,11 @@ class Question:
                 return result
             except:
                 pass
-        docassemble.base.functions.this_thread.misc['redact'] = bool(result['redact'])
-        docassemble.base.functions.this_thread.misc['attachment_info'] = {k: result[k] for k in ('name', 'filename', 'description', 'update_references', 'convert_to_pdf_a', 'convert_to_tagged_pdf') if k in result}
+        this_thread.misc['redact'] = bool(result['redact'])
+        this_thread.misc['attachment_info'] = {k: result[k] for k in ('name', 'filename', 'description', 'update_references', 'convert_to_pdf_a', 'convert_to_tagged_pdf') if k in result}
         if 'language' in attachment['options']:
-            old_language = docassemble.base.functions.get_language()
-            docassemble.base.functions.set_language(attachment['options']['language'])
+            old_language = get_language()
+            set_language(attachment['options']['language'])
         else:
             old_language = None
         try:
@@ -7107,13 +6879,13 @@ class Question:
                     with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=result['raw'], delete=False) as the_temp:
                         with open(the_temp.name, 'w', encoding='utf-8') as the_file:
                             the_file.write(result['markdown'][doc_format].lstrip("\n"))
-                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + result['raw'], the_temp.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = save_numbered_file(result['filename'] + result['raw'], the_temp.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                         result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
                 elif doc_format == 'md':
                     with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix='md', delete=False) as the_temp:
                         with open(the_temp.name, 'w', encoding='utf-8') as the_file:
                             the_file.write(result['markdown'][doc_format].lstrip("\n"))
-                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.md', the_temp.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = save_numbered_file(result['filename'] + '.md', the_temp.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                         result['content'][doc_format] = result['markdown'][doc_format].lstrip("\n")
                 elif doc_format in ('pdf', 'rtf', 'rtf to docx', 'tex', 'docx'):
                     if 'fields' in attachment['options']:
@@ -7122,33 +6894,33 @@ class Question:
                                 default_export_value = attachment['options']['checkbox_export_value'].text(the_user_dict).strip()
                             else:
                                 default_export_value = None
-                            docassemble.base.functions.set_context('pdf')
+                            set_context('pdf')
                             the_template_path = attachment['options']['pdf_template_file'].path(the_user_dict=the_user_dict)
                             if the_template_path is None:
                                 raise DASourceError("pdf template file " + attachment['options']['pdf_template_file'].original_reference() + " not found")
-                            the_pdf_file = docassemble.base.pdftk.fill_template(the_template_path, data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], use_pdftk=result['use_pdftk'], password=result['password'], owner_password=result['owner_password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
-                            result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format.get(doc_format, doc_format), the_pdf_file, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                            the_pdf_file = fill_template(the_template_path, data_strings=result['data_strings'], images=result['images'], editable=result['editable'], pdfa=result['convert_to_pdf_a'], use_pdftk=result['use_pdftk'], password=result['password'], owner_password=result['owner_password'], template_password=result['template_password'], default_export_value=default_export_value, replacement_font=result['rendering_font'])
+                            result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = save_numbered_file(result['filename'] + '.' + extension_of_doc_format.get(doc_format, doc_format), the_pdf_file, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                             for key in ('images', 'data_strings', 'convert_to_pdf_a', 'use_pdftk', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font'):
                                 if key in result:
                                     del result[key]
-                            docassemble.base.functions.reset_context()
+                            reset_context()
                         elif (doc_format == 'docx' or (doc_format == 'pdf' and 'docx' not in result['formats_to_use'])) and 'docx_template_file' in attachment['options']:
                             # logmessage("field_data is " + repr(result['field_data']))
                             if result['template'].current_rendering_part is None:
                                 result['template'].current_rendering_part = result['template'].docx._part
-                            docassemble.base.functions.set_context('docx', template=result['template'])
-                            docassemble.base.functions.this_thread.misc['docx_subdocs'] = []
-                            docassemble.base.functions.this_thread.misc['auto jinja filter'] = []
+                            set_context('docx', template=result['template'])
+                            this_thread.misc['docx_subdocs'] = []
+                            this_thread.misc['auto jinja filter'] = []
                             if 'auto jinja filter' in self.interview.options:
                                 for item in self.interview.options['auto jinja filter']:
-                                    docassemble.base.functions.this_thread.misc['auto jinja filter'].append(eval(item, the_user_dict))
+                                    this_thread.misc['auto jinja filter'].append(eval(item, the_user_dict))
                             try:
                                 the_template = result['template']
                                 template_loop_count = 0
                                 while True:  # Rerender if there's a subdoc using include_docx_template
-                                    old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
+                                    old_count = this_thread.misc.get('docx_include_count', 0)
                                     the_template.render(result['field_data'], jinja_env=custom_jinja_env(skip_undefined=attachment['options']['skip_undefined']))
-                                    if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and template_loop_count < 10:
+                                    if this_thread.misc.get('docx_include_count', 0) > old_count and template_loop_count < 10:
                                         # There's another template included
                                         with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False) as new_template_file:
                                             the_template.save(new_template_file.name)  # Save and refresh the template
@@ -7162,12 +6934,12 @@ class Question:
                                                 the_template.da_hyperlink_style = 'InternetLink'
                                             else:
                                                 the_template.da_hyperlink_style = None
-                                            docassemble.base.functions.this_thread.misc['docx_template'] = the_template
+                                            this_thread.misc['docx_template'] = the_template
                                             template_loop_count += 1
                                     else:
                                         break
                                 # Copy over images, etc from subdoc to master template
-                                # subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', [])  # Get the subdoc file list
+                                # subdocs = this_thread.misc.get('docx_subdocs', [])  # Get the subdoc file list
                                 # the_template_docx = the_template.docx
 
                             except TemplateError as the_error:
@@ -7179,19 +6951,19 @@ class Question:
                                     the_error.filename = ', '.join(docx_paths)
                                 # logmessage("TemplateError:\n" + traceback.format_exc())
                                 raise the_error
-                            docassemble.base.functions.reset_context()
+                            reset_context()
                             with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False) as docx_file:
                                 the_template.save(docx_file.name)
-                                docassemble.base.file_docx.fix_docx(docx_file.name)
+                                fix_docx(docx_file.name)
                                 if result['update_references']:
-                                    docassemble.base.pandoc.update_references(docx_file.name)  # does this update refs twice?
+                                    update_references(docx_file.name)  # does this update refs twice?
                                 if 'pdf' in result['formats_to_use']:
                                     with tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False) as pdf_file:
-                                        if not docassemble.base.pandoc.word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'], filename=result['filename']):
+                                        if not word_to_pdf(docx_file.name, 'docx', pdf_file.name, pdfa=result['convert_to_pdf_a'], password=result['password'], update_refs=result['update_references'], tagged=result['convert_to_tagged_pdf'], filename=result['filename']):
                                             raise DAException('Failure to convert DOCX to PDF')
-                                        result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                                        result['file']['pdf'], result['extension']['pdf'], result['mimetype']['pdf'] = save_numbered_file(result['filename'] + '.pdf', pdf_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                                 if 'docx' in result['formats_to_use']:
-                                    result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                                    result['file']['docx'], result['extension']['docx'], result['mimetype']['docx'] = save_numbered_file(result['filename'] + '.docx', docx_file.name, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                             for key in ['template', 'field_data', 'images', 'data_strings', 'convert_to_pdf_a', 'convert_to_tagged_pdf', 'password', 'owner_password', 'template_password', 'update_references', 'permissions', 'rendering_font']:
                                 if key in result:
                                     del result[key]
@@ -7224,10 +6996,10 @@ class Question:
                                 converter.template_file = self.interview.attachment_options['template_file'].path(the_user_dict=the_user_dict)
                         converter.metadata = result['metadata']
                         converter.convert(self)
-                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = docassemble.base.functions.server.save_numbered_file(result['filename'] + '.' + extension_of_doc_format.get(doc_format, doc_format), converter.output_filename, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                        result['file'][doc_format], result['extension'][doc_format], result['mimetype'][doc_format] = save_numbered_file(result['filename'] + '.' + extension_of_doc_format.get(doc_format, doc_format), converter.output_filename, yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                         result['content'][doc_format] = result['markdown'][doc_format]
                 elif doc_format == 'html':
-                    result['content'][doc_format] = docassemble.base.filter.markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
+                    result['content'][doc_format] = markdown_to_html(result['markdown'][doc_format], use_pandoc=True, question=self)
                 elif doc_format == 'md':
                     result['content'][doc_format] = result['markdown'][doc_format]
             if 'manual' in result:
@@ -7258,13 +7030,13 @@ class Question:
             if attachment['variable_name']:
                 the_string = "from docassemble.base.util import DAFile, DAFileCollection"
                 exec(the_string, the_user_dict)
-                variable_name = substitute_vars_from_user_dict(docassemble.base.functions.intrinsic_name_of(attachment['variable_name'], the_user_dict=the_user_dict), the_user_dict, is_generic=self.is_generic)
+                variable_name = substitute_vars_from_user_dict(intrinsic_name_of(attachment['variable_name'], the_user_dict=the_user_dict), the_user_dict, is_generic=self.is_generic)
                 the_string = variable_name + " = DAFileCollection(" + repr(variable_name) + ")"
                 exec(the_string, the_user_dict)
                 the_name = attachment['name'].text(the_user_dict).strip()
-                the_filename = docassemble.base.functions.secure_filename_unicode_ok(attachment['filename'].text(the_user_dict).strip())
+                the_filename = secure_filename_unicode_ok(attachment['filename'].text(the_user_dict).strip())
                 if the_filename == '':
-                    the_filename = docassemble.base.functions.secure_filename_unicode_ok(docassemble.base.functions.space_to_underscore(the_name))
+                    the_filename = secure_filename_unicode_ok(space_to_underscore(the_name))
                 the_user_dict['_attachment_info'] = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': result['valid_formats'], 'formats': result['formats_to_use'], 'attachment': {'name': attachment['question_name'], 'number': attachment['indexno']}, 'extension': result.get('extension', {}), 'mimetype': result.get('mimetype', {}), 'content': result.get('content', {}), 'markdown': result.get('markdown', {}), 'metadata': result.get('metadata', {}), 'convert_to_pdf_a': result.get('convert_to_pdf_a', False), 'convert_to_tagged_pdf': result.get('convert_to_tagged_pdf', False), 'orig_variable_name': result.get('orig_variable_name', None), 'raw': result['raw'], 'permissions': result.get('permissions', None)}
                 if len(manual_files) > 0:
                     the_user_dict['_attachment_info']['manual_formats'] = result['manual_formats']
@@ -7273,7 +7045,7 @@ class Question:
                 for doc_format in result['file']:
                     variable_string = variable_name + '.' + extension_of_doc_format.get(doc_format, doc_format)
                     # filename = result['filename'] + '.' + doc_format
-                    # file_number, extension, mimetype = docassemble.base.functions.server.save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+                    # file_number, extension, mimetype = save_numbered_file(filename, result['file'][doc_format], yaml_file_name=self.interview.source.path)  # pylint: disable=assignment-from-none,unpacking-non-sequence
                     if result['file'][doc_format] is None:
                         raise DAError("Could not save numbered file")
                     if doc_format in manual_files:
@@ -7325,20 +7097,20 @@ class Question:
                         exec(the_string, the_user_dict)
         except:
             if old_language is not None:
-                docassemble.base.functions.set_language(old_language)
-            docassemble.base.functions.this_thread.misc.pop('redact', None)
-            docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
+                set_language(old_language)
+            this_thread.misc.pop('redact', None)
+            this_thread.misc.pop('attachment_info', None)
             raise
         if old_language is not None:
-            docassemble.base.functions.set_language(old_language)
-        docassemble.base.functions.this_thread.misc.pop('redact', None)
-        docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
+            set_language(old_language)
+        this_thread.misc.pop('redact', None)
+        this_thread.misc.pop('attachment_info', None)
         return result
 
     def prepare_attachment(self, attachment, the_user_dict):
         if 'language' in attachment['options']:
-            old_language = docassemble.base.functions.get_language()
-            docassemble.base.functions.set_language(attachment['options']['language'])
+            old_language = get_language()
+            set_language(attachment['options']['language'])
         else:
             old_language = None
         if isinstance(attachment['valid_formats'], CodeType):
@@ -7353,9 +7125,9 @@ class Question:
         try:
             the_name = attachment['name'].text(the_user_dict).strip()
             the_filename = attachment['filename'].text(the_user_dict).strip()
-            the_filename = docassemble.base.functions.secure_filename_unicode_ok(the_filename)
+            the_filename = secure_filename_unicode_ok(the_filename)
             if the_filename == '':
-                the_filename = docassemble.base.functions.secure_filename_unicode_ok(docassemble.base.functions.space_to_underscore(the_name))
+                the_filename = secure_filename_unicode_ok(space_to_underscore(the_name))
             result = {'name': the_name, 'filename': the_filename, 'description': attachment['description'].text(the_user_dict), 'valid_formats': copy.deepcopy(valid_formats)}
             actual_extension = attachment['raw']
             if attachment['content'] is None and 'content file code' in attachment['options']:
@@ -7379,7 +7151,7 @@ class Question:
                                     raise DASourceError("prepare_attachment: error downloading " + str(the_filename) + ": " + str(err))
                                 the_filename = temp_template_file.name
                         else:
-                            the_filename = docassemble.base.functions.package_template_filename(the_filename, package=self.package)
+                            the_filename = package_template_filename(the_filename, package=self.package)
                     else:
                         the_filename = None
                     if the_filename is None or not os.path.isfile(the_filename):
@@ -7401,8 +7173,8 @@ class Question:
                 result['editable'] = eval(attachment['options']['editable'], the_user_dict)
             else:
                 result['editable'] = True
-            docassemble.base.functions.this_thread.misc['redact'] = bool(result['redact'])
-            docassemble.base.functions.this_thread.misc['attachment_info'] = {k: result[k] for k in ('name', 'filename', 'description', 'update_references', 'convert_to_pdf_a', 'convert_to_tagged_pdf') if k in result}
+            this_thread.misc['redact'] = bool(result['redact'])
+            this_thread.misc['attachment_info'] = {k: result[k] for k in ('name', 'filename', 'description', 'update_references', 'convert_to_pdf_a', 'convert_to_tagged_pdf') if k in result}
             result['markdown'] = {}
             result['content'] = {}
             result['extension'] = {}
@@ -7411,7 +7183,7 @@ class Question:
             if attachment['raw']:
                 if '.' in the_filename:
                     m = re.search(r'(.*)(\..*)', the_filename)
-                    result['filename'] = docassemble.base.functions.secure_filename_unicode_ok(m.group(1))
+                    result['filename'] = secure_filename_unicode_ok(m.group(1))
                     actual_extension = m.group(2)
                 result['raw'] = actual_extension
                 result['formats_to_use'] = ['raw']
@@ -7525,7 +7297,7 @@ class Question:
                             if len(docx_paths) == 1:
                                 docx_path = docx_paths[0]
                             else:
-                                docx_path = docassemble.base.file_docx.concatenate_files(docx_paths)
+                                docx_path = concatenate_files(docx_paths)
                             result['template'] = DocxTemplate(docx_path)
                             result['template'].render_init()
                             if result['hyperlink_style'] and result['hyperlink_style'] in result['template'].docx.styles:
@@ -7538,7 +7310,7 @@ class Question:
                                 result['template'].da_hyperlink_style = None
                             if result['template'].current_rendering_part is None:
                                 result['template'].current_rendering_part = result['template'].docx._part
-                            docassemble.base.functions.set_context('docx', template=result['template'])
+                            set_context('docx', template=result['template'])
                             if isinstance(attachment['options']['fields'], str):
                                 result['field_data'] = the_user_dict
                             else:
@@ -7574,7 +7346,7 @@ class Question:
                                         elif isinstance(val, RawValue):
                                             result['field_data'][key] = val.value
                                         else:
-                                            result['field_data'][key] = docassemble.base.file_docx.transform_for_docx(val)
+                                            result['field_data'][key] = transform_for_docx(val)
                                 else:
                                     raise DAError("code in an attachment returned something other than a dictionary")
                             if 'raw code dict' in attachment['options']:
@@ -7604,10 +7376,10 @@ class Question:
                                     elif isinstance(val, RawValue):
                                         result['field_data'][varname] = val.value
                                     else:
-                                        result['field_data'][varname] = docassemble.base.file_docx.transform_for_docx(val)
-                            docassemble.base.functions.reset_context()
+                                        result['field_data'][varname] = transform_for_docx(val)
+                            reset_context()
                     elif doc_format == 'pdf' and 'fields' in attachment['options'] and 'pdf_template_file' in attachment['options']:
-                        docassemble.base.functions.set_context('pdf')
+                        set_context('pdf')
                         result['data_strings'] = []
                         result['images'] = []
                         if isinstance(attachment['options']['fields'], dict):
@@ -7635,9 +7407,9 @@ class Question:
                                 m = re.search(r'\[FILE ([^\]]+)\]', answer)
                                 if m:
                                     file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                    file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                    file_info = file_finder(file_reference, question=self)
                                     if 'path' in file_info and 'extension' in file_info:
-                                        docassemble.base.filter.convert_svg_to_png(file_info)
+                                        convert_svg_to_png(file_info)
                                     result['images'].append((key, file_info))
                                 else:
                                     m = re.search(r'\[QR ([^\]]+)\]', answer)
@@ -7677,9 +7449,9 @@ class Question:
                                     m = re.search(r'\[FILE ([^\]]+)\]', val)
                                     if m:
                                         file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                        file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                        file_info = file_finder(file_reference, question=self)
                                         if 'path' in file_info and 'extension' in file_info:
-                                            docassemble.base.filter.convert_svg_to_png(file_info)
+                                            convert_svg_to_png(file_info)
                                         result['images'].append((key, file_info))
                                     else:
                                         m = re.search(r'\[QR ([^\]]+)\]', val)
@@ -7720,9 +7492,9 @@ class Question:
                                     m = re.search(r'\[FILE ([^\]]+)\]', val)
                                     if m:
                                         file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                        file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                        file_info = file_finder(file_reference, question=self)
                                         if 'path' in file_info and 'extension' in file_info:
-                                            docassemble.base.filter.convert_svg_to_png(file_info)
+                                            convert_svg_to_png(file_info)
                                         result['images'].append((key, file_info))
                                     else:
                                         m = re.search(r'\[QR ([^\]]+)\]', val)
@@ -7761,9 +7533,9 @@ class Question:
                                     m = re.search(r'\[FILE ([^\]]+)\]', val)
                                     if m:
                                         file_reference = re.sub(r'[ ,].*', '', m.group(1))
-                                        file_info = docassemble.base.functions.server.file_finder(file_reference, question=self)
+                                        file_info = file_finder(file_reference, question=self)
                                         if 'path' in file_info and 'extension' in file_info:
-                                            docassemble.base.filter.convert_svg_to_png(file_info)
+                                            convert_svg_to_png(file_info)
                                         result['images'].append((key, file_info))
                                     else:
                                         m = re.search(r'\[QR ([^\]]+)\]', val)
@@ -7774,24 +7546,24 @@ class Question:
                                                 result['images'].append((key, {'fullpath': the_image.name}))
                                         else:
                                             result['data_strings'].append((key, val))
-                        docassemble.base.functions.reset_context()
+                        reset_context()
                     elif doc_format in ('raw', 'md'):
-                        docassemble.base.functions.set_context(doc_format)
+                        set_context(doc_format)
                         the_markdown = the_content.text(the_user_dict)
                         result['markdown'][doc_format] = the_markdown
-                        docassemble.base.functions.reset_context()
+                        reset_context()
                     else:
                         modified_metadata = {"syslang": get_language()}
                         if result['convert_to_tagged_pdf']:
                             modified_metadata['taggedpdf'] = "true"
                         for key, data in result['metadata'].items():
                             if re.search(r'Footer|Header', key) and 'Lines' not in key:
-                                # modified_metadata[key] = docassemble.base.filter.metadata_filter(data, doc_format) + str('[END]')
+                                # modified_metadata[key] = metadata_filter(data, doc_format) + str('[END]')
                                 modified_metadata[key] = data + str('[END]')
                             else:
                                 modified_metadata[key] = data
                         the_markdown = '---\n' + altyaml.dump_to_string(modified_metadata) + "\n...\n"
-                        docassemble.base.functions.set_context('pandoc ' + doc_format)
+                        set_context('pandoc ' + doc_format)
                         the_markdown += the_content.text(the_user_dict)
                         # logmessage("Markdown is:\n" + repr(the_markdown) + "END")
                         do_not_scan_for_emojis = bool(re.search(r'\[NO_EMOJIS\]', the_markdown))
@@ -7800,27 +7572,27 @@ class Question:
                         elif emoji_match.search(the_markdown) and len(self.interview.images) > 0:
                             the_markdown = emoji_match.sub(emoji_matcher_insert(self), the_markdown)
                         result['markdown'][doc_format] = the_markdown
-                        docassemble.base.functions.reset_context()
+                        reset_context()
                 elif doc_format in ['html']:
-                    docassemble.base.functions.set_context('html')
+                    set_context('html')
                     result['markdown'][doc_format] = the_content.text(the_user_dict)
                     do_not_scan_for_emojis = bool(re.search(r'\[NO_EMOJIS\]', result['markdown'][doc_format]))
                     if do_not_scan_for_emojis:
                         result['markdown'][doc_format] = re.sub(r'\[NO_EMOJIS\]\s*', r'', result['markdown'][doc_format])
                     elif emoji_match.search(result['markdown'][doc_format]) and len(self.interview.images) > 0:
                         result['markdown'][doc_format] = emoji_match.sub(emoji_matcher_html(self), result['markdown'][doc_format])
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     # logmessage("output was:\n" + repr(result['content'][doc_format]))
         except:
             if old_language is not None:
-                docassemble.base.functions.set_language(old_language)
-            docassemble.base.functions.this_thread.misc.pop('redact', None)
-            docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
+                set_language(old_language)
+            this_thread.misc.pop('redact', None)
+            this_thread.misc.pop('attachment_info', None)
             raise
         if old_language is not None:
-            docassemble.base.functions.set_language(old_language)
-        docassemble.base.functions.this_thread.misc.pop('redact', None)
-        docassemble.base.functions.this_thread.misc.pop('attachment_info', None)
+            set_language(old_language)
+        this_thread.misc.pop('redact', None)
+        this_thread.misc.pop('attachment_info', None)
         if 'manual' in attachment['options']:
             result['manual'] = {extension: eval(expression, the_user_dict) for extension, expression in attachment['options']['manual'].items()}
         if 'manual code' in attachment['options']:
@@ -7904,36 +7676,11 @@ class Question:
 
 
 def emoji_matcher_insert(obj):
-    return (lambda x: docassemble.base.filter.emoji_insert(x.group(1), images=obj.interview.images))
+    return (lambda x: emoji_insert(x.group(1), images=obj.interview.images))
 
 
 def emoji_matcher_html(obj):
-    return (lambda x: docassemble.base.filter.emoji_html(x.group(1), images=obj.interview.images))
-
-
-def question_path_options(path):
-    n = 0
-    while n < 3:
-        if n == 0:
-            yield docassemble.base.functions.package_question_filename(path)
-        elif n == 1:
-            yield docassemble.base.functions.standard_question_filename(path)
-        elif n == 2:
-            yield docassemble.base.functions.server.absolute_filename(path)
-        n += 1
-
-
-def interview_source_from_string(path, **kwargs):
-    if path is None:
-        raise DAError("Passed None to interview_source_from_string")
-    # logmessage("Trying to find " + path)
-    path = re.sub(r'(docassemble.playground[0-9]+[^:]*:)data/questions/(.*)', r'\1\2', path)
-    for the_filename in question_path_options(path):
-        if the_filename is not None:
-            new_source = InterviewSourceFile(filepath=the_filename, path=path)
-            if new_source.update(**kwargs):
-                return new_source
-    raise DANotFoundError("Interview " + str(path) + " not found")
+    return (lambda x: emoji_html(x.group(1), images=obj.interview.images))
 
 
 def is_boolean(field_data):
@@ -8016,7 +7763,7 @@ def illegal_variable_name(var):
         t = ast.parse(var)
     except:
         return True
-    detector = docassemble.base.astparser.detectIllegal()
+    detector = DetectIllegal()
     detector.visit(t)
     return detector.illegal
 
@@ -8086,28 +7833,28 @@ def format_yaml_mark(mark, filename, line_number):
     return str(mark)
 
 
-def format_yaml_errmess(errMess, filename, line_number):
-    if isinstance(errMess, ruamel.yaml.error.MarkedYAMLError):
+def format_yaml_errmess(error_message, filename, line_number):
+    if isinstance(error_message, ruamel.yaml.error.MarkedYAMLError):
         lines = []
-        if errMess.context is not None:
-            lines.append(errMess.context)
-        if errMess.context_mark is not None and (
-            errMess.problem is None
-            or errMess.problem_mark is None
-            or errMess.context_mark.name != errMess.problem_mark.name
-            or errMess.context_mark.line != errMess.problem_mark.line
-            or errMess.context_mark.column != errMess.problem_mark.column
+        if error_message.context is not None:
+            lines.append(error_message.context)
+        if error_message.context_mark is not None and (
+            error_message.problem is None
+            or error_message.problem_mark is None
+            or error_message.context_mark.name != error_message.problem_mark.name
+            or error_message.context_mark.line != error_message.problem_mark.line
+            or error_message.context_mark.column != error_message.problem_mark.column
         ):
-            lines.append(format_yaml_mark(errMess.context_mark, filename, line_number))
-        if errMess.problem is not None:
-            lines.append(errMess.problem)
-        if errMess.problem_mark is not None:
-            lines.append(format_yaml_mark(errMess.problem_mark, filename, line_number))
-        if errMess.note is not None and errMess.note:
-            note = textwrap.dedent(errMess.note)
+            lines.append(format_yaml_mark(error_message.context_mark, filename, line_number))
+        if error_message.problem is not None:
+            lines.append(error_message.problem)
+        if error_message.problem_mark is not None:
+            lines.append(format_yaml_mark(error_message.problem_mark, filename, line_number))
+        if error_message.note is not None and error_message.note:
+            note = textwrap.dedent(error_message.note)
             lines.append(note)
         return '\n'.join(lines)
-    return str(errMess)
+    return str(error_message)
 
 
 class Interview:
@@ -8181,7 +7928,7 @@ class Interview:
         self.consolidated_metadata = {}
         self.issue = {}
         self.custom_data_types = set()
-        self.default_language = docassemble.base.functions.server.default_language
+        self.default_language = get_default_language()
         if 'source' in kwargs:
             self.read_from(kwargs['source'])
             self.cross_reference_dependencies()
@@ -8335,9 +8082,9 @@ class Interview:
         if self.bootstrap_theme is None:
             return None
         if not hasattr(self, 'bootstrap_theme_package'):
-            result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.source.package)
+            result = url_finder(self.bootstrap_theme, _package=self.source.package)
         else:
-            result = docassemble.base.functions.server.url_finder(self.bootstrap_theme, _package=self.bootstrap_theme_package)
+            result = url_finder(self.bootstrap_theme, _package=self.bootstrap_theme_package)
         return result
 
     def get_tags(self, the_user_dict):
@@ -8552,39 +8299,39 @@ class Interview:
                     if document is not None:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code, line_number=line_number)
                         self.names_used.update(question.fields_used)
-                except BaseException as errMess:
+                except BaseException as err_mess:
                     # logmessage(str(source_code))
                     try:
-                        logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(errMess, source.path, line_number)}')
+                        logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(err_mess, source.path, line_number)}')
                     except:
                         try:
-                            logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error was:\n\n{errMess}')
+                            logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error was:\n\n{err_mess}')
                         except:
-                            logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error type was:\n\n' + errMess.__class__.__name__)
+                            logmessage(f'Interview: error reading YAML file {source.path} in the block on line {line_number}. Error type was:\n\n' + err_mess.__class__.__name__)
                     self.success = False
             else:
                 try:
                     document = safeyaml.load(source_code)
-                except BaseException as errMess:
+                except BaseException as err_mess:
                     self.success = False
                     try:
-                        error_to_raise = DASourceError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(errMess, source.path, line_number)}')
+                        error_to_raise = DASourceError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n{format_yaml_errmess(err_mess, source.path, line_number)}')
                     except:
-                        error_to_raise = DASourceError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n' + str(errMess.__class__.__name__))
+                        error_to_raise = DASourceError(f'Error reading YAML file {source.path} in the block on line {line_number}\n\nDocument source code was:\n\n---\n{source_code.strip()}\n---\n\nError was:\n\n' + str(err_mess.__class__.__name__))
                     raise error_to_raise
                 if document is not None:
                     try:
                         question = Question(document, self, source=source, package=source_package, source_code=source_code, line_number=line_number)
                         self.names_used.update(question.fields_used)
-                    except SyntaxException as qError:
+                    except SyntaxException as question_error:
                         self.success = False
-                        raise DASourceError(f"Syntax Exception: {qError}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
-                    except CompileException as qError:
+                        raise DASourceError(f"Syntax Exception: {question_error}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
+                    except CompileException as question_error:
                         self.success = False
-                        raise DASourceError(f"Compile Exception: {qError}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
-                    except SyntaxError as qError:
+                        raise DASourceError(f"Compile Exception: {question_error}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
+                    except SyntaxError as question_error:
                         self.success = False
-                        raise DASourceError(f"Syntax Error: {qError}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
+                        raise DASourceError(f"Syntax Error: {question_error}\n\nIn file {source.path} in the block on line {line_number} from package {source_package}:\n{source_code}")
             line_number += lines_in_code
         for ordering in self.id_orderings:
             if ordering['type'] == 'supersedes' and hasattr(ordering['question'], 'number'):
@@ -8621,13 +8368,13 @@ class Interview:
         for metadata in self.metadata:
             if 'social' in metadata and isinstance(metadata['social'], dict):
                 if 'image' in metadata['social'] and isinstance(metadata['social']['image'], str):
-                    metadata['social']['image'] = docassemble.base.functions.server.url_finder(metadata['social']['image'], _package=metadata['_origin_package'], _external=True)
+                    metadata['social']['image'] = url_finder(metadata['social']['image'], _package=metadata['_origin_package'], _external=True)
                     if metadata['social']['image'] is None:
                         logmessage("Invalid image reference in social meta tags")
                         del metadata['social']['image']
                 for key, subkey in (('og', 'image'), ('twitter', 'image')):
                     if key in metadata['social'] and isinstance(metadata['social'][key], dict) and subkey in metadata['social'][key] and isinstance(metadata['social'][key][subkey], str):
-                        metadata['social'][key][subkey] = docassemble.base.functions.server.url_finder(metadata['social'][key][subkey], _package=metadata['_origin_package'], _external=True)
+                        metadata['social'][key][subkey] = url_finder(metadata['social'][key][subkey], _package=metadata['_origin_package'], _external=True)
                         if metadata['social'][key][subkey] is None:
                             logmessage("Invalid image reference in social meta tags")
                             del metadata['social'][key][subkey]
@@ -8655,7 +8402,7 @@ class Interview:
                             self.default_title[lang][title_abb] = str(val).strip()
                     else:
                         self.default_title['*'][title_abb] = str(metadata[title_name]).strip()
-        for lang, parts in docassemble.base.functions.server.main_page_parts.items():
+        for lang, parts in get_main_page_parts().items():
             if lang not in self.default_title:
                 self.default_title[lang] = {}
             for title_name, title_abb in mapping:
@@ -8758,14 +8505,14 @@ class Interview:
         # if interview_status.current_info['url'] is not None:
         #    user_dict['_internal']['url'] = interview_status.current_info['url']
         interview_status.set_tracker(user_dict['_internal']['tracker'])
-        # docassemble.base.functions.reset_local_variables()
+        # reset_local_variables()
         interview_status.current_info.update({'default_role': self.default_role})
-        docassemble.base.functions.this_thread.misc['reconsidered'] = set()
-        docassemble.base.functions.this_thread.current_package = self.source.package
-        docassemble.base.functions.this_thread.current_info = interview_status.current_info
-        docassemble.base.functions.this_thread.interview = self
-        docassemble.base.functions.this_thread.interview_status = interview_status
-        docassemble.base.functions.this_thread.internal = user_dict['_internal']
+        this_thread.misc['reconsidered'] = set()
+        this_thread.current_package = self.source.package
+        this_thread.current_info = interview_status.current_info
+        this_thread.interview = self
+        this_thread.interview_status = interview_status
+        this_thread.internal = user_dict['_internal']
         if user_dict['nav'].sections is None:
             user_dict['nav'].sections = self.sections
             if hasattr(self, 'sections_progressive'):
@@ -8834,9 +8581,9 @@ class Interview:
             while True:
                 number_loops += 1
                 if number_loops > self.loop_limit:
-                    docassemble.base.functions.wrap_up()
+                    wrap_up()
                     raise DASourceError("There appears to be a circularity.  Variables involved: " + ", ".join(variables_sought) + ".")
-                docassemble.base.functions.reset_gathering_mode()
+                reset_gathering_mode()
                 if 'action' in interview_status.current_info:
                     # logmessage("assemble: there is an action in the current_info: " + repr(interview_status.current_info['action']))
                     if interview_status.current_info['action'] in ('_da_list_remove', '_da_list_add', '_da_list_complete'):
@@ -8862,7 +8609,7 @@ class Interview:
                     if force_question is not None:
                         if self.debug and question is not None:
                             interview_status.seeking.append({'question': question, 'reason': 'multiple choice question', 'time': time.time()})
-                        docassemble.base.functions.this_thread.current_question = force_question
+                        this_thread.current_question = force_question
                         interview_status.populate(force_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                         raise MandatoryQuestion()
                     if not self.calls_process_action:
@@ -8873,7 +8620,7 @@ class Interview:
                             # logmessage("Running some initial code:\n\n" + question.sourcecode)
                             if self.debug:
                                 interview_status.seeking.append({'question': question, 'reason': 'initial', 'time': time.time()})
-                            docassemble.base.functions.this_thread.current_question = question
+                            this_thread.current_question = question
                             question.exec_setup_mandatory(user_dict)
                             exec_with_trap(question, user_dict)
                             continue
@@ -8891,9 +8638,9 @@ class Interview:
                                     gathered = eval(question.gathered, user_dict)
                                 thename = from_safeid(question.fields[0].saveas)
                                 if question.use_objects == 'objects':
-                                    user_dict['_DADATA'] = docassemble.base.util.objects_from_data(recursive_eval_dataobject(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
+                                    user_dict['_DADATA'] = objects_from_data(recursive_eval_dataobject(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
                                 elif question.use_objects:
-                                    user_dict['_DADATA'] = docassemble.base.util.objects_from_structure(recursive_eval_dataobject(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                                    user_dict['_DADATA'] = objects_from_structure(recursive_eval_dataobject(question.fields[0].data, user_dict), root=thename, gathered=gathered)
                                 else:
                                     user_dict['_DADATA'] = recursive_eval_dataobject(question.fields[0].data, user_dict)
                                 the_string = thename + ' = _DADATA'
@@ -8910,9 +8657,9 @@ class Interview:
                                     gathered = eval(question.gathered, user_dict)
                                 thename = from_safeid(question.fields[0].saveas)
                                 if question.use_objects == 'objects':
-                                    user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_data(recursive_eval_data_from_code(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
+                                    user_dict['_DADATAFROMCODE'] = objects_from_data(recursive_eval_data_from_code(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
                                 elif question.use_objects:
-                                    user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_structure(recursive_eval_data_from_code(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                                    user_dict['_DADATAFROMCODE'] = objects_from_structure(recursive_eval_data_from_code(question.fields[0].data, user_dict), root=thename, gathered=gathered)
                                 else:
                                     user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
                                 the_string = thename + ' = _DADATAFROMCODE'
@@ -8938,7 +8685,7 @@ class Interview:
                                 if self.debug:
                                     interview_status.seeking.append({'question': question, 'reason': 'objects', 'time': time.time()})
                                 # logmessage("Going into objects")
-                                docassemble.base.functions.this_thread.current_question = question
+                                this_thread.current_question = question
                                 question.exec_setup_mandatory(user_dict)
                                 for keyvalue in question.objects:
                                     for variable in keyvalue:
@@ -8959,7 +8706,7 @@ class Interview:
                                     interview_status.seeking.append({'question': question, 'reason': 'mandatory code', 'time': time.time()})
                                 # logmessage("Running some code:\n\n" + question.sourcecode)
                                 # logmessage("Question name is " + question.name)
-                                docassemble.base.functions.this_thread.current_question = question
+                                this_thread.current_question = question
                                 question.exec_setup_mandatory(user_dict)
                                 exec_with_trap(question, user_dict)
                                 # logmessage("Code completed")
@@ -8974,7 +8721,7 @@ class Interview:
                                     if self.debug and the_question is not question:
                                         interview_status.seeking.append({'question': the_question, 'reason': 'result of multiple choice', 'time': time.time()})
                                     if the_question.question_type in ["code", "event_code"]:
-                                        docassemble.base.functions.this_thread.current_question = the_question
+                                        this_thread.current_question = the_question
                                         question.exec_setup_mandatory(user_dict)
                                         exec_with_trap(the_question, user_dict)
                                         interview_status.mark_tentative_as_answered(user_dict)
@@ -8993,12 +8740,12 @@ class Interview:
                 except ForcedReRun:
                     continue
                 except (NameError, UnboundLocalError, DAAttributeError, DAIndexError) as the_exception:
-                    if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                        del docassemble.base.functions.this_thread.misc['pending_error']
+                    if 'pending_error' in this_thread.misc:
+                        del this_thread.misc['pending_error']
                     # logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))
-                    if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
+                    if self.debug and this_thread.evaluation_context == 'docx':
                         logmessage("NameError exception during document assembly: " + str(the_exception))
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     seeking_question = False
                     if isinstance(the_exception, ForcedNameError):
                         # logmessage("assemble: got a ForcedNameError for " + str(the_exception.name))
@@ -9023,10 +8770,10 @@ class Interview:
                                 user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                             if exception_name.startswith('_da_'):
                                 continue
-                            docassemble.base.functions.this_thread.misc['forgive_missing_question'] = [exception_name]
+                            this_thread.misc['forgive_missing_question'] = [exception_name]
                         if the_exception.arguments is not None:
-                            docassemble.base.functions.this_thread.current_info.update({'action': exception_name, 'arguments': the_exception.arguments})
-                        missingVariable = exception_name
+                            this_thread.current_info.update({'action': exception_name, 'arguments': the_exception.arguments})
+                        missing_variable = exception_name
                     else:
                         if type(the_exception) is NameError:  # pylint: disable=unidiomatic-typecheck
                             cl, exc, tb = sys.exc_info()
@@ -9043,9 +8790,9 @@ class Interview:
                             del exc
                             del tb
                         follow_mc = True
-                        missingVariable = extract_missing_name(the_exception)
-                    variables_sought.add(missingVariable)
-                    question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc, seeking_question=seeking_question)
+                        missing_variable = extract_missing_name(the_exception)
+                    variables_sought.add(missing_variable)
+                    question_result = self.askfor(missing_variable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=follow_mc, seeking_question=seeking_question)
                     if question_result['type'] in ('continue', 're_run'):
                         continue
                     if question_result['type'] == 'refresh':
@@ -9055,14 +8802,14 @@ class Interview:
                         break
                 except UndefinedError as the_exception:
                     # logmessage("UndefinedError")
-                    if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
+                    if self.debug and this_thread.evaluation_context == 'docx':
                         # logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n" + traceback.format_exc())
                         logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception))
-                    docassemble.base.functions.reset_context()
-                    missingVariable = extract_missing_name(the_exception)
-                    # logmessage("extracted " + missingVariable)
-                    variables_sought.add(missingVariable)
-                    question_result = self.askfor(missingVariable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
+                    reset_context()
+                    missing_variable = extract_missing_name(the_exception)
+                    # logmessage("extracted " + missing_variable)
+                    variables_sought.add(missing_variable)
+                    question_result = self.askfor(missing_variable, user_dict, old_user_dict, interview_status, seeking=interview_status.seeking, follow_mc=True)
                     if question_result['type'] in ('continue', 're_run'):
                         continue
                     if question_result['type'] == 'refresh':
@@ -9070,128 +8817,128 @@ class Interview:
                     else:
                         interview_status.populate(question_result)
                         break
-                except CommandError as qError:
+                except CommandError as question_error:
                     # logmessage("CommandError")
-                    docassemble.base.functions.reset_context()
-                    question_data = {'command': qError.return_type, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
+                    reset_context()
+                    question_data = {'command': question_error.return_type, 'sleep': question_error.sleep, 'question': question_error.question_text, 'subquestion': question_error.subquestion_text}
                     new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
+                    new_interview = Interview(source=new_interview_source)
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
-                except ResponseError as qError:
-                    docassemble.base.functions.reset_context()
+                except ResponseError as question_error:
+                    reset_context()
                     # logmessage("Trapped ResponseError")
                     question_data = {'extras': {}}
-                    if hasattr(qError, 'response') and qError.response is not None:
-                        question_data['response'] = qError.response
-                    elif hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
-                        question_data['binaryresponse'] = qError.binaryresponse
-                    elif hasattr(qError, 'filename') and qError.filename is not None:
-                        question_data['response filename'] = qError.filename
-                    elif hasattr(qError, 'url') and qError.url is not None:
-                        question_data['redirect url'] = qError.url
-                    elif hasattr(qError, 'all_variables') and qError.all_variables:
-                        if hasattr(qError, 'include_internal'):
-                            question_data['include_internal'] = qError.include_internal
+                    if hasattr(question_error, 'response') and question_error.response is not None:
+                        question_data['response'] = question_error.response
+                    elif hasattr(question_error, 'binaryresponse') and question_error.binaryresponse is not None:
+                        question_data['binaryresponse'] = question_error.binaryresponse
+                    elif hasattr(question_error, 'filename') and question_error.filename is not None:
+                        question_data['response filename'] = question_error.filename
+                    elif hasattr(question_error, 'url') and question_error.url is not None:
+                        question_data['redirect url'] = question_error.url
+                    elif hasattr(question_error, 'all_variables') and question_error.all_variables:
+                        if hasattr(question_error, 'include_internal'):
+                            question_data['include_internal'] = question_error.include_internal
                         question_data['content type'] = 'application/json'
                         question_data['all_variables'] = True
-                    elif hasattr(qError, 'nullresponse') and qError.nullresponse:
-                        question_data['null response'] = qError.nullresponse
-                    elif hasattr(qError, 'sleep') and qError.sleep:
-                        question_data['sleep'] = qError.sleep
-                    if hasattr(qError, 'content_type') and qError.content_type:
-                        question_data['content type'] = qError.content_type
-                    if hasattr(qError, 'response_code') and qError.response_code:
-                        question_data['response code'] = qError.response_code
+                    elif hasattr(question_error, 'nullresponse') and question_error.nullresponse:
+                        question_data['null response'] = question_error.nullresponse
+                    elif hasattr(question_error, 'sleep') and question_error.sleep:
+                        question_data['sleep'] = question_error.sleep
+                    if hasattr(question_error, 'content_type') and question_error.content_type:
+                        question_data['content type'] = question_error.content_type
+                    if hasattr(question_error, 'response_code') and question_error.response_code:
+                        question_data['response code'] = question_error.response_code
                     # new_interview = copy.deepcopy(self)
                     # if self.source is None:
                     #     new_interview_source = InterviewSourceString(content='')
                     # else:
                     #     new_interview_source = self.source
                     new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
+                    new_interview = Interview(source=new_interview_source)
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     # the_question = new_question.follow_multiple_choice(user_dict)
                     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
-                except BackgroundResponseError as qError:
-                    docassemble.base.functions.reset_context()
+                except BackgroundResponseError as question_error:
+                    reset_context()
                     # logmessage("Trapped BackgroundResponseError")
                     question_data = {'extras': {}}
-                    if hasattr(qError, 'backgroundresponse'):
-                        question_data['backgroundresponse'] = normalize_background_response(qError.backgroundresponse)
-                    if hasattr(qError, 'sleep'):
-                        question_data['sleep'] = qError.sleep
+                    if hasattr(question_error, 'backgroundresponse'):
+                        question_data['backgroundresponse'] = normalize_background_response(question_error.backgroundresponse)
+                    if hasattr(question_error, 'sleep'):
+                        question_data['sleep'] = question_error.sleep
                     new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
+                    new_interview = Interview(source=new_interview_source)
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
-                except BackgroundResponseActionError as qError:
-                    docassemble.base.functions.reset_context()
+                except BackgroundResponseActionError as question_error:
+                    reset_context()
                     # logmessage("Trapped BackgroundResponseActionError")
                     question_data = {'extras': {}}
-                    if hasattr(qError, 'action'):
-                        question_data['action'] = qError.action
+                    if hasattr(question_error, 'action'):
+                        question_data['action'] = question_error.action
                     new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
+                    new_interview = Interview(source=new_interview_source)
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
                     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
-                # except SendFileError as qError:
+                # except SendFileError as question_error:
                 #     # logmessage("Trapped SendFileError")
                 #     question_data = {'extras': {}}
-                #     if hasattr(qError, 'filename') and qError.filename is not None:
-                #         question_data['response filename'] = qError.filename
-                #     if hasattr(qError, 'content_type') and qError.content_type:
-                #         question_data['content type'] = qError.content_type
+                #     if hasattr(question_error, 'filename') and question_error.filename is not None:
+                #         question_data['response filename'] = question_error.filename
+                #     if hasattr(question_error, 'content_type') and question_error.content_type:
+                #         question_data['content type'] = question_error.content_type
                 #     new_interview_source = InterviewSourceString(content='')
-                #     new_interview = new_interview_source.get_interview()
+                #     new_interview = Interview(source=new_interview_source)
                 #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 #     new_question.name = "Question_Temp"
                 #     interview_status.populate(new_question.ask(user_dict, old_user_dict, 'None', [], None))
                 #     break
-                except QuestionError as qError:
+                except QuestionError as question_error:
                     # logmessage("QuestionError")
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     question_data = {}
-                    if qError.question:
-                        question_data['question'] = qError.question
-                    if qError.subquestion:
-                        question_data['subquestion'] = qError.subquestion
-                    if qError.reload:
-                        question_data['reload'] = qError.reload
-                    if qError.dead_end:
+                    if question_error.question:
+                        question_data['question'] = question_error.question
+                    if question_error.subquestion:
+                        question_data['subquestion'] = question_error.subquestion
+                    if question_error.reload:
+                        question_data['reload'] = question_error.reload
+                    if question_error.dead_end:
                         pass
-                    elif qError.buttons:
-                        question_data['buttons'] = qError.buttons
+                    elif question_error.buttons:
+                        question_data['buttons'] = question_error.buttons
                     else:
                         buttons = []
-                        if qError.show_exit is not False and not (qError.show_leave is True and qError.show_exit is None):
+                        if question_error.show_exit is not False and not (question_error.show_leave is True and question_error.show_exit is None):
                             exit_button = {word('Exit'): 'exit'}
-                            if qError.url:
-                                exit_button.update({'url': qError.url})
+                            if question_error.url:
+                                exit_button.update({'url': question_error.url})
                             buttons.append(exit_button)
-                        if qError.show_leave:
+                        if question_error.show_leave:
                             leave_button = {word('Leave'): 'leave'}
-                            if qError.url:
-                                leave_button.update({'url': qError.url})
+                            if question_error.url:
+                                leave_button.update({'url': question_error.url})
                             buttons.append(leave_button)
-                        if qError.show_restart is not False:
+                        if question_error.show_restart is not False:
                             buttons.append({word('Restart'): 'restart'})
                         if len(buttons) > 0:
                             question_data['buttons'] = buttons
                     new_interview_source = InterviewSourceString(content='')
-                    new_interview = new_interview_source.get_interview()
+                    new_interview = Interview(source=new_interview_source)
                     reproduce_basics(self, new_interview)
                     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                     new_question.name = "Question_Temp"
@@ -9201,57 +8948,57 @@ class Interview:
                     interview_status.populate(the_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                     break
                 except AttributeError as the_error:
-                    if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                        del docassemble.base.functions.this_thread.misc['pending_error']
+                    if 'pending_error' in this_thread.misc:
+                        del this_thread.misc['pending_error']
                     # logmessage("Regular attributeerror")
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     # logmessage(str(the_error.args))
-                    docassemble.base.functions.wrap_up()
+                    wrap_up()
                     raise DASourceError('Got error ' + str(the_error) + " " + traceback.format_exc() + "\nHistory was " + pprint.pformat(interview_status.seeking))
                 except MandatoryQuestion:
                     # logmessage("MandatoryQuestion")
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     break
                 except CodeExecute as code_error:
                     # logmessage("CodeExecute")
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     # if self.debug:
                     #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                     exec(code_error.compute, user_dict)
                     code_error.question.mark_as_answered(user_dict)
-                except SyntaxException as qError:
+                except SyntaxException as question_error:
                     # logmessage("SyntaxException")
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     the_question = None
                     try:
                         the_question = question
                     except:
                         pass
-                    docassemble.base.functions.wrap_up()
+                    wrap_up()
                     if the_question is not None:
-                        raise DASourceError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
-                    raise DASourceError("no question available: " + str(qError))
-                except CompileException as qError:
+                        raise DASourceError(str(question_error) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                    raise DASourceError("no question available: " + str(question_error))
+                except CompileException as question_error:
                     # logmessage("CompileException")
-                    docassemble.base.functions.reset_context()
+                    reset_context()
                     the_question = None
                     try:
                         the_question = question
                     except:
                         pass
-                    docassemble.base.functions.wrap_up()
+                    wrap_up()
                     if the_question is not None:
-                        raise DASourceError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
-                    raise DASourceError("no question available: " + str(qError))
+                        raise DASourceError(str(question_error) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                    raise DASourceError("no question available: " + str(question_error))
                 else:
-                    docassemble.base.functions.wrap_up()
+                    wrap_up()
                     raise DAErrorNoEndpoint('Docassemble has finished executing all code blocks marked as initial or mandatory, and finished asking all questions marked as mandatory (if any).  It is a best practice to end your interview with a question that says goodbye.')
         except BaseException as the_error:
             # logmessage("Untrapped exception")
             if self.debug:
                 the_error.interview = self
                 the_error.interview_status = interview_status
-                the_error.user_dict = docassemble.base.functions.serializable_dict(user_dict)
+                the_error.user_dict = serializable_dict(user_dict)
                 if not hasattr(the_error, '__traceback__'):
                     cl, exc, tb = sys.exc_info()
                     the_error.__traceback__ = tb
@@ -9259,9 +9006,9 @@ class Interview:
                     del exc
                     del tb
             raise the_error
-        if docassemble.base.functions.this_thread.prevent_going_back:
+        if this_thread.prevent_going_back:
             interview_status.can_go_back = False
-        docassemble.base.functions.wrap_up()
+        wrap_up()
         if self.debug:
             interview_status.seeking.append({'done': True, 'time': time.time()})
 
@@ -9270,7 +9017,7 @@ class Interview:
             if not self.consolidated_metadata.get('suppress loading util', False):
                 exec(import_util, the_user_dict)
 
-    def askfor(self, missingVariable, user_dict, old_user_dict, interview_status, **kwargs):
+    def askfor(self, missing_variable, user_dict, old_user_dict, interview_status, **kwargs):
         seeking_question = kwargs.get('seeking_question', False)
         variable_stack = kwargs.get('variable_stack', set())
         questions_tried = kwargs.get('questions_tried', {})
@@ -9281,35 +9028,35 @@ class Interview:
         follow_mc = kwargs.get('follow_mc', True)
         seeking = kwargs.get('seeking', [])
         if self.debug:
-            seeking.append({'variable': missingVariable, 'time': time.time()})
+            seeking.append({'variable': missing_variable, 'time': time.time()})
         if recursion_depth > self.recursion_limit:
             raise DASourceError("There appears to be an infinite loop.  Variables in stack are " + ", ".join(sorted(variable_stack)) + ".")
-        # logmessage("askfor: I don't have " + str(missingVariable) + " for language " + str(language))
-        # logmessage("I don't have " + str(missingVariable) + " for language " + str(language))
-        origMissingVariable = missingVariable
-        docassemble.base.functions.set_current_variable(origMissingVariable)
-        # if missingVariable in variable_stack:
-        #     raise DASourceError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
-        # variable_stack.add(missingVariable)
+        # logmessage("askfor: I don't have " + str(missing_variable) + " for language " + str(language))
+        # logmessage("I don't have " + str(missing_variable) + " for language " + str(language))
+        orig_missing_variable = missing_variable
+        set_current_variable(orig_missing_variable)
+        # if missing_variable in variable_stack:
+        #     raise DASourceError("Infinite loop: " + missing_variable + " already looked for, where stack is " + str(variable_stack))
+        # variable_stack.add(missing_variable)
         # found_generic = False
-        # realMissingVariable = missingVariable
+        # realMissingVariable = missing_variable
         totry = []
         variants = []
         level_dict = {}
         generic_dict = {}
-        expression_as_list = [x for x in match_brackets_or_dot.split(missingVariable) if x != '']
+        expression_as_list = [x for x in match_brackets_or_dot.split(missing_variable) if x != '']
         expression_as_list.append('')
         recurse_indices(expression_as_list, list_of_indices, [], variants, level_dict, [], generic_dict, [])
         # logmessage("variants: " + repr(variants))
         for variant in variants:
-            totry.append({'real': missingVariable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.'), 'num_iterators': variant.count('[')})
+            totry.append({'real': missing_variable, 'vari': variant, 'iterators': level_dict[variant], 'generic': generic_dict[variant], 'is_generic': 0 if generic_dict[variant] == '' else 1, 'num_dots': variant.count('.'), 'num_iterators': variant.count('[')})
         totry = sorted(sorted(sorted(sorted(totry, key=lambda x: len(x['iterators'])), key=lambda x: x['num_iterators'], reverse=True), key=lambda x: x['num_dots'], reverse=True), key=lambda x: x['is_generic'])
         # logmessage("ask_for: totry is " + "\n".join([x['vari'] for x in totry]))
         questions_to_try = []
         for mv in totry:
             # realMissingVariable = mv['real']
-            missingVariable = mv['vari']
-            # logmessage("Trying missingVariable " + missingVariable)
+            missing_variable = mv['vari']
+            # logmessage("Trying missing_variable " + missing_variable)
             if mv['is_generic']:
                 # logmessage("Testing out generic " + mv['generic'])
                 try:
@@ -9318,22 +9065,22 @@ class Interview:
                     classes_to_look_for = [type(root_evaluated).__name__]
                     recursive_add_classes(classes_to_look_for, type(root_evaluated))
                     for generic_object in classes_to_look_for:
-                        # logmessage("Looking for generic object " + generic_object + " for " + missingVariable)
-                        if generic_object in self.generic_questions and missingVariable in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][missingVariable] or '*' in self.generic_questions[generic_object][missingVariable]):
+                        # logmessage("Looking for generic object " + generic_object + " for " + missing_variable)
+                        if generic_object in self.generic_questions and missing_variable in self.generic_questions[generic_object] and (language in self.generic_questions[generic_object][missing_variable] or '*' in self.generic_questions[generic_object][missing_variable]):
                             for lang in [language, '*']:
-                                if lang in self.generic_questions[generic_object][missingVariable]:
-                                    for the_question_to_use in self.sort_with_orderings(self.generic_questions[generic_object][missingVariable][lang]):
-                                        questions_to_try.append((the_question_to_use, True, mv['generic'], mv['iterators'], missingVariable, generic_object))
+                                if lang in self.generic_questions[generic_object][missing_variable]:
+                                    for the_question_to_use in self.sort_with_orderings(self.generic_questions[generic_object][missing_variable][lang]):
+                                        questions_to_try.append((the_question_to_use, True, mv['generic'], mv['iterators'], missing_variable, generic_object))
                 except:
                     pass
                 continue
             # logmessage("askfor: questions to try is " + str(questions_to_try))
-            if missingVariable in self.questions:
+            if missing_variable in self.questions:
                 for lang in [language, '*']:
                     # logmessage("lang is " + lang)
-                    if lang in self.questions[missingVariable]:
-                        for the_question in self.sort_with_orderings(self.questions[missingVariable][lang]):
-                            questions_to_try.append((the_question, False, 'None', mv['iterators'], missingVariable, None))
+                    if lang in self.questions[missing_variable]:
+                        for the_question in self.sort_with_orderings(self.questions[missing_variable][lang]):
+                            questions_to_try.append((the_question, False, 'None', mv['iterators'], missing_variable, None))
         # logmessage("askfor: questions to try is " + str(questions_to_try))
         num_cycles = 0
         missing_var = "_unknown"
@@ -9342,7 +9089,7 @@ class Interview:
             if num_cycles > self.loop_limit:
                 raise DASourceError("Infinite loop detected while looking for " + missing_var)
             a_question_was_skipped = False
-            docassemble.base.functions.reset_gathering_mode(origMissingVariable)
+            reset_gathering_mode(orig_missing_variable)
             # logmessage("Starting the while loop")
             try:
                 for the_question, is_generic, the_x, iterators, missing_var, generic_object in questions_to_try:
@@ -9399,7 +9146,7 @@ class Interview:
                         skip_question = None
                         for field in question.fields:
                             if hasattr(field, 'showif_code') and hasattr(field, 'saveas') and field.saveas == field_id:
-                                docassemble.base.functions.this_thread.misc['current_field'] = field.number
+                                this_thread.misc['current_field'] = field.number
                                 result = eval(field.showif_code, user_dict)
                                 if hasattr(field, 'extras') and 'show_if_sign_code' in field.extras and field.extras['show_if_sign_code'] == 0:
                                     if result:
@@ -9429,18 +9176,18 @@ class Interview:
                             gathered = eval(question.gathered, user_dict)
                         thename = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
                         if question.use_objects == 'objects':
-                            user_dict['_DADATA'] = docassemble.base.util.objects_from_data(recursive_eval_dataobject(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
+                            user_dict['_DADATA'] = objects_from_data(recursive_eval_dataobject(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
                         elif question.use_objects:
-                            user_dict['_DADATA'] = docassemble.base.util.objects_from_structure(recursive_eval_dataobject(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                            user_dict['_DADATA'] = objects_from_structure(recursive_eval_dataobject(question.fields[0].data, user_dict), root=thename, gathered=gathered)
                         else:
                             user_dict['_DADATA'] = recursive_eval_dataobject(question.fields[0].data, user_dict)
                         the_string = thename + ' = _DADATA'
                         exec(the_string, user_dict)
                         del user_dict['_DADATA']
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
+                        pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type == "data_from_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)
@@ -9450,22 +9197,22 @@ class Interview:
                             gathered = eval(question.gathered, user_dict)
                         thename = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
                         if question.use_objects == 'objects':
-                            user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_data(recursive_eval_data_from_code(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
+                            user_dict['_DADATAFROMCODE'] = objects_from_data(recursive_eval_data_from_code(question.fields[0].data, user_dict), recursive=True, gathered=gathered, name=thename, package=question.package)
                         elif question.use_objects:
-                            user_dict['_DADATAFROMCODE'] = docassemble.base.util.objects_from_structure(recursive_eval_data_from_code(question.fields[0].data, user_dict), root=thename, gathered=gathered)
+                            user_dict['_DADATAFROMCODE'] = objects_from_structure(recursive_eval_data_from_code(question.fields[0].data, user_dict), root=thename, gathered=gathered)
                         else:
                             user_dict['_DADATAFROMCODE'] = recursive_eval_data_from_code(question.fields[0].data, user_dict)
                         the_string = thename + ' = _DADATAFROMCODE'
                         exec(the_string, user_dict)
                         del user_dict['_DADATAFROMCODE']
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
+                        pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type == "objects_from_file":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_variable = None
-                        docassemble.base.functions.this_thread.current_question = question
+                        this_thread.current_question = question
                         exec(import_core, user_dict)
                         if isinstance(question.use_objects, (bool, NoneType)):
                             use_objects = bool(question.use_objects)
@@ -9500,15 +9247,15 @@ class Interview:
                                         pass
                                 continue
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
+                        pop_current_variable()
                         if old_variable is not None:
                             question.invalidate_dependencies_of_variable(user_dict, missing_var, old_variable)
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type == "objects":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         success = False
                         old_variable = None
-                        docassemble.base.functions.this_thread.current_question = question
+                        this_thread.current_question = question
                         for keyvalue in question.objects:
                             # logmessage("In a for loop for keyvalue")
                             for raw_variable, object_type_name in keyvalue.items():
@@ -9568,11 +9315,11 @@ class Interview:
                         # question.mark_as_answered(user_dict)
                         # logmessage("pop current variable")
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
+                        pop_current_variable()
                         if old_variable is not None:
                             question.invalidate_dependencies_of_variable(user_dict, missing_var, old_variable)
                         # logmessage("Returning")
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type == "template":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         temp_vars = {}
@@ -9583,13 +9330,13 @@ class Interview:
                             for indexno in range(len(iterators)):
                                 temp_vars[list_of_indices[indexno]] = user_dict[list_of_indices[indexno]]
                         if question.target is not None:
-                            return {'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'interview_help_text': None, 'attachments': None, 'question': question, 'selectcompute': {}, 'defaults': {}, 'hints': {}, 'helptexts': {}, 'extras': {}, 'labels': {}, 'sought': missing_var, 'orig_sought': origMissingVariable}
+                            return {'type': 'template', 'question_text': question.content.text(user_dict).rstrip(), 'subquestion_text': None, 'continue_label': None, 'audiovideo': None, 'decorations': None, 'help_text': None, 'interview_help_text': None, 'attachments': None, 'question': question, 'selectcompute': {}, 'defaults': {}, 'hints': {}, 'helptexts': {}, 'extras': {}, 'labels': {}, 'sought': missing_var, 'orig_sought': orig_missing_variable}
                         if question.decorations is None:
                             decoration_list = []
                         else:
                             decoration_list = question.decorations
                         actual_saveas = substitute_vars(from_safeid(question.fields[0].saveas), is_generic, the_x, iterators)
-                        # docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
+                        # this_thread.template_vars.append(actual_saveas)
                         found_object = False
                         try:
                             the_object = eval(actual_saveas, user_dict)
@@ -9611,8 +9358,8 @@ class Interview:
                         the_object.userdict = user_dict
                         the_object.tempvars = temp_vars
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        pop_current_variable()
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type == "template_code":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         the_filenames = eval(question.compute, user_dict)
@@ -9635,7 +9382,7 @@ class Interview:
                                             raise DASourceError("askfor: error downloading " + str(the_filename) + ": " + str(err))
                                         the_filename = temp_template_file.name
                                 else:
-                                    the_filename = docassemble.base.functions.package_template_filename(the_filename, package=question.package)
+                                    the_filename = package_template_filename(the_filename, package=question.package)
                             else:
                                 the_filename = None
                             if the_filename is None or not os.path.isfile(the_filename):
@@ -9675,8 +9422,8 @@ class Interview:
                         the_object.userdict = user_dict
                         the_object.tempvars = temp_vars
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        pop_current_variable()
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type == "table":
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         temp_vars = {}
@@ -9702,7 +9449,7 @@ class Interview:
                         table_info.filter_expression = question.fields[0].extras['filter_expression']
                         table_info.saveas = from_safeid(question.fields[0].saveas)
                         actual_saveas = substitute_vars(table_info.saveas, is_generic, the_x, iterators)
-                        # docassemble.base.functions.this_thread.template_vars.append(actual_saveas)
+                        # this_thread.template_vars.append(actual_saveas)
                         the_string = "from docassemble.base.util import DALazyTableTemplate"
                         exec(the_string, user_dict)
                         found_object = False
@@ -9723,13 +9470,13 @@ class Interview:
                         the_object.tempvars = temp_vars
                         # logmessage("Pop variable for table")
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        pop_current_variable()
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type == 'attachments':
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         old_values = question.get_old_values(user_dict)
-                        # logmessage("original missing variable is " + origMissingVariable)
-                        question.processed_attachments(user_dict, seeking_var=origMissingVariable, use_cache=False)
+                        # logmessage("original missing variable is " + orig_missing_variable)
+                        question.processed_attachments(user_dict, seeking_var=orig_missing_variable, use_cache=False)
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         try:
@@ -9739,9 +9486,9 @@ class Interview:
                             logmessage("Problem with attachments block: " + err.__class__.__name__ + ": " + str(err))
                             continue
                         question.post_exec(user_dict)
-                        docassemble.base.functions.pop_current_variable()
+                        pop_current_variable()
                         question.invalidate_dependencies(user_dict, old_values)
-                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                        return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                     if question.question_type in ["code", "event_code"]:
                         question.exec_setup(is_generic, the_x, iterators, user_dict)
                         was_defined = False
@@ -9753,8 +9500,8 @@ class Interview:
                         except:
                             pass
                         if question.question_type == 'event_code':
-                            docassemble.base.functions.pop_event_stack(origMissingVariable)
-                        docassemble.base.functions.this_thread.current_question = question
+                            pop_event_stack(orig_missing_variable)
+                        this_thread.current_question = question
                         if was_defined:
                             exec_with_trap(question, user_dict, old_variable=missing_var)
                         else:
@@ -9763,12 +9510,12 @@ class Interview:
                         if missing_var in variable_stack:
                             variable_stack.remove(missing_var)
                         if question.question_type == 'event_code':
-                            docassemble.base.functions.pop_current_variable()
-                            docassemble.base.functions.pop_event_stack(origMissingVariable)
+                            pop_current_variable()
+                            pop_event_stack(orig_missing_variable)
                             question.invalidate_dependencies(user_dict, old_values)
                             if was_defined:
                                 exec("del __oldvariable__", user_dict)
-                            return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                            return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                         try:
                             eval(missing_var, user_dict)
                             if was_defined:
@@ -9777,9 +9524,9 @@ class Interview:
                             if seeking_question:
                                 continue
                             # question.mark_as_answered(user_dict)
-                            docassemble.base.functions.pop_current_variable()
-                            docassemble.base.functions.pop_event_stack(origMissingVariable)
-                            return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                            pop_current_variable()
+                            pop_event_stack(orig_missing_variable)
+                            return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                         except:
                             if was_defined:
                                 try:
@@ -9793,35 +9540,35 @@ class Interview:
                         interview_status.mark_tentative_as_answered(user_dict)
                         if question.question_type == 'continue':
                             continue
-                        return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var, origMissingVariable)
+                        return question.ask(user_dict, old_user_dict, the_x, iterators, missing_var, orig_missing_variable)
                 if a_question_was_skipped:
-                    raise DASourceError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
-                if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
-                    docassemble.base.functions.pop_current_variable()
-                    docassemble.base.functions.pop_event_stack(origMissingVariable)
-                    if 'action' in docassemble.base.functions.this_thread.current_info and docassemble.base.functions.this_thread.current_info['action'] == origMissingVariable:
-                        del docassemble.base.functions.this_thread.current_info['action']
-                    return {'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable}
-                if self.options.get('use catchall', False) and not origMissingVariable.endswith('.value'):
+                    raise DASourceError("Infinite loop: " + missing_variable + " already looked for, where stack is " + str(variable_stack))
+                if 'forgive_missing_question' in this_thread.misc and orig_missing_variable in this_thread.misc['forgive_missing_question']:
+                    pop_current_variable()
+                    pop_event_stack(orig_missing_variable)
+                    if 'action' in this_thread.current_info and this_thread.current_info['action'] == orig_missing_variable:
+                        del this_thread.current_info['action']
+                    return {'type': 'continue', 'sought': orig_missing_variable, 'orig_sought': orig_missing_variable}
+                if self.options.get('use catchall', False) and not orig_missing_variable.endswith('.value'):
                     the_string = "from docassemble.base.util import DACatchAll"
                     exec(the_string, user_dict)
-                    the_string = origMissingVariable + ' = DACatchAll(' + repr(origMissingVariable) + ')'
+                    the_string = orig_missing_variable + ' = DACatchAll(' + repr(orig_missing_variable) + ')'
                     exec(the_string, user_dict)
-                    docassemble.base.functions.pop_current_variable()
-                    docassemble.base.functions.pop_event_stack(origMissingVariable)
-                    return {'type': 'continue', 'sought': origMissingVariable, 'orig_sought': origMissingVariable}
-                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
+                    pop_current_variable()
+                    pop_event_stack(orig_missing_variable)
+                    return {'type': 'continue', 'sought': orig_missing_variable, 'orig_sought': orig_missing_variable}
+                raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + orig_missing_variable + "' that could not be looked up in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=orig_missing_variable)
             except ForcedReRun:
-                docassemble.base.functions.pop_current_variable()
-                docassemble.base.functions.pop_event_stack(origMissingVariable)
-                return {'type': 're_run', 'sought': origMissingVariable, 'orig_sought': origMissingVariable}
+                pop_current_variable()
+                pop_event_stack(orig_missing_variable)
+                return {'type': 're_run', 'sought': orig_missing_variable, 'orig_sought': orig_missing_variable}
             except (NameError, UnboundLocalError, DAAttributeError, DAIndexError) as the_exception:
-                if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                    del docassemble.base.functions.this_thread.misc['pending_error']
+                if 'pending_error' in this_thread.misc:
+                    del this_thread.misc['pending_error']
                 # logmessage("Error in " + the_exception.__class__.__name__ + " is " + str(the_exception))
-                if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
+                if self.debug and this_thread.evaluation_context == 'docx':
                     logmessage("NameError exception during document assembly: " + str(the_exception))
-                docassemble.base.functions.reset_context()
+                reset_context()
                 seeking_question = False
                 if isinstance(the_exception, ForcedNameError):
                     # logmessage("askfor: got a ForcedNameError for " + str(the_exception.name))
@@ -9829,7 +9576,7 @@ class Interview:
                     seeking_question = True
                     # logmessage("Seeking question is True")
                     exception_name = the_exception.name
-                    newMissingVariable = exception_name
+                    new_missing_variable = exception_name
                     if the_exception.next_action is not None and not interview_status.checkin:
                         if 'event_stack' not in user_dict['_internal']:
                             user_dict['_internal']['event_stack'] = {}
@@ -9848,12 +9595,12 @@ class Interview:
                         if len(new_items) > 0:
                             user_dict['_internal']['event_stack'][session_uid] = new_items + user_dict['_internal']['event_stack'][session_uid]
                     if the_exception.arguments is not None:
-                        docassemble.base.functions.this_thread.current_info.update({'action': exception_name, 'arguments': the_exception.arguments})
+                        this_thread.current_info.update({'action': exception_name, 'arguments': the_exception.arguments})
                     if exception_name.startswith('_da_'):
-                        docassemble.base.functions.pop_current_variable()
-                        docassemble.base.functions.pop_event_stack(origMissingVariable)
-                        return {'type': 're_run', 'sought': origMissingVariable, 'orig_sought': origMissingVariable}
-                    docassemble.base.functions.this_thread.misc['forgive_missing_question'] = [exception_name]
+                        pop_current_variable()
+                        pop_event_stack(orig_missing_variable)
+                        return {'type': 're_run', 'sought': orig_missing_variable, 'orig_sought': orig_missing_variable}
+                    this_thread.misc['forgive_missing_question'] = [exception_name]
                 else:
                     # logmessage("regular nameerror")
                     if type(the_exception) is NameError:  # pylint: disable=unidiomatic-typecheck
@@ -9871,171 +9618,171 @@ class Interview:
                         del exc
                         del tb
                     follow_mc = True
-                    newMissingVariable = extract_missing_name(the_exception)
-                if newMissingVariable == 'file':
+                    new_missing_variable = extract_missing_name(the_exception)
+                if new_missing_variable == 'file':
                     raise
-                # newMissingVariable = str(the_exception).split("'")[1]
-                # if newMissingVariable in questions_tried and newMissingVariable in variable_stack:
-                #    raise DASourceError("Infinite loop: " + missingVariable + " already looked for, where stack is " + str(variable_stack))
-                if newMissingVariable not in questions_tried:
-                    questions_tried[newMissingVariable] = set()
+                # new_missing_variable = str(the_exception).split("'")[1]
+                # if new_missing_variable in questions_tried and new_missing_variable in variable_stack:
+                #    raise DASourceError("Infinite loop: " + missing_variable + " already looked for, where stack is " + str(variable_stack))
+                if new_missing_variable not in questions_tried:
+                    questions_tried[new_missing_variable] = set()
                 else:
-                    variable_stack.add(missingVariable)
+                    variable_stack.add(missing_variable)
                 if current_question.question_type != 'objects':
-                    questions_tried[newMissingVariable].add(current_question)
+                    questions_tried[new_missing_variable].add(current_question)
                 try:
-                    eval(origMissingVariable, user_dict)
+                    eval(orig_missing_variable, user_dict)
                     was_defined = True
                 except:
                     was_defined = False
-                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth, seeking_question=seeking_question)
-                if question_result['type'] == 'continue' and missing_var != newMissingVariable:
+                question_result = self.askfor(new_missing_variable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=follow_mc, recursion_depth=recursion_depth, seeking_question=seeking_question)
+                if question_result['type'] == 'continue' and missing_var != new_missing_variable:
                     if not was_defined:
                         try:
-                            eval(origMissingVariable, user_dict)
+                            eval(orig_missing_variable, user_dict)
                             now_defined = True
                         except:
                             now_defined = False
                         if now_defined:
-                            docassemble.base.functions.pop_current_variable()
-                            return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
-                    # logmessage("Continuing after asking for newMissingVariable " + str(newMissingVariable))
+                            pop_current_variable()
+                            return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
+                    # logmessage("Continuing after asking for new_missing_variable " + str(new_missing_variable))
                     continue
-                docassemble.base.functions.pop_current_variable()
+                pop_current_variable()
                 return question_result
             except UndefinedError as the_exception:
                 # logmessage("UndefinedError")
-                if self.debug and docassemble.base.functions.this_thread.evaluation_context == 'docx':
+                if self.debug and this_thread.evaluation_context == 'docx':
                     # logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception) + "\n" + traceback.format_exc())
                     logmessage(the_exception.__class__.__name__ + " exception during document assembly: " + str(the_exception))
-                docassemble.base.functions.reset_context()
-                newMissingVariable = extract_missing_name(the_exception)
-                if newMissingVariable not in questions_tried:
-                    questions_tried[newMissingVariable] = set()
+                reset_context()
+                new_missing_variable = extract_missing_name(the_exception)
+                if new_missing_variable not in questions_tried:
+                    questions_tried[new_missing_variable] = set()
                 else:
-                    variable_stack.add(missingVariable)
+                    variable_stack.add(missing_variable)
                 if current_question.question_type != 'objects':
-                    questions_tried[newMissingVariable].add(current_question)
-                question_result = self.askfor(newMissingVariable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth, seeking_question=seeking_question)
+                    questions_tried[new_missing_variable].add(current_question)
+                question_result = self.askfor(new_missing_variable, user_dict, old_user_dict, interview_status, variable_stack=variable_stack, questions_tried=questions_tried, seeking=seeking, follow_mc=True, recursion_depth=recursion_depth, seeking_question=seeking_question)
                 if question_result['type'] == 'continue':
                     continue
-                docassemble.base.functions.pop_current_variable()
+                pop_current_variable()
                 return question_result
-            except CommandError as qError:
-                # logmessage("CommandError: " + str(qError))
-                docassemble.base.functions.reset_context()
-                question_data = {'command': qError.return_type, 'sleep': qError.sleep, 'question': qError.question_text, 'subquestion': qError.subquestion_text}
+            except CommandError as question_error:
+                # logmessage("CommandError: " + str(question_error))
+                reset_context()
+                question_data = {'command': question_error.return_type, 'sleep': question_error.sleep, 'question': question_error.question_text, 'subquestion': question_error.subquestion_text}
                 new_interview_source = InterviewSourceString(content='')
-                new_interview = new_interview_source.get_interview()
+                new_interview = Interview(source=new_interview_source)
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable)
-            except ResponseError as qError:
+                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, orig_missing_variable)
+            except ResponseError as question_error:
                 # logmessage("ResponseError")
-                docassemble.base.functions.reset_context()
+                reset_context()
                 # logmessage("Trapped ResponseError2")
                 question_data = {'extras': {}}
-                if hasattr(qError, 'response') and qError.response is not None:
-                    question_data['response'] = qError.response
-                elif hasattr(qError, 'binaryresponse') and qError.binaryresponse is not None:
-                    question_data['binaryresponse'] = qError.binaryresponse
-                elif hasattr(qError, 'filename') and qError.filename is not None:
-                    question_data['response filename'] = qError.filename
-                elif hasattr(qError, 'url') and qError.url is not None:
-                    question_data['redirect url'] = qError.url
-                elif hasattr(qError, 'all_variables') and qError.all_variables:
-                    if hasattr(qError, 'include_internal'):
-                        question_data['include_internal'] = qError.include_internal
+                if hasattr(question_error, 'response') and question_error.response is not None:
+                    question_data['response'] = question_error.response
+                elif hasattr(question_error, 'binaryresponse') and question_error.binaryresponse is not None:
+                    question_data['binaryresponse'] = question_error.binaryresponse
+                elif hasattr(question_error, 'filename') and question_error.filename is not None:
+                    question_data['response filename'] = question_error.filename
+                elif hasattr(question_error, 'url') and question_error.url is not None:
+                    question_data['redirect url'] = question_error.url
+                elif hasattr(question_error, 'all_variables') and question_error.all_variables:
+                    if hasattr(question_error, 'include_internal'):
+                        question_data['include_internal'] = question_error.include_internal
                     question_data['content type'] = 'application/json'
                     question_data['all_variables'] = True
-                elif hasattr(qError, 'nullresponse') and qError.nullresponse:
-                    question_data['null response'] = qError.nullresponse
-                elif hasattr(qError, 'sleep') and qError.sleep:
-                    question_data['sleep'] = qError.sleep
-                if hasattr(qError, 'content_type') and qError.content_type:
-                    question_data['content type'] = qError.content_type
-                if hasattr(qError, 'response_code') and qError.response_code:
-                    question_data['response code'] = qError.response_code
+                elif hasattr(question_error, 'nullresponse') and question_error.nullresponse:
+                    question_data['null response'] = question_error.nullresponse
+                elif hasattr(question_error, 'sleep') and question_error.sleep:
+                    question_data['sleep'] = question_error.sleep
+                if hasattr(question_error, 'content_type') and question_error.content_type:
+                    question_data['content type'] = question_error.content_type
+                if hasattr(question_error, 'response_code') and question_error.response_code:
+                    question_data['response code'] = question_error.response_code
                 new_interview_source = InterviewSourceString(content='')
-                new_interview = new_interview_source.get_interview()
+                new_interview = Interview(source=new_interview_source)
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 # the_question = new_question.follow_multiple_choice(user_dict)
-                docassemble.base.functions.pop_event_stack(origMissingVariable)
-                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable)
-            except BackgroundResponseError as qError:
+                pop_event_stack(orig_missing_variable)
+                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, orig_missing_variable)
+            except BackgroundResponseError as question_error:
                 # logmessage("BackgroundResponseError")
-                docassemble.base.functions.reset_context()
+                reset_context()
                 # logmessage("Trapped BackgroundResponseError2")
                 question_data = {'extras': {}}
-                if hasattr(qError, 'backgroundresponse'):
-                    question_data['backgroundresponse'] = normalize_background_response(qError.backgroundresponse)
-                if hasattr(qError, 'sleep'):
-                    question_data['sleep'] = qError.sleep
+                if hasattr(question_error, 'backgroundresponse'):
+                    question_data['backgroundresponse'] = normalize_background_response(question_error.backgroundresponse)
+                if hasattr(question_error, 'sleep'):
+                    question_data['sleep'] = question_error.sleep
                 new_interview_source = InterviewSourceString(content='')
-                new_interview = new_interview_source.get_interview()
+                new_interview = Interview(source=new_interview_source)
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                docassemble.base.functions.pop_event_stack(origMissingVariable)
-                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable)
-            except BackgroundResponseActionError as qError:
+                pop_event_stack(orig_missing_variable)
+                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, orig_missing_variable)
+            except BackgroundResponseActionError as question_error:
                 # logmessage("BackgroundResponseActionError")
-                docassemble.base.functions.reset_context()
+                reset_context()
                 # logmessage("Trapped BackgroundResponseActionError2")
                 question_data = {'extras': {}}
-                if hasattr(qError, 'action'):
-                    question_data['action'] = qError.action
+                if hasattr(question_error, 'action'):
+                    question_data['action'] = question_error.action
                 new_interview_source = InterviewSourceString(content='')
-                new_interview = new_interview_source.get_interview()
+                new_interview = Interview(source=new_interview_source)
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
-                docassemble.base.functions.pop_event_stack(origMissingVariable)
-                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable)
-            except QuestionError as qError:
+                pop_event_stack(orig_missing_variable)
+                return new_question.ask(user_dict, old_user_dict, 'None', [], missing_var, orig_missing_variable)
+            except QuestionError as question_error:
                 # logmessage("QuestionError")
-                docassemble.base.functions.reset_context()
+                reset_context()
                 # logmessage("Trapped QuestionError")
                 question_data = {}
-                if qError.question:
-                    question_data['question'] = qError.question
-                if qError.subquestion:
-                    question_data['subquestion'] = qError.subquestion
-                if qError.dead_end:
+                if question_error.question:
+                    question_data['question'] = question_error.question
+                if question_error.subquestion:
+                    question_data['subquestion'] = question_error.subquestion
+                if question_error.dead_end:
                     pass
-                elif qError.buttons:
-                    question_data['buttons'] = qError.buttons
+                elif question_error.buttons:
+                    question_data['buttons'] = question_error.buttons
                 else:
                     buttons = []
-                    if qError.show_exit is not False and not (qError.show_leave is True and qError.show_exit is None):
+                    if question_error.show_exit is not False and not (question_error.show_leave is True and question_error.show_exit is None):
                         exit_button = {word('Exit'): 'exit'}
-                        if qError.url:
-                            exit_button.update({'url': qError.url})
+                        if question_error.url:
+                            exit_button.update({'url': question_error.url})
                         buttons.append(exit_button)
-                    if qError.show_leave:
+                    if question_error.show_leave:
                         leave_button = {word('Leave'): 'leave'}
-                        if qError.url:
-                            leave_button.update({'url': qError.url})
+                        if question_error.url:
+                            leave_button.update({'url': question_error.url})
                         buttons.append(leave_button)
-                    if qError.show_restart is not False:
+                    if question_error.show_restart is not False:
                         buttons.append({word('Restart'): 'restart'})
                     if len(buttons) > 0:
                         question_data['buttons'] = buttons
                 new_interview_source = InterviewSourceString(content='')
-                new_interview = new_interview_source.get_interview()
+                new_interview = Interview(source=new_interview_source)
                 reproduce_basics(self, new_interview)
                 new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
                 new_question.name = "Question_Temp"
                 new_question.embeds = True
                 # will this be a problem? yup
                 the_question = new_question.follow_multiple_choice(user_dict, interview_status, False, 'None', [])
-                return the_question.ask(user_dict, old_user_dict, 'None', [], missing_var, origMissingVariable)
+                return the_question.ask(user_dict, old_user_dict, 'None', [], missing_var, orig_missing_variable)
             except CodeExecute as code_error:
                 # logmessage("CodeExecute")
-                docassemble.base.functions.reset_context()
+                reset_context()
                 # if self.debug:
                 #    interview_status.seeking.append({'question': question, 'reason': 'mandatory code'})
                 # logmessage("Going to execute " + str(code_error.compute) + " where missing_var is " + str(missing_var))
@@ -10045,51 +9792,51 @@ class Interview:
                     code_error.question.mark_as_answered(user_dict)
                     # logmessage("Got here 1")
                     # logmessage("returning from running code")
-                    docassemble.base.functions.pop_current_variable()
+                    pop_current_variable()
                     # logmessage("Got here 2")
-                    return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
+                    return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
                 except:
                     # raise DASourceError("Problem setting that variable")
                     continue
-            except SyntaxException as qError:
+            except SyntaxException as question_error:
                 # logmessage("SyntaxException")
-                docassemble.base.functions.reset_context()
+                reset_context()
                 the_question = None
                 try:
                     the_question = question
                 except:
                     pass
                 if the_question is not None:
-                    raise DASourceError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
-                raise DASourceError("no question available in askfor: " + str(qError))
-            except CompileException as qError:
+                    raise DASourceError(str(question_error) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                raise DASourceError("no question available in askfor: " + str(question_error))
+            except CompileException as question_error:
                 # logmessage("CompileException")
-                docassemble.base.functions.reset_context()
+                reset_context()
                 the_question = None
                 try:
                     the_question = question
                 except:
                     pass
                 if the_question is not None:
-                    raise DASourceError(str(qError) + "\n\n" + str(self.idebug(self.data_for_debug)))
-                raise DASourceError("no question available in askfor: " + str(qError))
-            # except SendFileError as qError:
+                    raise DASourceError(str(question_error) + "\n\n" + str(self.idebug(self.data_for_debug)))
+                raise DASourceError("no question available in askfor: " + str(question_error))
+            # except SendFileError as question_error:
             #     # logmessage("Trapped SendFileError2")
             #     question_data = {'extras': {}}
-            #     if hasattr(qError, 'filename') and qError.filename is not None:
-            #         question_data['response filename'] = qError.filename
-            #     if hasattr(qError, 'content_type') and qError.content_type:
-            #         question_data['content type'] = qError.content_type
+            #     if hasattr(question_error, 'filename') and question_error.filename is not None:
+            #         question_data['response filename'] = question_error.filename
+            #     if hasattr(question_error, 'content_type') and question_error.content_type:
+            #         question_data['content type'] = question_error.content_type
             #     new_interview_source = InterviewSourceString(content='')
-            #     new_interview = new_interview_source.get_interview()
+            #     new_interview = Interview(source=new_interview_source)
             #     new_question = Question(question_data, new_interview, source=new_interview_source, package=self.source.package)
             #     new_question.name = "Question_Temp"
             #     return new_question.ask(user_dict, old_user_dict, 'None', [], None, None)
-        if 'forgive_missing_question' in docassemble.base.functions.this_thread.misc and origMissingVariable in docassemble.base.functions.this_thread.misc['forgive_missing_question']:
-            docassemble.base.functions.pop_current_variable()
-            docassemble.base.functions.pop_event_stack(origMissingVariable)
-            return {'type': 'continue', 'sought': missing_var, 'orig_sought': origMissingVariable}
-        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + origMissingVariable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=origMissingVariable)
+        if 'forgive_missing_question' in this_thread.misc and orig_missing_variable in this_thread.misc['forgive_missing_question']:
+            pop_current_variable()
+            pop_event_stack(orig_missing_variable)
+            return {'type': 'continue', 'sought': missing_var, 'orig_sought': orig_missing_variable}
+        raise DAErrorMissingVariable("Interview has an error.  There was a reference to a variable '" + orig_missing_variable + "' that could not be found in the question file (for language '" + str(language) + "') or in any of the files incorporated by reference into the question file.", variable=orig_missing_variable)
 
 
 def substitute_vars(var, is_generic, the_x, iterators, last_only=False):
@@ -10240,14 +9987,6 @@ def process_selections(data, exclude=None):
     else:
         raise DASourceError("Unknown data type in choices selection: " + re.sub(r'[<>]', '', repr(data)))
     return result
-
-
-def extract_missing_name(the_error):
-    # logmessage("extract_missing_name: string was " + str(string))
-    m = nameerror_match.search(str(the_error))
-    if m:
-        return m.group(1)
-    raise the_error
 
 
 def auto_determine_type(field_info, the_value=None):
@@ -10408,7 +10147,7 @@ def exec_with_trap(the_question, the_dict, old_variable=None):
         raise
     except:
         cl, exc, tb = sys.exc_info()
-        exc.user_dict = docassemble.base.functions.serializable_dict(the_dict)
+        exc.user_dict = serializable_dict(the_dict)
         if len(traceback.extract_tb(tb)) == 2:
             line_with_error = traceback.extract_tb(tb)[-1][1]
             if isinstance(line_with_error, int) and line_with_error > 0 and hasattr(the_question, 'sourcecode'):
@@ -10419,8 +10158,8 @@ def exec_with_trap(the_question, the_dict, old_variable=None):
         del tb
         raise
 
-ok_outside_string = string.ascii_letters + string.digits + '.[]_'
-ok_inside_string = string.ascii_letters + string.digits + string.punctuation + " "
+OK_OUTSIDE_STRING = string.ascii_letters + string.digits + '.[]_'
+OK_INSIDE_STRING = string.ascii_letters + string.digits + string.punctuation + " "
 
 
 def parse_var_name(var):
@@ -10464,7 +10203,7 @@ def parse_var_name(var):
                 the_quote = char
         else:
             if not (in_quote or in_bracket):
-                if char not in ok_outside_string:
+                if char not in OK_OUTSIDE_STRING:
                     return {'valid': False, 'reason': 'invalid character in variable name'}
             if cur_pos == 0:
                 if char in string.digits or char == '.':
@@ -10473,7 +10212,7 @@ def parse_var_name(var):
                 if var[cur_pos - 1] == '.' and char in string.digits:
                     return {'valid': False, 'reason': 'attribute starts with digit'}
             if in_quote:
-                if char not in ok_inside_string:
+                if char not in OK_INSIDE_STRING:
                     return {'valid': False, 'reason': 'invalid character in string'}
             else:
                 if char == '.':
@@ -10500,522 +10239,6 @@ def parse_var_name(var):
     else:
         final_parts = (var, '')
     return {'valid': True, 'objects': objects, 'bracket_objects': bracket_objects, 'final_parts': final_parts}
-
-
-class DAExtension(Extension):
-
-    def parse(self, parser):
-        raise NotImplementedError()
-
-    def filter_stream(self, stream):
-        # in_var = False
-        met_pipe = False
-        for token in stream:
-            if token.type == 'variable_begin':
-                # in_var = True
-                met_pipe = False
-            if token.type == 'variable_end':
-                # in_var = False
-                if not met_pipe:
-                    yield Token(token.lineno, 'pipe', None)
-                    yield Token(token.lineno, 'name', 'ampersand_filter')
-            # if in_var and token.type == 'pipe':
-            #     met_pipe = True
-            yield token
-
-
-class DAEnvironment(Environment):
-
-    def from_string(self, source, **kwargs):  # pylint: disable=arguments-differ
-        source = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, source)
-        return super().from_string(source, **kwargs)
-
-    def getitem(self, obj, argument):
-        try:
-            return obj[argument]
-        except (DAAttributeError, DAIndexError) as err:
-            varname = extract_missing_name(err)
-            if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['pending_error']
-            return self.undefined(obj=missing, name=varname)
-        except (AttributeError, TypeError, LookupError):
-            if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['pending_error']
-            return self.undefined(obj=obj, name=argument, accesstype='item')
-
-    def getattr(self, obj, attribute):
-        try:
-            return getattr(obj, attribute)
-        except DAAttributeError as err:
-            if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['pending_error']
-            varname = extract_missing_name(err)
-            return self.undefined(obj=missing, name=varname)
-        except AttributeError:
-            if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                del docassemble.base.functions.this_thread.misc['pending_error']
-        return self.undefined(obj=obj, name=attribute, accesstype='attribute')
-
-
-def ampersand_filter(value):
-    if value.__class__.__name__ in ('DAFile', 'DALink', 'DAStaticFile', 'DAFileCollection', 'DAFileList'):
-        return value
-    if value.__class__.__name__ in ('CustomInlineImage', 'InlineImage', 'RichText', 'Listing', 'Document', 'Subdoc', 'DALazyTemplate', 'Markup'):
-        return str(value)
-    if isinstance(value, (int, bool, float, NoneType)):
-        return value
-    if not isinstance(value, str):
-        value = str(value)
-    value = docassemble.base.file_docx.sanitize_xml(value)
-    if '<w:r>' in value or '</w:t>' in value:
-        return re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)
-    for auto_filter in docassemble.base.functions.this_thread.misc.get('auto jinja filter', []):
-        value = auto_filter(value)
-    return re.sub(r'>', '&gt;', re.sub(r'<', '&lt;', re.sub(r'&(?!#?[0-9A-Za-z]+;)', '&amp;', value)))
-
-
-class DAStrictUndefined(StrictUndefined):
-    __slots__ = ('_undefined_type',)
-
-    def __init__(self, hint=None, obj=missing, name=None, exc=UndefinedError, accesstype=None):  # pylint: disable=super-init-not-called
-        self._undefined_hint = hint
-        self._undefined_obj = obj
-        self._undefined_name = name
-        self._undefined_exception = exc
-        self._undefined_type = accesstype
-
-    @internalcode
-    def __getattr__(self, name):
-        if name[:2] == '__':
-            raise AttributeError(name)
-        return self._fail_with_undefined_error(attribute=True)
-
-    @internalcode
-    def __getitem__(self, index):
-        if index[:2] == '__':
-            raise IndexError(index)
-        return self._fail_with_undefined_error(item=True)
-
-    @internalcode
-    def _fail_with_undefined_error(self, *args, **kwargs):
-        if self._undefined_obj is missing:
-            hint = "'%s' is undefined" % self._undefined_name
-        elif self._undefined_type == 'item' and hasattr(self._undefined_obj, 'instanceName'):
-            hint = "'%s[%r]' is undefined" % (
-                self._undefined_obj.instanceName,
-                self._undefined_name
-            )
-        elif 'attribute' in kwargs or self._undefined_type == 'attribute':
-            if hasattr(self._undefined_obj, 'instanceName'):
-                hint = "'%s.%s' is undefined" % (
-                    self._undefined_obj.instanceName,
-                    self._undefined_name
-                )
-            else:
-                hint = '%r has no attribute %r' % (
-                    object_type_repr(self._undefined_obj),
-                    self._undefined_name
-                )
-        else:
-            if hasattr(self._undefined_obj, 'instanceName'):
-                hint = "'%s[%r]' is undefined" % (
-                    self._undefined_obj.instanceName,
-                    self._undefined_name
-                )
-            else:
-                hint = '%s has no element %r' % (
-                    object_type_repr(self._undefined_obj),
-                    self._undefined_name
-                )
-        raise self._undefined_exception(hint)
-    __add__ = __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
-        __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
-        __mod__ = __rmod__ = __pos__ = __neg__ = __call__ = \
-        __lt__ = __le__ = __gt__ = __ge__ = __int__ = \
-        __float__ = __complex__ = __pow__ = __rpow__ = __sub__ = \
-        __rsub__ = __iter__ = __str__ = __len__ = __nonzero__ = __eq__ = \
-        __ne__ = __bool__ = __hash__ = _fail_with_undefined_error
-
-
-class DASkipUndefined(ChainableUndefined):
-    """Undefined handler for Jinja2 exceptions that allows rendering most
-    templates that have undefined variables. It will not fix all broken
-    templates. For example, if the missing variable is used in a complex
-    mathematical expression it may still break (but expressions with only two
-    elements should render as '').
-    """
-
-    def __init__(self, *pargs, **kwargs):  # pylint: disable=super-init-not-called
-        # Handle the way Docassemble DAEnvironment triggers attribute errors
-        pass
-
-    def __str__(self) -> str:
-        return ''
-
-    def __call__(self, *pargs, **kwargs) -> "DASkipUndefined":
-        return self
-
-    __getitem__ = __getattr__ = __call__
-
-    def __eq__(self, *pargs) -> bool:
-        return False
-
-    # need to return a bool type
-    __bool__ = __ne__ = __le__ = __lt__ = __gt__ = __ge__ = __nonzero__ = __eq__
-
-    # let undefined variables work in for loops
-
-    def __iter__(self, *pargs) -> "DASkipUndefined":
-        return self
-
-    def __next__(self, *pargs) -> None:
-        raise StopIteration
-
-    # need to return an int type
-
-    def __int__(self, *pargs) -> int:
-        return 0
-
-    __len__ = __int__
-
-    # need to return a float type
-
-    def __float__(self, *pargs) -> float:
-        return 0.0
-
-    # need to return complex type
-
-    def __complex__(self, *pargs) -> complex:
-        return 0j
-
-    def __add__(self, *pargs, **kwargs) -> str:
-        return self.__str__()
-
-    # type can be anything. we want it to work with `str()` function though
-    # and we do not want to silently give wrong math results.
-    # note that this means 1 + (undefined) or (undefined) + 1 will work but not 1 + (undefined) + 1
-    __radd__ = __mul__ = __rmul__ = __div__ = __rdiv__ = \
-        __truediv__ = __rtruediv__ = __floordiv__ = __rfloordiv__ = \
-        __mod__ = __rmod__ = __pos__ = __neg__ = __pow__ = __rpow__ = \
-        __sub__ = __rsub__ = __hash__ = __add__
-
-
-def mygetattr(y, attr):
-    for attribute in attr.split('.'):
-        y = getattr(y, attribute)
-    return y
-
-
-def str_or_original(y, case_sensitive):
-    if case_sensitive:
-        if hasattr(y, 'instanceName'):
-            if y.__class__.__name__ in ('Value', 'PeriodicValue'):
-                return y.amount()
-            return str(y)
-        return y
-    if hasattr(y, 'instanceName'):
-        if y.__class__.__name__ in ('Value', 'PeriodicValue'):
-            return y.amount()
-        return str(y).lower()
-    try:
-        return y.lower()
-    except:
-        return y
-
-
-def dictsort_filter(dictionary, case_sensitive=False, by='key', reverse=False):
-    if by == 'value':
-        return sorted(dictionary.items(), key=lambda y: str_or_original(y[1], case_sensitive), reverse=reverse)
-    return sorted(dictionary.items(), key=lambda y: str_or_original(y[0], case_sensitive), reverse=reverse)
-
-
-def sort_filter(the_array, reverse=False, case_sensitive=False, attribute=None):
-    if attribute is None:
-        if not case_sensitive:
-            def key_func(y):
-                return str_or_original(y, case_sensitive)
-        else:
-            key_func = None
-    else:
-        if isinstance(attribute, list):
-            attributes = [str(y).strip() for y in attribute]
-        else:
-            attributes = [y.strip() for y in str(attribute).split(',')]
-        def key_func(y):
-            return [str_or_original(mygetattr(y, attribute), case_sensitive) for attribute in attributes]
-    return sorted(the_array, key=key_func, reverse=reverse)
-
-_GroupTuple = namedtuple('_GroupTuple', ['grouper', 'list'])
-_GroupTuple.__repr__ = tuple.__repr__
-_GroupTuple.__str__ = tuple.__str__
-
-
-def groupby_filter(the_array, attr_name):
-
-    def func(y):
-        return mygetattr(y, attr_name)
-    return [_GroupTuple(key, list(values)) for key, values in groupby(sorted(the_array, key=func), func)]
-
-
-def max_filter(the_array, case_sensitive=False, attribute=None):
-    it = iter(the_array)
-    try:
-        first = next(it)
-    except StopIteration:
-        raise DAError("max: list was empty")
-    if attribute:
-        def key_func(y):
-            return str_or_original(mygetattr(y, attribute), case_sensitive=case_sensitive)
-    else:
-        def key_func(y):
-            return str_or_original(y, case_sensitive=case_sensitive)
-    return max(chain([first], it), key=key_func)
-
-
-def min_filter(the_array, case_sensitive=False, attribute=None):
-    it = iter(the_array)
-    try:
-        first = next(it)
-    except StopIteration:
-        raise DAError("min: list was empty")
-    if attribute:
-        def key_func(y):
-            return str_or_original(mygetattr(y, attribute), case_sensitive=case_sensitive)
-    else:
-        def key_func(y):
-            return str_or_original(y, case_sensitive=case_sensitive)
-    return min(chain([first], it), key=key_func)
-
-
-def sum_filter(the_array, attribute=None, start=0):
-    if attribute is not None:
-        the_array = [mygetattr(y, attribute) for y in the_array]
-    return sum(the_array, start)
-
-
-def unique_filter(the_array, case_sensitive=False, attribute=None):
-    seen = set()
-    if attribute is None:
-        for item in the_array:
-            new_item = str_or_original(item, case_sensitive)
-            if new_item not in seen:
-                seen.add(new_item)
-                yield item
-    else:
-        for item in the_array:
-            new_item = str_or_original(mygetattr(item, attribute), case_sensitive)
-            if new_item not in seen:
-                seen.add(new_item)
-                yield mygetattr(item, attribute)
-
-
-def join_filter(the_array, d="", attribute=None):
-    if attribute is not None:
-        return d.join([str(mygetattr(y, attribute)) for y in the_array])
-    return d.join([str(y) for y in the_array])
-
-
-def attr_filter(var, attr_name):
-    return mygetattr(var, attr_name)
-
-
-def selectattr_filter(*pargs, **kwargs):
-    if len(pargs) > 2:
-        the_array = pargs[0]
-        attr_name = pargs[1]
-        func_name = pargs[2]
-        env = custom_jinja_env()
-        def func(item):
-            return env.call_test(func_name, item, pargs[3:], kwargs)
-        for item in the_array:
-            if func(mygetattr(item, attr_name)):
-                yield item
-    else:
-        for item in pargs[0]:
-            if mygetattr(item, pargs[1]):
-                yield item
-
-
-def rejectattr_filter(*pargs, **kwargs):
-    if len(pargs) > 2:
-        the_array = pargs[0]
-        attr_name = pargs[1]
-        func_name = pargs[2]
-        env = custom_jinja_env()
-        def func(item):
-            return env.call_test(func_name, item, pargs[3:], kwargs)
-        for item in the_array:
-            if not func(mygetattr(item, attr_name)):
-                yield item
-    else:
-        for item in pargs[0]:
-            if not mygetattr(item, pargs[1]):
-                yield item
-
-
-def chain_filter(*pargs, **kwargs):  # pylint: disable=unused-argument
-    the_list = []
-    for parg in pargs:
-        if isinstance(parg, str):
-            the_list.append(parg)
-        elif (hasattr(parg, 'instanceName') and hasattr(parg, 'elements')):
-            if isinstance(parg.elements, dict):
-                for sub_parg in parg.values():
-                    the_list.append(sub_parg)
-            else:
-                for sub_parg in parg:
-                    the_list.append(sub_parg)
-        elif isinstance(parg, abc.Iterable):
-            for sub_parg in parg:
-                the_list.append(sub_parg)
-        else:
-            the_list.append(parg)
-    return chain(*the_list)
-
-
-def map_filter(*pargs, **kwargs):
-    if len(pargs) >= 2:
-        the_array = pargs[0]
-        the_filter = pargs[1]
-        env = custom_jinja_env()
-        if the_filter not in env.filters:
-            raise DAError('filter passed to map() does not exist')
-        for item in the_array:
-            yield env.call_filter(the_filter, item, pargs[2:], kwargs)
-    else:
-        if 'attribute' in kwargs:
-            if 'default' in kwargs:
-                for item in pargs[0]:
-                    yield mygetattr(item, kwargs['attribute'], kwargs['default'])
-            else:
-                for item in pargs[0]:
-                    yield mygetattr(item, kwargs['attribute'])
-        elif 'index' in kwargs:
-            if 'default' in kwargs:
-                for item in pargs[0]:
-                    yield item.get(kwargs['index'], kwargs['default'])
-            else:
-                for item in pargs[0]:
-                    yield item[kwargs['index']]
-        elif 'function' in kwargs:
-            the_kwargs = kwargs.get('kwargs', {})
-            the_pargs = kwargs.get('pargs', [])
-            if not isinstance(the_kwargs, dict):
-                raise DAError('kwargs passed to map() must be a dictionary')
-            if not isinstance(the_pargs, list):
-                raise DAError('pargs passed to map() must be a list')
-            for item in pargs[0]:
-                yield kwargs['function'](item, *the_pargs, **the_kwargs)
-        else:
-            raise DAError('map() must refer to a function, index, attribute, or filter')
-
-
-def markdown_filter(text):
-    return docassemble.base.file_docx.markdown_to_docx(text, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
-
-
-def inline_markdown_filter(text):
-    return docassemble.base.file_docx.inline_markdown_to_docx(text, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None))
-
-
-def get_builtin_jinja_filters():
-    return {
-        'ampersand_filter': ampersand_filter,
-        'markdown': markdown_filter,
-        'add_separators': docassemble.base.functions.add_separators,
-        'inline_markdown': inline_markdown_filter,
-        'paragraphs': docassemble.base.functions.single_to_double_newlines,
-        'manual_line_breaks': docassemble.base.functions.manual_line_breaks,
-        'RichText': docassemble.base.file_docx.RichText,
-        'groupby': groupby_filter,
-        'max': max_filter,
-        'min': min_filter,
-        'sum': sum_filter,
-        'unique': unique_filter,
-        'join': join_filter,
-        'attr': attr_filter,
-        'selectattr': selectattr_filter,
-        'rejectattr': rejectattr_filter,
-        'sort': sort_filter,
-        'dictsort': dictsort_filter,
-        'format_date': docassemble.base.util.format_date,
-        'format_datetime': docassemble.base.util.format_datetime,
-        'format_time': docassemble.base.util.format_time,
-        'month_of': docassemble.base.util.month_of,
-        'year_of': docassemble.base.util.year_of,
-        'day_of': docassemble.base.util.day_of,
-        'dow_of': docassemble.base.util.dow_of,
-        'qr_code': docassemble.base.functions.qr_code,
-        'nice_number': docassemble.base.functions.nice_number,
-        'ordinal': docassemble.base.functions.ordinal,
-        'ordinal_number': docassemble.base.functions.ordinal_number,
-        'currency': docassemble.base.functions.currency,
-        'comma_list': docassemble.base.functions.comma_list,
-        'comma_and_list': docassemble.base.functions.comma_and_list,
-        'capitalize': docassemble.base.functions.capitalize,
-        'salutation': docassemble.base.functions.salutation,
-        'alpha': docassemble.base.functions.alpha,
-        'roman': docassemble.base.functions.roman,
-        'word': docassemble.base.functions.word,
-        'bold': docassemble.base.functions.bold,
-        'italic': docassemble.base.functions.italic,
-        'title_case': docassemble.base.functions.title_case,
-        'single_paragraph': docassemble.base.functions.single_paragraph,
-        'phone_number_formatted': docassemble.base.functions.phone_number_formatted,
-        'phone_number_in_e164': docassemble.base.functions.phone_number_in_e164,
-        'country_name': docassemble.base.functions.country_name,
-        'fix_punctuation': docassemble.base.functions.fix_punctuation,
-        'redact': docassemble.base.functions.redact,
-        'verbatim': docassemble.base.functions.verbatim,
-        'map': map_filter,
-        'chain': chain_filter,
-        'any': any,
-        'all': all
-    }
-
-
-registered_jinja_filters = {}
-
-
-def custom_jinja_env(skip_undefined=False):
-    if skip_undefined:
-        env = DAEnvironment(undefined=DASkipUndefined, extensions=[DAExtension])
-    else:
-        env = DAEnvironment(undefined=DAStrictUndefined, extensions=[DAExtension])
-    env.filters.update(registered_jinja_filters)
-    env.filters.update(get_builtin_jinja_filters())
-    return env
-
-
-def register_jinja_filter(filter_name, func):
-    if filter_name in get_builtin_jinja_filters():
-        raise DAError("Cannot register filter with same name as built-in filter %s" % filter_name)
-    registered_jinja_filters[filter_name] = func
-
-
-def get_docx_variables(the_path):
-    names = set()
-    if not os.path.isfile(the_path):
-        raise DASourceError("Missing docx template file " + os.path.basename(the_path))
-    try:
-        docx_template = DocxTemplate(the_path)
-        docx_template.render_init()
-        the_env = custom_jinja_env()
-        the_xml = docx_template.get_xml()
-        the_xml = re.sub(r'<w:p([ >])', r'\n<w:p\1', the_xml)
-        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
-        the_xml = docx_template.patch_xml(the_xml)
-        parsed_content = the_env.parse(the_xml)
-    except BaseException as the_err:
-        raise DASourceError("There was an error parsing the docx file: " + the_err.__class__.__name__ + " " + str(the_err))
-    for key in jinja2meta.find_undeclared_variables(parsed_content):
-        if not key.startswith('__'):
-            names.add(key)
-    from docassemble.base.legal import __all__ as legal_all  # pylint: disable=import-outside-toplevel
-    for name in legal_all:
-        if name in names:
-            names.remove(name)
-    return sorted(list(names))
 
 
 def allow_users_list(obj):

@@ -1,8 +1,7 @@
 # do not pre-load
-import docassemble.base.functions
-
+from docassemble.base.language.core import update_language_function
 
 def my_name_suffix():
     return ['Jr', 'Sr', 'II', 'III', 'IV', 'Esq', 'PhD']
 
-docassemble.base.functions.update_language_function('en', 'name_suffix', my_name_suffix)
+update_language_function('en', 'name_suffix', my_name_suffix)

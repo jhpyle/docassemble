@@ -54,9 +54,9 @@ bash -c \
 && pip install --upgrade pip==26.0.1 \
 && pip install --upgrade mod_wsgi==5.0.2 \
 && pip install --upgrade \
-   certbot==5.2.2 \
-   certbot-apache==5.2.2 \
-   certbot-nginx==5.2.2 \
+   certbot==5.6.0 \
+   certbot-apache==5.6.0 \
+   certbot-nginx==5.6.0 \
    minio==7.2.20 \
    uWSGI==2.0.31 \
 && pip install \

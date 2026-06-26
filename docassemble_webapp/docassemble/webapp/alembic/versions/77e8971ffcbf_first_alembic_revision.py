@@ -1,3 +1,4 @@
+# pylint: disable=invalid-name
 """first alembic revision
 
 Revision ID: 77e8971ffcbf

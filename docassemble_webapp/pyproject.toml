@@ -60,14 +60,14 @@ dependencies = [
   "colorama==0.4.6",
   "configparser==7.2.0",
   "convertapi==2.0.0",
-  "cryptography==46.0.7",
+  "cryptography==49.0.0",
   "cssselect2==0.8.0",
   "defusedxml==0.7.1",
   "Deprecated==1.3.1",
   "deprecation==2.1.0",
   "dnspython==2.8.0",
   "docassemble-backports==1.0",
-  "Docassemble-Flask-User==0.6.31",
+  "Docassemble-Flask-User==0.6.32",
   "Docassemble-Pattern==3.6.7",
   "docassemble-textstat==0.7.3",
   "docassemblekvsession==0.9",
@@ -116,7 +116,7 @@ dependencies = [
   "humanize==4.15.0",
   "Hyphenate==1.1.0",
   "id==1.5.0",
-  "idna==3.11",
+  "idna==3.15",
   "img2pdf==0.6.3",
   "importlib_metadata==8.7.1",
   "importlib_resources==6.5.2",
@@ -136,14 +136,14 @@ dependencies = [
   "kombu==5.6.1",
   "links-from-link-header==0.1.0",
   "lxml==6.1.0",
-  "Mako==1.3.11",
+  "Mako==1.3.12",
   "Markdown==3.10",
   "markdown-it-py==4.0.0",
   "MarkupSafe==3.0.3",
   "mdurl==0.1.2",
   "monotonic==1.6",
   "more-itertools==11.0.1",
-  "msal==1.34.0",
+  "msal==1.38.0rc1",
   "msal-extensions==1.3.1",
   "msgpack==1.1.2",
   "msrest==0.7.1",
@@ -165,6 +165,7 @@ dependencies = [
   "pillow==12.0.0",
   "pkginfo==1.12.1.2",
   "platformdirs==4.5.1",
+  "pluggy==1.6.0",
   "portalocker==3.2.0",
   "prompt_toolkit==3.0.52",
   "propcache==0.4.1",
@@ -180,7 +181,7 @@ dependencies = [
   "pycryptodome==3.23.0",
   "pycryptodomex==3.23.0",
   "Pygments==2.20.0",
-  "PyJWT==2.12.1",
+  "PyJWT==2.13.0",
   "PyLaTeX==1.4.2",
   "pyotp==2.9.0",
   "pyparsing==3.3.1",
@@ -270,3 +271,50 @@ Documentation = "https://docassemble.org/docs.html"
 Repository = "https://github.com/jhpyle/docassemble.git"
 "Bug Tracker" = "https://github.com/jhpyle/docassemble/issues"
 Changelog = "https://github.com/jhpyle/docassemble/blob/master/CHANGELOG.md"
+[tool.ruff]
+src = ["docassemble_base", "docassemble_webapp", "docassemble_demo"]
+
+[tool.ruff.lint]
+ignore = ["E722", "E226", "E24", "E501", "C901", "E305", "E306"]
+
+[tool.pylint.main]
+init-hook = """
+import sys
+sys.path.insert(0, '../docassemble_webapp')
+sys.path.insert(0, '../docassemble_base')
+sys.path.insert(0, '../docassemble_demo')
+"""
+
+[tool.pylint.messages_control]
+disable = [
+    "bare-except",
+    "broad-exception-caught",
+    "consider-using-f-string",
+    "eval-used",
+    "exec-used",
+    "import-outside-toplevel",
+    "line-too-long",
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-boolean-expressions",
+    "too-many-branches",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-locals",
+    "too-many-nested-blocks",
+    "too-many-positional-arguments",
+    "too-many-return-statements",
+    "too-many-statements",
+    "no-member",
+    "consider-using-with",
+    "protected-access",
+    "global-statement",
+    "attribute-defined-outside-init",
+]
+
+
+[tool.mypy]
+disable_error_code = ["var-annotated"]

@@ -1,0 +1,17 @@
+{% extends 'base_templates/page_base_half.html' %}
+
+{% block content %}
+{% from "base_templates/form_macros.html" import render_field, render_submit_field, render_multiselect_field %}
+
+<form action="" method="POST" role="form">
+    {{ form.hidden_tag() }}
+    {{ render_field(form.first_name) }}
+    {{ render_field(form.last_name) }}
+    {{ render_field(form.email) }}
+    {{ render_field(form.password) }}
+    {{ render_multiselect_field(form.role_id) }}
+    {{ render_submit_field(form.submit) }}
+    <a class="btn {{ config['BUTTON_STYLE'] }}secondary {{ config['BUTTON_CLASS'] }}" href="{{ url_for('users.user_list') }}">{{ word('Cancel') }}</a>
+</form>
+
+{% endblock %}

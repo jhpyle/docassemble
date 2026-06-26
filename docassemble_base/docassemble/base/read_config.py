@@ -9,7 +9,7 @@ if __name__ == "__main__":
     try:
         total_memory = int(math.ceil(psutil.virtual_memory().total / 1024 ** 3))
     except:
-        total_memory = 2
+        total_memory = 2  # pylint: disable=invalid-name
     import docassemble.base.config
     docassemble.base.config.load(arguments=sys.argv)
     from docassemble.base.config import daconfig, parse_redis_uri
@@ -179,7 +179,7 @@ if __name__ == "__main__":
             days = int(daconfig['backup days'])
             assert days >= 0
         except:
-            days = 14
+            days = 14  # pylint: disable=invalid-name
         print('export DABACKUPDAYS="' + str(days) + '"')
     else:
         print('export DABACKUPDAYS="14"')
@@ -191,6 +191,14 @@ if __name__ == "__main__":
         print('export ENABLEUNOCONV=true')
     else:
         print('export ENABLEUNOCONV=false')
+    if 'enable email server' in daconfig and not daconfig['enable email server']:
+        print('export ENABLEEMAILSERVER=false')
+    else:
+        print('export ENABLEEMAILSERVER=true')
+    if 'enable monitor' in daconfig and not daconfig['enable monitor']:
+        print('export ENABLEMONITOR=false')
+    else:
+        print('export ENABLEMONITOR=true')
     if 's3' in daconfig:
         s4_options = []
         if ('enable' in daconfig['s3'] and daconfig['s3']['enable']) or ('enable' not in daconfig['s3'] and 'bucket' in daconfig['s3'] and daconfig['s3']['bucket'] is not None):
@@ -294,4 +302,6 @@ if __name__ == "__main__":
         print('export PIPINDEXURL="' + str(daconfig['pip index url']) + '"')
     if 'pip extra index urls' in daconfig and daconfig['pip extra index urls'] is not None and daconfig['pip extra index urls'] != '':
         print('export PIPEXTRAINDEXURLS="' + str(daconfig['pip extra index urls']) + '"')
+    if 'pip trusted host' in daconfig and daconfig['pip trusted host'] is not None and daconfig['pip trusted host'] != '':
+        print('export PIPTRUSTEDHOST="' + str(daconfig['pip trusted host']) + '"')
     sys.exit(0)

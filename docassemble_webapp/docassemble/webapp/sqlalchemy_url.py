@@ -7,5 +7,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         db_config = sys.argv[1]
     else:
-        db_config = 'db'
+        db_config = 'db'  # pylint: disable=invalid-name
     print(docassemble.webapp.user_database.alchemy_url(db_config))

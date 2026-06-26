@@ -1,16 +1,20 @@
 import copy
 import os
-# import sys
 import json
 import logging.config
 import sqlalchemy
-from docassemble.base.logger import logmessage
-import docassemble.base.functions
-from docassemble.base.functions import server
-from docassemble.base.util import DAList, DAObjectPlusParameters
-from docassemble.base.error import DAAttributeError, DAException
 from alembic.config import Config
 from alembic import command
+from .error import DAAttributeError, DAException
+from .hooks import (
+    alchemy_url as server_alchemy_url,
+    connect_args as server_connect_args,
+    create_objects_in_db,
+    register_db,
+)
+from .logger import logmessage
+from .thread_context import this_thread
+from .util import DAList, DAObjectPlusParameters
 
 __all__ = ['SQLObject', 'SQLObjectRelationship', 'SQLObjectList', 'SQLRelationshipList', 'StandardRelationshipList', 'alchemy_url', 'connect_args', 'upgrade_db', 'register_db', 'create_objects']
 
@@ -76,8 +80,8 @@ class SQLObject:
 
     @classmethod
     def filter(cls, instance_name, **kwargs):
-        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
-            docassemble.base.functions.this_thread.misc['dbcache'] = {}
+        if 'dbcache' not in this_thread.misc:
+            this_thread.misc['dbcache'] = {}
         listobj = DAList(instance_name, object_type=cls, auto_gather=False)
         filters = []
         for key, val in kwargs.items():
@@ -85,8 +89,8 @@ class SQLObject:
                 raise DAException("filter: class " + cls.__name__ + " does not have column " + key)
             filters.append(getattr(cls._model, key) == val)
         for db_entry in list(cls._session.query(cls._model).filter(*filters).order_by(cls._model.id).all()):
-            if cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and db_entry.id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
-                listobj.append(docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
+            if cls._model.__name__ in this_thread.misc['dbcache'] and db_entry.id in this_thread.misc['dbcache'][cls._model.__name__]:
+                listobj.append(this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
             else:
                 obj = listobj.appendObject()
                 obj.id = db_entry.id
@@ -111,16 +115,16 @@ class SQLObject:
 
     @classmethod
     def all(cls, instance_name=None):
-        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
-            docassemble.base.functions.this_thread.misc['dbcache'] = {}
+        if 'dbcache' not in this_thread.misc:
+            this_thread.misc['dbcache'] = {}
         if instance_name:
             listobj = DAList(instance_name, object_type=cls)
         else:
             listobj = DAList(object_type=cls)
             listobj.set_random_instance_name()
         for db_entry in list(cls._session.query(cls._model).order_by(cls._model.id).all()):
-            if cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and db_entry.id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
-                listobj.append(docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
+            if cls._model.__name__ in this_thread.misc['dbcache'] and db_entry.id in this_thread.misc['dbcache'][cls._model.__name__]:
+                listobj.append(this_thread.misc['dbcache'][cls._model.__name__][db_entry.id])
             else:
                 obj = listobj.appendObject()
                 obj.id = db_entry.id
@@ -138,12 +142,12 @@ class SQLObject:
 
     @classmethod
     def by_id(cls, the_id, instance_name=None):
-        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
-            docassemble.base.functions.this_thread.misc['dbcache'] = {}
-        if cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and the_id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
+        if 'dbcache' not in this_thread.misc:
+            this_thread.misc['dbcache'] = {}
+        if cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
             if instance_name is None:
-                return docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]
-            obj = docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]
+                return this_thread.misc['dbcache'][cls._model.__name__][the_id]
+            obj = this_thread.misc['dbcache'][cls._model.__name__][the_id]
             obj.fix_instance_name(obj.instanceName, instance_name)
         if instance_name is None:
             obj = cls(id=the_id)
@@ -173,8 +177,8 @@ class SQLObject:
     def delete_by_id(cls, the_id):
         cls._session.query(cls._model).filter(cls._model.id == the_id).delete()
         cls._session.commit()
-        if 'dbcache' in docassemble.base.functions.this_thread.misc and cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and the_id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
-            docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
+        if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
+            this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
 
     @classmethod
     def delete_by_uid(cls, uid):
@@ -185,8 +189,8 @@ class SQLObject:
             the_id = db_entry.id
             cls._session.query(cls._model).filter(getattr(cls._model, cls._uid) == uid).delete()
             cls._session.commit()
-            if 'dbcache' in docassemble.base.functions.this_thread.misc and cls._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and the_id in docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__]:
-                docassemble.base.functions.this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
+            if 'dbcache' in this_thread.misc and cls._model.__name__ in this_thread.misc['dbcache'] and the_id in this_thread.misc['dbcache'][cls._model.__name__]:
+                this_thread.misc['dbcache'][cls._model.__name__][the_id]._zombie = True
 
     @classmethod
     def id_exists(cls, the_id):
@@ -205,25 +209,25 @@ class SQLObject:
         return True
 
     def db_from_cache(self, the_id):
-        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
-            docassemble.base.functions.this_thread.misc['dbcache'] = {}
-        if self._model.__name__ not in docassemble.base.functions.this_thread.misc['dbcache']:
-            docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__] = {}
-        if the_id in docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__]:
-            return docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__][the_id]
+        if 'dbcache' not in this_thread.misc:
+            this_thread.misc['dbcache'] = {}
+        if self._model.__name__ not in this_thread.misc['dbcache']:
+            this_thread.misc['dbcache'][self._model.__name__] = {}
+        if the_id in this_thread.misc['dbcache'][self._model.__name__]:
+            return this_thread.misc['dbcache'][self._model.__name__][the_id]
         return None
 
     def db_cache(self):
-        if 'dbcache' not in docassemble.base.functions.this_thread.misc:
-            docassemble.base.functions.this_thread.misc['dbcache'] = {}
-        if self._model.__name__ not in docassemble.base.functions.this_thread.misc['dbcache']:
-            docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__] = {}
+        if 'dbcache' not in this_thread.misc:
+            this_thread.misc['dbcache'] = {}
+        if self._model.__name__ not in this_thread.misc['dbcache']:
+            this_thread.misc['dbcache'][self._model.__name__] = {}
         if hasattr(self, 'id'):
-            docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__][self.id] = self
+            this_thread.misc['dbcache'][self._model.__name__][self.id] = self
 
     def __del__(self):
-        if hasattr(self, 'id') and 'dbcache' in docassemble.base.functions.this_thread.misc and self._model.__name__ in docassemble.base.functions.this_thread.misc['dbcache'] and self.id in docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__]:
-            del docassemble.base.functions.this_thread.misc['dbcache'][self._model.__name__][self.id]
+        if hasattr(self, 'id') and 'dbcache' in this_thread.misc and self._model.__name__ in this_thread.misc['dbcache'] and self.id in this_thread.misc['dbcache'][self._model.__name__]:
+            del this_thread.misc['dbcache'][self._model.__name__][self.id]
 
     def db_delete(self):
         self.db_read()
@@ -460,12 +464,12 @@ class SQLObject:
 
 def alchemy_url(db_config):
     """Returns a URL representing a database connection."""
-    return server.alchemy_url(db_config)
+    return server_alchemy_url(db_config)
 
 
 def connect_args(db_config):
     """Returns PostgreSQL arguments for connecting via SSL."""
-    return server.connect_args(db_config)
+    return server_connect_args(db_config)
 
 
 def upgrade_db(url, py_file, engine, version_table=None, name=None, conn_args=None):
@@ -493,23 +497,18 @@ def upgrade_db(url, py_file, engine, version_table=None, name=None, conn_args=No
     alembic_cfg.set_main_option("sqlalchemy.url", url)
     alembic_cfg.set_main_option("connect_args", json.dumps(conn_args))
     alembic_cfg.set_main_option("script_location", alembic_path)
-    _real_fileConfig = logging.config.fileConfig
+    real_file_config = logging.config.fileConfig
     logging.config.fileConfig = lambda *a, **kw: None
     try:
         if not sqlalchemy.inspect(engine).has_table(version_table):
             command.stamp(alembic_cfg, "head")
         command.upgrade(alembic_cfg, "head")
     finally:
-        logging.config.fileConfig = _real_fileConfig
-
-
-def register_db(db_name):
-    db = server.register_db(db_name)
-    return db
+        logging.config.fileConfig = real_file_config
 
 
 def create_objects(filename, db_name):
-    url, conn_args, engine = server.create_objects_in_db(db_name)
+    url, conn_args, engine = create_objects_in_db(db_name)
     if db_name in upgrades_done:
         return
     upgrade_db(url, filename, engine, version_table='auto', conn_args=conn_args)

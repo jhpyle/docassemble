@@ -39,6 +39,7 @@ audit.py
 conflict_check.yml
 publish.sh
 pypi-publish.sh
+pypi-publish-dev.sh
 newversion.sh
 json_files
 posttoslack.sh
@@ -65,6 +66,9 @@ settings.json
 .dir-locals.el
 .flake8
 mypy.ini
+docassemble_base/mypy.ini
+docassemble_demo/mypy.ini
+docassemble_webapp/mypy.ini
 stylelint.config.js
 .stylelintrc.json
 .sass-cache/
@@ -72,3 +76,6 @@ CLAUDE.md
 .claude/
 .claudeignore
 __pycache__
+pyproject.toml
+autoimport.py
+runpylint.py

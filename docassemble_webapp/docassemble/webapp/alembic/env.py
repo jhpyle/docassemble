@@ -1,7 +1,11 @@
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from docassemble.webapp.database import alchemy_connection_string, connect_args, dbtableprefix
 from alembic import context
+from sqlalchemy import engine_from_config, pool
+from docassemble.webapp.database import (
+    alchemy_connection_string,
+    connect_args,
+    dbtableprefix,
+)
 
 VERSION_TABLE = dbtableprefix + 'alembic_version'
 
@@ -18,7 +22,7 @@ fileConfig(config.config_file_name, disable_existing_loggers=False)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = None  # pylint: disable=invalid-name
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

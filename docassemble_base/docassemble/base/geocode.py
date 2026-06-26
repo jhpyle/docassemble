@@ -1,12 +1,10 @@
-from docassemble.base.logger import logmessage
 from geopy.geocoders import GoogleV3
 from geopy.geocoders import AzureMaps
+from docassemble.base.logger import logmessage
+from docassemble.base.config import daconfig
 
 
 class GeoCoder:
-
-    def __init__(self, *pargs, **kwargs):  # pylint: disable=unused-argument
-        self.server = kwargs['server']
 
     def geocode(self, *pargs, **kwargs):
         self.data = self.geocoder.geocode(*pargs, **kwargs)
@@ -17,14 +15,14 @@ class GoogleV3GeoCoder(GeoCoder):
 
     def config_ok(self):
         try:
-            assert isinstance(self.server.daconfig['google']['api key'], str)
+            assert isinstance(daconfig['google']['api key'], str)
         except:
             logmessage("geocode: cannot geocode without an 'api key' under 'google' in the Configuration. Set 'geolocate service' in the Configuration to use a different geocoding service.")
             return False
         return True
 
     def initialize(self):
-        self.geocoder = GoogleV3(api_key=self.server.daconfig['google']['api key'])
+        self.geocoder = GoogleV3(api_key=daconfig['google']['api key'])
 
     def populate_address(self, address):
         if 'formatted_address' in self.data.raw:
@@ -145,14 +143,14 @@ class AzureMapsGeoCoder(GeoCoder):
 
     def config_ok(self):
         try:
-            assert isinstance(self.server.daconfig['azure maps']['primary key'], str)
+            assert isinstance(daconfig['azure maps']['primary key'], str)
         except:
             logmessage("geocode: cannot geocode without a 'primary key' under 'azure maps' in the Configuration. Set 'geolocate service' in the Configuration to use a different geocoding service.")
             return False
         return True
 
     def initialize(self):
-        self.geocoder = AzureMaps(self.server.daconfig['azure maps']['primary key'])
+        self.geocoder = AzureMaps(daconfig['azure maps']['primary key'])
 
     def populate_address(self, address):
         if 'address' not in self.data.raw:

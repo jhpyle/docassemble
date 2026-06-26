@@ -55,7 +55,6 @@
 "API Keys": Null
 "Apply": Null
 "App": Null
-", are attached": Null
 "A reset password email has been sent to '%(email)s'. Open that email and follow the instructions to reset your password.": Null
 "are we": Null
 "are you": Null
@@ -381,7 +380,6 @@
 "Google Drive": Null
 "Google Drive synchronization": Null
 "Google Drive Sync": Null
-"Google Drive Test": Null
 "Greece": Null
 "Greenland": Null
 "Grenada": Null
@@ -500,7 +498,6 @@
 "Iraq": Null
 "Ireland": Null
 ", is already in use by someone else": Null
-", is attached": Null
 "Isle of Man": Null
 "is not a valid date and time.": Null
 "is not a valid date.": Null
@@ -701,6 +698,7 @@
 "Other settings": Null
 "other user": Null
 "other users": Null
+"our": Null
 "ourselves": Null
 "Output Format": Null
 "Overrides": Null
@@ -1004,7 +1002,6 @@
 "(term definition)": Null
 "Terms used in this question:": Null
 "Terms used:": Null
-"Test": Null
 "Thailand": Null
 "Thank you for registering": Null
 "Thank you for registering with": Null
@@ -1330,10 +1327,8 @@
 "Your confirmation token has expired.": Null
 "Your docassemble server": Null
 "Your document is attached.": Null
-"Your document, ": Null
 "Your documents are attached.": Null
 "Your document, %s, is attached.": Null
-"Your documents, ": Null
 "Your documents, %s, are attached.": Null
 "Your documents will be e-mailed to": Null
 'Your email address has not yet been confirmed. Check your email Inbox and Spam folders for the confirmation email or <a href="%(url)s">Re-send confirmation email</a>.': Null

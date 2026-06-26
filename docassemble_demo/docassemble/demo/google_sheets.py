@@ -1,11 +1,12 @@
 # do not pre-load
 import json
 import gspread
-from docassemble.base.util import get_config
 from oauth2client.service_account import ServiceAccountCredentials
+from docassemble.base.util import get_config
+
 credential_json = get_config('google').get('service account credentials', None)
 if credential_json is None:
-    credential_info = None
+    credential_info = None  # pylint: disable=invalid-name
 else:
     credential_info = json.loads(credential_json, strict=False)
 

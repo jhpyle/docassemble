@@ -1,10 +1,11 @@
 import re
 from bs4 import BeautifulSoup
-from docassemble.base.functions import word
+from docassemble.base.language.words import word
+from .hooks.impl import hookimpl
 
 __all__ = ['to_text']
 
-
+@hookimpl
 def to_text(html_doc):
     # logmessage("Starting to_text")
     output = ''

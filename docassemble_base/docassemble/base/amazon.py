@@ -7,7 +7,7 @@ import boto3
 epoch = datetime.datetime(1970, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
 
 
-class s3object:
+class S3Object:
 
     def __init__(self, s3_config):
         self.upload_args = {}
@@ -41,23 +41,23 @@ class s3object:
         self.bucket_name = s3_config['bucket']
 
     def get_key(self, key_name):
-        return s3key(self, self.conn.Object(self.bucket_name, key_name))
+        return S3Key(self, self.conn.Object(self.bucket_name, key_name))
 
     def search_key(self, key_name):
         for key in self.bucket.objects.filter(Prefix=key_name, Delimiter='/'):
             if key.key == key_name:
-                return s3key(self, self.conn.Object(self.bucket_name, key.key))
+                return S3Key(self, self.conn.Object(self.bucket_name, key.key))
         return None
 
     def list_keys(self, prefix):
         output = []
         for obj in self.bucket.objects.filter(Prefix=prefix):
-            new_key = s3key(self, obj)
+            new_key = S3Key(self, obj)
             output.append(new_key)
         return output
 
 
-class s3key:
+class S3Key:
 
     def __init__(self, s3_object, key_obj):
         self.s3_object = s3_object

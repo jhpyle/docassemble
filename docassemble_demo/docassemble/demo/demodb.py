@@ -1,10 +1,15 @@
 # do not pre-load
+# Import SQLAlchemy names
+from sqlalchemy import Column, ForeignKey, Integer, String
 # Import any DAObject classes that you will need
 from docassemble.base.util import Individual, Person, DAObject
 # Import the SQLObject and some associated utility functions
-from docassemble.base.sql import register_db, create_objects, SQLObject, SQLObjectRelationship
-# Import SQLAlchemy names
-from sqlalchemy import Column, ForeignKey, Integer, String
+from docassemble.base.sql import (
+    register_db,
+    create_objects,
+    SQLObject,
+    SQLObjectRelationship,
+)
 
 # Only allow these names (DAObject classes) to be imported with a modules block
 __all__ = ['Bank', 'Customer', 'BankCustomer']

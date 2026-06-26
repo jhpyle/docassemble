@@ -1,3 +1,5 @@
+# ruff: noqa: F401
+# pylint: disable=unused-import
 from collections import OrderedDict, abc
 from decimal import Decimal
 from functools import reduce
@@ -32,7 +34,7 @@ import oauth2client.client
 try:
     import zoneinfo
 except ImportError:
-    from backports import zoneinfo
+    from backports import zoneinfo  # type: ignore[no-redef]
 from PIL import Image, ImageEnhance
 from twilio.rest import Client as TwilioRestClient
 import pycountry
@@ -40,35 +42,368 @@ from jinja2.runtime import UndefinedError
 from jinja2.exceptions import TemplateError
 import dateutil
 import dateutil.parser
-import babel.dates
-# import redis
 import phonenumbers
 from bs4 import BeautifulSoup
 import i18naddress
 from pyzbar.pyzbar import decode
 from docxtpl import InlineImage, Subdoc, DocxTemplate
-# import tablib
 from docx import Document
 from pikepdf import Pdf
-import google.cloud
-from docassemble.base.config import in_celery, daconfig
-from docassemble.base.error import DAError, DAValidationError, DAIndexError, DAWebError, LazyNameError, DAAttributeError, DAException
-from docassemble.base.file_docx import include_docx_template
-from docassemble.base.filter import markdown_to_html
-from docassemble.base.functions import alpha, roman, item_label, comma_and_list, get_language, set_language, get_dialect, get_voice, set_country, get_country, word, comma_list, ordinal, ordinal_number, need, nice_number, quantity_noun, possessify, verb_past, verb_present, noun_plural, noun_singular, space_to_underscore, force_ask, force_gather, period_list, name_suffix, currency_symbol, currency, indefinite_article, nodoublequote, capitalize, title_case, url_of, do_you, did_you, does_a_b, did_a_b, were_you, was_a_b, have_you, has_a_b, your, her, his, their, is_word, get_locale, set_locale, update_locale, process_action, url_action, get_info, set_info, get_config, prevent_going_back, qr_code, action_menu_item, from_b64_json, defined, define, value, message, response, json_response, command, single_paragraph, quote_paragraphs, location_returned, location_known, user_lat_lon, interview_url, interview_url_action, interview_url_as_qr, interview_url_action_as_qr, interview_email, get_emails, static_image, action_arguments, action_argument, language_functions, language_function_constructor, get_default_timezone, user_logged_in, interface, user_privileges, user_has_privilege, user_info, current_context, background_action, background_response, background_response_action, background_error_action, us, set_live_help_status, chat_partners_available, phone_number_in_e164, phone_number_formatted, phone_number_is_valid, countries_list, country_name, write_record, read_records, delete_record, variables_as_json, all_variables, server, language_from_browser, device, plain, bold, italic, states_list, state_name, subdivision_type, indent, raw, fix_punctuation, set_progress, get_progress, referring_url, undefine, invalidate, dispatch, yesno, noyes, split, showif, showifdef, phone_number_part, set_parts, log, encode_name, decode_name, interview_list, interview_menu, server_capabilities, session_tags, get_chat_log, get_user_list, get_user_info, set_user_info, get_user_secret, create_user, invite_user, create_session, get_session_variables, set_session_variables, get_question_data, go_back_in_session, manage_privileges, salutation, redact, ensure_definition, forget_result_of, re_run_logic, reconsider, set_title, set_save_status, single_to_double_newlines, CustomDataType, verbatim, add_separators, update_ordinal_numbers, update_ordinal_function, update_language_function, update_nice_numbers, update_word_collection, store_variables_snapshot, get_uid, update_terms, possessify_long, a_in_the_b, its, the, this, these, underscore_to_space, some, set_variables, language_name, run_action_in_session  # noqa: F401 # pylint: disable=unused-import
-from docassemble.base.generate_key import random_alphanumeric, random_string
-from docassemble.base.logger import logmessage
-from docassemble.base.pandoc import word_to_markdown, concatenate_files, can_convert_word_to_markdown
-import docassemble.base.file_docx
-import docassemble.base.filter
-import docassemble.base.functions
-import docassemble.base.geocode
-import docassemble.base.pandoc
-import docassemble.base.parse
-import docassemble.base.pdftk
-from docassemble.base import DA
-from docassemble.webapp.da_flask_mail import Message
 import google_auth_httplib2
+import google.cloud
+import docassemble.base.pandoc
+from . import DA
+from .config import in_celery, daconfig
+from .dates import (
+    today,
+    babel_language,
+    month_of,
+    day_of,
+    dow_of,
+    year_of,
+    format_date,
+    format_datetime,
+    format_time,
+    DateTimeDelta,
+    DADateTime,
+    current_datetime,
+    as_datetime,
+    dd,
+    dt,
+    date_interval,
+    date_difference,
+)
+from .empty import DAEmpty
+from .error import (
+    DAError,
+    DAValidationError,
+    DAIndexError,
+    DAWebError,
+    LazyNameError,
+    DAAttributeError,
+    DAException,
+)
+from .filter.docx import include_docx_template, markdown_to_docx
+from .filter.html import markdown_to_html
+from .functions import (
+    alpha,
+    roman,
+    item_label,
+    comma_and_list,
+    get_language,
+    set_language,
+    get_dialect,
+    get_voice,
+    set_country,
+    get_country,
+    word,
+    comma_list,
+    ordinal,
+    ordinal_number,
+    need,
+    nice_number,
+    quantity_noun,
+    possessify,
+    verb_past,
+    verb_present,
+    noun_plural,
+    noun_singular,
+    space_to_underscore,
+    force_ask,
+    force_gather,
+    period_list,
+    name_suffix,
+    currency_symbol,
+    currency,
+    indefinite_article,
+    nodoublequote,
+    capitalize,
+    title_case,
+    url_of,
+    do_you,
+    did_you,
+    does_a_b,
+    did_a_b,
+    were_you,
+    was_a_b,
+    have_you,
+    has_a_b,
+    your,
+    her,
+    his,
+    their,
+    is_word,
+    get_locale,
+    set_locale,
+    update_locale,
+    process_action,
+    url_action,
+    get_info,
+    set_info,
+    get_config,
+    prevent_going_back,
+    qr_code,
+    action_menu_item,
+    from_b64_json,
+    defined,
+    define,
+    value,
+    message,
+    response,
+    json_response,
+    command,
+    single_paragraph,
+    quote_paragraphs,
+    location_returned,
+    location_known,
+    user_lat_lon,
+    interview_url,
+    interview_url_action,
+    interview_url_as_qr,
+    interview_url_action_as_qr,
+    interview_email,
+    get_emails,
+    static_image,
+    action_arguments,
+    action_argument,
+    language_functions,
+    language_function_constructor,
+    get_default_timezone,
+    user_logged_in,
+    interface,
+    user_privileges,
+    user_has_privilege,
+    user_info,
+    current_context,
+    background_action,
+    background_response,
+    background_response_action,
+    background_error_action,
+    us,
+    set_live_help_status,
+    chat_partners_available,
+    phone_number_in_e164,
+    phone_number_formatted,
+    phone_number_is_valid,
+    countries_list,
+    country_name,
+    write_record,
+    read_records,
+    delete_record,
+    variables_as_json,
+    all_variables,
+    language_from_browser,
+    device,
+    plain,
+    bold,
+    italic,
+    states_list,
+    state_name,
+    subdivision_type,
+    indent,
+    raw,
+    fix_punctuation,
+    set_progress,
+    get_progress,
+    referring_url,
+    undefine,
+    invalidate,
+    dispatch,
+    yesno,
+    noyes,
+    split,
+    showif,
+    showifdef,
+    phone_number_part,
+    set_parts,
+    log,
+    encode_name,
+    decode_name,
+    interview_list,
+    interview_menu,
+    server_capabilities,
+    session_tags,
+    get_chat_log,
+    get_user_list,
+    get_user_info,
+    set_user_info,
+    get_user_secret,
+    create_user,
+    invite_user,
+    create_session,
+    get_session_variables,
+    set_session_variables,
+    get_question_data,
+    go_back_in_session,
+    manage_privileges,
+    salutation,
+    redact,
+    ensure_definition,
+    forget_result_of,
+    re_run_logic,
+    reconsider,
+    set_title,
+    set_save_status,
+    single_to_double_newlines,
+    CustomDataType,
+    verbatim,
+    add_separators,
+    update_ordinal_numbers,
+    update_ordinal_function,
+    update_language_function,
+    update_nice_numbers,
+    update_word_collection,
+    store_variables_snapshot,
+    get_uid,
+    update_terms,
+    possessify_long,
+    a_in_the_b,
+    its,
+    the,
+    this,
+    these,
+    underscore_to_space,
+    some,
+    set_variables,
+    language_name,
+    run_action_in_session,
+)
+from .functions import (
+    get_user_dict,
+    get_action_stack,
+    safe_json,
+    DALocalFile,
+    set_gathering_mode,
+    get_gathering_mode,
+    set_context,
+    reset_context,
+)
+from .generate_key import random_alphanumeric, random_string
+from .geocode import GoogleV3GeoCoder, AzureMapsGeoCoder
+from .hooks import (
+    chord,
+    cloud_custom,
+    fg_make_png_for_pdf,
+    file_finder,
+    file_number_finder,
+    file_privilege_access,
+    file_set_attributes,
+    file_user_access,
+    fix_pickle_obj,
+    get_button_class_prefix,
+    get_celery_app,
+    get_cloud,
+    get_configuration,
+    get_ext_and_mimetype,
+    get_mail_class,
+    get_new_file_number,
+    get_saved_file_class,
+    get_server_redis,
+    get_server_redis_user,
+    get_sms_session as server_get_sms_session,
+    get_twilio_config,
+    get_user_object,
+    google_api,
+    initiate_sms_session as server_initiate_sms_session,
+    make_png_for_pdf as server_make_png_for_pdf,
+    ocr_google_in_background,
+    path_from_reference,
+    retrieve_stashed_data as server_retrieve_stashed_data,
+    secure_filename,
+    secure_filename_spaces_ok,
+    secure_filename_unicode_ok,
+    send_fax as server_send_fax,
+    send_mail,
+    server_sql_defined,
+    server_sql_delete,
+    server_sql_get,
+    server_sql_keys,
+    server_sql_set,
+    sms_body,
+    stash_data as server_stash_data,
+    task_ready,
+    terminate_sms_session as server_terminate_sms_session,
+    url_finder,
+    variables_snapshot_connect,
+    variables_snapshot_connection,
+    wait_for_task,
+)
+from .jinja import (
+    custom_jinja_env,
+    fix_quotes,
+    get_docx_variables,
+    register_jinja_filter as jinja_register_jinja_filter,
+)
+from .language.language import (
+    am_i,
+    are_we,
+    are_word,
+    are_you,
+    are_you_plural,
+    did_a_b_plural,
+    did_i,
+    did_we,
+    did_you_plural,
+    do_a_b,
+    do_i,
+    do_we,
+    do_you_plural,
+    genderless_objective,
+    genderless_self,
+    genderless_subjective,
+    have_a_b,
+    have_i,
+    have_we,
+    have_you_plural,
+    he_subjective,
+    her_objective,
+    herself,
+    him_objective,
+    himself,
+    i_subjective,
+    it_objective,
+    it_subjective,
+    itself,
+    me_objective,
+    my_possessive,
+    myself,
+    our_objective,
+    our_possessive,
+    ourselves,
+    she_subjective,
+    them_objective,
+    themselves,
+    they_subjective,
+    us_objective,
+    was_i,
+    we_subjective,
+    were_a_b_plural,
+    were_we,
+    were_you_plural,
+    you_objective,
+    you_objective_plural,
+    you_subjective,
+    you_subjective_plural,
+    your_plural,
+    yourself,
+    yourselves,
+)
+from .logger import logmessage
+from .pandoc import (
+    can_convert_word_to_markdown,
+    concatenate_files,
+    convert_file,
+    word_to_markdown,
+    word_to_pdf,
+)
+from .pdftk import (
+    apply_qpdf,
+    extract_pages,
+    overlay_pdf as pdftk_overlay_pdf,
+    overlay_pdf_multi,
+    read_fields,
+)
+from .thread_context import this_thread
 
 capitalize_func = capitalize
 NoneType = type(None)
@@ -83,7 +418,10 @@ REMOTE = 2
 TESSERACT_PATH = 'tesseract'
 if daconfig.get('tesseract with celery', False):
     TESSERACT_MODE = REMOTE
-    from docassemble.tesseract.tasks import run_tesseract, run_gs  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
+    from docassemble.tesseract.tasks import (  # pylint: disable=import-error,no-name-in-module,ungrouped-imports
+        run_tesseract,
+        run_gs,
+    )
 elif TESSERACT_PATH and shutil.which(TESSERACT_PATH):
     TESSERACT_MODE = LOCAL
 else:
@@ -422,210 +760,8 @@ def get_unique_name():
     #     return newname
 
 
-class DAEmpty:
-    """An object that silently absorbs any attribute access or operation.
-
-    DAEmpty avoids triggering errors about missing information by returning
-    another DAEmpty for any attribute access, returning empty values for
-    string conversion and length, and absorbing arithmetic operations.
-
-    Attributes:
-        str (str): The string value returned when the object is converted to
-            text. Defaults to the empty string.
-    """
-
-    def __init__(self, *pargs, **kwargs):  # pylint: disable=unused-argument
-        self.str = str(kwargs.get('str', ''))
-
-    def __getattr__(self, thename):
-        if thename.startswith('__') or thename == 'str':
-            return object.__getattribute__(self, thename)
-        return DAEmpty()
-
-    def __str__(self):
-        try:
-            return object.__getattribute__(self, 'str')
-        except:
-            return ''
-
-    def __dir__(self):
-        return []
-
-    def __contains__(self, item):
-        return False
-
-    def __iter__(self):
-        the_list = []
-        return the_list.__iter__()
-
-    def __len__(self):
-        return 0
-
-    def __reversed__(self):
-        return []
-
-    def __getitem__(self, index):
-        return DAEmpty()
-
-    def __setitem__(self, index, val):
-        pass
-
-    def __delitem__(self, index):
-        pass
-
-    def __call__(self, *pargs, **kwargs):
-        return DAEmpty()
-
-    def __repr__(self):
-        return repr('')
-
-    def __add__(self, other):
-        return other
-
-    def __sub__(self, other):
-        return other
-
-    def __mul__(self, other):
-        return other
-
-    def __floordiv__(self, other):
-        return other
-
-    def __mod__(self, other):
-        return other
-
-    def __divmod__(self, other):
-        return other
-
-    def __pow__(self, other):
-        return other
-
-    def __lshift__(self, other):
-        return other
-
-    def __rshift__(self, other):
-        return other
-
-    def __and__(self, other):
-        return other
-
-    def __xor__(self, other):
-        return other
-
-    def __or__(self, other):
-        return other
-
-    def __div__(self, other):
-        return other
-
-    def __truediv__(self, other):
-        return other
-
-    def __radd__(self, other):
-        return other
-
-    def __rsub__(self, other):
-        return other
-
-    def __rmul__(self, other):
-        return other
-
-    def __rdiv__(self, other):
-        return other
-
-    def __rtruediv__(self, other):
-        return other
-
-    def __rfloordiv__(self, other):
-        return other
-
-    def __rmod__(self, other):
-        return other
-
-    def __rdivmod__(self, other):
-        return other
-
-    def __rpow__(self, other):
-        return other
-
-    def __rlshift__(self, other):
-        return other
-
-    def __rrshift__(self, other):
-        return other
-
-    def __rand__(self, other):
-        return other
-
-    def __ror__(self, other):
-        return other
-
-    def __neg__(self):
-        return 0
-
-    def __pos__(self):
-        return 0
-
-    def __abs__(self):
-        return 0
-
-    def __invert__(self):
-        return 0
-
-    def __complex__(self):
-        return 0
-
-    def __int__(self):
-        return int(0)
-
-    def __float__(self):
-        return float(0)
-
-    def __oct__(self):
-        return oct(0)
-
-    def __hex__(self):
-        return hex(0)
-
-    def __index__(self):
-        return int(0)
-
-    def __le__(self, other):
-        return True
-
-    def __ge__(self, other):
-        return self is other or False
-
-    def __gt__(self, other):
-        return False
-
-    def __lt__(self, other):
-        return True
-
-    def __eq__(self, other):
-        return self is other
-
-    def __ne__(self, other):
-        return self is not other
-
-    def __hash__(self):
-        return hash(('',))
-
-    def as_dict(self):
-        return self.to_json()
-
-    def to_json(self):
-        output = {'_class': 'docassemble.base.util.DAEmpty'}
-        try:
-            output.update({'str': object.__getattribute__(self, 'str')})
-        except Exception:
-            pass
-        return output
-
-
 class DAObjectPlusParameters:
     """A wrapper pairing a DAObject with initialization parameters for lazy object construction."""
-    pass
 
 
 class DAObject:
@@ -723,8 +859,8 @@ class DAObject:
                 thename = get_unique_name()
                 self.has_nonrandom_instance_name = False
             del frame
-        self.instanceName = str(thename)
-        self.attrList = []
+        self.instanceName = str(thename)  # pylint: disable=invalid-name
+        self.attrList = []  # pylint: disable=invalid-name
         self.init(*pargs, **kwargs)
 
     def _set_instance_name_for_function(self):
@@ -805,7 +941,7 @@ class DAObject:
             The recomputed attribute value.
         """
         if hasattr(self, attr):
-            docassemble.base.functions.reconsider(self.instanceName + '.' + attr)
+            reconsider(self.instanceName + '.' + attr)
         return getattr(self, attr)
 
     def is_peer_relation(self, target, relationship_type, tree):
@@ -982,7 +1118,7 @@ class DAObject:
     def get_point_of_view(self):
         if hasattr(self, '_point_of_view'):
             return self._point_of_view
-        if self is docassemble.base.functions.this_thread.global_vars.user:
+        if self is this_thread.global_vars.user:
             return '2'
         return None
 
@@ -1078,14 +1214,14 @@ class DAObject:
 
     def __getattr__(self, thename):
         if thename.startswith('__') or hasattr(self.__class__, thename):
-            if 'pending_error' in docassemble.base.functions.this_thread.misc:
-                pending_error = docassemble.base.functions.this_thread.misc['pending_error']
-                del docassemble.base.functions.this_thread.misc['pending_error']
+            if 'pending_error' in this_thread.misc:
+                pending_error = this_thread.misc['pending_error']
+                del this_thread.misc['pending_error']
                 raise pending_error
             return object.__getattribute__(self, thename)
         var_name = object.__getattribute__(self, 'instanceName') + "." + thename
-        docassemble.base.functions.this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
-        raise docassemble.base.functions.this_thread.misc['pending_error']
+        this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
+        raise this_thread.misc['pending_error']
 
     def raise_undefined_attribute_error(self, thename):
         """Raise a DAAttributeError for the named attribute, as if the attribute were undefined.
@@ -1100,8 +1236,8 @@ class DAObject:
             DAAttributeError: Always raised.
         """
         var_name = object.__getattribute__(self, 'instanceName') + "." + thename
-        docassemble.base.functions.this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
-        raise docassemble.base.functions.this_thread.misc['pending_error']
+        this_thread.misc['pending_error'] = DAAttributeError("name '" + var_name + "' is not defined")
+        raise this_thread.misc['pending_error']
 
     def object_name(self, **kwargs):
         """Return a human-readable name for the object based on its instance name.
@@ -1129,7 +1265,7 @@ class DAObject:
         Returns:
             dict: A serializable dict representation of the object.
         """
-        return docassemble.base.functions.safe_json(self)
+        return safe_json(self)
 
     def possessive(self, target, **kwargs):
         """Return a possessive phrase appropriate to this object.
@@ -1148,11 +1284,11 @@ class DAObject:
         if person == '2':
             return your(target, **kwargs)
         if person == '2p':
-            return docassemble.base.functions.your_plural(target, **kwargs)
+            return your_plural(target, **kwargs)
         if person == '1':
-            return docassemble.base.functions.my_possessive(target, **kwargs)
+            return my_possessive(target, **kwargs)
         if person == '1p':
-            return docassemble.base.functions.our_possessive(target, **kwargs)
+            return our_possessive(target, **kwargs)
         return possessify(self, target, **kwargs)
 
     def object_possessive(self, target, **kwargs):
@@ -1183,13 +1319,13 @@ class DAObject:
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.are_you(**kwargs)
+            output = are_you(**kwargs)
         if person == '2p':
-            output = docassemble.base.functions.are_you_plural(**kwargs)
+            output = are_you_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.am_i(**kwargs)
+            output = am_i(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.are_we(**kwargs)
+            output = are_we(**kwargs)
         else:
             output = is_word(str(self), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1208,13 +1344,13 @@ class DAObject:
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.yourself(**kwargs)
+            output = yourself(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.yourselves(**kwargs)
+            output = yourselves(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.myself(**kwargs)
+            output = myself(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.ourselves(**kwargs)
+            output = ourselves(**kwargs)
         else:
             output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1233,20 +1369,20 @@ class DAObject:
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            return docassemble.base.functions.yourself(**kwargs)
+            return yourself(**kwargs)
         if person == '2p':
-            return docassemble.base.functions.yourselves(**kwargs)
+            return yourselves(**kwargs)
         if person == '1':
-            return docassemble.base.functions.myself(**kwargs)
+            return myself(**kwargs)
         if person == '1p':
-            return docassemble.base.functions.ourselves(**kwargs)
-        return docassemble.base.functions.itself(**kwargs)
+            return ourselves(**kwargs)
+        return itself(**kwargs)
 
     def is_user(self):
         """Return True if this object is the current user, otherwise False."""
-        return self is docassemble.base.functions.this_thread.global_vars.user
+        return self is this_thread.global_vars.user
 
-    def initializeAttribute(self, *pargs, **kwargs):
+    def initialize_attribute(self, *pargs, **kwargs):
         """Define an attribute as a newly initialized DAObject, if not already defined.
 
         The attribute will be created with an ``instanceName`` derived from
@@ -1264,7 +1400,7 @@ class DAObject:
         """
         pargs = list(pargs)
         if len(pargs) < 2:
-            raise DAError("initializeAttribute requires an attribute name and an object type")
+            raise DAError("initialize_attribute requires an attribute name and an object type")
         name = pargs.pop(0)
         object_type = pargs.pop(0)
         new_object_parameters = {}
@@ -1280,10 +1416,12 @@ class DAObject:
         self.attrList.append(name)
         return getattr(self, name)
 
-    def reInitializeAttribute(self, *pargs, **kwargs):
+    initializeAttribute = initialize_attribute
+
+    def reinitialize_attribute(self, *pargs, **kwargs):
         """Redefine an attribute as a newly initialized DAObject, overwriting any existing value.
 
-        Like ``initializeAttribute()``, but overwrites the attribute even if
+        Like ``initialize_attribute()``, but overwrites the attribute even if
         it is already defined.
 
         Args:
@@ -1310,6 +1448,8 @@ class DAObject:
             return getattr(self, name)
         self.attrList.append(name)
         return getattr(self, name)
+
+    reInitializeAttribute = reinitialize_attribute
 
     def attribute_defined(self, name):
         """Return True if the named attribute is defined, otherwise False.
@@ -1363,11 +1503,11 @@ class DAObject:
         if person == '2':
             output = your(target, **kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.your_plural(target, **kwargs)
+            output = your_plural(target, **kwargs)
         elif person == '1':
-            output = docassemble.base.functions.my_possessive(target, **kwargs)
+            output = my_possessive(target, **kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.our_possessive(target, **kwargs)
+            output = our_possessive(target, **kwargs)
         else:
             output = its(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1388,15 +1528,15 @@ class DAObject:
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.you_objective(**kwargs)
+            output = you_objective(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.you_objective_plural(**kwargs)
+            output = you_objective_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.me_objective(**kwargs)
+            output = me_objective(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.us_objective(**kwargs)
+            output = us_objective(**kwargs)
         else:
-            output = docassemble.base.functions.it_objective(**kwargs)
+            output = it_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -1426,15 +1566,15 @@ class DAObject:
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.you_subjective(**kwargs)
+            output = you_subjective(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+            output = you_subjective_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.i_subjective(**kwargs)
+            output = i_subjective(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.we_subjective(**kwargs)
+            output = we_subjective(**kwargs)
         else:
-            output = docassemble.base.functions.it_subjective(**kwargs)
+            output = it_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -1478,11 +1618,11 @@ class DAObject:
         if person == '2':
             return do_you(the_verb, **kwargs)
         if person == '2p':
-            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+            return do_you_plural(the_verb, **kwargs)
         if person == '1':
-            return docassemble.base.functions.do_i(the_verb, **kwargs)
+            return do_i(the_verb, **kwargs)
         if person == '1p':
-            return docassemble.base.functions.do_we(the_verb, **kwargs)
+            return do_we(the_verb, **kwargs)
         return does_a_b(self, the_verb, **kwargs)
 
     def did_question(self, the_verb, **kwargs):
@@ -1499,11 +1639,11 @@ class DAObject:
         if person == '2':
             return did_you(the_verb, **kwargs)
         if person == '2p':
-            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+            return did_you_plural(the_verb, **kwargs)
         if person == '1':
-            return docassemble.base.functions.did_i(the_verb, **kwargs)
+            return did_i(the_verb, **kwargs)
         if person == '1p':
-            return docassemble.base.functions.did_we(the_verb, **kwargs)
+            return did_we(the_verb, **kwargs)
         return did_a_b(self, the_verb, **kwargs)
 
     def were_question(self, the_target, **kwargs):
@@ -1520,11 +1660,11 @@ class DAObject:
         if person == '2':
             return were_you(the_target, **kwargs)
         if person == '2p':
-            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+            return were_you_plural(the_target, **kwargs)
         if person == '1':
-            return docassemble.base.functions.was_i(the_target, **kwargs)
+            return was_i(the_target, **kwargs)
         if person == '1p':
-            return docassemble.base.functions.were_we(the_target, **kwargs)
+            return were_we(the_target, **kwargs)
         return was_a_b(self, the_target, **kwargs)
 
     def have_question(self, the_target, **kwargs):
@@ -1541,11 +1681,11 @@ class DAObject:
         if person == '2':
             return have_you(the_target, **kwargs)
         if person == '2p':
-            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+            return have_you_plural(the_target, **kwargs)
         if person == '1':
-            return docassemble.base.functions.have_i(the_target, **kwargs)
+            return have_i(the_target, **kwargs)
         if person == '1p':
-            return docassemble.base.functions.have_we(the_target, **kwargs)
+            return have_we(the_target, **kwargs)
         return has_a_b(self, the_target, **kwargs)
 
     def does_verb(self, the_verb, **kwargs):
@@ -1609,13 +1749,13 @@ class DAObject:
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.you_subjective(**kwargs)
+            output = you_subjective(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+            output = you_subjective_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.i_subjective(**kwargs)
+            output = i_subjective(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.we_subjective(**kwargs)
+            output = we_subjective(**kwargs)
         else:
             output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -1634,13 +1774,13 @@ class DAObject:
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.you_objective(**kwargs)
+            output = you_objective(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.you_objective_plural(**kwargs)
+            output = you_objective_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.me_objective(**kwargs)
+            output = me_objective(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.us_objective(**kwargs)
+            output = us_objective(**kwargs)
         else:
             output = str(self)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -2272,7 +2412,7 @@ class DAList(DAObject):
             self.ask_object_type = False
         super().init(*pargs, **kwargs)
 
-    def initializeObject(self, *pargs, **kwargs):
+    def initializeObject(self, *pargs, **kwargs):  # pylint: disable=invalid-name
         """Create a new object at a given index in the list.
 
         Args:
@@ -2290,41 +2430,41 @@ class DAList(DAObject):
         Raises:
             DAError: If the first argument is not a non-negative integer.
         """
-        objectFunction = None
+        object_function = None
         pargs = list(pargs)
         if len(pargs) == 0 or not isinstance(pargs[0], int) or pargs[0] < 0:
             raise DAError("initializeObject: first parameter must be an integer (0 or greater)")
         index = pargs.pop(0)
         if len(pargs) > 0:
-            objectFunction = pargs.pop(0)
+            object_function = pargs.pop(0)
         new_obj_parameters = {}
-        if isinstance(objectFunction, DAObjectPlusParameters):
-            for key, val in objectFunction.parameters.items():
+        if isinstance(object_function, DAObjectPlusParameters):
+            for key, val in object_function.parameters.items():
                 new_obj_parameters[key] = val
-            objectFunction = objectFunction.object_type
-        if objectFunction is None:
+            object_function = object_function.object_type
+        if object_function is None:
             if self.ask_object_type:
                 if isinstance(self.new_object_type, DAObjectPlusParameters):
-                    objectFunction = self.new_object_type.object_type
+                    object_function = self.new_object_type.object_type
                     new_obj_parameters = self.new_object_type.parameters
                 elif isinstance(self.new_object_type, type):
-                    objectFunction = self.new_object_type
+                    object_function = self.new_object_type
                 else:
                     raise DAError("new_object_type must be an object type")
             elif self.object_type is not None:
-                objectFunction = self.object_type
+                object_function = self.object_type
                 for key, val in self.object_type_parameters.items():
                     new_obj_parameters[key] = val
             else:
-                objectFunction = DAObject
+                object_function = DAObject
         for key, val in kwargs.items():
             new_obj_parameters[key] = val
-        newobject = objectFunction(self.instanceName + '[' + repr(index) + ']', *pargs, **new_obj_parameters)
+        newobject = object_function(self.instanceName + '[' + repr(index) + ']', *pargs, **new_obj_parameters)
         for pre_index in range(len(self.elements), index):  # pylint: disable=unused-variable
             self.elements.append(None)
         self[index] = newobject
         self.there_are_any = True
-        if objectFunction is None and self.ask_object_type and hasattr(self, 'new_object_type'):
+        if object_function is None and self.ask_object_type and hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         return newobject
 
@@ -2343,10 +2483,10 @@ class DAList(DAObject):
             self.object_type_parameters = {}
 
     def cancel_add_or_edit(self):
-        unique_id = docassemble.base.functions.this_thread.current_info['user']['session_uid']
-        if 'event_stack' in docassemble.base.functions.this_thread.internal and unique_id in docassemble.base.functions.this_thread.internal['event_stack']:
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
             new_stack = []
-            for item in docassemble.base.functions.this_thread.internal['event_stack'][unique_id]:
+            for item in this_thread.internal['event_stack'][unique_id]:
                 if 'arguments' in item:
                     if 'list' in item['arguments'] and item['arguments']['list'] == self.instanceName:
                         continue
@@ -2355,7 +2495,7 @@ class DAList(DAObject):
                 if 'action' in item and item['action'].startswith(self.instanceName + '['):
                     continue
                 new_stack.append(item)
-            docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
+            this_thread.internal['event_stack'][unique_id] = new_stack
         if self.complete_elements().number() < self.number_gathered():
             self.pop()
         self.delattr('doing_gathered_and_complete', '_necessary_length', 'there_is_one_other')
@@ -2452,7 +2592,7 @@ class DAList(DAObject):
 
     def _trigger_gather(self):
         """Triggers the gathering process."""
-        if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
+        if get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
                 self.gather()
             else:
@@ -2655,7 +2795,7 @@ class DAList(DAObject):
         self._reset_instance_names()
         return self
 
-    def appendObject(self, *pargs, **kwargs):
+    def appendObject(self, *pargs, **kwargs):  # pylint: disable=invalid-name
         """Create a new object and append it to the list.
 
         Args:
@@ -2670,32 +2810,32 @@ class DAList(DAObject):
             DAObject: The newly created object appended to the list.
         """
         # logmessage("Called appendObject where len is " + str(len(self.elements)))
-        objectFunction = None
+        object_function = None
         if len(pargs) > 0:
             pargs = list(pargs)
-            objectFunction = pargs.pop(0)
+            object_function = pargs.pop(0)
         new_obj_parameters = {}
-        if objectFunction is None:
+        if object_function is None:
             if self.ask_object_type:
                 if isinstance(self.new_object_type, DAObjectPlusParameters):
-                    objectFunction = self.new_object_type.object_type
+                    object_function = self.new_object_type.object_type
                     new_obj_parameters = self.new_object_type.parameters
                 elif isinstance(self.new_object_type, type):
-                    objectFunction = self.new_object_type
+                    object_function = self.new_object_type
                 else:
                     raise DAError("new_object_type must be an object type")
             elif self.object_type is not None:
-                objectFunction = self.object_type
+                object_function = self.object_type
                 for key, val in self.object_type_parameters.items():
                     new_obj_parameters[key] = val
             else:
-                objectFunction = DAObject
+                object_function = DAObject
         for key, val in kwargs.items():
             new_obj_parameters[key] = val
-        newobject = objectFunction(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **new_obj_parameters)
+        newobject = object_function(self.instanceName + '[' + str(len(self.elements)) + ']', *pargs, **new_obj_parameters)
         self.elements.append(newobject)
         self.there_are_any = True
-        if objectFunction is None and self.ask_object_type and hasattr(self, 'new_object_type'):
+        if object_function is None and self.ask_object_type and hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         return newobject
 
@@ -2792,13 +2932,13 @@ class DAList(DAObject):
         if self.number() == 1:
             if isinstance(self.elements[0], DAObject):
                 return self.elements[0].itself(**kwargs)
-            return docassemble.base.functions.itself(**kwargs)
+            return itself(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.yourselves(**kwargs)
+            return yourselves(**kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.ourselves(**kwargs)
-        return docassemble.base.functions.themselves(**kwargs)
+            return ourselves(**kwargs)
+        return themselves(**kwargs)
 
     def do_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "do x eat" if there is
@@ -2814,10 +2954,10 @@ class DAList(DAObject):
             return does_a_b(self.elements[0], the_verb, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+            return do_you_plural(the_verb, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.do_we(the_verb, **kwargs)
-        return docassemble.base.functions.do_a_b(self, the_verb, **kwargs)
+            return do_we(the_verb, **kwargs)
+        return do_a_b(self, the_verb, **kwargs)
 
     def did_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "did x eat" if there is
@@ -2833,10 +2973,10 @@ class DAList(DAObject):
             return did_a_b(self.elements[0], the_verb, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+            return did_you_plural(the_verb, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.did_we(the_verb, **kwargs)
-        return docassemble.base.functions.did_a_b_plural(self, the_verb, **kwargs)
+            return did_we(the_verb, **kwargs)
+        return did_a_b_plural(self, the_verb, **kwargs)
 
     def were_question(self, the_target, **kwargs):
         """Given a target like "married", returns "were x married" if
@@ -2850,10 +2990,10 @@ class DAList(DAObject):
             return was_a_b(self.elements[0], the_target, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+            return were_you_plural(the_target, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.were_we(the_target, **kwargs)
-        return docassemble.base.functions.were_a_b_plural(self, the_target, **kwargs)
+            return were_we(the_target, **kwargs)
+        return were_a_b_plural(self, the_target, **kwargs)
 
     def have_question(self, the_target, **kwargs):
         """Given a target like "married", returns "have x married" if
@@ -2869,10 +3009,10 @@ class DAList(DAObject):
             return has_a_b(self.elements[0], the_target, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+            return have_you_plural(the_target, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.have_we(the_target, **kwargs)
-        return docassemble.base.functions.have_a_b(self, the_target, **kwargs)
+            return have_we(the_target, **kwargs)
+        return have_a_b(self, the_target, **kwargs)
 
     def does_verb(self, the_verb, **kwargs):
         """Return the correctly conjugated present-tense form of a verb for the list.
@@ -2997,11 +3137,11 @@ class DAList(DAObject):
             return self.elements[0].is_are_you(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.are_you_plural(**kwargs)
+            output = are_you_plural(**kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.are_we(**kwargs)
+            output = are_we(**kwargs)
         else:
-            output = docassemble.base.functions.are_word(str(self), **kwargs)
+            output = are_word(str(self), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -3231,7 +3371,7 @@ class DAList(DAObject):
             item_object_parameters = {}
         if complete_attribute is None and self.complete_attribute is not None:
             complete_attribute = self.complete_attribute
-        docassemble.base.functions.set_gathering_mode(True, self.instanceName)
+        set_gathering_mode(True, self.instanceName)
         if number is None and self.ask_number:
             if hasattr(self, 'there_are_any') and not self.there_are_any:
                 number = 0
@@ -3303,7 +3443,7 @@ class DAList(DAObject):
         #    del self.doing_gathered_and_complete
         if hasattr(self, 'was_gathered'):
             del self.was_gathered
-        docassemble.base.functions.set_gathering_mode(False, self.instanceName)
+        set_gathering_mode(False, self.instanceName)
         self.hook_after_gather()
         return True
 
@@ -3380,7 +3520,7 @@ class DAList(DAObject):
         try:
             return self.elements[index]
         except:
-            if (self.auto_gather and hasattr(self, 'gathered') and not (hasattr(self, '_appending_allowed') and self._appending_allowed)) or docassemble.base.functions.this_thread.probing:
+            if (self.auto_gather and hasattr(self, 'gathered') and not (hasattr(self, '_appending_allowed') and self._appending_allowed)) or this_thread.probing:
                 try:
                     logmessage("list index " + str(index) + " out of range on " + str(self.instanceName))
                 except:
@@ -3502,9 +3642,9 @@ class DAList(DAObject):
             return its(target, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.your_plural(target, **kwargs)
+            output = your_plural(target, **kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.our_possessive(target, **kwargs)
+            output = our_possessive(target, **kwargs)
         else:
             output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -3527,14 +3667,14 @@ class DAList(DAObject):
             self._trigger_gather()
             if isinstance(self.elements[0], DAObject):
                 return self.elements[0].pronoun(**kwargs)
-            return docassemble.base.functions.it_objective(**kwargs)
+            return it_objective(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.you_objective_plural(**kwargs)
+            output = you_objective_plural(**kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.us_objective(**kwargs)
+            output = us_objective(**kwargs)
         else:
-            output = docassemble.base.functions.them_objective(**kwargs)
+            output = them_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -3559,14 +3699,14 @@ class DAList(DAObject):
             self._trigger_gather()
             if isinstance(self.elements[0], DAObject):
                 return self.elements[0].pronoun_subjective(**kwargs)
-            docassemble.base.functions.it_subjective(**kwargs)
+            it_subjective(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+            output = you_subjective_plural(**kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.we_subjective(**kwargs)
+            output = we_subjective(**kwargs)
         else:
-            output = docassemble.base.functions.they_subjective(**kwargs)
+            output = they_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -3583,7 +3723,7 @@ class DAList(DAObject):
             self.hook_after_gather()
 
     def _reorder_buttons(self, classes, index):
-        return '<span class="text-nowrap"><a href="#" role="button" class="' + classes + '" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fa-solid fa-arrow-up"></i><span class="visually-hidden">' + word("Move up") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fa-solid fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="visually-hidden">' + word("Move down") + '</span></a></span> '
+        return '<span class="text-nowrap"><a href="#" role="button" class="' + classes + '" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fa-solid fa-arrow-up"></i><span class="visually-hidden">' + word("Move up") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + get_button_class_prefix + get_configuration()['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fa-solid fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="visually-hidden">' + word("Move down") + '</span></a></span> '
 
     def _edit_button(self, url, classes):
         return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-pencil-alt"></i> {word("Edit")}</span></a> '
@@ -3611,7 +3751,7 @@ class DAList(DAObject):
         index = the_args.pop(0)
         output = ''
         if kwargs.get('reorder', False):
-            output += self._reorder_buttons('btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('reorder', 'info') + ' btn-darevisit datableup', index)
+            output += self._reorder_buttons('btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('reorder', 'info') + ' btn-darevisit datableup', index)
         if self.minimum_number is not None and len(self.elements) <= self.minimum_number:
             can_delete = False
         else:
@@ -3640,17 +3780,17 @@ class DAList(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_list_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += self._edit_button(docassemble.base.functions.url_action('_da_list_edit', items=items), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit')
+            output += self._edit_button(url_action('_da_list_edit', items=items), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('edit', 'secondary') + ' btn-darevisit')
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += self._delete_button(docassemble.base.functions.url_action('_da_list_remove', list=self.instanceName, item=repr(index)), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
+            output += self._delete_button(url_action('_da_list_remove', list=self.instanceName, item=repr(index)), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
         if kwargs.get('edit_url_only', False):
-            return docassemble.base.functions.url_action('_da_list_edit', items=items)
+            return url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
-            return docassemble.base.functions.url_action('_da_list_remove', dict=self.instanceName, item=repr(index))
+            return url_action('_da_list_remove', dict=self.instanceName, item=repr(index))
         return output
 
     def _add_action_button(self, url, classes, icon, the_message):
@@ -3680,7 +3820,7 @@ class DAList(DAObject):
             str: HTML anchor element or URL string.
         """
         if color is None:
-            color = server.daconfig['button colors'].get('add', 'secondary')
+            color = get_configuration()['button colors'].get('add', 'secondary')
         if color not in ('primary', 'secondary', 'tertiary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
         if size not in ('sm', 'md', 'lg'):
@@ -3717,10 +3857,10 @@ class DAList(DAObject):
                 message = word("Add an item")
         else:
             message = word(str(message))
-        the_url = docassemble.base.functions.url_action('_da_list_add', list=self.instanceName)
+        the_url = url_action('_da_list_add', list=self.instanceName)
         if url_only:
             return the_url
-        return self._add_action_button(the_url, 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
+        return self._add_action_button(the_url, 'btn' + size + block + ' ' + get_button_class_prefix() + color + ' btn-darevisit' + classname, icon, message)
 
     def hook_on_gather(self, *pargs, **kwargs):
         """Override this method to run code just before the list is marked as gathered."""
@@ -3830,7 +3970,7 @@ class DADict(DAObject):
 
     def _trigger_gather(self):
         """Triggers the gathering process."""
-        if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
+        if get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
                 self.gather()
             else:
@@ -3906,7 +4046,7 @@ class DADict(DAObject):
             object: The freshly computed value for ``item``.
         """
         if item in self.elements:
-            docassemble.base.functions.reconsider(self.item_name(item))
+            reconsider(self.item_name(item))
         return self[item]
 
     def all_false(self, *pargs, **kwargs):
@@ -4051,7 +4191,7 @@ class DADict(DAObject):
     def _sorted_elements_iteritems(self):
         return sorted(self.elements.items())
 
-    def initializeObject(self, *pargs, **kwargs):
+    def initializeObject(self, *pargs, **kwargs):  # pylint: disable=invalid-name
         """Create a new object and store it at the given key in the dictionary.
 
         Args:
@@ -4066,37 +4206,37 @@ class DADict(DAObject):
         Returns:
             DAObject: The newly created object stored at ``self[entry]``.
         """
-        objectFunction = None
+        object_function = None
         pargs = list(pargs)
         entry = pargs.pop(0)
         if len(pargs) > 0:
-            objectFunction = pargs.pop(0)
+            object_function = pargs.pop(0)
         new_obj_parameters = {}
-        if isinstance(objectFunction, DAObjectPlusParameters):
-            for key, val in objectFunction.parameters.items():
+        if isinstance(object_function, DAObjectPlusParameters):
+            for key, val in object_function.parameters.items():
                 new_obj_parameters[key] = val
-            objectFunction = objectFunction.object_type
-        if objectFunction is None:
+            object_function = object_function.object_type
+        if object_function is None:
             if self.ask_object_type:
                 if isinstance(self.new_object_type, DAObjectPlusParameters):
-                    objectFunction = self.new_object_type.object_type
+                    object_function = self.new_object_type.object_type
                     new_obj_parameters = self.new_object_type.parameters
                 elif isinstance(self.new_object_type, type):
-                    objectFunction = self.new_object_type
+                    object_function = self.new_object_type
                 else:
                     raise DAError("new_object_type must be an object type")
             elif self.object_type is not None:
-                objectFunction = self.object_type
+                object_function = self.object_type
                 for key, val in self.object_type_parameters.items():
                     new_obj_parameters[key] = val
             else:
-                objectFunction = DAObject
+                object_function = DAObject
         for key, val in kwargs.items():
             new_obj_parameters[key] = val
-        newobject = objectFunction(self.instanceName + '[' + repr(entry) + ']', *pargs, **new_obj_parameters)
+        newobject = object_function(self.instanceName + '[' + repr(entry) + ']', *pargs, **new_obj_parameters)
         self[entry] = newobject
         self.there_are_any = True
-        if objectFunction is None and self.ask_object_type and hasattr(self, 'new_object_type'):
+        if object_function is None and self.ask_object_type and hasattr(self, 'new_object_type'):
             delattr(self, 'new_object_type')
         return newobject
 
@@ -4214,13 +4354,13 @@ class DADict(DAObject):
             first_element = list(self.elements.values())[0]
             if isinstance(first_element, DAObject):
                 return first_element.itself(**kwargs)
-            return docassemble.base.functions.itself(**kwargs)
+            return itself(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.yourselves(**kwargs)
+            return yourselves(**kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.ourselves(**kwargs)
-        return docassemble.base.functions.themselves(**kwargs)
+            return ourselves(**kwargs)
+        return themselves(**kwargs)
 
     def do_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "do x eat" if there is
@@ -4237,10 +4377,10 @@ class DADict(DAObject):
             return does_a_b(first_element, the_verb, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+            return do_you_plural(the_verb, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.do_we(the_verb, **kwargs)
-        return docassemble.base.functions.do_a_b(self, the_verb, **kwargs)
+            return do_we(the_verb, **kwargs)
+        return do_a_b(self, the_verb, **kwargs)
 
     def did_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "did x eat" if there is
@@ -4257,10 +4397,10 @@ class DADict(DAObject):
             return did_a_b(first_element, the_verb, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+            return did_you_plural(the_verb, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.did_we(the_verb, **kwargs)
-        return docassemble.base.functions.did_a_b_plural(self, the_verb, **kwargs)
+            return did_we(the_verb, **kwargs)
+        return did_a_b_plural(self, the_verb, **kwargs)
 
     def were_question(self, the_target, **kwargs):
         """Given a target like "married", returns "were x married" if
@@ -4277,10 +4417,10 @@ class DADict(DAObject):
             return was_a_b(first_element, the_target, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+            return were_you_plural(the_target, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.were_we(the_target, **kwargs)
-        return docassemble.base.functions.were_a_b_plural(self, the_target, **kwargs)
+            return were_we(the_target, **kwargs)
+        return were_a_b_plural(self, the_target, **kwargs)
 
     def have_question(self, the_target, **kwargs):
         """Given a target like "married", returns "have x married" if
@@ -4297,10 +4437,10 @@ class DADict(DAObject):
             return has_a_b(first_element, the_target, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+            return have_you_plural(the_target, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.have_we(the_target, **kwargs)
-        return docassemble.base.functions.have_a_b(self, the_target, **kwargs)
+            return have_we(the_target, **kwargs)
+        return have_a_b(self, the_target, **kwargs)
 
     def does_verb(self, the_verb, **kwargs):
         """Return the correctly conjugated present-tense form of a verb for the dictionary.
@@ -4575,10 +4715,10 @@ class DADict(DAObject):
                 str(elem)
 
     def cancel_add_or_edit(self):
-        unique_id = docassemble.base.functions.this_thread.current_info['user']['session_uid']
-        if 'event_stack' in docassemble.base.functions.this_thread.internal and unique_id in docassemble.base.functions.this_thread.internal['event_stack']:
+        unique_id = this_thread.current_info['user']['session_uid']
+        if 'event_stack' in this_thread.internal and unique_id in this_thread.internal['event_stack']:
             new_stack = []
-            for item in docassemble.base.functions.this_thread.internal['event_stack'][unique_id]:
+            for item in this_thread.internal['event_stack'][unique_id]:
                 if 'arguments' in item:
                     if 'dict' in item['arguments'] and item['arguments']['dict'] == self.instanceName:
                         continue
@@ -4587,7 +4727,7 @@ class DADict(DAObject):
                 if 'action' in item and item['action'].startswith(self.instanceName + '['):
                     continue
                 new_stack.append(item)
-            docassemble.base.functions.this_thread.internal['event_stack'][unique_id] = new_stack
+            this_thread.internal['event_stack'][unique_id] = new_stack
         if self.complete_elements().number() < self.number_gathered():
             self.popitem()
         self.delattr('doing_gathered_and_complete', 'there_is_one_other', 'new_item_name')
@@ -4651,7 +4791,7 @@ class DADict(DAObject):
             new_item_parameters = {}
         if complete_attribute is None and self.complete_attribute is not None:
             complete_attribute = self.complete_attribute
-        docassemble.base.functions.set_gathering_mode(True, self.instanceName)
+        set_gathering_mode(True, self.instanceName)
         self._validate(item_object_type, complete_attribute, keys=keys)
         if number is None and self.ask_number:
             if hasattr(self, 'there_are_any') and not self.there_are_any:
@@ -4719,7 +4859,7 @@ class DADict(DAObject):
         if self.auto_gather:
             self.gathered = True
             self.revisit = True
-        docassemble.base.functions.set_gathering_mode(False, self.instanceName)
+        set_gathering_mode(False, self.instanceName)
         self.hook_after_gather()
         return True
 
@@ -4755,7 +4895,7 @@ class DADict(DAObject):
 
     def __getitem__(self, index):
         if index not in self.elements:
-            if (self.object_type is None and not self.ask_object_type) or docassemble.base.functions.this_thread.probing:
+            if (self.object_type is None and not self.ask_object_type) or this_thread.probing:
                 var_name = object.__getattribute__(self, 'instanceName') + "[" + repr(index) + "]"
                 raise DAIndexError("name '" + var_name + "' is not defined")
             if self.ask_object_type:
@@ -5043,11 +5183,11 @@ class DADict(DAObject):
         if person == '2':
             output = your(target, **kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.your_plural(target, **kwargs)
+            output = your_plural(target, **kwargs)
         elif person == '1':
-            output = docassemble.base.functions.my_possessive(target, **kwargs)
+            output = my_possessive(target, **kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.our_possessive(**kwargs)
+            output = our_possessive(**kwargs)
         else:
             output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -5070,14 +5210,14 @@ class DADict(DAObject):
             self._trigger_gather()
             if isinstance(list(self.elements.values())[0], DAObject):
                 return list(self.elements.values())[0].pronoun(**kwargs)
-            return docassemble.base.functions.it_objective(**kwargs)
+            return it_objective(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.you_objective_plural(**kwargs)
+            output = you_objective_plural(**kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.us_objective(**kwargs)
+            output = us_objective(**kwargs)
         else:
-            output = docassemble.base.functions.them_objective(**kwargs)
+            output = them_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -5102,14 +5242,14 @@ class DADict(DAObject):
             self._trigger_gather()
             if isinstance(list(self.elements.values())[0], DAObject):
                 return list(self.elements.values())[0].pronoun_subjective(**kwargs)
-            docassemble.base.functions.it_subjective(**kwargs)
+            it_subjective(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+            output = you_subjective_plural(**kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.we_subjective(**kwargs)
+            output = we_subjective(**kwargs)
         else:
-            output = docassemble.base.functions.they_subjective(**kwargs)
+            output = they_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -5167,17 +5307,17 @@ class DADict(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_dict_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += self._edit_button(docassemble.base.functions.url_action('_da_dict_edit', items=items), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('edit', 'secondary') + ' btn-darevisit')
+            output += self._edit_button(url_action('_da_dict_edit', items=items), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('edit', 'secondary') + ' btn-darevisit')
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += self._delete_button(docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)), 'btn btn-sm ' + server.button_class_prefix + server.daconfig['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
+            output += self._delete_button(url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
         if kwargs.get('edit_url_only', False):
-            return docassemble.base.functions.url_action('_da_dict_edit', items=items)
+            return url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):
-            return docassemble.base.functions.url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
+            return url_action('_da_dict_remove', dict=self.instanceName, item=repr(index))
         return output
 
     def _add_action_button(self, url, classes, icon, the_message):
@@ -5188,7 +5328,7 @@ class DADict(DAObject):
     def add_action(self, label=None, message=None, url_only=False, icon='plus-circle', color=None, size='sm', block=None, classname=None):  # pylint: disable=redefined-outer-name
         """Returns HTML for adding an item to a dict"""
         if color is None:
-            color = server.daconfig['button colors'].get('add', 'secondary')
+            color = get_configuration()['button colors'].get('add', 'secondary')
         if color not in ('primary', 'secondary', 'tertiary', 'success', 'danger', 'warning', 'info', 'light', 'dark'):
             color = 'success'
         if size not in ('sm', 'md', 'lg'):
@@ -5225,10 +5365,10 @@ class DADict(DAObject):
                 message = word("Add an item")
         else:
             message = word(str(message))
-        the_url = docassemble.base.functions.url_action('_da_dict_add', dict=self.instanceName)
+        the_url = url_action('_da_dict_add', dict=self.instanceName)
         if url_only:
             return the_url
-        return self._add_action_button(the_url, 'btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname, icon, message)
+        return self._add_action_button(the_url, 'btn' + size + block + ' ' + get_button_class_prefix() + color + ' btn-darevisit' + classname, icon, message)
 
     def _new_elements(self):
         return {}
@@ -5419,7 +5559,7 @@ class DASet(DAObject):
 
     def _trigger_gather(self):
         """Triggers the gathering process."""
-        if docassemble.base.functions.get_gathering_mode(self.instanceName) is False:
+        if get_gathering_mode(self.instanceName) is False:
             if self.auto_gather:
                 self.gather()
             else:
@@ -5556,13 +5696,13 @@ class DASet(DAObject):
             first_element = list(self.elements)[0]
             if isinstance(first_element, DAObject):
                 return first_element.itself(**kwargs)
-            return docassemble.base.functions.itself(**kwargs)
+            return itself(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.yourselves(**kwargs)
+            return yourselves(**kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.ourselves(**kwargs)
-        return docassemble.base.functions.themselves(**kwargs)
+            return ourselves(**kwargs)
+        return themselves(**kwargs)
 
     def do_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "do x eat" if there is
@@ -5579,10 +5719,10 @@ class DASet(DAObject):
             return does_a_b(first_element, the_verb, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.do_you_plural(the_verb, **kwargs)
+            return do_you_plural(the_verb, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.do_we(the_verb, **kwargs)
-        return docassemble.base.functions.do_a_b(self, the_verb, **kwargs)
+            return do_we(the_verb, **kwargs)
+        return do_a_b(self, the_verb, **kwargs)
 
     def did_question(self, the_verb, **kwargs):
         """Given a verb like "eat," returns "did x eat" if there is
@@ -5599,10 +5739,10 @@ class DASet(DAObject):
             return did_a_b(first_element, the_verb, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.did_you_plural(the_verb, **kwargs)
+            return did_you_plural(the_verb, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.did_we(the_verb, **kwargs)
-        return docassemble.base.functions.did_a_b_plural(self, the_verb, **kwargs)
+            return did_we(the_verb, **kwargs)
+        return did_a_b_plural(self, the_verb, **kwargs)
 
     def were_question(self, the_target, **kwargs):
         """Given a target like "married", returns "were x married" if
@@ -5619,10 +5759,10 @@ class DASet(DAObject):
             return was_a_b(first_element, the_target, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.were_you_plural(the_target, **kwargs)
+            return were_you_plural(the_target, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.were_we(the_target, **kwargs)
-        return docassemble.base.functions.were_a_b_plural(self, the_target, **kwargs)
+            return were_we(the_target, **kwargs)
+        return were_a_b_plural(self, the_target, **kwargs)
 
     def have_question(self, the_target, **kwargs):
         """Given a target like "married", returns "have x married" if
@@ -5639,10 +5779,10 @@ class DASet(DAObject):
             return has_a_b(first_element, the_target, **kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            return docassemble.base.functions.have_you_plural(the_target, **kwargs)
+            return have_you_plural(the_target, **kwargs)
         if person in ('1', '1p'):
-            return docassemble.base.functions.have_we(the_target, **kwargs)
-        return docassemble.base.functions.have_a_b(self, the_target, **kwargs)
+            return have_we(the_target, **kwargs)
+        return have_a_b(self, the_target, **kwargs)
 
     def does_verb(self, the_verb, **kwargs):
         """Return the correctly conjugated present-tense form of a verb for the set.
@@ -5861,7 +6001,7 @@ class DASet(DAObject):
                 return True
         if not self.auto_gather:
             return self.gathered
-        docassemble.base.functions.set_gathering_mode(True, self.instanceName)
+        set_gathering_mode(True, self.instanceName)
         for elem in sorted(self.elements):
             str(elem)
         if number is None and self.ask_number:
@@ -5893,7 +6033,7 @@ class DASet(DAObject):
         if self.auto_gather:
             self.gathered = True
             self.revisit = True
-        docassemble.base.functions.set_gathering_mode(False, self.instanceName)
+        set_gathering_mode(False, self.instanceName)
         self.hook_after_gather()
         return True
 
@@ -6074,11 +6214,11 @@ class DASet(DAObject):
         if person == '2':
             output = your(target, **kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.your_plural(target, **kwargs)
+            output = your_plural(target, **kwargs)
         elif person == '1':
-            output = docassemble.base.functions.my_possessive(target, **kwargs)
+            output = my_possessive(target, **kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.our_possessive(target, **kwargs)
+            output = our_possessive(target, **kwargs)
         else:
             output = their(target, **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -6101,14 +6241,14 @@ class DASet(DAObject):
             self._trigger_gather()
             if isinstance(list(self.elements)[0], DAObject):
                 return list(self.elements)[0].pronoun(**kwargs)
-            return docassemble.base.functions.it_objective(**kwargs)
+            return it_objective(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.you_objective_plural(**kwargs)
+            output = you_objective_plural(**kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.us_objective(**kwargs)
+            output = us_objective(**kwargs)
         else:
-            output = docassemble.base.functions.them_objective(**kwargs)
+            output = them_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -6133,14 +6273,14 @@ class DASet(DAObject):
             self._trigger_gather()
             if isinstance(list(self.elements)[0], DAObject):
                 return list(self.elements)[0].pronoun_subjective(**kwargs)
-            return docassemble.base.functions.it_subjective(**kwargs)
+            return it_subjective(**kwargs)
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person in ('2', '2p'):
-            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+            output = you_subjective_plural(**kwargs)
         elif person in ('1', '1p'):
-            output = docassemble.base.functions.we_subjective(**kwargs)
+            output = we_subjective(**kwargs)
         else:
-            output = docassemble.base.functions.they_subjective(**kwargs)
+            output = they_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize_func(output)
         return output
@@ -6238,7 +6378,7 @@ class DAFile(DAObject):
         if hasattr(self, 'extension'):
             input_extension = self.extension
         elif hasattr(self, 'filename'):
-            input_extension, input_mimetype = server.get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence,unused-variable
+            input_extension, input_mimetype = get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence,unused-variable
         else:
             raise DAError("DAFile.convert: could not identify file type")
         output_extension = output_extension.strip().lower()
@@ -6257,13 +6397,13 @@ class DAFile(DAObject):
         if input_extension == output_extension:
             shutil.copyfile(input_path, output_to.path())
         elif input_extension in ("docx", "doc", "odt", "rtf", "png", "jpg", "tif") and output_extension == "pdf":
-            shutil.copyfile(docassemble.base.pandoc.concatenate_files([input_path]), output_to.path())
+            shutil.copyfile(concatenate_files([input_path]), output_to.path())
         elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension in ("docx", "doc", "odt", "rtf"):
-            if not docassemble.base.pandoc.convert_file(input_path, output_to.path(), input_extension, output_extension):
+            if not convert_file(input_path, output_to.path(), input_extension, output_extension):
                 raise DAError("Could not convert file")
         elif input_extension in ("docx", "doc", "odt", "rtf") and output_extension == 'md':
             if can_convert_word_to_markdown():
-                result = docassemble.base.pandoc.word_to_markdown(input_path, input_extension)
+                result = word_to_markdown(input_path, input_extension)
             else:
                 result = None
             if result is None:
@@ -6291,7 +6431,7 @@ class DAFile(DAObject):
             self.initialized  # pylint: disable=pointless-statement
         if hasattr(self, 'extension'):
             if self.extension == 'pdf':
-                docassemble.base.pdftk.apply_qpdf(self.path())
+                apply_qpdf(self.path())
             elif self.extension == 'gif':
                 fix_gif(self.path())
             elif self.extension == 'png':
@@ -6361,7 +6501,7 @@ class DAFile(DAObject):
             if hasattr(self, 'filename'):
                 del self.filename
             if hasattr(self, 'number'):
-                server.SavedFile(self.number).delete()
+                get_saved_file_class()(self.number).delete()
                 del self.number
             self.ok = False
             if hasattr(self, 'initialized'):
@@ -6389,13 +6529,13 @@ class DAFile(DAObject):
             self.number = kwargs['number']
             self.ok = True
         if hasattr(self, 'extension'):
-            self.extension = server.secure_filename(self.extension)
+            self.extension = secure_filename(self.extension)
         if not hasattr(self, 'filename'):
             if hasattr(self, 'extension'):
                 self.filename = kwargs.get('filename', 'file.' + self.extension)
             else:
                 self.filename = kwargs.get('filename', 'file.txt')
-        self.filename = server.secure_filename_unicode_ok(self.filename)
+        self.filename = secure_filename_unicode_ok(self.filename)
         if self.filename == '':
             if hasattr(self, 'extension'):
                 self.filename = 'file.' + self.extension
@@ -6406,17 +6546,17 @@ class DAFile(DAObject):
         else:
             yaml_filename = None
             uid = None
-            if hasattr(docassemble.base.functions.this_thread, 'current_info'):
-                yaml_filename = docassemble.base.functions.this_thread.current_info.get('yaml_filename', None)
-            uid = docassemble.base.functions.get_uid()
-            self.number = server.get_new_file_number(uid, server.secure_filename_spaces_ok(self.filename) or 'file.txt', yaml_file_name=yaml_filename)  # pylint: disable=assignment-from-none
+            if hasattr(this_thread, 'current_info'):
+                yaml_filename = this_thread.current_info.get('yaml_filename', None)
+            uid = get_uid()
+            self.number = get_new_file_number(uid, secure_filename_spaces_ok(self.filename) or 'file.txt', yaml_file_name=yaml_filename)  # pylint: disable=assignment-from-none
             self.ok = True
-            self.extension, self.mimetype = server.get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+            self.extension, self.mimetype = get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence
             should_not_exist = True
         self.retrieve()
         the_path = self.path()
         if not (os.path.isfile(the_path) or os.path.islink(the_path)):
-            sf = server.SavedFile(self.number, extension=self.extension, fix=True, should_not_exist=should_not_exist)
+            sf = get_saved_file_class()(self.number, extension=self.extension, fix=True, should_not_exist=should_not_exist)
             sf.save()
         self.initialized = True
 
@@ -6430,12 +6570,12 @@ class DAFile(DAObject):
             self.initialize()
         if not hasattr(self, 'number'):
             raise DAError("Cannot retrieve a file without a file number.")
-        docassemble.base.functions.this_thread.open_files.add(self)
+        this_thread.open_files.add(self)
         # logmessage("Retrieve: calling file finder")
         if self.has_specific_filename:
-            self.file_info = server.file_number_finder(self.number, filename=self.filename)
+            self.file_info = file_number_finder(self.number, filename=self.filename)
         else:
-            self.file_info = server.file_number_finder(self.number)
+            self.file_info = file_number_finder(self.number)
         if self.file_info is None:
             raise DAError("Could not retrieve file " + str(self.number))
         if 'path' not in self.file_info:
@@ -6557,7 +6697,7 @@ class DAFile(DAObject):
             input_path = temp_file.name
         output_to.initialize(extension='pdf', filename=input_filename, reinitialize=output_to.ok)
         try:
-            docassemble.base.pdftk.extract_pages(input_path, output_to.path(), first, last)
+            extract_pages(input_path, output_to.path(), first, last)
         except BaseException as err:
             raise DAError("extract_pages: " + str(err))
         output_to.retrieve()
@@ -6620,7 +6760,7 @@ class DAFile(DAObject):
             raise DAError("bates_number: area must be one of TOP_LEFT, TOP_RIGHT, BOTTOM_RIGHT, or BOTTOM_LEFT")
         if filename is None:
             filename = 'file.pdf'
-        args = [os.path.join(server.daconfig['modules'], 'bin', 'python'), '-m', 'docassemble.base.bates', '--prefix', str(prefix), '--digits', str(digits), '--start', str(start), '--area', area, '--font-size', str(font_size), '--offset-horizontal', str(offset_horizontal), '--offset-vertical', str(offset_vertical)]
+        args = [os.path.join(get_configuration()['modules'], 'bin', 'python'), '-m', 'docassemble.base.bates', '--prefix', str(prefix), '--digits', str(digits), '--start', str(start), '--area', area, '--font-size', str(font_size), '--offset-horizontal', str(offset_horizontal), '--offset-vertical', str(offset_vertical)]
         for doc in docs:
             if isinstance(doc, str):
                 args.append(doc)
@@ -6673,8 +6813,9 @@ class DAFile(DAObject):
             AsyncResult: A Celery chord handle for the background task.
         """
         lang = get_ocr_language(kwargs.get('language', None))
-        args = {'yaml_filename': docassemble.base.functions.this_thread.current_info['yaml_filename'], 'user': docassemble.base.functions.this_thread.current_info['user'], 'user_code': docassemble.base.functions.this_thread.current_info['session'], 'secret': docassemble.base.functions.this_thread.current_info['secret'], 'url': docassemble.base.functions.this_thread.current_info['url'], 'url_root': docassemble.base.functions.this_thread.current_info['url_root'], 'language': lang, 'psm': kwargs.get('psm', None), 'x': None, 'y': None, 'W': None, 'H': None, 'extra': None, 'message': None, 'pdf': True, 'preserve_color': kwargs.get('preserve_color', False), 'target': self, 'dafilelist': kwargs.get('dafilelist', None), 'filename': kwargs.get('filename', None)}
-        collector = server.ocr_finalize.s(**args)
+        args = {'yaml_filename': this_thread.current_info['yaml_filename'], 'user': this_thread.current_info['user'], 'user_code': this_thread.current_info['session'], 'secret': this_thread.current_info['secret'], 'url': this_thread.current_info['url'], 'url_root': this_thread.current_info['url_root'], 'language': lang, 'psm': kwargs.get('psm', None), 'x': None, 'y': None, 'W': None, 'H': None, 'extra': None, 'message': None, 'pdf': True, 'preserve_color': kwargs.get('preserve_color', False), 'target': self, 'dafilelist': kwargs.get('dafilelist', None), 'filename': kwargs.get('filename', None)}
+        celery_app = get_celery_app()
+        collector = celery_app.signature('tasks.ocr_finalize', kwargs=args)
         docs = []
         for parg in pargs:
             if isinstance(parg, DAFileList):
@@ -6687,28 +6828,27 @@ class DAFile(DAObject):
         indexno = 0
         for image_file in docs:
             if hasattr(image_file, 'extension') and image_file.extension in ('docx', 'doc', 'odt', 'rtf'):
-                todo.append(server.ocr_dummy.s(image_file, indexno, **args))
+                todo.append(celery_app.signature('tasks.ocr_dummy', args=[image_file, indexno], kwargs=args))
                 indexno += 1
             elif hasattr(image_file, 'extension') and image_file._is_pdf() and hasattr(image_file, 'has_ocr') and image_file.has_ocr:
-                todo.append(server.ocr_dummy.s(image_file, indexno, **args))
+                todo.append(celery_app.signature('tasks.ocr_dummy', args=[image_file, indexno], kwargs=args))
                 indexno += 1
             else:
                 for item in ocr_page_tasks(image_file, **args):
-                    todo.append(server.ocr_page.s(indexno, **item))
+                    todo.append(celery_app.signature('tasks.ocr_page', args=[indexno], kwargs=item))
                     indexno += 1
         if len(todo) == 0:
             if hasattr(self, 'extension') and self.extension in ('docx', 'doc', 'odt', 'rtf'):
-                todo.append(server.ocr_dummy.s(self, indexno, **args))
+                todo.append(celery_app.signature('tasks.ocr_dummy', args=[self, indexno], kwargs=args))
                 indexno += 1
             elif self._is_pdf() and hasattr(self, 'has_ocr') and self.has_ocr:
-                todo.append(server.ocr_dummy.s(self, indexno, **args))
+                todo.append(celery_app.signature('tasks.ocr_dummy', args=[self, indexno], kwargs=args))
                 indexno += 1
             else:
                 for item in ocr_page_tasks(self, **args):
-                    todo.append(server.ocr_page.s(indexno, **item))
+                    todo.append(celery_app.signature('tasks.ocr_page', args=[indexno], kwargs=item))
                     indexno += 1
-        the_chord = server.chord(todo)(collector)  # pylint: disable=assignment-from-none
-        return the_chord
+        return chord(todo)(collector)  # pylint: disable=assignment-from-none
 
     def _is_pdf(self):
         if hasattr(self, 'extension') and self.extension.lower() == 'pdf':
@@ -6723,7 +6863,7 @@ class DAFile(DAObject):
         Returns:
             list[str]: Variable names referenced in the document template.
         """
-        return docassemble.base.parse.get_docx_variables(self.path())
+        return get_docx_variables(self.path())
 
     def get_pdf_fields(self):
         """Return a list of form fields found in the PDF document.
@@ -6733,7 +6873,7 @@ class DAFile(DAObject):
                 position, page number, field type, and flags.
         """
         results = []
-        all_items = docassemble.base.pdftk.read_fields(self.path())
+        all_items = read_fields(self.path())
         if all_items is not None:
             for item in all_items:
                 the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
@@ -6788,11 +6928,11 @@ class DAFile(DAObject):
         formatter = '%0' + str(len(str(max_pages))) + 'd'
         the_path = self.file_info['path'] + 'screen-' + (formatter % int(page)) + '.png'
         if not os.path.isfile(the_path):
-            server.fg_make_png_for_pdf(self, 'screen', page=page)
+            fg_make_png_for_pdf(self, 'screen', page=page)
         if both_formats:
             the_path = self.file_info['path'] + 'page-' + (formatter % int(page)) + '.png'
             if not os.path.isfile(the_path):
-                server.fg_make_png_for_pdf(self, 'page', page=page)
+                fg_make_png_for_pdf(self, 'page', page=page)
 
     def pngs_ready(self):
         """Return True if the PNG page images for the PDF have been generated.
@@ -6801,7 +6941,7 @@ class DAFile(DAObject):
             bool: True if all PNG images are ready; False otherwise.
         """
         self._make_pngs_for_pdf()
-        if server.task_ready(self._taskscreen) and server.task_ready(self._taskpage):
+        if task_ready(self._taskscreen) and task_ready(self._taskpage):
             return True
         return False
 
@@ -6819,7 +6959,7 @@ class DAFile(DAObject):
                     self.commit()
                     self.retrieve()
             if os.path.isfile(test_path) and hasattr(self, '_task' + prefix):
-                server.wait_for_task(getattr(self, '_task' + prefix), timeout=10)
+                wait_for_task(getattr(self, '_task' + prefix), timeout=10)
                 self.commit()
                 self.retrieve()
             if os.path.isfile(test_path):
@@ -6845,9 +6985,9 @@ class DAFile(DAObject):
 
     def _make_pngs_for_pdf(self):
         if not hasattr(self, '_taskscreen'):
-            setattr(self, '_taskscreen', server.make_png_for_pdf(self, 'screen'))
+            setattr(self, '_taskscreen', server_make_png_for_pdf(self, 'screen'))
         if not hasattr(self, '_taskpage'):
-            setattr(self, '_taskpage', server.make_png_for_pdf(self, 'page'))
+            setattr(self, '_taskpage', server_make_png_for_pdf(self, 'page'))
 
     def num_pages(self):
         """Return the number of pages in the file.
@@ -6936,7 +7076,7 @@ class DAFile(DAObject):
             if wait:
                 tries = 4
                 while tries > 0:
-                    server.wait_for_task(getattr(self, '_task' + prefix))
+                    wait_for_task(getattr(self, '_task' + prefix))
                     self.commit()
                     self.retrieve()
                     if self._path_ready(the_path):
@@ -6950,14 +7090,14 @@ class DAFile(DAObject):
             if wait:
                 tries = 4
                 while tries > 0:
-                    server.wait_for_task(getattr(self, '_task' + prefix))
+                    wait_for_task(getattr(self, '_task' + prefix))
                     self.commit()
                     self.retrieve()
                     if self._path_ready(the_path):
                         return the_path
                     tries -= 1
         if wait:
-            server.fg_make_png_for_pdf(self, prefix, page=page)
+            fg_make_png_for_pdf(self, prefix, page=page)
         if os.path.isfile(the_path):
             return the_path
         return None
@@ -6979,7 +7119,7 @@ class DAFile(DAObject):
             self.initialized  # pylint: disable=pointless-statement
         if not hasattr(self, 'number'):
             raise DAError("Cannot get the cloud path of file without a file number.")
-        return server.SavedFile(self.number, fix=False).cloud_path(filename)
+        return get_saved_file_class()(self.number, fix=False).cloud_path(filename)
 
     def path(self):
         """Return the filesystem path at which the file can be accessed.
@@ -7005,7 +7145,7 @@ class DAFile(DAObject):
     def commit(self):
         """Persist any changes to the file so they are available in the future."""
         if hasattr(self, 'number'):
-            sf = server.SavedFile(self.number, fix=True)
+            sf = get_saved_file_class()(self.number, fix=True)
             sf.finalize()
 
     def show(self, width=None, wait=True, alt_text=None):
@@ -7034,12 +7174,12 @@ class DAFile(DAObject):
             return the_content
         if alt_text is None:
             alt_text = self.get_alt_text()
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if this_thread.evaluation_context == 'docx':
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self, _use_jinja2=False)
             if self.mimetype in ('application/pdf', 'application/rtf', 'application/vnd.oasis.opendocument.text', 'application/msword'):
                 return self._pdf_pages(width)
-            return docassemble.base.file_docx.image_for_docx(self.number, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text)
+            return docassemble.base.file_docx.image_for_docx(self.number, this_thread.current_question, this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text)
         if width is not None:
             the_width = str(width)
         else:
@@ -7051,7 +7191,7 @@ class DAFile(DAObject):
         return '[FILE ' + str(self.number) + ', ' + the_width + ', ' + the_alt_text + ']'
 
     def _pdf_pages(self, width):
-        file_info = server.file_finder(self.number, question=docassemble.base.functions.this_thread.current_question)
+        file_info = file_finder(self.number, question=this_thread.current_question)
         if 'path' not in file_info:
             return ''
         return docassemble.base.file_docx.pdf_pages(file_info, width)
@@ -7074,7 +7214,7 @@ class DAFile(DAObject):
         if kwargs.get('attachment', False):
             kwargs['_attachment'] = True
             del kwargs['attachment']
-        return server.url_finder(self, **kwargs)
+        return url_finder(self, **kwargs)
 
     def set_attributes(self, **kwargs):
         """Set server-side attributes for the file.
@@ -7088,17 +7228,17 @@ class DAFile(DAObject):
         if 'persistent' in kwargs and kwargs['persistent'] in [True, False]:
             self.persistent = kwargs['persistent']
         if 'filename' in kwargs:
-            self.filename = server.secure_filename_unicode_ok(kwargs['filename'])
+            self.filename = secure_filename_unicode_ok(kwargs['filename'])
             if kwargs['filename'] == '':
                 if hasattr(self, 'extension'):
-                    self.extension = server.secure_filename(self.extension)
+                    self.extension = secure_filename(self.extension)
                     self.filename = 'file.' + self.extension
                 else:
                     self.filename = 'file.txt'
-                kwargs['filename'] = server.secure_filename_spaces_ok(self.filename)
+                kwargs['filename'] = secure_filename_spaces_ok(self.filename)
         if 'session' in kwargs:
             del kwargs['session']
-        return server.file_set_attributes(self.number, **kwargs)
+        return file_set_attributes(self.number, **kwargs)
 
     def user_access(self, *pargs, **kwargs):
         """Grant or revoke access to the file for specific users.
@@ -7141,7 +7281,7 @@ class DAFile(DAObject):
                             disallow_user_id.append(item)
                         elif isinstance(item, str):
                             disallow_email.append(item)
-        return server.file_user_access(self.number, allow_user_id=allow_user_id, allow_email=allow_email, disallow_user_id=disallow_user_id, disallow_email=disallow_email, disallow_all=disallow_all)
+        return file_user_access(self.number, allow_user_id=allow_user_id, allow_email=allow_email, disallow_user_id=disallow_user_id, disallow_email=disallow_email, disallow_all=disallow_all)
 
     def privilege_access(self, *pargs, **kwargs):
         """Grant or revoke access to the file for users with specific privileges.
@@ -7169,7 +7309,7 @@ class DAFile(DAObject):
                     for item in disallow_arg:
                         if isinstance(item, str):
                             disallow.append(item)
-        return server.file_privilege_access(self.number, allow=allow, disallow=disallow, disallow_all=disallow_all)
+        return file_privilege_access(self.number, allow=allow, disallow=disallow, disallow_all=disallow_all)
 
 
 class DAFileCollection(DAObject):
@@ -7721,13 +7861,13 @@ class DAStaticFile(DAObject):
 
     def init(self, *pargs, **kwargs):
         if 'filename' in kwargs and 'mimetype' not in kwargs and 'extension' not in kwargs:
-            self.extension, self.mimetype = server.get_ext_and_mimetype(kwargs['filename'])  # pylint: disable=assignment-from-none,unpacking-non-sequence
-        self.package = docassemble.base.functions.this_thread.current_question.package
+            self.extension, self.mimetype = get_ext_and_mimetype(kwargs['filename'])  # pylint: disable=assignment-from-none,unpacking-non-sequence
+        self.package = this_thread.current_question.package
         super().init(*pargs, **kwargs)
 
     def _populate(self):
         if not hasattr(self, 'extension') or not hasattr(self, 'mimetype'):
-            self.extension, self.mimetype = server.get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence
+            self.extension, self.mimetype = get_ext_and_mimetype(self.filename)  # pylint: disable=assignment-from-none,unpacking-non-sequence
 
     def get_alt_text(self):
         """Return the alternative text for the file, or None if not set.
@@ -7770,12 +7910,12 @@ class DAStaticFile(DAObject):
         self._populate()
         if alt_text is None:
             alt_text = self.get_alt_text()
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if this_thread.evaluation_context == 'docx':
             if self.mimetype == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return docassemble.base.file_docx.include_docx_template(self)
             if self.mimetype in ('application/pdf', 'application/rtf', 'application/vnd.oasis.opendocument.text', 'application/msword'):
                 return self._pdf_pages(width)
-            the_text = docassemble.base.file_docx.image_for_docx(docassemble.base.functions.DALocalFile(self.path()), docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text)
+            the_text = docassemble.base.file_docx.image_for_docx(DALocalFile(self.path()), this_thread.current_question, this_thread.misc.get('docx_template', None), width=width, alt_text=alt_text)
             return the_text
         if width is not None:
             the_width = str(width)
@@ -7802,7 +7942,7 @@ class DAStaticFile(DAObject):
         Returns:
             bool: True if the file uses AcroForm; False otherwise.
         """
-        file_info = server.file_finder(self._get_unqualified_reference())
+        file_info = file_finder(self._get_unqualified_reference())
         return file_info.get('acroform', False)
 
     def is_encrypted(self):
@@ -7811,7 +7951,7 @@ class DAStaticFile(DAObject):
         Returns:
             bool: True if the file is an encrypted PDF; False otherwise.
         """
-        file_info = server.file_finder(self._get_unqualified_reference())
+        file_info = file_finder(self._get_unqualified_reference())
         return file_info.get('encrypted', False)
 
     def size_in_bytes(self):
@@ -7853,7 +7993,7 @@ class DAStaticFile(DAObject):
             str or None: Absolute filesystem path to the file, or None if not
                 found.
         """
-        file_info = server.file_finder(self._get_unqualified_reference())
+        file_info = file_finder(self._get_unqualified_reference())
         return file_info.get('fullpath', None)
 
     def get_docx_variables(self):
@@ -7862,7 +8002,7 @@ class DAStaticFile(DAObject):
         Returns:
             list[str]: Variable names referenced in the document template.
         """
-        return docassemble.base.parse.get_docx_variables(self.path())
+        return get_docx_variables(self.path())
 
     def get_pdf_fields(self):
         """Return a list of form fields found in the PDF document.
@@ -7872,7 +8012,7 @@ class DAStaticFile(DAObject):
                 position, page number, field type, and flags.
         """
         results = []
-        all_items = docassemble.base.pdftk.read_fields(self.path())
+        all_items = read_fields(self.path())
         if all_items is not None:
             for item in all_items:
                 the_type = re.sub(r'[^/A-Za-z]', '', str(item[4]))
@@ -7902,8 +8042,8 @@ class DAStaticFile(DAObject):
         if 'attachment' in kwargs:
             the_args['_attachment'] = kwargs['attachment']
             del the_args['attachment']
-        the_args['question'] = docassemble.base.functions.this_thread.current_question
-        return server.url_finder(self._get_unqualified_reference(), **the_args)
+        the_args['question'] = this_thread.current_question
+        return url_finder(self._get_unqualified_reference(), **the_args)
 
     def _is_pdf(self):
         if hasattr(self, 'extension') and self.extension.lower() == 'pdf':
@@ -7982,7 +8122,7 @@ class DAEmailRecipient(DAObject):
             return 'EMAIL NOT DEFINED'
         if self.address == '' and name != '':
             return name
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if this_thread.evaluation_context == 'docx':
             return str(self.address)
         if name == '' and self.address != '':
             return '[' + str(self.address) + '](mailto:' + str(self.address) + ')'
@@ -8049,10 +8189,10 @@ class DATemplate(DAObject):
         return str(self.content)
 
     def __str__(self):
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if this_thread.evaluation_context == 'docx':
             content = self.content
             content = re.sub(r'\\_', r'\\\\_', content)
-            return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
+            return str(markdown_to_docx(content, this_thread.current_question, this_thread.misc.get('docx_template', None)))
         return str(self.content)
 
 
@@ -8097,7 +8237,7 @@ def text_of_table(table_info, orig_user_dict, temp_vars, editable=True):
             the_iterable = the_iterable.complete_elements()
         elif table_info.show_incomplete and the_iterable.gathering_started():
             the_iterable = the_iterable.elements
-        elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+        elif get_gathering_mode(the_iterable.instanceName):
             the_iterable = the_iterable.complete_elements()
     contents = []
     if hasattr(the_iterable, 'items') and callable(the_iterable.items):
@@ -8222,17 +8362,17 @@ class DALazyTemplate(DAObject):
         the_args = {}
         for key, val in kwargs.items():
             the_args[key] = val
-        the_args['status'] = docassemble.base.functions.this_thread.interview_status
-        the_args['question'] = docassemble.base.functions.this_thread.current_question
-        return docassemble.base.filter.markdown_to_html(self.subject, **the_args)
+        the_args['status'] = this_thread.interview_status
+        the_args['question'] = this_thread.current_question
+        return markdown_to_html(self.subject, **the_args)
 
     def content_as_html(self, **kwargs):
         the_args = {}
         for key, val in kwargs.items():
             the_args[key] = val
-        the_args['status'] = docassemble.base.functions.this_thread.interview_status
-        the_args['question'] = docassemble.base.functions.this_thread.current_question
-        return docassemble.base.filter.markdown_to_html(self.content, **the_args)
+        the_args['status'] = this_thread.interview_status
+        the_args['question'] = this_thread.current_question
+        return markdown_to_html(self.content, **the_args)
 
     @property
     def subject(self):
@@ -8266,9 +8406,9 @@ class DALazyTemplate(DAObject):
         user_dict_copy.update(self.tempvars)
         user_dict_copy.update(kwargs)
         content = self.source_content.text(user_dict_copy).rstrip()
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx' and server.daconfig.get('new template markdown behavior', False):
+        if this_thread.evaluation_context == 'docx' and get_configuration().get('new template markdown behavior', False):
             content = re.sub(r'\\_', r'\\\\_', content)
-            return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
+            return str(markdown_to_docx(content, this_thread.current_question, this_thread.misc.get('docx_template', None)))
         return content
 
     def show_as_markdown(self, **kwargs):
@@ -8281,10 +8421,10 @@ class DALazyTemplate(DAObject):
         return self.source_content.text(user_dict_copy).rstrip()
 
     def __str__(self):
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx' and server.daconfig.get('new template markdown behavior', False):
+        if this_thread.evaluation_context == 'docx' and get_configuration().get('new template markdown behavior', False):
             content = self.content
             content = re.sub(r'\\_', r'\\\\_', content)
-            return str(docassemble.base.file_docx.markdown_to_docx(content, docassemble.base.functions.this_thread.current_question, docassemble.base.functions.this_thread.misc.get('docx_template', None)))
+            return str(markdown_to_docx(content, this_thread.current_question, this_thread.misc.get('docx_template', None)))
         return str(self.content)
 
 
@@ -8293,7 +8433,7 @@ class DALazyTableTemplate(DALazyTemplate):
 
     def show(self, **kwargs):
         """Displays the contents of the table."""
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if this_thread.evaluation_context == 'docx':
             return word("ERROR: you cannot insert a table into a .docx document")
         if kwargs.get('editable', True):
             return str(self.content)
@@ -8376,7 +8516,7 @@ class DALazyTableTemplate(DALazyTemplate):
                 the_iterable = the_iterable.complete_elements()
             elif self.table_info.show_incomplete and the_iterable.gathering_started():
                 the_iterable = the_iterable.elements
-            elif docassemble.base.functions.get_gathering_mode(the_iterable.instanceName):
+            elif get_gathering_mode(the_iterable.instanceName):
                 the_iterable = the_iterable.complete_elements()
         contents = []
         if hasattr(the_iterable, 'items') and callable(the_iterable.items):
@@ -8551,8 +8691,8 @@ def objects_from_data(data, recursive=True, gathered=True, name=None, package=No
         del frame
     else:
         thename = name
-    if package is None and docassemble.base.functions.this_thread.current_question is not None:
-        package = docassemble.base.functions.this_thread.current_question.package
+    if package is None and this_thread.current_question is not None:
+        package = this_thread.current_question.package
     if thename is None:
         objects = DAList('objects')
         objects.set_random_instance_name()
@@ -8622,9 +8762,9 @@ def objects_from_file(file_ref, recursive=True, gathered=True, name=None, use_ob
     else:
         thename = name
     # logmessage("objects_from_file: thename is " + str(thename))
-    if package is None and docassemble.base.functions.this_thread.current_question is not None:
-        package = docassemble.base.functions.this_thread.current_question.package
-    file_info = server.file_finder(file_ref, folder='sources', package=package)
+    if package is None and this_thread.current_question is not None:
+        package = this_thread.current_question.package
+    file_info = file_finder(file_ref, folder='sources', package=package)
     if file_info is None or 'path' not in file_info:
         raise SystemError('objects_from_file: file reference ' + str(file_ref) + ' not found')
     if thename is None:
@@ -8701,7 +8841,7 @@ def recurse_obj(the_object, recursive=True, use_objects=False):
             if not constructor:
                 if 'module' in the_object:
                     if the_object['module'].startswith('.'):
-                        module_name = docassemble.base.functions.this_thread.current_package + the_object['module']
+                        module_name = this_thread.current_package + the_object['module']
                     else:
                         module_name = the_object['module']
                     new_module = __import__(module_name, globals(), locals(), [the_object['object']], 0)
@@ -8772,8 +8912,8 @@ class DALink(DAObject):
             str or docx Run: A DOCX hyperlink object when evaluated inside a
                 DOCX template; a Markdown hyperlink string otherwise.
         """
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
-            return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, docassemble.base.functions.this_thread.misc.get('docx_template', None))
+        if this_thread.evaluation_context == 'docx':
+            return docassemble.base.file_docx.create_hyperlink(self.url, self.anchor_text, this_thread.misc.get('docx_template', None))
         return '[%s](%s)' % (self.anchor_text, self.url)
 
 
@@ -8808,10 +8948,10 @@ class DAContext(DADict):
             self[key] = val
 
     def __str__(self):
-        if isinstance(docassemble.base.functions.this_thread.evaluation_context, str) and docassemble.base.functions.this_thread.evaluation_context.startswith('pandoc'):
+        if isinstance(this_thread.evaluation_context, str) and this_thread.evaluation_context.startswith('pandoc'):
             context = 'pandoc'
         else:
-            context = docassemble.base.functions.this_thread.evaluation_context
+            context = this_thread.evaluation_context
         if context in ('docx', 'pdf', 'pandoc'):
             if context in self.elements:
                 return str(self.elements[context])
@@ -8899,12 +9039,12 @@ class DAGlobal(DAObject):
     @classmethod
     def keys(cls, base):
         if base == 'interview':
-            globalbase = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', ''))
+            globalbase = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', ''))
         elif base == 'global':
             globalbase = 'da:daglobal:global'
         else:
-            globalbase = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
-        return server.server_sql_keys(globalbase + ':')
+            globalbase = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id'])
+        return server_sql_keys(globalbase + ':')
 
     @classmethod
     def defined(cls, base, key):
@@ -8919,12 +9059,12 @@ class DAGlobal(DAObject):
             bool: True if the key exists; False otherwise.
         """
         if base == 'interview':
-            globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
+            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
         elif base == 'global':
             globalkey = 'da:daglobal:global:' + str(key)
         else:
-            globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(key)
-        return server.server_sql_defined(globalkey)
+            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(key)
+        return server_sql_defined(globalkey)
 
     @classmethod
     def remove(cls, base, key):
@@ -8936,12 +9076,12 @@ class DAGlobal(DAObject):
             key (str): The key to delete.
         """
         if base == 'interview':
-            globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
+            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(key)
         elif base == 'global':
             globalkey = 'da:daglobal:global:' + str(key)
         else:
-            globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(key)
-        server.server_sql_delete(globalkey)
+            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(key)
+        server_sql_delete(globalkey)
 
     def init(self, *pargs, **kwargs):
         super().init(*pargs, **kwargs)
@@ -8950,12 +9090,12 @@ class DAGlobal(DAObject):
         if 'key' not in kwargs:
             self.key = random_alphanumeric(32)
         if self.base == 'interview':
-            globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
+            globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
         elif self.base == 'global':
             globalkey = 'da:daglobal:global:' + str(self.key)
         else:
-            globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
-        saved_dict = server.server_sql_get(globalkey)  # pylint: disable=assignment-from-none
+            globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
+        saved_dict = server_sql_get(globalkey)  # pylint: disable=assignment-from-none
         if isinstance(saved_dict, dict):
             for key, val in saved_dict.items():
                 setattr(self, key, val)
@@ -8963,11 +9103,11 @@ class DAGlobal(DAObject):
     def __getstate__(self):
         if hasattr(self, 'base') and hasattr(self, 'key'):
             if self.base == 'interview':
-                globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
+                globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(self.key)
             elif self.base == 'global':
                 globalkey = 'da:daglobal:global:' + str(self.key)
             else:
-                globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
+                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(self.key)
             dict_to_save = copy.copy(self.__dict__)
             dict_to_return = {'attrList': []}
             if 'instanceName' in dict_to_save:
@@ -8982,7 +9122,7 @@ class DAGlobal(DAObject):
             if 'key' in dict_to_save:
                 dict_to_return['key'] = dict_to_save['key']
                 del dict_to_save['key']
-            server.server_sql_set(globalkey, dict_to_save, encrypted=False)
+            server_sql_set(globalkey, dict_to_save, encrypted=False)
             return dict_to_return
         dict_to_return = copy.copy(self.__dict__)
         return dict_to_return
@@ -8991,13 +9131,13 @@ class DAGlobal(DAObject):
         self.__dict__ = pickle_dict
         if 'base' in pickle_dict and 'key' in pickle_dict:
             if pickle_dict['base'] == 'interview':
-                globalkey = 'da:daglobal:i:' + str(docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')) + ':' + str(pickle_dict['key'])
+                globalkey = 'da:daglobal:i:' + str(this_thread.current_info.get('yaml_filename', '')) + ':' + str(pickle_dict['key'])
             elif pickle_dict['base'] == 'global':
                 globalkey = 'da:daglobal:global:' + str(pickle_dict['key'])
             else:
-                globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + str(pickle_dict['key'])
+                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + str(pickle_dict['key'])
 
-            saved_dict = server.server_sql_get(globalkey)  # pylint: disable=assignment-from-none
+            saved_dict = server_sql_get(globalkey)  # pylint: disable=assignment-from-none
             if isinstance(saved_dict, dict):
                 for key, val in saved_dict.items():
                     setattr(self, key, val)
@@ -9006,12 +9146,12 @@ class DAGlobal(DAObject):
         """Delete all data from global storage and undefine all object attributes."""
         if hasattr(self, 'base') and hasattr(self, 'key'):
             if self.base == 'interview':
-                globalkey = 'da:daglobal:i:' + docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') + ':' + self.key
+                globalkey = 'da:daglobal:i:' + this_thread.current_info.get('yaml_filename', '') + ':' + self.key
             elif self.base == 'global':
                 globalkey = 'da:daglobal:global:' + self.key
             else:
-                globalkey = 'da:daglobal:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id']) + ':' + self.key
-            server.server_sql_delete(globalkey)
+                globalkey = 'da:daglobal:userid:' + str(this_thread.current_info['user']['the_user_id']) + ':' + self.key
+            server_sql_delete(globalkey)
             self.__dict__ = {'instanceName': self.instanceName, 'attrList': [], 'has_nonrandom_instance_name': self.has_nonrandom_instance_name}
 
 
@@ -9050,15 +9190,15 @@ class DAStore(DAObject):
     def _get_base_key(self):
         if hasattr(self, 'base'):
             if self.base == 'interview':
-                return 'da:i:' + docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')
+                return 'da:i:' + this_thread.current_info.get('yaml_filename', '')
             if self.base == 'user':
-                return 'da:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
+                return 'da:userid:' + str(this_thread.current_info['user']['the_user_id'])
             if self.base == 'session':
-                return 'da:uid:' + get_uid() + ':i:' + docassemble.base.functions.this_thread.current_info.get('yaml_filename', '')
+                return 'da:uid:' + get_uid() + ':i:' + this_thread.current_info.get('yaml_filename', '')
             if self.base == 'global':
                 return 'da:global'
             return str(self.base)
-        return 'da:userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
+        return 'da:userid:' + str(this_thread.current_info['user']['the_user_id'])
 
     def defined(self, key):
         """Return True if the given key exists in the store.
@@ -9070,7 +9210,7 @@ class DAStore(DAObject):
             bool: True if the key exists; False otherwise.
         """
         the_key = self._get_base_key() + ':' + key
-        return server.server_sql_defined(the_key)
+        return server_sql_defined(the_key)
 
     def get(self, key):
         """Retrieve the value stored under the given key.
@@ -9082,7 +9222,7 @@ class DAStore(DAObject):
             object: The stored value, or None if not found.
         """
         the_key = self._get_base_key() + ':' + key
-        return server.server_sql_get(the_key, secret=docassemble.base.functions.this_thread.current_info.get('secret', None))
+        return server_sql_get(the_key, secret=this_thread.current_info.get('secret', None))
 
     def set(self, key, the_value):
         """Store a value under the given key.
@@ -9092,7 +9232,7 @@ class DAStore(DAObject):
             the_value (object): Value to store.
         """
         the_key = self._get_base_key() + ':' + key
-        server.server_sql_set(the_key, the_value, encrypted=self.is_encrypted(), secret=docassemble.base.functions.this_thread.current_info.get('secret', None), the_user_id=docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
+        server_sql_set(the_key, the_value, encrypted=self.is_encrypted(), secret=this_thread.current_info.get('secret', None), the_user_id=this_thread.current_info['user']['the_user_id'])
 
     def delete(self, key):
         """Delete the value stored under the given key.
@@ -9101,7 +9241,7 @@ class DAStore(DAObject):
             key (str): Key to delete.
         """
         the_key = self._get_base_key() + ':' + key
-        server.server_sql_delete(the_key)
+        server_sql_delete(the_key)
 
     def keys(self):
         """Return a list of all keys currently stored.
@@ -9109,7 +9249,7 @@ class DAStore(DAObject):
         Returns:
             list[str]: Keys present in this store.
         """
-        return server.server_sql_keys(self._get_base_key() + ':')
+        return server_sql_keys(self._get_base_key() + ':')
 
 
 class BearerAuth(AuthBase):
@@ -9300,7 +9440,7 @@ class DAWeb(DAObject):
                 if not isinstance(key, str):
                     raise DAError("DAWeb.call: files must be a dictionary of string keys")
                 try:
-                    path = server.path_from_reference(val)
+                    path = path_from_reference(val)
                     logmessage("path is " + str(path))
                     assert path is not None
                 except:
@@ -9557,7 +9697,7 @@ class DARedis(DAObject):
         Returns:
             str: Fully qualified Redis key.
         """
-        return docassemble.base.functions.this_thread.current_info.get('yaml_filename', '') + ':' + str(keyname)
+        return this_thread.current_info.get('yaml_filename', '') + ':' + str(keyname)
 
     def get_data(self, key):
         """Retrieve and unpickle a Python object stored in Redis.
@@ -9569,11 +9709,11 @@ class DARedis(DAObject):
             object: Unpickled value, or None if the key does not exist or
                 unpickling fails.
         """
-        result = server.server_redis_user.get(key)
+        result = get_server_redis_user().get(key)
         if result is None:
             return None
         try:
-            result = server.fix_pickle_obj(result)
+            result = fix_pickle_obj(result)
         except:
             logmessage("get_data: could not unpickle contents of " + str(key))
             result = None
@@ -9595,15 +9735,15 @@ class DARedis(DAObject):
         if expire is not None:
             if not isinstance(expire, int):
                 raise DAError("set_data: expire time must be an integer")
-            pipe = server.server_redis_user.pipeline()
+            pipe = get_server_redis_user().pipeline()
             pipe.set(key, pickled_data)
             pipe.expire(key, expire)
             pipe.execute()
         else:
-            server.server_redis_user.set(key, pickled_data)
+            get_server_redis_user().set(key, pickled_data)
 
     def __getattr__(self, funcname):
-        return getattr(server.server_redis_user, funcname)
+        return getattr(get_server_redis_user(), funcname)
 
 
 class DACloudStorage(DAObject):
@@ -9623,7 +9763,7 @@ class DACloudStorage(DAObject):
             self.config = kwargs['config']
             del kwargs['provider']
             del kwargs['config']
-            server.cloud_custom(self.provider, self.config)
+            cloud_custom(self.provider, self.config)
         else:
             self.custom = False
         super().init(*pargs, **kwargs)
@@ -9632,36 +9772,36 @@ class DACloudStorage(DAObject):
     def conn(self):
         """The underlying cloud connection object (``boto3.resource('s3')`` or ``BlockBlobService``)."""
         if self.custom:
-            return server.cloud_custom(self.provider, self.config).conn
-        return server.cloud.conn
+            return cloud_custom(self.provider, self.config).conn
+        return get_cloud().conn
 
     @property
     def client(self):
         """The ``boto3.client('s3')`` object for low-level S3 operations."""
         if self.custom:
-            return server.cloud_custom(self.provider, self.config).client
-        return server.cloud.client
+            return cloud_custom(self.provider, self.config).client
+        return get_cloud().client
 
     @property
     def bucket(self):
         """The ``boto3 Bucket`` object for the configured S3 bucket."""
         if self.custom:
-            return server.cloud_custom(self.provider, self.config).bucket
-        return server.cloud.bucket
+            return cloud_custom(self.provider, self.config).bucket
+        return get_cloud().bucket
 
     @property
     def bucket_name(self):
         """The name of the Amazon S3 bucket."""
         if self.custom:
-            return server.cloud_custom(self.provider, self.config).bucket_name
-        return server.cloud.bucket_name
+            return cloud_custom(self.provider, self.config).bucket_name
+        return get_cloud().bucket_name
 
     @property
     def container_name(self):
         """The name of the Azure Blob Storage container."""
         if self.custom:
-            return server.cloud_custom(self.provider, self.config).container
-        return server.cloud.container
+            return cloud_custom(self.provider, self.config).container
+        return get_cloud().container
 
 
 class BackgroundAction(DAObject):
@@ -9738,7 +9878,7 @@ class DAGoogleAPI(DAObject):
         Returns:
             google.oauth2.credentials.Credentials: Authenticated credentials.
         """
-        return server.google_api().google_api_credentials(scope)
+        return google_api().google_api_credentials(scope)
 
     def http(self, scope):
         """Return an authorized ``httplib2.Http`` object for the given API scope.
@@ -9780,7 +9920,7 @@ class DAGoogleAPI(DAObject):
             google.oauth2.service_account.Credentials: Service account
                 credentials.
         """
-        return server.google_api().google_cloud_credentials(scopes=scopes)
+        return google_api().google_cloud_credentials(scopes=scopes)
 
     def project_id(self):
         """Return the Google Cloud project ID from the service-account credentials.
@@ -9788,7 +9928,7 @@ class DAGoogleAPI(DAObject):
         Returns:
             str: Google Cloud project ID.
         """
-        return server.google_api().project_id()
+        return google_api().project_id()
 
     def google_cloud_storage_client(self):
         """Return an authenticated Google Cloud Storage client.
@@ -9796,7 +9936,7 @@ class DAGoogleAPI(DAObject):
         Returns:
             google.cloud.storage.Client: Authorized Cloud Storage client.
         """
-        return server.google_api().google_cloud_storage_client()
+        return google_api().google_cloud_storage_client()
 
     def google_cloud_vision_client(self):
         """Return an authenticated Google Cloud Vision client.
@@ -9804,7 +9944,7 @@ class DAGoogleAPI(DAObject):
         Returns:
             google.cloud.vision.ImageAnnotatorClient: Authorized Vision client.
         """
-        return server.google_api().google_cloud_vision_client()
+        return google_api().google_cloud_vision_client()
 
 
 def run_python_module(module, arguments=None):
@@ -9826,9 +9966,9 @@ def run_python_module(module, arguments=None):
         DAError: If ``arguments`` is not a list.
     """
     if re.search(r'\.py$', module):
-        module = docassemble.base.functions.this_thread.current_package + '.' + re.sub(r'\.py$', '', module)
+        module = this_thread.current_package + '.' + re.sub(r'\.py$', '', module)
     elif re.search(r'^\.', module):
-        module = docassemble.base.functions.this_thread.current_package + module
+        module = this_thread.current_package + module
     commands = [re.sub(r'/lib/python.*', '/bin/python3', docassemble.base.pandoc.__file__), '-m', module]
     if arguments:
         if not isinstance(arguments, list):
@@ -9842,475 +9982,6 @@ def run_python_module(module, arguments=None):
         output = err.output.decode()
         return_code = err.returncode
     return output, return_code
-
-
-def today(timezone=None, format=None):  # pylint: disable=redefined-builtin
-    """Return today's date at midnight as a DADateTime object.
-
-    Args:
-        timezone (str or None): IANA timezone name. If None, the interview's
-            default timezone is used.
-        format (str or None): If provided, return the date formatted as a
-            string using this Babel date-format pattern instead of a
-            DADateTime.
-
-    Returns:
-        DADateTime or str: Midnight today in the given timezone, or a
-            formatted date string if ``format`` is specified.
-    """
-    ensure_definition(timezone, format)
-    if timezone is None:
-        timezone = get_default_timezone()
-    val = datetime.datetime.now(datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone))
-    if format is not None:
-        return dd(val.replace(hour=0, minute=0, second=0, microsecond=0)).format_date(format)
-    return dd(val.replace(hour=0, minute=0, second=0, microsecond=0))
-
-
-def babel_language(language):
-    if 'babel dates map' not in server.daconfig:
-        return language
-    return server.daconfig['babel dates map'].get(language, language)
-
-
-def month_of(the_date, as_word=False, language=None):
-    """Return the month component of a date.
-
-    Args:
-        the_date (datetime.date, datetime.datetime, or str): The date to
-            extract the month from.
-        as_word (bool): If True, return the full month name (e.g.
-            ``'January'``); otherwise return the month as an integer.
-        language (str or None): Language code for localizing the month name.
-            Defaults to the current interview language.
-
-    Returns:
-        int or str: Month number (1–12) or localized month name.
-    """
-    ensure_definition(the_date, as_word, language)
-    if language is None:
-        language = get_language()
-    try:
-        if isinstance(the_date, (datetime.datetime, datetime.date)):
-            date = the_date
-        else:
-            date = dateutil.parser.parse(the_date)
-        if as_word:
-            return babel.dates.format_date(date, format='MMMM', locale=babel_language(language))
-        return int(date.strftime('%m'))
-    except:
-        return word("Bad date")
-
-
-def day_of(the_date, language=None):
-    """Return the day-of-month component of a date.
-
-    Args:
-        the_date (datetime.date, datetime.datetime, or str): The date to
-            extract the day from.
-        language (str or None): Unused; retained for API consistency.
-
-    Returns:
-        int: Day of the month (1–31).
-    """
-    ensure_definition(the_date, language)
-    try:
-        if isinstance(the_date, (datetime.datetime, datetime.date)):
-            date = the_date
-        else:
-            date = dateutil.parser.parse(the_date)
-        return int(date.strftime('%d'))
-    except:
-        return word("Bad date")
-
-
-def dow_of(the_date, as_word=False, language=None):
-    """Return the day of the week for a date.
-
-    Args:
-        the_date (datetime.date, datetime.datetime, or str): The date to
-            inspect.
-        as_word (bool): If True, return the full weekday name (e.g.
-            ``'Monday'``); otherwise return an integer from 1 (Monday) to
-            7 (Sunday) per ISO 8601.
-        language (str or None): Language code for localizing the weekday
-            name. Defaults to the current interview language.
-
-    Returns:
-        int or str: Day-of-week number or localized weekday name.
-    """
-    ensure_definition(the_date, as_word, language)
-    if language is None:
-        language = get_language()
-    try:
-        if isinstance(the_date, (datetime.datetime, datetime.date)):
-            date = the_date
-        else:
-            date = dateutil.parser.parse(the_date)
-        if as_word:
-            return babel.dates.format_date(date, format='EEEE', locale=babel_language(language))
-        return int(date.strftime('%u'))
-    except:
-        return word("Bad date")
-
-
-def year_of(the_date, language=None):
-    """Return the year component of a date.
-
-    Args:
-        the_date (datetime.date, datetime.datetime, or str): The date to
-            extract the year from.
-        language (str or None): Unused; retained for API consistency.
-
-    Returns:
-        int: Four-digit year.
-    """
-    ensure_definition(the_date, language)
-    try:
-        if isinstance(the_date, (datetime.datetime, datetime.date)):
-            date = the_date
-        else:
-            date = dateutil.parser.parse(the_date)
-        return int(date.strftime('%Y'))
-    except:
-        return word("Bad date")
-
-
-def interview_default(the_part, default_value, language):
-    if the_part in docassemble.base.functions.this_thread.internal and docassemble.base.functions.this_thread.internal[the_part] is not None:
-        return docassemble.base.functions.this_thread.internal[the_part]
-    for lang in (language, get_language(), '*'):
-        if lang is not None and docassemble.base.functions.this_thread.interview is not None and lang in docassemble.base.functions.this_thread.interview.default_title and the_part in docassemble.base.functions.this_thread.interview.default_title[lang]:
-            return docassemble.base.functions.this_thread.interview.default_title[lang][the_part]
-    return default_value
-
-
-def format_date(the_date, format=None, language=None):  # pylint: disable=redefined-builtin
-    """Return a date formatted as a localized string.
-
-    Args:
-        the_date (datetime.date, datetime.datetime, or str): Date to format.
-        format (str or None): Babel date-format pattern (e.g. ``'long'``,
-            ``'short'``, ``'MM/dd/yyyy'``). Defaults to the interview's
-            configured date format or ``'long'``.
-        language (str or None): Language/locale code. Defaults to the current
-            interview language.
-
-    Returns:
-        str: Formatted date string, or ``''`` for an empty date.
-    """
-    ensure_definition(the_date, format, language)
-    if isinstance(the_date, DAEmpty):
-        return ""
-    if language is None:
-        language = get_language()
-    if format is None:
-        format = interview_default('date format', 'long', language)
-    try:
-        if isinstance(the_date, (datetime.datetime, datetime.date)):
-            date = the_date
-        else:
-            date = dateutil.parser.parse(the_date)
-        return babel.dates.format_date(date, format=format, locale=babel_language(language))
-    except:
-        return word("Bad date")
-
-
-def format_datetime(the_date, format=None, language=None):  # pylint: disable=redefined-builtin
-    """Return a date and time formatted as a localized string.
-
-    Args:
-        the_date (datetime.datetime or str): Date/time to format.
-        format (str or None): Babel datetime-format pattern. Defaults to the
-            interview's configured datetime format or ``'long'``.
-        language (str or None): Language/locale code. Defaults to the current
-            interview language.
-
-    Returns:
-        str: Formatted datetime string, or ``''`` for an empty date.
-    """
-    ensure_definition(the_date, format, language)
-    if isinstance(the_date, DAEmpty):
-        return ""
-    if language is None:
-        language = get_language()
-    if format is None:
-        format = interview_default('datetime format', 'long', language)
-    try:
-        if isinstance(the_date, (datetime.datetime, datetime.date)):
-            date = the_date
-        else:
-            date = dateutil.parser.parse(the_date)
-        return babel.dates.format_datetime(date, format=format, locale=babel_language(language))
-    except:
-        return word("Bad date")
-
-
-def format_time(the_time, format=None, language=None):  # pylint: disable=redefined-builtin
-    """Return a time formatted as a localized string.
-
-    Args:
-        the_time (datetime.time, datetime.datetime, or str): Time to format.
-        format (str or None): Babel time-format pattern. Defaults to the
-            interview's configured time format or ``'short'``.
-        language (str or None): Language/locale code. Defaults to the current
-            interview language.
-
-    Returns:
-        str: Formatted time string, or ``''`` for an empty time.
-    """
-    ensure_definition(the_time, format, language)
-    if isinstance(the_time, DAEmpty):
-        return ""
-    if language is None:
-        language = get_language()
-    if format is None:
-        format = interview_default('time format', 'short', language)
-    try:
-        if isinstance(the_time, (datetime.datetime, datetime.date, datetime.time)):
-            this_time = the_time
-        else:
-            this_time = dateutil.parser.parse(the_time)
-        return babel.dates.format_time(this_time, format=format, locale=babel_language(language))
-    except BaseException as errmess:
-        return word("Bad date: " + str(errmess))
-
-
-class DateTimeDelta:
-
-    def __str__(self):
-        return str(self.describe())
-
-    def describe(self, **kwargs):
-        specificity = kwargs.get('specificity', None)
-        output = []
-        diff = dateutil.relativedelta.relativedelta(self.end, self.start)
-        if diff.years != 0:
-            output.append((abs(diff.years), noun_plural(word('year'), abs(diff.years), noun_is_singular=True)))
-        if diff.months != 0 and specificity != 'year':
-            output.append((abs(diff.months), noun_plural(word('month'), abs(diff.months), noun_is_singular=True)))
-        if diff.days != 0 and specificity not in ('year', 'month'):
-            output.append((abs(diff.days), noun_plural(word('day'), abs(diff.days), noun_is_singular=True)))
-        if len(output) == 0 or specificity in ('hour', 'minute', 'second'):
-            if diff.hours != 0 and specificity not in ('year', 'month', 'day'):
-                output.append((abs(diff.hours), noun_plural(word('hour'), abs(diff.hours), noun_is_singular=True)))
-            if (abs(diff.hours) < 2 or specificity in ('minute', 'second')) and diff.minutes != 0 and specificity not in ('year', 'month', 'day', 'hour'):
-                output.append((abs(diff.minutes), noun_plural(word('minute'), abs(diff.minutes), noun_is_singular=True)))
-        if len(output) == 0 or specificity == 'second':
-            if diff.seconds != 0 and specificity not in ('year', 'month', 'day', 'hour', 'minute'):
-                output.append((abs(diff.seconds), noun_plural(word('second'), abs(diff.seconds), noun_is_singular=True)))
-        if len(output) == 0:
-            if specificity is None:
-                output.append((0, noun_plural(word('second'), 0, noun_is_singular=True)))
-            else:
-                output.append((0, noun_plural(word(specificity), 0, noun_is_singular=True)))
-        if kwargs.get('nice', True):
-            return_value = comma_and_list(["%s %s" % (nice_number(y[0]), y[1]) for y in output])
-            if kwargs.get('capitalize', False):
-                return capitalize(return_value)
-            return return_value
-        return comma_and_list(["%d %s" % y for y in output])
-
-
-class DADateTime(datetime.datetime):
-    """A timezone-aware datetime subclass with docassemble-specific formatting and arithmetic.
-
-    Inherits all ``datetime.datetime`` behavior and adds convenience methods
-    for formatting, date arithmetic, and accessing ISO calendar properties.
-
-    Attributes:
-        dow (int): Day of the week (1 = Monday … 7 = Sunday, ISO 8601).
-        week (int): ISO week number of the year.
-        nanosecond (int): Always 0; provided for compatibility.
-    """
-
-    def format(self, format=None, language=None):  # pylint: disable=redefined-builtin
-        return format_date(self, format=format, language=language)
-
-    def format_date(self, format=None, language=None):  # pylint: disable=redefined-builtin
-        return format_date(self, format=format, language=language)
-
-    def format_datetime(self, format=None, language=None):  # pylint: disable=redefined-builtin
-        return format_datetime(self, format=format, language=language)
-
-    def format_time(self, format=None, language=None):  # pylint: disable=redefined-builtin
-        return format_time(self, format=format, language=language)
-
-    def replace_time(self, the_time):
-        return self.replace(hour=the_time.hour, minute=the_time.minute, second=the_time.second, microsecond=the_time.microsecond)
-
-    @property
-    def nanosecond(self):
-        return 0
-
-    @property
-    def dow(self):
-        return self.isocalendar()[2]
-
-    @property
-    def week(self):
-        return self.isocalendar()[1]
-
-    def plus(self, **kwargs):
-        return dd(dt(self) + date_interval(**kwargs))
-
-    def minus(self, **kwargs):
-        return dd(dt(self) - date_interval(**kwargs))
-
-    def __str__(self):
-        return str(format_date(self))
-
-    def __add__(self, other):
-        if isinstance(other, str):
-            return str(self) + other
-        val = dt(self) + other
-        if isinstance(val, datetime.date):
-            return dd(val)
-        return val
-
-    def __radd__(self, other):
-        if isinstance(other, str):
-            return other + str(self)
-        return dd(dt(self) + other)
-
-    def __sub__(self, other):
-        val = dt(self) - other
-        if isinstance(val, datetime.date):
-            return dd(val)
-        return val
-
-    def __rsub__(self, other):
-        val = other - dt(self)
-        if isinstance(val, datetime.date):
-            return dd(val)
-        return val
-
-
-def current_datetime(timezone=None):
-    """Return the current date and time as a DADateTime object.
-
-    Args:
-        timezone (str or None): IANA timezone name. If None, the interview's
-            default timezone is used.
-
-    Returns:
-        DADateTime: Current date and time in the specified timezone.
-    """
-    ensure_definition(timezone)
-    if timezone is None:
-        timezone = get_default_timezone()
-    return dd(datetime.datetime.now(datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
-
-
-def as_datetime(the_date, timezone=None):
-    """Convert a date or date string to a timezone-aware DADateTime object.
-
-    Args:
-        the_date (datetime.date, datetime.datetime, or str): Date or
-            date/time value to convert. String values are parsed with
-            ``dateutil``.
-        timezone (str or None): IANA timezone name to attach. If the value
-            already carries timezone information it is converted to this
-            zone; otherwise the timezone is applied as-is. Defaults to
-            the interview's default timezone.
-
-    Returns:
-        DADateTime: Timezone-aware datetime.
-    """
-    ensure_definition(the_date, timezone)
-    if timezone is None:
-        timezone = get_default_timezone()
-    if isinstance(the_date, datetime.date) and not isinstance(the_date, datetime.datetime):
-        the_date = datetime.datetime.combine(the_date, datetime.datetime.min.time())
-    if isinstance(the_date, datetime.datetime):
-        new_datetime = the_date
-    else:
-        new_datetime = dateutil.parser.parse(the_date)
-    if new_datetime.tzinfo:
-        new_datetime = new_datetime.astimezone(zoneinfo.ZoneInfo(timezone))
-    else:
-        new_datetime = new_datetime.replace(tzinfo=zoneinfo.ZoneInfo(timezone))
-    return dd(new_datetime)
-
-
-def dd(obj):
-    if isinstance(obj, DADateTime):
-        return obj
-    return DADateTime(obj.year, month=obj.month, day=obj.day, hour=obj.hour, minute=obj.minute, second=obj.second, microsecond=obj.microsecond, tzinfo=obj.tzinfo)
-
-
-def dt(obj):
-    return datetime.datetime(obj.year, obj.month, obj.day, obj.hour, obj.minute, obj.second, obj.microsecond, obj.tzinfo)
-
-
-def date_interval(**kwargs):
-    """Return a relative date/time interval.
-
-    All keyword arguments are forwarded to
-    ``dateutil.relativedelta.relativedelta``. Common arguments include
-    ``years``, ``months``, ``weeks``, ``days``, ``hours``, ``minutes``,
-    and ``seconds``.
-
-    Returns:
-        dateutil.relativedelta.relativedelta: Interval that can be added to
-            or subtracted from a ``DADateTime`` or ``datetime`` object.
-    """
-    ensure_definition(**kwargs)
-    return dateutil.relativedelta.relativedelta(**kwargs)
-
-
-def date_difference(starting=None, ending=None, timezone=None):
-    """Return the difference between two dates.
-
-    Args:
-        starting (datetime.date, datetime.datetime, str, or None): Start of
-            the interval. Defaults to the current datetime.
-        ending (datetime.date, datetime.datetime, str, or None): End of the
-            interval. Defaults to the current datetime.
-        timezone (str or None): IANA timezone name used when localizing
-            naive datetimes. Defaults to the interview's default timezone.
-
-    Returns:
-        DateTimeDelta: Object with ``weeks``, ``days``, ``hours``,
-            ``minutes``, ``seconds``, ``years``, and ``delta`` attributes
-            expressing the difference, and ``start``/``end`` attributes
-            holding the resolved datetime objects.
-    """
-    ensure_definition(starting, ending, timezone)
-    if starting is None:
-        starting = current_datetime()
-    if ending is None:
-        ending = current_datetime()
-    if timezone is None:
-        timezone = get_default_timezone()
-    if isinstance(starting, datetime.date) and not isinstance(starting, datetime.datetime):
-        starting = datetime.datetime.combine(starting, datetime.datetime.min.time())
-    if isinstance(ending, datetime.date) and not isinstance(ending, datetime.datetime):
-        ending = datetime.datetime.combine(ending, datetime.datetime.min.time())
-    if not isinstance(starting, datetime.datetime):
-        starting = dateutil.parser.parse(starting)
-    if not isinstance(ending, datetime.datetime):
-        ending = dateutil.parser.parse(ending)
-    if starting.tzinfo:
-        starting = starting.astimezone(zoneinfo.ZoneInfo(timezone))
-    else:
-        starting = starting.replace(tzinfo=zoneinfo.ZoneInfo(timezone))
-    if ending.tzinfo:
-        ending = ending.astimezone(zoneinfo.ZoneInfo(timezone))
-    else:
-        ending = ending.replace(tzinfo=zoneinfo.ZoneInfo(timezone))
-    delta = ending - starting
-    output = DateTimeDelta()
-    output.start = starting
-    output.end = ending
-    output.weeks = (delta.days / 7.0) + (delta.seconds / 604800.0)
-    output.days = delta.days + (delta.seconds / 86400.0)
-    output.hours = (delta.days * 24.0) + (delta.seconds / 3600.0)
-    output.minutes = (delta.days * 1440.0) + (delta.seconds / 60.0)
-    output.seconds = (delta.days * 86400) + delta.seconds
-    output.years = (delta.days + delta.seconds / 86400.0) / 365.2425
-    output.delta = delta
-    return output
 
 
 def fax_string(person, country=None):
@@ -10398,7 +10069,7 @@ def returning_user(minutes=None, hours=None, days=None):
         bool: True if the user is returning after the specified period (or
             after 6 hours by default); False otherwise or on POST requests.
     """
-    if docassemble.base.functions.this_thread.current_info['method'] != 'GET':
+    if this_thread.current_info['method'] != 'GET':
         return False
     if minutes is not None and last_access_minutes() > minutes:
         return True
@@ -10496,7 +10167,7 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
                 exclude_privileges = [exclude_privileges]
     else:
         exclude_privileges = []
-    for user_id, access_time in docassemble.base.functions.this_thread.internal['accesstime'].items():
+    for user_id, access_time in this_thread.internal['accesstime'].items():
         if user_id == -1:
             if 'anonymous' in exclude_privileges:
                 continue
@@ -10505,7 +10176,7 @@ def last_access_time(include_privileges=None, exclude_privileges=None, include_c
                     max_time = access_time
                     break
         else:
-            user_object = server.get_user_object(user_id)
+            user_object = get_user_object(user_id)
             if user_object is not None and hasattr(user_object, 'roles'):
                 if len(user_object.roles) == 0:
                     if 'user' in exclude_privileges:
@@ -10540,8 +10211,8 @@ def start_time(timezone=None):
         DADateTime: Session start time.
     """
     if timezone is not None:
-        return dd(docassemble.base.functions.this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
-    return dd(docassemble.base.functions.this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc))
+        return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc).astimezone(zoneinfo.ZoneInfo(timezone)))
+    return dd(this_thread.internal['starttime'].replace(tzinfo=datetime.timezone.utc))
 
 
 class LatitudeLongitude(DAObject):
@@ -10583,14 +10254,14 @@ class LatitudeLongitude(DAObject):
 
     def _set_to_current(self):
         # logmessage("set to current")
-        if 'user' in docassemble.base.functions.this_thread.current_info and 'location' in docassemble.base.functions.this_thread.current_info['user'] and isinstance(docassemble.base.functions.this_thread.current_info['user']['location'], dict):
-            if 'latitude' in docassemble.base.functions.this_thread.current_info['user']['location'] and 'longitude' in docassemble.base.functions.this_thread.current_info['user']['location']:
-                self.latitude = docassemble.base.functions.this_thread.current_info['user']['location']['latitude']
-                self.longitude = docassemble.base.functions.this_thread.current_info['user']['location']['longitude']
+        if 'user' in this_thread.current_info and 'location' in this_thread.current_info['user'] and isinstance(this_thread.current_info['user']['location'], dict):
+            if 'latitude' in this_thread.current_info['user']['location'] and 'longitude' in this_thread.current_info['user']['location']:
+                self.latitude = this_thread.current_info['user']['location']['latitude']
+                self.longitude = this_thread.current_info['user']['location']['longitude']
                 self.known = True
                 # logmessage("known is true")
-            elif 'error' in docassemble.base.functions.this_thread.current_info['user']['location']:
-                self.error = docassemble.base.functions.this_thread.current_info['user']['location']['error']
+            elif 'error' in this_thread.current_info['user']['location']:
+                self.error = this_thread.current_info['user']['location']['error']
                 self.known = False
                 # logmessage("known is false")
             self.gathered = True
@@ -10639,7 +10310,7 @@ class RoleChangeTracker(DAObject):
             bool: True if an email was successfully sent; False if no email
                 was necessary or sending failed.
         """
-        # logmessage("Current role is " + str(docassemble.base.functions.this_thread.global_vars.role))
+        # logmessage("Current role is " + str(this_thread.global_vars.role))
         for key, val in kwargs.items():  # pylint: disable=unused-variable
             if 'to' in val:
                 need(val['to'].email)
@@ -11019,11 +10690,11 @@ class Address(DAObject):
         else:
             the_address = address
         # logmessage("geocode: trying to geocode " + str(the_address))
-        geocoder_service = server.daconfig.get('geocoder service', 'google maps')
+        geocoder_service = get_configuration().get('geocoder service', 'google maps')
         if geocoder_service == 'google maps':
-            geocoder = docassemble.base.geocode.GoogleV3GeoCoder(server=server)
+            geocoder = GoogleV3GeoCoder()
         elif geocoder_service == 'azure maps':
-            geocoder = docassemble.base.geocode.AzureMapsGeoCoder(server=server)
+            geocoder = AzureMapsGeoCoder()
         else:
             self._geocoded = True
             self.geolocated = True
@@ -11151,7 +10822,7 @@ class Address(DAObject):
             str: Multi-line address block (lines joined with ``[NEWLINE]``
                 markers in non-DOCX contexts).
         """
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if this_thread.evaluation_context == 'docx':
             line_breaker = '</w:t><w:br/><w:t xml:space="preserve">'
         else:
             line_breaker = " [NEWLINE] "
@@ -11421,7 +11092,7 @@ class Person(DAObject):
             result = {'latitude': self.location.latitude, 'longitude': self.location.longitude, 'info': the_info}
             if hasattr(self, 'icon'):
                 result['icon'] = self.icon
-            elif self is docassemble.base.functions.this_thread.global_vars.user:
+            elif self is this_thread.global_vars.user:
                 result['icon'] = DEFAULT_BLUE_ICON
             return [result]
         return None
@@ -11458,15 +11129,15 @@ class Person(DAObject):
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.you_objective(**kwargs)
+            output = you_objective(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.you_objective_plural(**kwargs)
+            output = you_objective_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.me_objective(**kwargs)
+            output = me_objective(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.us_objective(**kwargs)
+            output = us_objective(**kwargs)
         else:
-            output = docassemble.base.functions.it_objective(**kwargs)
+            output = it_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -11486,11 +11157,11 @@ class Person(DAObject):
         if person == '2':
             return your(target, **kwargs)
         if person == '2p':
-            return docassemble.base.functions.your_plural(target, **kwargs)
+            return your_plural(target, **kwargs)
         if person == '1':
-            return docassemble.base.functions.my_possessive(target, **kwargs)
+            return my_possessive(target, **kwargs)
         if person == '1p':
-            return docassemble.base.functions.our_possessive(target, **kwargs)
+            return our_possessive(target, **kwargs)
         return super().object_possessive(target, **kwargs)
 
     def is_are_you(self, **kwargs):
@@ -11505,13 +11176,13 @@ class Person(DAObject):
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.are_you(**kwargs)
+            output = are_you(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.are_you_plural(**kwargs)
+            output = are_you_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.am_i(**kwargs)
+            output = am_i(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.are_we(**kwargs)
+            output = are_we(**kwargs)
         else:
             output = is_word(str(self), **kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
@@ -11529,7 +11200,7 @@ class Person(DAObject):
         Returns:
             str: Name followed by the address block.
         """
-        if docassemble.base.functions.this_thread.evaluation_context == 'docx':
+        if this_thread.evaluation_context == 'docx':
             return self.name.full() + '</w:t><w:br/><w:t xml:space="preserve">' + self.address.block(language=language, international=international, show_country=show_country)
         return "[FLUSHLEFT] " + self.name.full() + " [NEWLINE] " + self.address.block(language=language, international=international, show_country=show_country)
 
@@ -11728,8 +11399,8 @@ class Individual(Person):
                 current user and they are authenticated; otherwise an empty
                 string.
         """
-        if self is docassemble.base.functions.this_thread.global_vars.user and docassemble.base.functions.this_thread.current_info['user']['is_authenticated'] and 'firstname' in docassemble.base.functions.this_thread.current_info['user'] and docassemble.base.functions.this_thread.current_info['user']['firstname']:
-            return docassemble.base.functions.this_thread.current_info['user']['firstname']
+        if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'firstname' in this_thread.current_info['user'] and this_thread.current_info['user']['firstname']:
+            return this_thread.current_info['user']['firstname']
         return ''
 
     def last_name_hint(self):
@@ -11740,8 +11411,8 @@ class Individual(Person):
                 current user and they are authenticated; otherwise an empty
                 string.
         """
-        if self is docassemble.base.functions.this_thread.global_vars.user and docassemble.base.functions.this_thread.current_info['user']['is_authenticated'] and 'lastname' in docassemble.base.functions.this_thread.current_info['user'] and docassemble.base.functions.this_thread.current_info['user']['lastname']:
-            return docassemble.base.functions.this_thread.current_info['user']['lastname']
+        if self is this_thread.global_vars.user and this_thread.current_info['user']['is_authenticated'] and 'lastname' in this_thread.current_info['user'] and this_thread.current_info['user']['lastname']:
+            return this_thread.current_info['user']['lastname']
         return ''
 
     def salutation(self, **kwargs):
@@ -11776,11 +11447,11 @@ class Individual(Person):
         if person == '2':
             output = your(target, **kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.your_plural(target, **kwargs)
+            output = your_plural(target, **kwargs)
         elif person == '1':
-            output = docassemble.base.functions.my_possessive(target, **kwargs)
+            output = my_possessive(target, **kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.our_possessive(target, **kwargs)
+            output = our_possessive(target, **kwargs)
         elif self.gender == 'female':
             output = her(target, **kwargs)
         elif self.gender == 'other':
@@ -11803,19 +11474,19 @@ class Individual(Person):
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.you_objective(**kwargs)
+            output = you_objective(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.you_objective_plural(**kwargs)
+            output = you_objective_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.me_objective(**kwargs)
+            output = me_objective(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.our_objective(**kwargs)
+            output = our_objective(**kwargs)
         elif self.gender == 'female':
-            output = docassemble.base.functions.her_objective(**kwargs)
+            output = her_objective(**kwargs)
         elif self.gender == 'other':
-            output = docassemble.base.functions.genderless_objective(**kwargs)
+            output = genderless_objective(**kwargs)
         else:
-            output = docassemble.base.functions.him_objective(**kwargs)
+            output = him_objective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -11845,19 +11516,19 @@ class Individual(Person):
         else:
             person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            output = docassemble.base.functions.you_subjective(**kwargs)
+            output = you_subjective(**kwargs)
         elif person == '2p':
-            output = docassemble.base.functions.you_subjective_plural(**kwargs)
+            output = you_subjective_plural(**kwargs)
         elif person == '1':
-            output = docassemble.base.functions.i_subjective(**kwargs)
+            output = i_subjective(**kwargs)
         elif person == '1p':
-            output = docassemble.base.functions.we_subjective(**kwargs)
+            output = we_subjective(**kwargs)
         elif self.gender == 'female':
-            output = docassemble.base.functions.she_subjective(**kwargs)
+            output = she_subjective(**kwargs)
         elif self.gender == 'other':
-            output = docassemble.base.functions.genderless_subjective(**kwargs)
+            output = genderless_subjective(**kwargs)
         else:
-            output = docassemble.base.functions.he_subjective(**kwargs)
+            output = he_subjective(**kwargs)
         if 'capitalize' in kwargs and kwargs['capitalize']:
             return capitalize(output)
         return output
@@ -11875,18 +11546,18 @@ class Individual(Person):
         """
         person = str(kwargs.pop('person', self.get_point_of_view()))
         if person == '2':
-            return docassemble.base.functions.yourself(**kwargs)
+            return yourself(**kwargs)
         if person == '2p':
-            return docassemble.base.functions.yourselves(**kwargs)
+            return yourselves(**kwargs)
         if person == '1':
-            return docassemble.base.functions.myself(**kwargs)
+            return myself(**kwargs)
         if person == '1p':
-            return docassemble.base.functions.ourselves(**kwargs)
+            return ourselves(**kwargs)
         if self.gender == 'female':
-            return docassemble.base.functions.herself(**kwargs)
+            return herself(**kwargs)
         if self.gender == 'other':
-            return docassemble.base.functions.genderless_self(**kwargs)
-        return docassemble.base.functions.himself(**kwargs)
+            return genderless_self(**kwargs)
+        return himself(**kwargs)
 
     def __setattr__(self, attrname, the_value):
         if attrname == 'name' and isinstance(the_value, str):
@@ -12174,7 +11845,7 @@ def get_sms_session(phone_number, config='default'):
         dict or None: Session data dict (without internal keys), or None if no
             session exists for the number.
     """
-    result = server.get_sms_session(phone_number, config=config)
+    result = server_get_sms_session(phone_number, config=config)
     for key in ['number', 'tempuser', 'user_id']:
         if key in result:
             del result[key]
@@ -12196,7 +11867,7 @@ def initiate_sms_session(phone_number, yaml_filename=None, email=None, new=False
     Returns:
         bool: True.
     """
-    server.initiate_sms_session(phone_number, yaml_filename=yaml_filename, email=email, new=new, config=config)
+    server_initiate_sms_session(phone_number, yaml_filename=yaml_filename, email=email, new=new, config=config)
     if send:
         send_sms_invite(to=phone_number, config=config)
     return True
@@ -12212,7 +11883,7 @@ def terminate_sms_session(phone_number, config='default'):
     Returns:
         bool: True if a session was terminated; False otherwise.
     """
-    return server.terminate_sms_session(phone_number, config=config)
+    return server_terminate_sms_session(phone_number, config=config)
 
 
 def send_sms_invite(to=None, body='question', config='default'):
@@ -12222,10 +11893,10 @@ def send_sms_invite(to=None, body='question', config='default'):
     """
     if to is None:
         raise DAError("send_sms_invite: no phone number provided")
-    phone_number = docassemble.base.functions.phone_number_in_e164(to)
+    phone_number = phone_number_in_e164(to)
     if phone_number is None:
         raise DAError("send_sms_invite: phone number is invalid")
-    the_message = server.sms_body(phone_number, body=body, config=config)
+    the_message = sms_body(phone_number, body=body, config=config)
     # logmessage("Sending message " + str(message) + " to " + str(phone_number))
     send_sms(to=phone_number, body=the_message, config=config)
 
@@ -12250,13 +11921,14 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
     Returns:
         bool: True if the message was sent successfully; False otherwise.
     """
-    if server.twilio_config is None:
+    twilio_config = get_twilio_config()
+    if twilio_config is None:
         logmessage("send_sms: ignoring because Twilio not enabled")
         return False
-    if config not in server.twilio_config['name']:
+    if config not in twilio_config['name']:
         logmessage("send_sms: ignoring because requested configuration does not exist")
         return False
-    tconfig = server.twilio_config['name'][config]
+    tconfig = twilio_config['name'][config]
     if 'sms' not in tconfig or tconfig['sms'] in [False, None]:
         logmessage("send_sms: ignoring because SMS not enabled")
         return False
@@ -12311,7 +11983,7 @@ def send_sms(to=None, body=None, template=None, task=None, task_persistent=False
         if success:
             for the_attachment in attachment_list:
                 if isinstance(the_attachment, DAFile) and the_attachment.ok:
-                    # url = url_start + server.url_for('serve_stored_file', uid=docassemble.base.functions.this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
+                    # url = url_start + url_for('serve_stored_file', uid=this_thread.current_info['session'], number=the_attachment.number, filename=the_attachment.filename, extension=the_attachment.extension)
                     media.append(the_attachment.url_for(_external=True))
                 if isinstance(the_attachment, DAStaticFile):
                     media.append(the_attachment.url_for(_external=True))
@@ -12352,7 +12024,7 @@ class FaxStatus:
     def status(self):
         if self.sid is None:
             return 'not-configured'
-        the_json = server.server_redis.get('da:faxcallback:sid:' + self.sid)
+        the_json = get_server_redis().get('da:faxcallback:sid:' + self.sid)
         if the_json is None:
             return 'no-information'
         info = json.loads(the_json)
@@ -12367,7 +12039,7 @@ class FaxStatus:
     def pages(self):
         if self.sid is None:
             return 0
-        the_json = server.server_redis.get('da:faxcallback:sid:' + self.sid)
+        the_json = get_server_redis().get('da:faxcallback:sid:' + self.sid)
         if the_json is None:
             return 0
         info = json.loads(the_json)
@@ -12382,7 +12054,7 @@ class FaxStatus:
     def info(self):
         if self.sid is None:
             return {'FaxStatus': 'not-configured'}
-        the_json = server.server_redis.get('da:faxcallback:sid:' + self.sid)
+        the_json = get_server_redis().get('da:faxcallback:sid:' + self.sid)
         if the_json is None:
             return {'FaxStatus': 'no-information'}
         info_dict = json.loads(the_json)
@@ -12422,7 +12094,7 @@ def send_fax(fax_number, file_object, config='default', country=None):
             file_object = file_object.elements[0]
         else:
             file_object = pdf_concatenate(file_object)
-    return FaxStatus(server.send_fax(fax_string(fax_number, country=country), file_object, config, country=country))
+    return FaxStatus(server_send_fax(fax_string(fax_number, country=country), file_object, config, country=country))
 
 
 def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None, html=None, subject="", template=None, task=None, task_persistent=False, attachments=None, mailgun_variables=None, dry_run=False, config=None):
@@ -12462,7 +12134,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
             False otherwise.
     """
     if config is None:
-        config = docassemble.base.functions.this_thread.interview.consolidated_metadata.get('email config', None)
+        config = this_thread.interview.consolidated_metadata.get('email config', None)
     if not config:
         config = 'default'
     if attachments is None:
@@ -12492,6 +12164,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
     cc_string = email_stringer(cc, include_name=None)
     bcc_string = email_stringer(bcc, include_name=None)
     # logmessage("Sending mail to: " + repr({'subject': subject, 'recipients': to_string, 'sender': sender_string, 'cc': cc_string, 'bcc': bcc_string, 'body': body, 'html': html}))
+    Message = get_mail_class()  # pylint: disable=invalid-name
     msg = Message(subject, sender=sender_string, reply_to=reply_to_string, recipients=to_string, cc=cc_string, bcc=bcc_string, body=body, html=html)
     if mailgun_variables is not None:
         if isinstance(mailgun_variables, dict):
@@ -12523,7 +12196,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
         elif isinstance(attachment, DAFileList):
             attachment_list.extend(attachment.elements)
         elif isinstance(attachment, str):
-            file_info = server.file_finder(attachment)
+            file_info = file_finder(attachment)
             if 'fullpath' in file_info and file_info['fullpath'] is not None:
                 failed = True
                 with open(file_info['fullpath'], 'rb') as fp:
@@ -12542,14 +12215,14 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
                     the_path = the_attachment.path()
                     with open(the_path, 'rb') as fp:
                         the_basename = os.path.basename(the_path)
-                        extension, mimetype = server.get_ext_and_mimetype(the_basename)  # pylint: disable=assignment-from-none,unpacking-non-sequence,unused-variable
+                        extension, mimetype = get_ext_and_mimetype(the_basename)  # pylint: disable=assignment-from-none,unpacking-non-sequence,unused-variable
                         msg.attach(attachment_name(the_basename, filenames_used), mimetype, fp.read())
                     continue
                 if the_attachment.ok:
                     if the_attachment.has_specific_filename:
-                        file_info = server.file_finder(str(the_attachment.number), filename=the_attachment.filename)
+                        file_info = file_finder(str(the_attachment.number), filename=the_attachment.filename)
                     else:
-                        file_info = server.file_finder(str(the_attachment.number))
+                        file_info = file_finder(str(the_attachment.number))
                     if 'fullpath' in file_info and file_info['fullpath'] is not None:
                         failed = True
                         with open(file_info['fullpath'], 'rb') as fp:
@@ -12564,7 +12237,7 @@ def send_email(to=None, sender=None, reply_to=None, cc=None, bcc=None, body=None
     if success:
         try:
             logmessage("send_email: starting to send")
-            server.send_mail(msg, config=config)
+            send_mail(msg, config=config)
             logmessage("send_email: finished sending")
         except BaseException as errmess:
             logmessage("send_email: sending mail failed with error of " + " type " + str(errmess.__class__.__name__) + ": " + str(errmess))
@@ -12615,7 +12288,7 @@ def map_of(*pargs, **kwargs):
             if markers:
                 for marker in markers:
                     if 'icon' in marker and not isinstance(marker['icon'], dict):
-                        marker['icon'] = {'url': server.url_finder(marker['icon'])}
+                        marker['icon'] = {'url': url_finder(marker['icon'])}
                     if 'info' in marker and marker['info']:
                         marker['info'] = markdown_to_html(marker['info'], trim=True, external=True)
                     the_map['markers'].append(marker)
@@ -12663,7 +12336,7 @@ def ocr_file_in_background(*pargs, **kwargs):
     else:
         ui_notification = None
     if kwargs.get('use_google', False):
-        the_task = server.ocr_google_in_background(image_file, kwargs.get('raw_result', False), docassemble.base.functions.this_thread.current_info['session'])  # pylint: disable=assignment-from-none
+        the_task = ocr_google_in_background(image_file, kwargs.get('raw_result', False), this_thread.current_info['session'])  # pylint: disable=assignment-from-none
     else:
         language = kwargs.get('language', None)
         arg_f = int_or_none(kwargs.get('f', None))
@@ -12671,21 +12344,22 @@ def ocr_file_in_background(*pargs, **kwargs):
         arg_psm = kwargs.get('psm', 6)
         arg_x = int_or_none(kwargs.get('x', None))
         arg_y = int_or_none(kwargs.get('y', None))
-        arg_W = int_or_none(kwargs.get('W', None))
-        arg_H = int_or_none(kwargs.get('H', None))
+        arg_W = int_or_none(kwargs.get('W', None))  # pylint: disable=invalid-name
+        arg_H = int_or_none(kwargs.get('H', None))  # pylint: disable=invalid-name
         the_message = kwargs.get('message', None)
-        args = {'yaml_filename': docassemble.base.functions.this_thread.current_info['yaml_filename'], 'user': docassemble.base.functions.this_thread.current_info['user'], 'user_code': docassemble.base.functions.this_thread.current_info['session'], 'secret': docassemble.base.functions.this_thread.current_info['secret'], 'url': docassemble.base.functions.this_thread.current_info['url'], 'url_root': docassemble.base.functions.this_thread.current_info['url_root'], 'language': language, 'f': arg_f, 'l': arg_l, 'psm': arg_psm, 'x': arg_x, 'y': arg_y, 'W': arg_W, 'H': arg_H, 'extra': ui_notification, 'message': the_message, 'pdf': False, 'preserve_color': False}
-        collector = server.ocr_finalize.s(**args)
+        args = {'yaml_filename': this_thread.current_info['yaml_filename'], 'user': this_thread.current_info['user'], 'user_code': this_thread.current_info['session'], 'secret': this_thread.current_info['secret'], 'url': this_thread.current_info['url'], 'url_root': this_thread.current_info['url_root'], 'language': language, 'f': arg_f, 'l': arg_l, 'psm': arg_psm, 'x': arg_x, 'y': arg_y, 'W': arg_W, 'H': arg_H, 'extra': ui_notification, 'message': the_message, 'pdf': False, 'preserve_color': False}
+        celery_app = get_celery_app()
+        collector = celery_app.signature('tasks.ocr_finalize', kwargs=args)
         todo = []
         indexno = 0
         for item in ocr_page_tasks(image_file, **args):
-            todo.append(server.ocr_page.s(indexno, **item))
+            todo.append(celery_app.signature('tasks.ocr_page', args=[indexno], kwargs=item))
             indexno += 1
-        the_task = server.chord(todo)(collector)  # pylint: disable=assignment-from-none
+        the_task = chord(todo)(collector)  # pylint: disable=assignment-from-none
     if ui_notification is not None:
-        worker_key = 'da:worker:uid:' + str(docassemble.base.functions.this_thread.current_info['session']) + ':i:' + str(docassemble.base.functions.this_thread.current_info['yaml_filename']) + ':userid:' + str(docassemble.base.functions.this_thread.current_info['user']['the_user_id'])
+        worker_key = 'da:worker:uid:' + str(this_thread.current_info['session']) + ':i:' + str(this_thread.current_info['yaml_filename']) + ':userid:' + str(this_thread.current_info['user']['the_user_id'])
         # logmessage("worker_caller: id is " + str(result.obj.id) + " and key is " + worker_key)
-        server.server_redis.rpush(worker_key, the_task.id)
+        get_server_redis().rpush(worker_key, the_task.id)
     # logmessage("ocr_file_in_background finished")
     return the_task
 
@@ -12693,11 +12367,11 @@ def ocr_file_in_background(*pargs, **kwargs):
 #     """Starts optical character recognition on one or more image files or PDF
 #     files and returns an object representing the background task created."""
 #     logmessage("ocr_file_in_background: started")
-#     return server.async_ocr(image_file, ui_notification=ui_notification, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=docassemble.base.functions.this_thread.current_info.get('session', None))
+#     return server.async_ocr(image_file, ui_notification=ui_notification, language=language, psm=psm, x=x, y=y, W=W, H=H, user_code=this_thread.current_info.get('session', None))
 
 
 def get_work_bucket():
-    bucket_name = server.daconfig['google'].get('work bucket', None)
+    bucket_name = get_configuration()['google'].get('work bucket', None)
     if bucket_name is None:
         raise DAError("Cannot use Google Storage unless there is a work bucket configured in the google configuration")
     api = DAGoogleAPI()
@@ -12715,7 +12389,7 @@ def get_work_bucket():
 def google_ocr_file(image_file, raw_result=False):
     if isinstance(image_file, DAFile):
         image_file = [image_file]
-    api = docassemble.base.util.DAGoogleAPI()
+    api = DAGoogleAPI()
     client = api.google_cloud_vision_client()
     if raw_result:
         output = []
@@ -12792,7 +12466,7 @@ def google_ocr_file(image_file, raw_result=False):
     return output
 
 
-def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, use_google=False, raw_result=False):  # noqa: E741
+def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, use_google=False, raw_result=False):  # noqa: E741 # pylint: disable=invalid-name
     """Run optical character recognition on image or PDF files and return the text.
 
     Args:
@@ -12900,7 +12574,7 @@ def ocr_file(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W
     return "\f".join(page_text)
 
 
-def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):  # noqa: E741
+def read_qr(image_file, f=None, l=None, x=None, y=None, W=None, H=None):  # noqa: E741 # pylint: disable=invalid-name
     """Decode QR codes found in image or PDF files.
 
     Args:
@@ -12989,7 +12663,7 @@ def path_and_mimetype(file_ref):
         file_ref = file_ref._first_file()
     elif isinstance(file_ref, DAStaticFile):
         path = file_ref.path()
-        extension, mimetype = server.get_ext_and_mimetype(file_ref.filename)  # pylint: disable=unpacking-non-sequence,unused-variable,assignment-from-none
+        extension, mimetype = get_ext_and_mimetype(file_ref.filename)  # pylint: disable=unpacking-non-sequence,unused-variable,assignment-from-none
         return path, mimetype
     if isinstance(file_ref, DAFile):
         if hasattr(file_ref, 'mimetype'):
@@ -12997,7 +12671,7 @@ def path_and_mimetype(file_ref):
         else:
             mime_type = None
         return file_ref.path(), mime_type
-    file_info = server.file_finder(file_ref, return_nonexistent=True)
+    file_info = file_finder(file_ref, return_nonexistent=True)
     return file_info.get('fullpath', None), file_info.get('mimetype', None)
 
 
@@ -13184,7 +12858,7 @@ def pdf_concatenate(*pargs, **kwargs):
     if len(paths) == 0:
         raise DAError("pdf_concatenate: no valid files to concatenate")
     (owner_password, password) = get_passwords(kwargs.get('password', None))
-    pdf_path = docassemble.base.pandoc.concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=password, owner_password=owner_password)
+    pdf_path = concatenate_files(paths, pdfa=kwargs.get('pdfa', False), password=password, owner_password=owner_password)
     pdf_file = kwargs.get('output_to', None)
     if pdf_file is None:
         pdf_file = DAFile()
@@ -13232,7 +12906,7 @@ def recurse_zip_params(param, root, files):
     elif isinstance(param, (DAStaticFile, DAFile)):
         files.append((root + param.filename, param.path()))
     else:
-        file_info = server.file_finder(param)
+        file_info = file_finder(param)
         files.append((root + file_info['filename'], file_info['fullpath']))
     return files
 
@@ -13483,7 +13157,7 @@ def action_button_html(url, icon=None, color='success', size='sm', block=False, 
         id_tag = ''
     else:
         id_tag = ' id=' + json.dumps(id_tag)
-    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + server.button_class_prefix + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
+    return '<a ' + target + 'href="' + url + '"' + id_tag + ' class="btn' + size + block + ' ' + get_button_class_prefix() + color + ' btn-darevisit' + classname + '">' + icon + word(label) + '</a> '
 
 
 def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=None, only=None, multi=False, output_to=None, filename=None):
@@ -13539,9 +13213,9 @@ def overlay_pdf(main_pdf, logo_pdf, first_page=None, last_page=None, logo_page=N
         filename = 'file.pdf'
     outfile.initialize(extension='pdf', filename=filename, reinitialize=outfile.ok)
     if multi:
-        docassemble.base.pdftk.overlay_pdf_multi(main_file, logo_file, outfile.path())
+        overlay_pdf_multi(main_file, logo_file, outfile.path())
     else:
-        docassemble.base.pdftk.overlay_pdf(main_file, logo_file, outfile.path(), first_page=first_page, last_page=last_page, logo_page=logo_page, only=only)
+        pdftk_overlay_pdf(main_file, logo_file, outfile.path(), first_page=first_page, last_page=last_page, logo_page=logo_page, only=only)
     outfile.commit()
     outfile.retrieve()
     return outfile
@@ -13555,12 +13229,12 @@ def explain(the_explanation, category='default'):
         category (str): Category name for grouping explanations. Defaults to
             ``'default'``.
     """
-    if 'explanations' not in docassemble.base.functions.this_thread.internal:
-        docassemble.base.functions.this_thread.internal['explanations'] = {}
-    if category not in docassemble.base.functions.this_thread.internal['explanations']:
-        docassemble.base.functions.this_thread.internal['explanations'][category] = []
-    if the_explanation not in docassemble.base.functions.this_thread.internal['explanations'][category]:
-        docassemble.base.functions.this_thread.internal['explanations'][category].append(the_explanation)
+    if 'explanations' not in this_thread.internal:
+        this_thread.internal['explanations'] = {}
+    if category not in this_thread.internal['explanations']:
+        this_thread.internal['explanations'][category] = []
+    if the_explanation not in this_thread.internal['explanations'][category]:
+        this_thread.internal['explanations'][category].append(the_explanation)
 
 
 def clear_explanations(category='default'):
@@ -13570,13 +13244,13 @@ def clear_explanations(category='default'):
         category (str): Category to clear, or ``'all'`` to clear every
             category. Defaults to ``'default'``.
     """
-    if 'explanations' not in docassemble.base.functions.this_thread.internal:
+    if 'explanations' not in this_thread.internal:
         return
     if category == 'all':
-        docassemble.base.functions.this_thread.internal['explanations'] = {}
-    if category not in docassemble.base.functions.this_thread.internal['explanations']:
+        this_thread.internal['explanations'] = {}
+    if category not in this_thread.internal['explanations']:
         return
-    docassemble.base.functions.this_thread.internal['explanations'][category] = []
+    this_thread.internal['explanations'][category] = []
 
 
 def logic_explanation(category='default'):
@@ -13588,9 +13262,9 @@ def logic_explanation(category='default'):
     Returns:
         list[str]: Explanation strings recorded for the category, in order.
     """
-    if 'explanations' not in docassemble.base.functions.this_thread.internal:
+    if 'explanations' not in this_thread.internal:
         return []
-    return docassemble.base.functions.this_thread.internal['explanations'].get(category, [])
+    return this_thread.internal['explanations'].get(category, [])
 
 
 def set_status(**kwargs):
@@ -13600,10 +13274,10 @@ def set_status(**kwargs):
         **kwargs: Arbitrary key-value pairs to store in the session's internal
             ``'misc'`` dictionary.
     """
-    if 'misc' not in docassemble.base.functions.this_thread.internal:
-        docassemble.base.functions.this_thread.internal['misc'] = {}
+    if 'misc' not in this_thread.internal:
+        this_thread.internal['misc'] = {}
     for key, val in kwargs.items():
-        docassemble.base.functions.this_thread.internal['misc'][key] = val
+        this_thread.internal['misc'][key] = val
 
 
 def get_status(setting):
@@ -13615,9 +13289,9 @@ def get_status(setting):
     Returns:
         object or None: The stored value, or None if the key does not exist.
     """
-    if 'misc' not in docassemble.base.functions.this_thread.internal:
+    if 'misc' not in this_thread.internal:
         return None
-    return docassemble.base.functions.this_thread.internal['misc'].get(setting, None)
+    return this_thread.internal['misc'].get(setting, None)
 
 
 def prevent_dependency_satisfaction(f):
@@ -13669,31 +13343,31 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         output_path = output_file.name
     else:
         using_temporary_file = False
-    the_fields = copy.copy(docassemble.base.functions.get_user_dict())
+    the_fields = copy.copy(get_user_dict())
     if isinstance(fields, dict):
         the_fields.update(fields)
     try:
         docx_template = DocxTemplate(input_file)
         docx_template.render_init()
-        docassemble.base.functions.set_context('docx', template=docx_template)
-        the_env = docassemble.base.parse.custom_jinja_env()
+        set_context('docx', template=docx_template)
+        the_env = custom_jinja_env()
         the_xml = docx_template.get_xml()
         the_xml = re.sub(r'<w:p([ >])', r'\n<w:p\1', the_xml)
-        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', docassemble.base.parse.fix_quotes, the_xml)
+        the_xml = re.sub(r'({[\%\{].*?[\%\}]})', fix_quotes, the_xml)
         the_xml = docx_template.patch_xml(the_xml)
         the_env.parse(the_xml)
         while True:
-            old_count = docassemble.base.functions.this_thread.misc.get('docx_include_count', 0)
-            docx_template.render(the_fields, jinja_env=docassemble.base.parse.custom_jinja_env())
-            if docassemble.base.functions.this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
+            old_count = this_thread.misc.get('docx_include_count', 0)
+            docx_template.render(the_fields, jinja_env=custom_jinja_env())
+            if this_thread.misc.get('docx_include_count', 0) > old_count and old_count < 10:
                 new_template_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".docx", delete=False)
                 docx_template.save(new_template_file.name)
                 docx_template = DocxTemplate(new_template_file.name)
                 docx_template.render_init()
-                docassemble.base.functions.this_thread.misc['docx_template'] = docx_template
+                this_thread.misc['docx_template'] = docx_template
             else:
                 break
-        subdocs = docassemble.base.functions.this_thread.misc.get('docx_subdocs', [])
+        subdocs = this_thread.misc.get('docx_subdocs', [])
         the_template_docx = docx_template.docx
         for subdoc in subdocs:
             docassemble.base.file_docx.fix_subdoc(the_template_docx, subdoc)
@@ -13701,7 +13375,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         if (not hasattr(the_error, 'filename')) or the_error.filename is None:
             the_error.filename = os.path.basename(input_file)
             raise the_error
-    docassemble.base.functions.reset_context()
+    reset_context()
     if output_format == 'docx':
         docx_template.save(output_path)
         docassemble.base.file_docx.fix_docx(output_path)
@@ -13711,7 +13385,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         docassemble.base.file_docx.fix_docx(temp_file.name)
         if not isinstance(pdf_options, dict):
             pdf_options = {}
-        result = docassemble.base.pandoc.word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), owner_password=pdf_options.get('owner_password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False), filename=filename)
+        result = word_to_pdf(temp_file.name, 'docx', output_path, pdfa=pdf_options.get('pdfa', False), password=pdf_options.get('password', None), owner_password=pdf_options.get('owner_password', None), update_refs=pdf_options.get('update_refs', False), tagged=pdf_options.get('tagged', False), filename=filename)
         if not result:
             raise DAError("Error converting to PDF")
     elif output_format == 'md':
@@ -13719,7 +13393,7 @@ def assemble_docx(input_file, fields=None, output_path=None, output_format='docx
         docx_template.save(temp_file.name)
         docassemble.base.file_docx.fix_docx(temp_file.name)
         if can_convert_word_to_markdown():
-            result = docassemble.base.pandoc.word_to_markdown(temp_file.name, 'docx')
+            result = word_to_markdown(temp_file.name, 'docx')
         else:
             result = None
         if not result:
@@ -13761,15 +13435,7 @@ def register_jinja_filter(filter_name, func):
 
     register_jinja_filter('omg', omg_filter)
     """
-    return docassemble.base.parse.register_jinja_filter(filter_name, func)
-
-
-def variables_snapshot_connection():
-    return server.variables_snapshot_connection()
-
-
-def variables_snapshot_connect():
-    return server.variables_snapshot_connect()
+    return jinja_register_jinja_filter(filter_name, func)
 
 
 def get_persistent_task_store(persistent):
@@ -13778,7 +13444,7 @@ def get_persistent_task_store(persistent):
     else:
         base = persistent
     if base == 'session':
-        encrypted = docassemble.base.functions.this_thread.current_info.get('encrypted', True)
+        encrypted = this_thread.current_info.get('encrypted', True)
         store = DAStore('store', base=base, encrypted=encrypted)
     else:
         store = DAStore('store', base=base)
@@ -13805,7 +13471,7 @@ def task_performed(task, persistent=False):
         if task in tasks and tasks[task]:  # pylint: disable=unsubscriptable-object,unsupported-membership-test
             return True
         return False
-    if task in docassemble.base.functions.this_thread.internal['tasks'] and docassemble.base.functions.this_thread.internal['tasks'][task]:
+    if task in this_thread.internal['tasks'] and this_thread.internal['tasks'][task]:
         return True
     return False
 
@@ -13847,10 +13513,10 @@ def mark_task_as_performed(task, persistent=False):
         tasks[task] += 1  # pylint: disable=unsupported-assignment-operation
         store.set('tasks', tasks)
         return tasks[task]  # pylint: disable=unsubscriptable-object
-    if task not in docassemble.base.functions.this_thread.internal['tasks']:
-        docassemble.base.functions.this_thread.internal['tasks'][task] = 0
-    docassemble.base.functions.this_thread.internal['tasks'][task] += 1
-    return docassemble.base.functions.this_thread.internal['tasks'][task]
+    if task not in this_thread.internal['tasks']:
+        this_thread.internal['tasks'][task] = 0
+    this_thread.internal['tasks'][task] += 1
+    return this_thread.internal['tasks'][task]
 
 
 def times_task_performed(task, persistent=False):
@@ -13871,9 +13537,9 @@ def times_task_performed(task, persistent=False):
         if task not in tasks:  # pylint: disable=unsupported-membership-test
             return 0
         return tasks[task]  # pylint: disable=unsubscriptable-object
-    if task not in docassemble.base.functions.this_thread.internal['tasks']:
+    if task not in this_thread.internal['tasks']:
         return 0
-    return docassemble.base.functions.this_thread.internal['tasks'][task]
+    return this_thread.internal['tasks'][task]
 
 
 def set_task_counter(task, times, persistent=False):
@@ -13892,7 +13558,7 @@ def set_task_counter(task, times, persistent=False):
         tasks[task] = times  # pylint: disable=unsupported-assignment-operation
         store.set('tasks', tasks)
         return
-    docassemble.base.functions.this_thread.internal['tasks'][task] = times
+    this_thread.internal['tasks'][task] = times
 
 
 def stash_data(data, expire=None):
@@ -13916,7 +13582,7 @@ def stash_data(data, expire=None):
         assert expire > 0
     except:
         raise DAError("Invalid expire value")
-    return server.stash_data(data, expire)
+    return server_stash_data(data, expire)
 
 
 def retrieve_stashed_data(stash_key, secret, delete=False, refresh=False):
@@ -13935,7 +13601,7 @@ def retrieve_stashed_data(stash_key, secret, delete=False, refresh=False):
     """
     if refresh and not (isinstance(refresh, int) and refresh > 0):
         refresh = 60*60*24*90
-    return server.retrieve_stashed_data(stash_key, secret, delete=delete, refresh=refresh)
+    return server_retrieve_stashed_data(stash_key, secret, delete=delete, refresh=refresh)
 
 
 class DABreadCrumbs(DAObject):
@@ -13948,7 +13614,7 @@ class DABreadCrumbs(DAObject):
             list[dict]: List of dicts with ``'breadcrumb'`` keys, representing
                 parent questions followed by the current question.
         """
-        return docassemble.base.functions.get_action_stack()
+        return get_action_stack()
 
     def show(self):
         """Return HTML for the breadcrumb navigation element.
@@ -14343,7 +14009,7 @@ def get_available_languages():
     return result
 
 
-def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, user_code=None, user=None, pdf=False, preserve_color=False, **kwargs):  # noqa: E741 # pylint: disable=unused-argument
+def ocr_page_tasks(image_file, language=None, psm=6, f=None, l=None, x=None, y=None, W=None, H=None, user_code=None, user=None, pdf=False, preserve_color=False, **kwargs):  # noqa: E741 # pylint: disable=unused-argument, invalid-name
     # logmessage("ocr_page_tasks running")
     if isinstance(image_file, set):
         return []
@@ -14562,7 +14228,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
         shutil.copyfile(output[0], the_file.name)
         source_file = the_file.name
     else:
-        source_file = docassemble.base.pandoc.concatenate_files(output)
+        source_file = concatenate_files(output)
     if filename is None:
         filename = 'file.pdf'
     target.initialize(filename=filename, extension='pdf', mimetype='application/pdf', reinitialize=True)
@@ -14574,7 +14240,7 @@ def ocr_pdf(*pargs, target=None, filename=None, lang=None, psm=6, dafilelist=Non
     return target
 
 
-def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, psm=6, page=None, x=None, y=None, W=None, H=None, user_code=None, user=None, pdf=False, preserve_color=False):  # pylint: disable=unused-argument
+def ocr_page(indexno, doc=None, lang=None, pdf_to_ppm='pdf_to_ppm', ocr_resolution=300, psm=6, page=None, x=None, y=None, W=None, H=None, user_code=None, user=None, pdf=False, preserve_color=False):  # pylint: disable=unused-argument, invalid-name
     """Runs optical character recognition on an image or a page of a PDF file and returns the recognized text."""
     text = ''
     if page is None:
@@ -14703,4 +14369,4 @@ def transform_json_variables(obj):
         object: A JSON-serializable version of ``obj``, with docassemble types
             converted to their plain Python equivalents.
     """
-    return server.transform_json_variables(obj)
+    return transform_json_variables(obj)

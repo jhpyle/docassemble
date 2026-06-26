@@ -1,6 +1,6 @@
 # do not pre-load
 import openai
-from docassemble.base.util import get_config, BackgroundAction, action_argument
+from docassemble.base.util import get_config, BackgroundAction
 
 openai.api_key = get_config('openai key')
 

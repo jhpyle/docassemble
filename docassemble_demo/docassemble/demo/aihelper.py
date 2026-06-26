@@ -1,6 +1,6 @@
 # do not pre-load
-from docassemble.base.util import get_config, DAObject, BackgroundAction, DADict
 import anthropic
+from docassemble.base.util import get_config, DAObject, BackgroundAction, DADict
 
 __all__ = ['AIHelper', 'AIInteraction']
 

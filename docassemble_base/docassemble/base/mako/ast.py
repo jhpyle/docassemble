@@ -11,7 +11,7 @@ import re
 
 from docassemble.base.mako import exceptions
 from docassemble.base.mako import pyparser
-from docassemble.base.astparser import myvisitnode
+from docassemble.base.astparser import MyVisitNode
 from docassemble.base.astparser import ast as base_ast
 
 
@@ -21,7 +21,7 @@ class PythonCode:
 
     def __init__(self, code, **exception_kwargs):
         if isinstance(code, str):
-            myvisitor = myvisitnode()
+            myvisitor = MyVisitNode()
             t = base_ast.parse(code.strip())
             myvisitor.visit(t)
             self.names_used = set()
