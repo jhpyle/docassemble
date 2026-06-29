@@ -127,7 +127,7 @@ data.  The following procedure will avoid these problems:
        resuming each session and see if you get any errors.
    11. If you get any errors, report them on [Slack] or [GitHub].
        Internally, **docassemble** uses a function called
-       [`recursive_fix_pickle()`] for converting Python 2.7
+       `recursive_fix_pickle()` for converting Python 2.7
        pickled objects into Python 3.x objects.  There may be a way to
        adapt this function so that it can make an exception for
        whatever object types are causing problems in your interview.
@@ -136,7 +136,6 @@ data.  The following procedure will avoid these problems:
    in-place by installing the latest versions of your interviews, then
    doing `docker stop`, `docker rm`, `docker pull`, and `docker run`.
 
-[`recursive_fix_pickle()`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/fixpickle.py
 [Slack]: {{ site.slackurl }}
 [GitHub]: https://github.com/jhpyle/docassemble/issues
 [`docker volume inspect`]: https://docs.docker.com/engine/reference/commandline/volume_inspect/

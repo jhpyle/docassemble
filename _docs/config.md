@@ -264,6 +264,94 @@ learning models. To disable this feature, set `enable training` to
 enable training: False
 {% endhighlight %}
 
+## <a name="enable api"></a>Allowing the use of the API
+
+If you want to disable the [API] and save memory by not loading the
+code for the API, set `enable api` to False. The default value is
+`True`.
+
+{% highlight yaml %}
+enable api: False
+{% endhighlight %}
+
+## <a name="enable email server"></a>Disabling the email server
+
+By default, there is an email receiving feature (see
+[`interview_email()`]) that depends on an Exim4 server. This feature
+can be disabled by setting `enable email server` to `False`. The
+default value is `True`.
+
+{% highlight yaml %}
+enable email server: False
+{% endhighlight %}
+
+## <a name="enable object storage"></a>Disabling the object storage feature
+
+If you are not using the [`write_record()`], [`read_records()`], and
+[`delete_record()`] functions, you can turn off this feature to save
+some memory.
+
+{% highlight yaml %}
+enable object storage: False
+{% endhighlight %}
+
+The default value is `True`.
+
+## <a name="enable daglobal"></a>Disabling the DAGlobal feature
+
+If you are not using the [`DAGlobal`] feature, you can turn it off to
+save some memory.
+
+{% highlight yaml %}
+enable daglobal: False
+{% endhighlight %}
+
+The default value is `True`.
+
+## <a name="enable json storage"></a>Disabling the json storage feature
+
+If you are not using [`store_variables_snapshot()`], you can turn off
+the feature.
+
+{% highlight yaml %}
+enable json storage: False
+{% endhighlight %}
+
+The default value is `True`.
+
+## <a name="enable sms interface"></a>Disabling the SMS interface
+
+If you are not using the [SMS interface], you can turn off the feature.
+
+{% highlight yaml %}
+enable sms interface: False
+{% endhighlight %}
+
+The default value is `True`.
+
+## <a name="enable faxing"></a>Disabling the faxing feature
+
+If you are not using the [fax sending] feature, you can turn it off to
+save some memory.
+
+{% highlight yaml %}
+enable faxing: False
+{% endhighlight %}
+
+The default value is `True`.
+
+## <a name="enable tts"></a>Disabling the text to speech feature
+
+If you are not using the [screen reader] feature, which converts text
+to speech, you can turn it off to save some memory.
+
+{% highlight yaml %}
+enable tts: False
+{% endhighlight %}
+
+The default value is `True`.
+
+
 ## <a name="developer can install"></a>Whether users with developer accounts can install packages
 
 By default, any user with `admin` or `developer` privileges can use
@@ -4795,7 +4883,7 @@ ffmpeg: null
 You can also set these variables to tell **docassemble** to use a
 particular path on your system to run these applications.
 
-## <a name="libreoffice"></a><a name="pandoc"></a><a name="gotenberg url"></a><a name="convertapi secret"></a><a name="cloudconvert secret"></a>Document conversion
+## <a name="libreoffice"></a><a name="pandoc"></a><a name="gotenberg"></a><a name="convertapi secret"></a><a name="cloudconvert secret"></a>Document conversion
 
 **docassemble** requires that you have [Pandoc] installed on your
 system. It assumes that it can be run using the command `pandoc`.
@@ -4815,7 +4903,7 @@ Instead of using [unoserver], you can use an external [Gotenberg]
 server for DOCX to PDF conversion. If you have a [Gotenberg] server
 that is accessible from within the **docassemble** container on
 hostname `mygotenberg`, port 3000, you would disable [unoserver] and
-set the `gotenberg url` to the following:
+set the `gotenberg` configuration to the following:
 
 {% highlight yaml %}
 enable unoconv: false
@@ -4872,11 +4960,10 @@ gotenberg:
   password: abc-makethismuchlonger-123
 {% endhighlight %}
 
-The `gotenberg url` can be prepopulated in the **docassemble**
-configuration using the [`GOTENBERGURL`] environment variable.
-The [`GOTENBERGUSERNAME`] and [`GOTENBERGPASSWORD`] environment
-variables can also be set to connect to a gotenberg server with
-basic auth.
+The `gotenberg` directive can be prepopulated in the **docassemble**
+configuration using the [`GOTENBERGURL`] environment variable.  The
+[`GOTENBERGUSERNAME`] and [`GOTENBERGPASSWORD`] environment variables
+can also be set to connect to a gotenberg server with basic auth.
 
 Disabling [unoserver] when using [Gotenberg] is important not only to
 save memory but to prevent any conflicts between [Gotenberg]'s use of
@@ -5959,6 +6046,13 @@ package index sites (`--extra-index-url`). You can set this as well.
 
 {% highlight yaml %}
 pip extra index urls: https://myserver.com https://myotherserver.com
+{% endhighlight %}
+
+If the index URL uses http:// instead of https://, you can set the
+`trusted-host` setting with:
+
+{% highlight yaml %}
+pip trusted host: myserver.com
 {% endhighlight %}
 
 ## <a name="jinja data"></a>Variables for Jinja2 YAML preprocessor
@@ -7059,3 +7153,9 @@ and Facebook API keys.
 [Microsoft Graph API]: https://learn.microsoft.com/en-us/graph/api/user-sendmail
 [Place Autocomplete]: https://developers.google.com/maps/documentation/places/web-service/place-autocomplete
 [Google Places API]: https://developers.google.com/maps/documentation/places/web-service/op-overview
+[`interview_email()`]: {{ site.baseurl }}/docs/functions.html#interview_email
+[`write_record()`]: {{ site.baseurl }}/docs/functions.html#write_record
+[`read_records()`]: {{ site.baseurl }}/docs/functions.html#read_records
+[`delete_record()`]: {{ site.baseurl }}/docs/functions.html#delete_record
+[`DAGlobal`]: {{ site.baseurl }}/docs/objects.html#DAGlobal
+[screen reader]: {{ site.baseurl }}/docs/special.html#speak_text

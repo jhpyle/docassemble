@@ -1311,9 +1311,6 @@ define the following methods:
 * `_train()`
 * `predict()`
 
-See the code of [`docassemble.webapp.machinelearning`] for more
-information.
-
 # Slow-running code
 
 If your machine learning algorithms use very large training sets, or
@@ -1333,7 +1330,6 @@ object.)
 [Playground]: {{ site.baseurl }}/docs/playground.html
 [`pattern.vector`]: https://github.com/clips/pattern/wiki/pattern-vector
 [Python]: https://en.wikipedia.org/wiki/Python_%28programming_language%29
-[`docassemble.webapp.machinelearning`]: {{ site.github.repository_url }}/blob/master/docassemble_webapp/docassemble/webapp/machinelearning.py
 [`.reset()`]: #SimpleTextMachineLearner.reset
 [`.predict()`]: #SimpleTextMachineLearner.predict
 [`.delete_training_set()`]: #SimpleTextMachineLearner.delete_training_set

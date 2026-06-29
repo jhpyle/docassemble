@@ -1539,8 +1539,8 @@ your container for the new configuration to take effect.
   `true` or `false`. See the [`enable unoconv`] configuration
   directive.
 * <a name="GOTENBERGURL"></a>`GOTENBERGURL`: This can be set to the
-  URL of your [Gotenberg] server, if you have one. See the [`gotenberg
-  url`] configuration directive.
+  URL of your [Gotenberg] server, if you have one. See the
+  [`gotenberg`] configuration directive.
 * <a name="DAGOOGLEFONTS"></a>`DAGOOGLEFONTS`: This can be set to
   `true` if you want the [Google TrueType fonts] to be installed on
   your server.
@@ -3816,7 +3816,7 @@ endpoints that you can use.
 [tz database]: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 [locale values]: {{ site.baseurl }}/img/locales.txt
 [`enable unoconv`]: {{ site.baseurl }}/docs/config.html#enable unoconv
-[`gotenberg url`]: {{ site.baseurl }}/docs/config.html#gotenberg url
+[`gotenberg`]: {{ site.baseurl }}/docs/config.html#gotenberg
 [`use nginx to serve files`]: {{ site.baseurl }}/docs/config.html#use nginx to serve files
 [Gotenberg]: https://gotenberg.dev/
 [deletes inactive sessions]: {{ site.baseurl }}/docs/config.html#interview delete days

@@ -1114,7 +1114,7 @@ multiple-choice selections and random input values.  If a random
 combination of inputs results in an error screen, the test fails, and
 the developer will know that there is a bug in the interview.
 
-An example of such a script is the [`random-test.py`] file in the
+An example of such a script is the [`random_test.py`] file in the
 [`docassemble.demo`] package.  This is a general-purpose script for
 testing any interview, but you will likely need to tweak it to work
 appropriately with any of your own interviews.  For example, it does
@@ -1694,7 +1694,7 @@ staff member who knows a lot about the subject matter.
 [Python virtual environment]: https://docs.python-guide.org/dev/virtualenvs/
 [Gherkin]: https://en.wikipedia.org/wiki/Cucumber_(software)#Gherkin_language
 [`docassemble.demo`]: {{ site.github.repository_url }}/tree/master/docassemble_demo
-[`random-test.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/random-test.py
+[`random_test.py`]: {{ site.github.repository_url }}/blob/master/docassemble_demo/docassemble/demo/random_test.py
 [unit testing]: https://en.wikipedia.org/wiki/Unit_testing
 [people, process, and technology]: https://www.christopherspenn.com/2018/01/transforming-people-process-and-technology-part-1/
 [waterfall]: https://en.wikipedia.org/wiki/Waterfall_model
