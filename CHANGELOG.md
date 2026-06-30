@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.10.1] - 2026-06-29
+
+### Fixed
+
+- Errors related to add-on package installation.
+
 ## [1.10.0] - 2026-06-28
 
 ### Added

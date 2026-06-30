@@ -23,7 +23,12 @@ from docassemble.base.language.control import get_language, set_language
 from docassemble.base.logger import logmessage
 from docassemble.base.parse import InterviewStatus
 from docassemble.base.save_status import SS_NEW, SS_IGNORE
-from docassemble.base.thread_context import this_thread, user_dict_context
+from docassemble.base.thread_context import (
+    empty_globals,
+    global_context,
+    this_thread,
+    user_dict_context,
+)
 from docassemble.base.util import (
     pdf_concatenate,
     ocr_page as do_ocr_page,
@@ -907,18 +912,19 @@ def update_packages(restart=True):
     logmessage("update_packages in worker: continuing after " + str(time.time() - start_time) + " seconds")
     try:
         logmessage("update_packages in worker: starting update after " + str(time.time() - start_time) + " seconds")
-        ok, logmessages, results = check_for_updates(start_time=start_time, full=restart)
+        with global_context(empty_globals()):
+            ok, logmessages, results = check_for_updates(start_time=start_time, full=restart)
         if len(logmessages) > 210000:
             logmessages = logmessages[0:100000] + "\n\nTRUNCATED\n\n" + logmessages[-100000:]
         logmessage("update_packages in worker: update completed after " + str(time.time() - start_time) + " seconds")
         if restart and ':all:' not in CONTAINER_ROLE:
-            trigger_update(except_for=hostname)
+            with flaskapp.app_context():
+                trigger_update(except_for=hostname)
             logmessage("update_packages in worker: trigger completed after " + str(time.time() - start_time) + " seconds")
         return ReturnValue(ok=ok, logmessages=logmessages, results=results, hostname=hostname, restart=restart)
-    except:
-        e = sys.exc_info()[0]
-        error_mess = sys.exc_info()[1]
-        logmessage("update_packages in worker: error was " + str(e) + " with message " + str(error_mess))
+    except Exception as err:
+        e = type(err)
+        logmessage("update_packages in worker: error was " + str(e) + " with message " + str(err) + "\n" + str(traceback.format_tb(err.__traceback__)))
         return ReturnValue(ok=False, error_message=str(e), restart=False)
     logmessage("update_packages in worker: all done")
     return ReturnValue(ok=False, error_message="Reached end", restart=False)

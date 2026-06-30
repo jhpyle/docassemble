@@ -222,10 +222,10 @@ def populate_tables(start_time=None):
         api_result = add_specific_api_key('default', admin_defaults['api key'], admin_id, daconfig.get('secretkey', '38ihfiFehfoU34mcq_4clirglw3g4o87'))
         if api_result:
             logmessage("create_tables.populate_tables: added API key")
-    logmessage("create_tables.populate_tables: calling add_dependencies after " + str(time.time() - start_time) + " seconds.")
-    add_dependencies(admin_id, start_time=start_time)
-    logmessage("create_tables.populate_tables: add_dependencies finished after " + str(time.time() - start_time) + " seconds.")
     with session_scope() as session:
+        logmessage("create_tables.populate_tables: calling add_dependencies after " + str(time.time() - start_time) + " seconds.")
+        add_dependencies(session, admin_id, start_time=start_time)
+        logmessage("create_tables.populate_tables: add_dependencies finished after " + str(time.time() - start_time) + " seconds.")
         git_packages = session.execute(select(Package).filter_by(type='git')).scalars().all()
         for package in git_packages:
             if package.name in ['docassemble', 'docassemble.base', 'docassemble.webapp', 'docassemble.demo']:

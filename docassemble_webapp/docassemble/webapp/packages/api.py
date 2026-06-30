@@ -76,10 +76,10 @@ def api_package():
         uninstall_package(target)
         if do_restart:
             logmessage("Starting process of updating packages followed by restarting server")
-            result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={'run_create': should_run_create(target)}))
+            result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={'run_create': should_run_create(target)}))
             #result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
         else:
-            result = celery_app.signature('tasks.update_packages', pargs={"restart": False}).delay()
+            result = celery_app.signature('tasks.update_packages', kwargs={"restart": False}).delay()
             # result = docassemble.webapp.worker.update_packages.delay(restart=False)
         return jsonify_task(result)
     if request.method == 'POST':
@@ -128,10 +128,10 @@ def api_package():
             db.session.commit()
             if do_restart:
                 logmessage("Starting process of updating packages followed by restarting server")
-                result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={'run_create': should_run_create(target)}))
+                result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={'run_create': should_run_create(target)}))
                 #result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
             else:
-                result = celery_app.signature('tasks.update_packages', pargs={"restart": False}).delay()
+                result = celery_app.signature('tasks.update_packages', kwargs={"restart": False}).delay()
                 # result = docassemble.webapp.worker.update_packages.delay(restart=False)
             return jsonify_task(result)
         if 'github_url' in post_data:
@@ -154,10 +154,10 @@ def api_package():
                 install_git_package(packagename, github_url, branch)
                 if do_restart:
                     logmessage("Starting process of updating packages followed by restarting server")
-                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={'run_create': should_run_create(packagename)}))
+                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={'run_create': should_run_create(packagename)}))
                     # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                 else:
-                    result = celery_app.signature('tasks.update_packages', pargs={"restart": False}).delay()
+                    result = celery_app.signature('tasks.update_packages', kwargs={"restart": False}).delay()
                     # result = docassemble.webapp.worker.update_packages.delay(restart=False)
                 return jsonify_task(result)
             jsonify_with_status("You do not have permission to install that package.", 403)
@@ -174,10 +174,10 @@ def api_package():
                 install_pip_package(packagename, limitation)
                 if do_restart:
                     logmessage("Starting process of updating packages followed by restarting server")
-                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={'run_create': should_run_create(packagename)}))
+                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={'run_create': should_run_create(packagename)}))
                     # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                 else:
-                    result = celery_app.signature('tasks.update_packages', pargs={"restart": False}).delay()
+                    result = celery_app.signature('tasks.update_packages', kwargs={"restart": False}).delay()
                     # result = docassemble.webapp.worker.update_packages.delay(restart=False)
                 return jsonify_task(result)
             return jsonify_with_status("You do not have permission to install that package.", 403)
@@ -197,10 +197,10 @@ def api_package():
                     install_zip_package(pkgname, file_number)
                     if do_restart:
                         logmessage("Starting process of updating packages followed by restarting server")
-                        result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={'run_create': should_run_create(pkgname)}))
+                        result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={'run_create': should_run_create(pkgname)}))
                         # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(pkgname)))
                     else:
-                        result = celery_app.signature('tasks.update_packages', pargs={"restart": False}).delay()
+                        result = celery_app.signature('tasks.update_packages', kwargs={"restart": False}).delay()
                         # result = docassemble.webapp.worker.update_packages.delay(restart=False)
                     return jsonify_task(result)
                 return jsonify_with_status("You do not have permission to install that package.", 403)

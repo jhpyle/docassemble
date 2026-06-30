@@ -103,7 +103,7 @@ def update_package():
                             existing_package.limitation = None
                             db.session.commit()
                         install_pip_package(existing_package.name, existing_package.limitation)
-        result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={'run_create': should_run_create(target)}))
+        result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={'run_create': should_run_create(target)}))
         # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
         session['taskwait'] = result.id
         session['serverstarttime'] = START_TIME
@@ -128,7 +128,7 @@ def update_package():
                 pkgname = get_package_name_from_zip(zippath)
                 if user_can_edit_package(pkgname=pkgname):
                     install_zip_package(pkgname, file_number)
-                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={"run_create": should_run_create(pkgname)}))
+                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={"run_create": should_run_create(pkgname)}))
                     # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(pkgname)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
@@ -155,7 +155,7 @@ def update_package():
                     packagename = re.sub(r'^docassemble-', 'docassemble.', packagename)
                 if user_can_edit_package(giturl=giturl) and user_can_edit_package(pkgname=packagename):
                     install_git_package(packagename, giturl, branch)
-                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={"run_create": should_run_create(packagename)}))
+                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={"run_create": should_run_create(packagename)}))
                     #result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
@@ -173,7 +173,7 @@ def update_package():
                 packagename = re.sub(r'[^A-Za-z0-9\_\-\.]', '', packagename)
                 if user_can_edit_package(pkgname=packagename):
                     install_pip_package(packagename, limitation)
-                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', pargs={"run_create": should_run_create(packagename)}))
+                    result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={"run_create": should_run_create(packagename)}))
                     # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME

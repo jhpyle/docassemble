@@ -13,14 +13,6 @@ from packaging import version
 from sqlalchemy import select, delete
 from sqlalchemy.orm import aliased
 import docassemble.base.config
-from docassemble.webapp.files.savedfile import SavedFile
-from docassemble.webapp.info import system_packages
-from docassemble.webapp.db import session_scope, get_session
-from docassemble.webapp.main.models import Supervisors
-from docassemble.webapp.packages.pip import get_pip_info
-from docassemble.webapp.packages.models import Package, Install, PackageAuth
-from docassemble.webapp.utils.logger import logmessage
-from docassemble.webapp.utils.helpers import Object
 from docassemble.webapp.config import (
     daconfig,
     hostname,
@@ -29,6 +21,18 @@ from docassemble.webapp.config import (
     SINGLE_SERVER,
     USING_SUPERVISOR,
 )
+from docassemble.base.thread_context import (
+    empty_globals,
+    global_context,
+)
+from docassemble.webapp.files.savedfile import SavedFile
+from docassemble.webapp.info import system_packages
+from docassemble.webapp.db import session_scope, get_session
+from docassemble.webapp.main.models import Supervisors
+from docassemble.webapp.packages.pip import get_pip_info
+from docassemble.webapp.packages.models import Package, Install, PackageAuth
+from docassemble.webapp.utils.logger import logmessage
+from docassemble.webapp.utils.helpers import Object
 
 # This is called from the command line but also from celery
 
@@ -397,42 +401,43 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
                     session.add(install)
                 session.flush()
         if did_something:
-            update_versions(start_time=start_time)
-            if full and add_dependencies(package_owner.get(package.id, 1), start_time=start_time):
-                update_versions(start_time=start_time)
+            update_versions(session, start_time=start_time)
+            if full and add_dependencies(session, package_owner.get(package.id, 1), start_time=start_time):
+                update_versions(session, start_time=start_time)
         logmessage("check_for_updates: 11 after " + str(time.time() - start_time) + " seconds")
         for package in packages_to_delete:
             try:
+                logmessage(f"check_for_updates: deleting {package.name} from package table")
                 session.delete(package)
             except:
-                logmessage("check_for_updates: unable to uninstall package")
-        logmessage("check_for_updates: 12 after " + str(time.time() - start_time) + " seconds")
+                logmessage(f"check_for_updates: unable to delete {package.name} from package table")
+        session.commit()
         logmessage("check_for_updates: finished uninstalling and installing after " + str(time.time() - start_time) + " seconds")
     return ok, logmessages, results
 
 
-def update_versions(start_time=None):
+def update_versions(session, start_time=None):
     if start_time is None:
         start_time = time.time()
     logmessage("update_versions: starting after " + str(time.time() - start_time) + " seconds")
     install_by_id = {}
-    with session_scope() as session:
-        for install in session.execute(select(Install).filter_by(hostname=hostname)).scalars():
-            install_by_id[install.package_id] = install
-        package_by_name = {}
-        for package in session.execute(select(Package).filter_by(active=True).order_by(Package.name, Package.id.desc())).scalars():
-            if package.name in package_by_name:
-                continue
-            package_by_name[package.name] = Object(id=package.id, packageversion=package.packageversion, name=package.name)
-        installed_packages = get_installed_distributions(start_time=start_time)
-        for package in installed_packages:
-            if package.key in package_by_name:
-                if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
-                    for install_row in session.execute(select(Install).filter_by(hostname=hostname, package_id=package_by_name[package.key].id)).scalars():
-                        install_row.packageversion = package.version
-                if package.version != package_by_name[package.key].packageversion:
-                    for package_row in session.execute(select(Package).filter_by(active=True, name=package_by_name[package.key].name).with_for_update()).scalars():
-                        package_row.packageversion = package.version
+    for install in session.execute(select(Install).filter_by(hostname=hostname)).scalars():
+        install_by_id[install.package_id] = install
+    package_by_name = {}
+    for package in session.execute(select(Package).filter_by(active=True).order_by(Package.name, Package.id.desc())).scalars():
+        if package.name in package_by_name:
+            continue
+        package_by_name[package.name] = Object(id=package.id, packageversion=package.packageversion, name=package.name)
+    installed_packages = get_installed_distributions(start_time=start_time)
+    for package in installed_packages:
+        if package.key in package_by_name:
+            if package_by_name[package.key].id in install_by_id and package.version != install_by_id[package_by_name[package.key].id].packageversion:
+                for install_row in session.execute(select(Install).filter_by(hostname=hostname, package_id=package_by_name[package.key].id)).scalars():
+                    install_row.packageversion = package.version
+            if package.version != package_by_name[package.key].packageversion:
+                for package_row in session.execute(select(Package).filter_by(active=True, name=package_by_name[package.key].name)).scalars():
+                    package_row.packageversion = package.version
+    session.flush()
     logmessage("update_versions: ended after " + str(time.time() - start_time))
 
 
@@ -457,48 +462,48 @@ def get_home_page_dict():
     return home_page
 
 
-def add_dependencies(user_id, start_time=None):
+def add_dependencies(session, user_id, start_time=None):
     if start_time is None:
         start_time = time.time()
     # logmessage('add_dependencies: user_id is ' + str(user_id))
     logmessage("add_dependencies: starting after " + str(time.time() - start_time) + " seconds")
     packages_known = set()
-    with session_scope() as session:
-        for package in session.execute(select(Package.name).filter_by(active=True)):
-            packages_known.add(package.name)
-        installed_packages = get_installed_distributions(start_time=start_time)
-        # logmessage("add_dependencies: installed_packages is " + repr(installed_packages))
-        home_pages = None
-        packages_to_add = []
-        for package in installed_packages:
-            # logmessage("add_dependencies: package is " + repr(package.key))
-            if package.key in packages_known:
-                continue
-            if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
-                continue
-            logmessage("add_dependencies: deleting package record " + repr(package.key))
-            session.execute(delete(Package).filter_by(name=package.key))
-            packages_to_add.append(package)
-        did_something = False
-        if len(packages_to_add) > 0:
-            did_something = True
-            for package in packages_to_add:
-                if package.key.startswith('docassemble.'):
-                    if home_pages is None:
-                        home_pages = get_home_page_dict()
-                    home_page = home_pages.get(package.key.lower(), None)
-                    if home_page is not None and re.search(r'/github.com/', home_page):
-                        package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='git', giturl=home_page, packageversion=package.version, dependency=True)
-                    else:
-                        package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='pip', packageversion=package.version, dependency=True)
+    for package in session.execute(select(Package.name).filter_by(active=True)):
+        packages_known.add(package.name)
+    installed_packages = get_installed_distributions(start_time=start_time)
+    # logmessage("add_dependencies: installed_packages is " + repr(installed_packages))
+    home_pages = None
+    packages_to_add = []
+    for package in installed_packages:
+        # logmessage("add_dependencies: package is " + repr(package.key))
+        if package.key in packages_known:
+            continue
+        if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
+            continue
+        logmessage("add_dependencies: deleting package record " + repr(package.key))
+        session.execute(delete(Package).filter_by(name=package.key))
+        packages_to_add.append(package)
+    session.flush()
+    did_something = False
+    if len(packages_to_add) > 0:
+        did_something = True
+        for package in packages_to_add:
+            if package.key.startswith('docassemble.'):
+                if home_pages is None:
+                    home_pages = get_home_page_dict()
+                home_page = home_pages.get(package.key.lower(), None)
+                if home_page is not None and re.search(r'/github.com/', home_page):
+                    package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='git', giturl=home_page, packageversion=package.version, dependency=True)
                 else:
                     package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='pip', packageversion=package.version, dependency=True)
-                logmessage("add_dependencies: adding package record " + repr(package.key))
-                session.add(package_entry)
-                session.flush()
-                install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
-                session.add(install)
-                session.flush()
+            else:
+                package_entry = Package(name=package.key, package_auth=PackageAuth(user_id=user_id), type='pip', packageversion=package.version, dependency=True)
+            logmessage("add_dependencies: adding package record " + repr(package.key))
+            session.add(package_entry)
+            session.flush()
+            install = Install(hostname=hostname, packageversion=package_entry.packageversion, version=package_entry.version, package_id=package_entry.id)
+            session.add(install)
+            session.flush()
     logmessage("add_dependencies: ending after " + str(time.time() - start_time) + " seconds")
     return did_something
 
@@ -659,12 +664,12 @@ def main():
     clear_invalid_package_auth(start_time=start_time)
     if mode == 'initialize':
         logmessage("update: updating with mode initialize after " + str(time.time() - start_time) + " seconds")
-        update_versions(start_time=start_time)
         with session_scope() as session:
+            update_versions(session, start_time=start_time)
             any_package = session.execute(select(Package).filter_by(active=True)).first()
-        if any_package is None:
-            add_dependencies(1, start_time=start_time)
-            update_versions(start_time=start_time)
+            if any_package is None:
+                add_dependencies(session, 1, start_time=start_time)
+                update_versions(session, start_time=start_time)
         check_for_updates(start_time=start_time, invalidate_cache=False)
         if not SINGLE_SERVER:
             remove_inactive_hosts(start_time=start_time)
@@ -690,4 +695,5 @@ def main():
                     os.utime(wsgi_file, None)
 
 if __name__ == "__main__":
-    main()
+    with global_context(empty_globals()):
+        main()
