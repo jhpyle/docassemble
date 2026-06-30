@@ -3,6 +3,8 @@
 {% block content %}
 {% from "base_templates/form_macros.html" import render_field, render_file_field, render_select_field, render_submit_field, render_checkbox_field with context %}
 
+          <p>{{ config_version }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ word("Python version %s") % (underlying_python_version,) }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ free_disk_space + ' ' + word('remaining on disk') }}</p>
+
 
 {%- if allowed_to_upgrade %}
 <h1 class="h2">{{ word('Upgrade docassemble') }}</h1>

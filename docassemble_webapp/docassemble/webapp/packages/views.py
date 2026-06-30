@@ -1,5 +1,8 @@
 import re
+import sys
+import shutil
 import json
+import humanize
 import packaging
 from markupsafe import Markup
 from flask import (
@@ -182,6 +185,7 @@ def update_package():
             else:
                 flash(word('You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.'), 'error')
     package_list, package_auth = get_package_info()
+    (disk_total, disk_used, disk_free) = shutil.disk_usage(daconfig['config file'])  # pylint: disable=unused-variable
     form.pippackage.data = None
     form.giturl.data = None
     initial_values = {
@@ -193,6 +197,11 @@ def update_package():
     <script{DEFER} src="{url_for('static', filename="app/update_package.min.js")}"></script>
     {redis_script(initial_values)}"""
     python_version = daconfig.get('python version', word('Unknown'))
+    system_version = daconfig.get('system version', word('Unknown'))
+    if python_version == system_version:
+        config_version = word("Version") + " " + str(python_version)
+    else:
+        config_version = word("Version") + " " + str(python_version) + ' (Python); ' + str(system_version) + ' (' + word('system') + ')'
     version = word("Current") + ': <span class="badge bg-primary">' + str(python_version) + '</span>'
     dw_status = pypi_status('docassemble.webapp')
     if daconfig.get('stable version', False):
@@ -220,6 +229,6 @@ def update_package():
     else:
         limitation = ''
     allowed_to_upgrade = current_user.has_role('admin') or user_can_edit_package(pkgname='docassemble.webapp')
-    response = make_response(render_template('packages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name == 'docassemble' or y.package.name.startswith('docassemble.') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
+    response = make_response(render_template('packages/update_package.html', underlying_python_version=re.sub(r' \(.*', '', sys.version, flags=re.DOTALL), free_disk_space=humanize.naturalsize(disk_free), config_version=config_version, version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name == 'docassemble' or y.package.name.startswith('docassemble.') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
