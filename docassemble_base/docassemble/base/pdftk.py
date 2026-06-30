@@ -298,12 +298,12 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                     elif field_type == "/Btn":
                         if hasattr(annot, "A"):
                             continue
-                        if not editable and (flattened_checkbox_label is not None or flattened_checkbox_unselected_label is not None):
+                        if not editable:
                             annot.FT = pikepdf.Name("/Tx")
                             if value == "Off":
-                                annot.V = pikepdf.String(flattened_checkbox_unselected_label if flattened_checkbox_unselected_label is not None else "")
+                                annot.V = pikepdf.String(flattened_checkbox_unselected_label if flattened_checkbox_unselected_label is not None else word("checkbox, unchecked"))
                             else:
-                                annot.V = pikepdf.String(flattened_checkbox_label if flattened_checkbox_label is not None else "[X]")
+                                annot.V = pikepdf.String(flattened_checkbox_label if flattened_checkbox_label is not None else word("checkbox, checked"))
                             continue
                         the_name = pikepdf.Name('/' + value)
                         # Could be radio button: if it is, set the appearance stream of the

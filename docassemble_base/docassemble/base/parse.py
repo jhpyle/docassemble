@@ -5288,6 +5288,10 @@ class Question:
                     raise DASourceError('Unknown data type in attachment pdftk.' + self.idebug(target))
             if 'rendering font' in target and target['rendering font']:
                 options['rendering_font'] = TextObject(str(target['rendering font']), question=self)
+            if 'flattened checkbox label' in target and target['flattened checkbox label'] is not None:
+                options['flattened_checkbox_label'] = TextObject(str(target['flattened checkbox label']), question=self)
+            if 'flattened checkbox unselected label' in target and target['flattened checkbox unselected label'] is not None:
+                options['flattened_checkbox_unselected_label'] = TextObject(str(target['flattened checkbox unselected label']), question=self)
             if 'tagged pdf' in target:
                 if isinstance(target['tagged pdf'], bool):
                     options['tagged_pdf'] = target['tagged pdf']
@@ -7173,12 +7177,12 @@ class Question:
                 result['editable'] = eval(attachment['options']['editable'], the_user_dict)
             else:
                 result['editable'] = True
-            if 'flattened checkbox label' in attachment['options']:
-                result['flattened_checkbox_label'] = attachment['options']['flattened checkbox label']
+            if 'flattened_checkbox_label' in attachment['options']:
+                result['flattened_checkbox_label'] = attachment['options']['flattened_checkbox_label'].text(the_user_dict)
             else:
                 result['flattened_checkbox_label'] = None
-            if 'flattened checkbox unselected label' in attachment['options']:
-                result['flattened_checkbox_unselected_label'] = attachment['options']['flattened checkbox unselected label']
+            if 'flattened_checkbox_unselected_label' in attachment['options']:
+                result['flattened_checkbox_unselected_label'] = attachment['options']['flattened_checkbox_unselected_label'].text(the_user_dict)
             else:
                 result['flattened_checkbox_unselected_label'] = None
             this_thread.misc['redact'] = bool(result['redact'])
