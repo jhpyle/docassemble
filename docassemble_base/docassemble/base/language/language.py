@@ -52,6 +52,7 @@ def salutation_default(indiv, **kwargs):
     with_name_and_punctuation = kwargs.get('with_name_and_punctuation', False)
     ensure_definition(indiv, with_name, with_name_and_punctuation)
     used_gender = False
+    gender = str(indiv.gender).casefold()
     if hasattr(indiv, 'salutation_to_use') and indiv.salutation_to_use is not None:
         salut = indiv.salutation_to_use
     elif hasattr(indiv, 'is_doctor') and indiv.is_doctor:
@@ -62,14 +63,17 @@ def salutation_default(indiv, **kwargs):
         salut = 'Dr.'
     elif hasattr(indiv, 'name') and hasattr(indiv.name, 'suffix') and indiv.name.suffix == 'J':
         salut = 'Judge'
-    elif indiv.gender == 'female':
+    elif gender == 'female':
         used_gender = True
         salut = 'Ms.'
-    else:
+    elif gender == 'male':
         used_gender = True
         salut = 'Mr.'
+    else:
+        used_gender = True
+        salut = 'Mx.'
     if with_name_and_punctuation or with_name:
-        if used_gender and indiv.gender not in ('male', 'female'):
+        if used_gender and gender not in ('male', 'female'):
             salut_and_name = indiv.name.full()
         else:
             salut_and_name = salut + ' ' + indiv.name.last
