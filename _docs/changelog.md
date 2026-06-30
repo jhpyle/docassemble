@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.10.1](https://github.com/jhpyle/docassemble/releases/tag/v1.10.1) - 2026-06-29
+
+
+### Fixed
+
+- Errors related to add-on package installation.
+
 ## [1.10.0](https://github.com/jhpyle/docassemble/releases/tag/v1.10.0) - 2026-06-28
 
 
