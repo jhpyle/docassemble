@@ -351,6 +351,17 @@ enable tts: False
 
 The default value is `True`.
 
+## <a name="enable translation"></a>Disabling the translation spreadsheet generator
+
+If you are not using the [`translations`] feature, you can turn off
+the spreadsheet generation utility to save memory. This feature is
+also disabled if `enable playground` is false.
+
+{% highlight yaml %}
+enable translations: False
+{% endhighlight %}
+
+The default value is `True`.
 
 ## <a name="developer can install"></a>Whether users with developer accounts can install packages
 
@@ -7159,3 +7170,4 @@ and Facebook API keys.
 [`delete_record()`]: {{ site.baseurl }}/docs/functions.html#delete_record
 [`DAGlobal`]: {{ site.baseurl }}/docs/objects.html#DAGlobal
 [screen reader]: {{ site.baseurl }}/docs/special.html#speak_text
+[`translations`]: {{ site.baseurl }}/docs/initial.html#translations
