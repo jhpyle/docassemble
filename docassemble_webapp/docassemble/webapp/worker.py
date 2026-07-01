@@ -6,6 +6,8 @@ import docassemble.base.config
 if not docassemble.base.config.loaded:
     docassemble.base.config.load(in_celery=True)
 from docassemble.webapp.config import daconfig
+from docassemble.webapp.flask_app import flaskapp
+from docassemble.webapp.startup import initialize
 from docassemble.webapp.utils.logger import logmessage
 from docassemble.webapp.tasks.context import bg_context
 from docassemble.webapp.tasks.common import celery_app, convert
@@ -22,6 +24,8 @@ from docassemble.webapp.tasks.tasks import (
     sync_with_onedrive,
     update_packages,
 )
+
+initialize(flaskapp)
 
 for module_name in daconfig['celery modules']:
     try:

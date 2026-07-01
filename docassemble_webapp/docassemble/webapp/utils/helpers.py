@@ -1328,7 +1328,7 @@ def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, 
                                 navbar += '<a class="dropdown-item" href="' + url_for('logs.logs') + '">' + word('Logs') + '</a>'
                             if current_app.config['ENABLE_PLAYGROUND']:
                                 navbar += '<a class="dropdown-item" href="' + url_for('develop.playground_page') + '">' + word('Playground') + '</a>'
-                            navbar += '<a class="dropdown-item" href="' + url_for('develop.utilities') + '">' + word('Utilities') + '</a>'
+                                navbar += '<a class="dropdown-item" href="' + url_for('develop.utilities') + '">' + word('Utilities') + '</a>'
                         if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
                             navbar += '<a class="dropdown-item" href="' + url_for('users.user_list') + '">' + word('User List') + '</a>'
                         if current_user.has_role('admin') and current_app.config['ALLOW_CONFIGURATION_EDITING']:
@@ -2153,7 +2153,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 else:
                     content += '&nbsp;<a class="datrain" target="_blank" href="' + url_for('ml.train', package=ml_parts[0], file=ml_parts[1], group_id=var) + '" title=' + json.dumps(word("Train")) + '><i class="fa-solid fa-graduation-cap"></i></a>'
             content += '</td></tr>'
-        if len(all_sources) > 0 and show_messages:
+        if current_app.config['ENABLE_PLAYGROUND'] and len(all_sources) > 0 and show_messages:
             content += search_key
             content += '\n                <tr><td>'
             content += '\n                  <ul>'

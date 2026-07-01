@@ -121,6 +121,7 @@ def init_app(app):
     app.config['ENABLE_TRAINING'] = daconfig.get('enable training', True)
     app.config['ENABLE_FAX'] = daconfig.get('enable faxing', True)
     app.config['ENABLE_TTS'] = daconfig.get('enable tts', True)
+    app.config['ENABLE_TRANSLATION'] = daconfig.get('enable translation', True)
     app.config['INVERSE_NAVBAR'] = bool(daconfig.get('inverse navbar', True))
     app.config['AUTO_COLOR_SCHEME'] = bool(daconfig.get('auto color scheme', True))
     app.config['ENABLE_PLAYGROUND'] = daconfig.get('enable playground', True)

@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.10.2] - 2026-07-01
+
+### Added
+
+- The `enable translation` Configuration directive.
+
+### Changed
+
+- If `enable playground` is false, the Playground page, the Utilities
+  page, and other code associated with interview development will not
+  be loaded.
+
+### Fixed
+
+- Problem with Celery not being fully configured.
+- Bug in fax configuration.
+- Added input santiation on admin-only endpoint /logfile.
+- Added Twilio verification to /sms endpoint.
+
 ## [1.10.1] - 2026-06-29
 
 ### Fixed

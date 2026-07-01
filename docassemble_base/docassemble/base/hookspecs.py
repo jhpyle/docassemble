@@ -504,3 +504,7 @@ def get_chat_log_internal(chat_mode, yaml_filename, session_id, user_id, temp_us
 @hookspec(firstresult=True)
 def get_ml_info(varname, default_package, default_file) -> Any:
     pass
+
+@hookspec(firstresult=True)
+def devel_login() -> Any:
+    pass

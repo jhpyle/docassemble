@@ -127,8 +127,6 @@ from docassemble.webapp.utils.helpers import (
     formatted_current_date,
     additional_scripts,
     pg_code_cache,
-    reset_process_running,
-    summarize_results,
     standard_html_start,
     additional_css,
     ok_mimetypes,
@@ -140,6 +138,7 @@ from docassemble.webapp.utils.helpers import (
     custom_send_file,
 )
 from docassemble.webapp.interview.dictionary import fresh_dictionary
+from docassemble.webapp.packages.helpers import pypi_status
 from docassemble.webapp.utils.filenames import sanitize_arguments, secure_filename
 from docassemble.webapp.utils.hooks import url_for
 from docassemble.webapp.utils.logger import logmessage
@@ -175,7 +174,6 @@ from .helpers import (
     get_github_flow,
     get_ssh_keys,
     pg_ex,
-    pypi_status,
     set_playground_user,
 )
 
@@ -2047,7 +2045,7 @@ def pull_playground_package():
     branch = request.args.get('branch')
     initial_values = {
         "daDefaultBranch": branch if branch else GITHUB_BRANCH,
-        "daGetGitBranches": url_for('develop.get_git_branches'),
+        "daGetGitBranches": url_for('packages.get_git_branches'),
         "daGithubBranch": GITHUB_BRANCH
     }
     extra_js = f"""
@@ -2066,68 +2064,6 @@ def pull_playground_package():
                                              extra_js=Markup(extra_js)), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
-
-
-def get_branches_of_repo(giturl):
-    repo_name = re.sub(r'/*$', '', giturl)
-    m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
-    if m:
-        access_token = m.group(1)
-    else:
-        access_token = None
-    repo_name = re.sub(r'^git\+', '', repo_name)
-    repo_name = re.sub(r'^http.*github.com/', '', repo_name)
-    repo_name = re.sub(r'.*@github.com:', '', repo_name)
-    repo_name = re.sub(r'[@#].*', '', repo_name)
-    repo_name = re.sub(r'.git$', '', repo_name)
-    if current_app.config['USE_GITHUB']:
-        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
-    else:
-        github_auth = None
-    if github_auth and access_token is None:
-        storage = RedisCredStorage(oauth_app='github')
-        credentials = storage.get()
-        if not credentials or credentials.invalid:
-            http = httplib2.Http()
-        else:
-            http = credentials.authorize(httplib2.Http())
-    else:
-        http = httplib2.Http()
-    the_url = "https://api.github.com/repos/" + repo_name + '/branches'
-    branches = []
-    if access_token:
-        resp, content = http.request(the_url, "GET", headers={'Authorization': "token " + access_token})
-    else:
-        resp, content = http.request(the_url, "GET")
-    if int(resp['status']) == 200:
-        branches.extend(json.loads(content.decode()))
-        while True:
-            next_link = get_next_link(resp)
-            if next_link:
-                if access_token:
-                    resp, content = http.request(next_link, "GET", headers={'Authorization': "token " + access_token})
-                else:
-                    resp, content = http.request(next_link, "GET")
-                if int(resp['status']) != 200:
-                    raise DAException(repo_name + " fetch failed")
-                branches.extend(json.loads(content.decode()))
-            else:
-                break
-        return branches
-    raise DAException(the_url + " fetch failed on first try; got " + str(resp['status']))
-
-
-@develop_bp.route('/get_git_branches', methods=['GET'])
-@login_required
-@roles_required(['developer', 'admin'])
-def get_git_branches():
-    if 'url' not in request.args:
-        return ('File not found', 404)
-    giturl = request.args['url'].strip()
-    try:
-        return jsonify({'success': True, 'result': get_branches_of_repo(giturl)})
-    except BaseException as err:
-        return jsonify({'success': False, 'reason': str(err)})
 
 
 def get_user_repositories(http):
@@ -4428,69 +4364,6 @@ def download_zip_package():
     return response
 
 
-@develop_bp.route('/updatingpackages', methods=['GET', 'POST'])
-@login_required
-@roles_required(['admin', 'developer'])
-def update_package_wait():
-    setup_translation()
-    if not (current_app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
-        return ('File not found', 404)
-    next_url = current_app.user_manager.make_safe_url_function(request.args.get('next', url_for('packages.update_package')))
-    my_csrf = generate_csrf()
-    initial_values = {
-        "daRestartAjax": url_for('main.restart_ajax'),
-        "daCsrf": my_csrf,
-        "daNoError": word("The package update did not report an error.  The logs are below."),
-        "daErrorWithLog": word("The package update reported an error.  The logs are below."),
-        "daUpdateError": word("There was an error updating the packages."),
-        "daGeneralError": word("There was an error."),
-        "daServerDidNotRespond": word("Server did not respond to request for update."),
-        "daUrlUpdatePackageAjax": url_for('develop.update_package_ajax')
-    }
-    script = f"""
-    <script{DEFER} src="{url_for('static', filename="app/updatingpackages.min.js")}"></script>
-    {redis_script(initial_values)}"""
-    response = make_response(render_template('develop/update_package_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url), 200)
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
-    return response
-
-
-@develop_bp.route('/update_package_ajax', methods=['POST'])
-@login_required
-@roles_required(['admin', 'developer'])
-def update_package_ajax():
-    if not (current_app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
-        return ('File not found', 404)
-    if 'taskwait' not in session or 'serverstarttime' not in session:
-        return jsonify(success=False)
-    setup_translation()
-    result = celery_app.AsyncResult(id=session['taskwait'])
-    if result.ready():
-        # if 'taskwait' in session:
-        #     del session['taskwait']
-        the_result = result.get()
-        if the_result.__class__.__name__ == 'ReturnValue':
-            if the_result.ok:
-                # logmessage("update_package_ajax: success")
-                if (hasattr(the_result, 'restart') and not the_result.restart) or (START_TIME > session['serverstarttime'] and not reset_process_running()):
-                    if len(the_result.logmessages) > 210000:
-                        the_result.logmessages = the_result.logmessages[0:100000] + "\n\nTRUNCATED\n\n" + the_result.logmessages[-100000:]
-                    return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
-                return jsonify(success=True, status='waiting')
-            if hasattr(the_result, 'error_message'):
-                logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
-                return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
-            if hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
-                if len(the_result.logmessages) > 210000:
-                    the_result.logmessages = the_result.logmessages[0:100000] + "\n\nTRUNCATED\n\n" + the_result.logmessages[-100000:]
-                return jsonify(success=True, status='failed', summary=summarize_results(the_result.results, the_result.logmessages))
-            return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)))
-        logmessage("update_package_ajax: failed return value is a " + str(type(the_result)))
-        logmessage("update_package_ajax: failed return value is " + str(the_result))
-        return jsonify(success=True, status='failed', error_message=str(the_result))
-    return jsonify(success=True, status='waiting')
-
-
 @develop_bp.route('/createplaygroundpackage', methods=['GET', 'POST'])
 @login_required
 @roles_required(['admin', 'developer'])
@@ -4968,7 +4841,7 @@ def create_playground_package():
                 result = celery_app.signature('tasks.update_packages').apply_async(link=celery_app.signature('tasks.reset_server', kwargs={'run_create': should_run_create('docassemble.' + pkgname)}))
                 session['taskwait'] = result.id
                 session['serverstarttime'] = START_TIME
-                return redirect(url_for('develop.update_package_wait', next=url_for('develop.playground_packages', project=current_project, file=current_package)))
+                return redirect(url_for('packages.update_package_wait', next=url_for('develop.playground_packages', project=current_project, file=current_package)))
                 # return redirect(url_for('develop.playground_packages', file=current_package))
             response = custom_send_file(saved_file.path, mimetype='application/zip', as_attachment=True, download_name=nice_name)
             response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
@@ -5324,43 +5197,48 @@ def utilities():
                     result[language][the_word] = existing[the_word]
                     continue
                 words_to_translate.append(the_word)
-            chunk_limit = daconfig.get('google translate words at a time', 20)
-            chunks = []
-            interim_list = []
-            while len(words_to_translate) > 0:
-                the_word = words_to_translate.pop(0)
-                interim_list.append(the_word)
-                if len(interim_list) >= chunk_limit:
+            if language == 'en':
+                for the_word in words_to_translate:
+                    if not bool(result[language].get(the_word)):
+                        result[language][the_word] = the_word
+            else:
+                chunk_limit = daconfig.get('google translate words at a time', 20)
+                chunks = []
+                interim_list = []
+                while len(words_to_translate) > 0:
+                    the_word = words_to_translate.pop(0)
+                    interim_list.append(the_word)
+                    if len(interim_list) >= chunk_limit:
+                        chunks.append(interim_list)
+                        interim_list = []
+                if len(interim_list) > 0:
                     chunks.append(interim_list)
-                    interim_list = []
-            if len(interim_list) > 0:
-                chunks.append(interim_list)
-            for chunk in chunks:
-                if use_google_translate:
-                    try:
-                        resp = service.translations().list(  # pylint: disable=no-member
-                            source='en',
-                            target=language,
-                            q=chunk
-                        ).execute()
-                    except BaseException as errstr:
-                        logmessage("utilities: translation failed: " + str(errstr))
-                        resp = None
-                    if isinstance(resp, dict) and 'translations' in resp and isinstance(resp['translations'], list) and len(resp['translations']) == len(chunk):
-                        for the_index, the_chunk in enumerate(chunk):
-                            if isinstance(resp['translations'][the_index], dict) and 'translatedText' in resp['translations'][the_index]:
-                                result[language][the_chunk] = re.sub(r'&#39;', r"'", str(resp['translations'][the_index]['translatedText']))
-                            else:
-                                result[language][the_chunk] = 'XYZNULLXYZ'
-                                uses_null = True
+                for chunk in chunks:
+                    if use_google_translate:
+                        try:
+                            resp = service.translations().list(  # pylint: disable=no-member
+                                source='en',
+                                target=language,
+                                q=chunk
+                            ).execute()
+                        except BaseException as errstr:
+                            logmessage("utilities: translation failed: " + str(errstr))
+                            resp = None
+                        if isinstance(resp, dict) and 'translations' in resp and isinstance(resp['translations'], list) and len(resp['translations']) == len(chunk):
+                            for the_index, the_chunk in enumerate(chunk):
+                                if isinstance(resp['translations'][the_index], dict) and 'translatedText' in resp['translations'][the_index]:
+                                    result[language][the_chunk] = re.sub(r'&#39;', r"'", str(resp['translations'][the_index]['translatedText']))
+                                else:
+                                    result[language][the_chunk] = 'XYZNULLXYZ'
+                                    uses_null = True
+                        else:
+                            for the_word in chunk:
+                                result[language][the_word] = 'XYZNULLXYZ'
+                            uses_null = True
                     else:
                         for the_word in chunk:
                             result[language][the_word] = 'XYZNULLXYZ'
                         uses_null = True
-                else:
-                    for the_word in chunk:
-                        result[language][the_word] = 'XYZNULLXYZ'
-                    uses_null = True
             if form.systemfiletype.data == 'YAML':
                 word_box = altyamlstring.dump_to_string(result)
                 word_box = re.sub(r'"XYZNULLXYZ"', r'null', word_box)

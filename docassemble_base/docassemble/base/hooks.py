@@ -551,3 +551,6 @@ def get_chat_log_internal(chat_mode, yaml_filename, session_id, user_id, temp_us
 
 def get_ml_info(varname, default_package, default_file) -> Any:
     return pm.hook.get_ml_info(varname=varname, default_package=default_package, default_file=default_file)
+
+def devel_login() -> Any:
+    return pm.hook.devel_login()

@@ -1,24 +1,23 @@
 import re
-import json
 import packaging
 from markupsafe import Markup
 from flask import (
     current_app,
-    request,
-    session,
+    flash,
+    jsonify,
+    make_response,
     redirect,
     render_template,
-    make_response,
-    flash,
+    request,
+    session,
 )
 from flask_login import current_user
+from flask_wtf.csrf import generate_csrf
 from sqlalchemy import select
 from docassemble_flask_user import login_required, roles_required
-from docassemble.base.generate_key import random_string
 from docassemble.base.language.words import word
+from docassemble.base.hooks import devel_login
 from docassemble.webapp.config import GITHUB_BRANCH, DEFER, daconfig, START_TIME
-from docassemble.webapp.daredis import r
-from docassemble.webapp.develop.helpers import get_github_flow, pypi_status
 from docassemble.webapp.extensions import db
 from docassemble.webapp.files.file_number import get_new_file_number
 from docassemble.webapp.files.helpers import file_set_attributes
@@ -26,23 +25,29 @@ from docassemble.webapp.files.savedfile import SavedFile
 from docassemble.webapp.tasks.app import celery_app
 from docassemble.webapp.translations import setup_translation
 from docassemble.webapp.utils.filenames import secure_filename
+from docassemble.webapp.utils.logger import logmessage
 from docassemble.webapp.utils.helpers import (
-    user_can_edit_package,
-    install_pip_package,
+    get_master_branch,
     get_package_info,
     install_git_package,
-    uninstall_package,
-    redis_script,
-    get_master_branch,
-    should_run_create,
+    install_pip_package,
     install_zip_package,
+    redis_script,
+    reset_process_running,
+    should_run_create,
+    summarize_results,
+    uninstall_package,
     url_for,
+    user_can_edit_package,
 )
-from docassemble.webapp.utils.redis_cred_storage import RedisCredStorage
 from docassemble.webapp.utils.helpers import version_warning
 from .blueprint import packages_bp
 from .forms import UpdatePackageForm
-from .helpers import get_package_name_from_zip
+from .helpers import (
+    get_branches_of_repo,
+    get_package_name_from_zip,
+    pypi_status,
+)
 from .models import Package
 
 @packages_bp.route('/updatepackage', methods=['GET', 'POST'])
@@ -60,15 +65,10 @@ def update_package():
         del session['serverstarttime']
     # pip.utils.logging._log_state = threading.local()
     # pip.utils.logging._log_state.indentation = 0
-    if request.method == 'GET' and current_app.config['USE_GITHUB'] and r.get('da:using_github:userid:' + str(current_user.id)) is not None:
-        storage = RedisCredStorage(oauth_app='github')
-        credentials = storage.get()
-        if not credentials or credentials.invalid:
-            state_string = random_string(16)
-            session['github_next'] = json.dumps({'state': state_string, 'path': 'update_package', 'arguments': request.args})
-            flow = get_github_flow()
-            uri = flow.step1_get_authorize_url(state=state_string)
-            return redirect(uri)
+    if request.method == 'GET' and current_app.config['ENABLE_PLAYGROUND']:
+        status = devel_login()
+        if status:
+            return status
     form = UpdatePackageForm(request.form)
     form.gitbranch.choices = [('', "Not applicable")]
     if form.gitbranch.data:
@@ -107,7 +107,7 @@ def update_package():
         # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(target)))
         session['taskwait'] = result.id
         session['serverstarttime'] = START_TIME
-        return redirect(url_for('develop.update_package_wait'))
+        return redirect(url_for('packages.update_package_wait'))
     if request.method == 'POST' and form.validate_on_submit():
         # use_pip_cache = form.use_cache.data
         # pipe = r.pipeline()
@@ -132,7 +132,7 @@ def update_package():
                     # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(pkgname)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
-                    return redirect(url_for('develop.update_package_wait'))
+                    return redirect(url_for('packages.update_package_wait'))
                 flash(word("You do not have permission to install this package."), 'error')
             except BaseException as err_mess:
                 flash("Error of type " + str(type(err_mess)) + " processing upload: " + str(err_mess), "error")
@@ -159,7 +159,7 @@ def update_package():
                     #result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
-                    return redirect(url_for('develop.update_package_wait'))
+                    return redirect(url_for('packages.update_package_wait'))
                 flash(word("You do not have permission to install this package."), 'error')
             elif form.pippackage.data:
                 pippackage = re.sub(r'@.*', '', form.pippackage.data).strip()
@@ -177,7 +177,7 @@ def update_package():
                     # result = docassemble.webapp.worker.update_packages.apply_async(link=docassemble.webapp.worker.reset_server.s(run_create=should_run_create(packagename)))
                     session['taskwait'] = result.id
                     session['serverstarttime'] = START_TIME
-                    return redirect(url_for('develop.update_package_wait'))
+                    return redirect(url_for('packages.update_package_wait'))
                 flash(word("You do not have permission to install this package."), 'error')
             else:
                 flash(word('You need to supply a Git URL, upload a file, or supply the name of a package on PyPI.'), 'error')
@@ -186,7 +186,7 @@ def update_package():
     form.giturl.data = None
     initial_values = {
         "daDefaultBranch": branch if branch else 'null',
-        "daGetGitBranches": url_for('develop.get_git_branches'),
+        "daGetGitBranches": url_for('packages.get_git_branches'),
         "daGithubBranch": GITHUB_BRANCH
     }
     extra_js = f"""
@@ -223,3 +223,79 @@ def update_package():
     response = make_response(render_template('packages/update_package.html', version_warning=version_warning, bodyclass='daadminbody', form=form, package_list=sorted(package_list, key=lambda y: (0 if y.package.name == 'docassemble' or y.package.name.startswith('docassemble.') else 1, y.package.name.lower())), tab_title=word('Package Management'), page_title=word('Package Management'), extra_js=Markup(extra_js), version=Markup(version), allowed_to_upgrade=allowed_to_upgrade, limitation=limitation), 200)
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
     return response
+
+
+@packages_bp.route('/updatingpackages', methods=['GET', 'POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def update_package_wait():
+    setup_translation()
+    if not (current_app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
+        return ('File not found', 404)
+    next_url = current_app.user_manager.make_safe_url_function(request.args.get('next', url_for('packages.update_package')))
+    my_csrf = generate_csrf()
+    initial_values = {
+        "daRestartAjax": url_for('main.restart_ajax'),
+        "daCsrf": my_csrf,
+        "daNoError": word("The package update did not report an error.  The logs are below."),
+        "daErrorWithLog": word("The package update reported an error.  The logs are below."),
+        "daUpdateError": word("There was an error updating the packages."),
+        "daGeneralError": word("There was an error."),
+        "daServerDidNotRespond": word("Server did not respond to request for update."),
+        "daUrlUpdatePackageAjax": url_for('packages.update_package_ajax')
+    }
+    script = f"""
+    <script{DEFER} src="{url_for('static', filename="app/updatingpackages.min.js")}"></script>
+    {redis_script(initial_values)}"""
+    response = make_response(render_template('packages/update_package_wait.html', version_warning=None, bodyclass='daadminbody', extra_js=Markup(script), tab_title=word('Updating'), page_title=word('Updating'), next_page=next_url), 200)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    return response
+
+
+@packages_bp.route('/get_git_branches', methods=['GET'])
+@login_required
+@roles_required(['developer', 'admin'])
+def get_git_branches():
+    if 'url' not in request.args:
+        return ('File not found', 404)
+    giturl = request.args['url'].strip()
+    try:
+        return jsonify({'success': True, 'result': get_branches_of_repo(giturl)})
+    except BaseException as err:
+        return jsonify({'success': False, 'reason': str(err)})
+
+
+@packages_bp.route('/update_package_ajax', methods=['POST'])
+@login_required
+@roles_required(['admin', 'developer'])
+def update_package_ajax():
+    if not (current_app.config['DEVELOPER_CAN_INSTALL'] or current_user.has_role('admin')):
+        return ('File not found', 404)
+    if 'taskwait' not in session or 'serverstarttime' not in session:
+        return jsonify(success=False)
+    setup_translation()
+    result = celery_app.AsyncResult(id=session['taskwait'])
+    if result.ready():
+        # if 'taskwait' in session:
+        #     del session['taskwait']
+        the_result = result.get()
+        if the_result.__class__.__name__ == 'ReturnValue':
+            if the_result.ok:
+                # logmessage("update_package_ajax: success")
+                if (hasattr(the_result, 'restart') and not the_result.restart) or (START_TIME > session['serverstarttime'] and not reset_process_running()):
+                    if len(the_result.logmessages) > 210000:
+                        the_result.logmessages = the_result.logmessages[0:100000] + "\n\nTRUNCATED\n\n" + the_result.logmessages[-100000:]
+                    return jsonify(success=True, status='finished', ok=the_result.ok, summary=summarize_results(the_result.results, the_result.logmessages))
+                return jsonify(success=True, status='waiting')
+            if hasattr(the_result, 'error_message'):
+                logmessage("update_package_ajax: failed return value is " + str(the_result.error_message))
+                return jsonify(success=True, status='failed', error_message=str(the_result.error_message))
+            if hasattr(the_result, 'results') and hasattr(the_result, 'logmessages'):
+                if len(the_result.logmessages) > 210000:
+                    the_result.logmessages = the_result.logmessages[0:100000] + "\n\nTRUNCATED\n\n" + the_result.logmessages[-100000:]
+                return jsonify(success=True, status='failed', summary=summarize_results(the_result.results, the_result.logmessages))
+            return jsonify(success=True, status='failed', error_message=str("No error message.  Result is " + str(the_result)))
+        logmessage("update_package_ajax: failed return value is a " + str(type(the_result)))
+        logmessage("update_package_ajax: failed return value is " + str(the_result))
+        return jsonify(success=True, status='failed', error_message=str(the_result))
+    return jsonify(success=True, status='waiting')

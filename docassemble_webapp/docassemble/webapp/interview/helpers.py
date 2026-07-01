@@ -857,7 +857,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
     if allow_going_back:
         data['cornerBackButton'] = interview_status.cornerback
     data.update(interview_status.as_data(user_dict, encode=encode))
-    if 'source' in data:
+    if current_app.config['ENABLE_PLAYGROUND'] and 'source' in data:
         data['source']['varsLink'] = url_for('develop.get_variables', i=yaml_filename)
         data['source']['varsLabel'] = word('Show variables and values')
     # if interview_status.question.question_type == "review" and len(interview_status.question.fields_used):
@@ -928,7 +928,7 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
                             menu_items.append({'href': url_for('logs.logs'), 'anchor': word('Logs')})
                         if current_app.config['ENABLE_PLAYGROUND']:
                             menu_items.append({'href': url_for('develop.playground_page'), 'anchor': word('Playground')})
-                        menu_items.append({'href': url_for('develop.utilities'), 'anchor': word('Utilities')})
+                            menu_items.append({'href': url_for('develop.utilities'), 'anchor': word('Utilities')})
                         if current_user.has_role('admin', 'advocate') or current_user.can_do('access_user_info'):
                             menu_items.append({'href': url_for('users.user_list'), 'anchor': word('User List')})
                         if current_user.has_role('admin') and current_app.config['ALLOW_CONFIGURATION_EDITING']:

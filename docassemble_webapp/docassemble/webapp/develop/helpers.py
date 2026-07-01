@@ -8,7 +8,6 @@ from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import YamlLexer  # pylint: disable=no-name-in-module
 import oauth2client
-import requests
 from Crypto.PublicKey import RSA
 from markupsafe import Markup
 from sqlalchemy import select, or_, and_
@@ -26,7 +25,9 @@ from docassemble.webapp.config import (
     WEBAPP_PATH,
     LOG_DIRECTORY,
     da_version,
+    hostname,
 )
+from docassemble.webapp.daredis import r
 from docassemble.webapp.extensions import db
 from docassemble.webapp.files.file_access import get_info_from_file_reference
 from docassemble.webapp.files.savedfile import SavedFile
@@ -40,12 +41,19 @@ from docassemble.webapp.utils.helpers import (
     get_base_words,
 )
 from docassemble.webapp.utils.hooks import url_for
-from docassemble.webapp.utils.regex import url_sanitize
 
 pg_ex = {}
 base_words = {}
 
 def copy_playground_modules():
+    progress_key = 'da:copying_playground_modules:' + hostname
+    in_progress = r.get(progress_key)
+    if in_progress is not None:
+        return
+    pipe = r.pipeline()
+    pipe.set(progress_key, 1)
+    pipe.expire(progress_key, 5)
+    pipe.execute()
     root_dir = os.path.join(FULL_PACKAGE_DIRECTORY, 'docassemble')
     for d in os.listdir(root_dir):
         if re.search(r'^playground[0-9]', d) and os.path.isdir(os.path.join(root_dir, d)):
@@ -74,6 +82,10 @@ def copy_playground_modules():
             # shutil.copytree(mod_dir.directory, local_dir)
             # with open(os.path.join(local_dir, '__init__.py'), 'w', encoding='utf-8') as the_file:
             #     the_file.write(init_py_file)
+    pipe = r.pipeline()
+    pipe.set(progress_key, 1)
+    pipe.expire(progress_key, 3)
+    pipe.execute()
 
 
 def proc_example_list(example_list, package, directory, examples):
@@ -189,6 +201,14 @@ def add_project(filename, current_project):
 
 
 def write_pypirc():
+    progress_key = 'da:writing_pypirc:' + hostname
+    in_progress = r.get(progress_key)
+    if in_progress is not None:
+        return
+    pipe = r.pipeline()
+    pipe.set(progress_key, 1)
+    pipe.expire(progress_key, 5)
+    pipe.execute()
     pypirc_file = daconfig.get('pypirc path', '/var/www/.pypirc')
     # pypi_username = daconfig.get('pypi username', None)
     # pypi_password = daconfig.get('pypi password', None)
@@ -214,33 +234,10 @@ repository: """ + pypi_url + "\n"
         with open(pypirc_file, 'w', encoding='utf-8') as fp:
             fp.write(content)
         os.chmod(pypirc_file, stat.S_IRUSR | stat.S_IWUSR)
-
-
-def pypi_status(packagename):
-    result = {}
-    pypi_url = daconfig.get('pypi url', 'https://pypi.org/pypi')
-    try:
-        response = requests.get(url_sanitize(pypi_url + '/' + str(packagename) + '/json'), timeout=30)
-        assert response.status_code == 200
-    except AssertionError:
-        if response.status_code == 404:
-            result['error'] = False
-            result['exists'] = False
-        else:
-            result['error'] = response.status_code
-    except requests.exceptions.Timeout:
-        result['error'] = 'timeout'
-    except:
-        result['error'] = 'unknown'
-    else:
-        try:
-            result['info'] = response.json()
-        except:
-            result['error'] = 'json'
-        else:
-            result['error'] = False
-            result['exists'] = True
-    return result
+    pipe = r.pipeline()
+    pipe.set(progress_key, 1)
+    pipe.expire(progress_key, 3)
+    pipe.execute()
 
 
 def get_github_flow():

@@ -2888,7 +2888,8 @@ def index(action_argument=None, refer=None):
                 if question_type in interview_status.screen_reader_text:
                     output += '<pre style="white-space: pre-wrap;">' + to_text(interview_status.screen_reader_text[question_type]) + '</pre>\n'
         output += '          <hr>\n'
-        output += '          <h3>' + word('Source code for question') + '<a class="float-end btn btn-info" target="_blank" href="' + url_for('develop.get_variables', i=yaml_filename) + '">' + word('Show variables and values') + '</a></h3>' + "\n"
+        if current_app.config['ENABLE_PLAYGROUND']:
+            output += '          <h3>' + word('Source code for question') + '<a class="float-end btn btn-info" target="_blank" href="' + url_for('develop.get_variables', i=yaml_filename) + '">' + word('Show variables and values') + '</a></h3>' + "\n"
         if interview_status.question.from_source.path != interview.source.path and interview_status.question.from_source.path is not None:
             output += '          <p style="font-weight: bold;"><small>(' + word('from') + ' ' + interview_status.question.from_source.path + ")</small></p>\n"
         if (not hasattr(interview_status.question, 'source_code')) or interview_status.question.source_code is None:
@@ -2951,7 +2952,7 @@ def index(action_argument=None, refer=None):
             "daPostURL": url_for('interview.index', **index_params_external),
             "daYamlFilename": yaml_filename,
             "daMessageLog": get_message_log(),
-            "daGetVariablesUrl": url_for('develop.get_variables', i=yaml_filename),
+            "daGetVariablesUrl": url_for('develop.get_variables', i=yaml_filename) if current_app.config['ENABLE_PLAYGROUND'] else None,
             "daChatRoles": user_dict['_internal']['livehelp']['roles'],
             "daChatPartnerRoles": user_dict['_internal']['livehelp']['partner_roles'],
             "daShouldForceFullScreen": force_full_screen,

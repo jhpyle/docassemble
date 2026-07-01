@@ -129,11 +129,14 @@ def init_app(the_app):
     import docassemble.webapp.packages.views
     the_app.register_blueprint(packages_bp)
     # develop blueprint
-    from docassemble.webapp.develop import develop_bp
-    if the_app.config['ENABLE_API']:
-        import docassemble.webapp.develop.api
-    import docassemble.webapp.develop.views
-    the_app.register_blueprint(develop_bp)
+    if the_app.config['ENABLE_PLAYGROUND']:
+        from docassemble.webapp.develop import develop_bp
+        if the_app.config['ENABLE_API']:
+            import docassemble.webapp.develop.api
+        import docassemble.webapp.develop.views
+        import docassemble.webapp.develop.hooks
+        pm.register(docassemble.webapp.develop.hooks)
+        the_app.register_blueprint(develop_bp)
     # monitor blueprint
     if the_app.config['ENABLE_MONITOR']:
         from docassemble.webapp.monitor import monitor_bp
@@ -166,8 +169,9 @@ def init_app(the_app):
         import docassemble.webapp.api.views
         the_app.register_blueprint(api_bp)
     # translation blueprint
-    from docassemble.webapp.translation import translation_bp
-    the_app.register_blueprint(translation_bp)
+    if the_app.config['ENABLE_PLAYGROUND'] and the_app.config['ENABLE_TRANSLATION']:
+        from docassemble.webapp.translation import translation_bp
+        the_app.register_blueprint(translation_bp)
     # fax blueprint
     if the_app.config['ENABLE_FAX']:
         from docassemble.webapp.fax import fax_bp

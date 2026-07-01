@@ -3,16 +3,24 @@ import fnmatch
 from io import TextIOWrapper
 import re
 import os
+import json
 import traceback
 import zipfile
 import tomli
+import httplib2
+import requests
 from flask import current_app
+from flask_login import current_user
 from docassemble.base.error import DAException
 from docassemble.base.thread_context import this_thread
 from docassemble.webapp.config import FULL_PACKAGE_DIRECTORY, daconfig
+from docassemble.webapp.daredis import r
 from docassemble.webapp.users.helpers import login_as_admin
+from docassemble.webapp.utils.helpers import get_next_link
 from docassemble.webapp.utils.logger import logmessage
 from docassemble.webapp.utils.path import splitall
+from docassemble.webapp.utils.redis_cred_storage import RedisCredStorage
+from docassemble.webapp.utils.regex import url_sanitize
 
 def import_necessary(url, url_root):
     login_as_admin(url, url_root)
@@ -133,3 +141,79 @@ def get_package_name_from_zip(zippath):
                     return data['project']['name']
                 raise DAException("Could not find name of Python package")
     raise DAException("Not a Python package zip file")
+
+
+def pypi_status(packagename):
+    result = {}
+    pypi_url = daconfig.get('pypi url', 'https://pypi.org/pypi')
+    try:
+        response = requests.get(url_sanitize(pypi_url + '/' + str(packagename) + '/json'), timeout=30)
+        assert response.status_code == 200
+    except AssertionError:
+        if response.status_code == 404:
+            result['error'] = False
+            result['exists'] = False
+        else:
+            result['error'] = response.status_code
+    except requests.exceptions.Timeout:
+        result['error'] = 'timeout'
+    except:
+        result['error'] = 'unknown'
+    else:
+        try:
+            result['info'] = response.json()
+        except:
+            result['error'] = 'json'
+        else:
+            result['error'] = False
+            result['exists'] = True
+    return result
+
+
+def get_branches_of_repo(giturl):
+    repo_name = re.sub(r'/*$', '', giturl)
+    m = re.search(r'//(.+):x-oauth-basic@github.com', repo_name)
+    if m:
+        access_token = m.group(1)
+    else:
+        access_token = None
+    repo_name = re.sub(r'^git\+', '', repo_name)
+    repo_name = re.sub(r'^http.*github.com/', '', repo_name)
+    repo_name = re.sub(r'.*@github.com:', '', repo_name)
+    repo_name = re.sub(r'[@#].*', '', repo_name)
+    repo_name = re.sub(r'.git$', '', repo_name)
+    if current_app.config['ENABLE_PLAYGROUND'] and current_app.config['USE_GITHUB']:
+        github_auth = r.get('da:using_github:userid:' + str(current_user.id))
+    else:
+        github_auth = None
+    if github_auth and access_token is None:
+        storage = RedisCredStorage(oauth_app='github')
+        credentials = storage.get()
+        if not credentials or credentials.invalid:
+            http = httplib2.Http()
+        else:
+            http = credentials.authorize(httplib2.Http())
+    else:
+        http = httplib2.Http()
+    the_url = "https://api.github.com/repos/" + repo_name + '/branches'
+    branches = []
+    if access_token:
+        resp, content = http.request(the_url, "GET", headers={'Authorization': "token " + access_token})
+    else:
+        resp, content = http.request(the_url, "GET")
+    if int(resp['status']) == 200:
+        branches.extend(json.loads(content.decode()))
+        while True:
+            next_link = get_next_link(resp)
+            if next_link:
+                if access_token:
+                    resp, content = http.request(next_link, "GET", headers={'Authorization': "token " + access_token})
+                else:
+                    resp, content = http.request(next_link, "GET")
+                if int(resp['status']) != 200:
+                    raise DAException(repo_name + " fetch failed")
+                branches.extend(json.loads(content.decode()))
+            else:
+                break
+        return branches
+    raise DAException(the_url + " fetch failed on first try; got " + str(resp['status']))

@@ -6,6 +6,7 @@ import tempfile
 from urllib.parse import unquote as urllibunquote
 import dateutil
 import twilio
+from twilio.request_validator import RequestValidator
 from flask import request, Response, Blueprint, session
 from PIL import Image
 from docassemble.base.error import DAException, DAError
@@ -55,6 +56,17 @@ sms_bp = Blueprint(
 def sms():
     # logmessage("Received: " + str(request.form))
     form = request.form
+    if twilio_config is not None:
+        signature = request.headers.get('X-Twilio-Signature', '')
+        auth_token = None
+        account_sid = form.get('AccountSid', '')
+        for tconfig in twilio_config['name'].values():
+            if str(tconfig.get('account sid', '')) == account_sid:
+                auth_token = tconfig.get('auth token')
+                break
+        if auth_token is None or not RequestValidator(auth_token).validate(request.url, form, signature):
+            logmessage("sms: invalid Twilio signature")
+            return Response('', status=403)
     base_url = url_for('interview.rootindex', _external=True)
     url_root = base_url
     resp = do_sms(form, base_url, url_root)

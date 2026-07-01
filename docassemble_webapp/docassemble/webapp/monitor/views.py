@@ -180,7 +180,7 @@ def observer():
         "daPostURL": url_for('interview.index', i=i),
         "daYamlFilename": i,
         "daMessageLog": [],
-        "daGetVariablesUrl": url_for('develop.get_variables', i=i),
+        "daGetVariablesUrl": url_for('develop.get_variables', i=i) if current_app.config['ENABLE_PLAYGROUND'] else None,
         "daChatRoles": None,
         "daChatPartnerRoles": None,
         "daShouldForceFullScreen": False,

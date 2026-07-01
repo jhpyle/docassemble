@@ -34,6 +34,7 @@ logs_bp = Blueprint(
 @login_required
 @roles_required(['admin', 'developer'])
 def logfile(filename):
+    filename = secure_filename_spaces_ok(filename)
     if LOGSERVER is None:
         the_file = os.path.join(LOG_DIRECTORY, filename)
         if not os.path.isfile(the_file):

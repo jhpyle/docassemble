@@ -125,4 +125,4 @@ def populate_fax_config():
     telnyx_config.clear()
     conf = get_telnyx_config()
     if conf is not None:
-        telnyx_config.update()
+        telnyx_config.update(conf)

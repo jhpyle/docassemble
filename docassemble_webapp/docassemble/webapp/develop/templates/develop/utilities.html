@@ -39,6 +39,7 @@
   {{ render_submit_field(form.language_submit, data={'disable-button': 0}) }}
 </form>
 
+{%- if config['ENABLE_TRANSLATION'] %}
 <h1 class="h3 da-page-header">{{ word('Download an interview phrase translation file') }}</h1>
 
 <form action="{{ url_for('translation.translation_file') }}" method="POST" class="form" role="form">
@@ -48,6 +49,7 @@
   {{ render_select_field(form.filetype) }}
   {{ render_submit_field(form.interview_submit, data={'disable-button': 0}) }}
 </form>
+{%- endif %}
 
 <h1 class="h3 da-page-header">{{ word('Download Office add-in manifest file') }}</h1>
 

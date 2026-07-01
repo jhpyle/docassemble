@@ -108,8 +108,8 @@
                     {%- endif %}
                     {%- if config['ENABLE_PLAYGROUND'] %}
                   <a class="dropdown-item" href="{{ url_for('develop.playground_page') }}">{{ word('Playground') }}</a>
-                    {%- endif %}
                   <a class="dropdown-item" href="{{ url_for('develop.utilities') }}">{{ word('Utilities') }}</a>
+                    {%- endif %}
                   {%- endif %}
                   {%- if current_user.has_roles(['admin', 'advocate']) or current_user.can_do('access_user_info') %}
                   <a class="dropdown-item" href="{{ url_for('users.user_list') }}">{{ word('User List') }}</a>
