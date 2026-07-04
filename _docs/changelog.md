@@ -3,6 +3,14 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.10.3](https://github.com/jhpyle/docassemble/releases/tag/v1.10.3) - 2026-07-04
+
+
+### Fixed
+
+- Issue with `table css class`.
+- Issue with Google Drive and OneDrive sync.
+
 ## [1.10.2](https://github.com/jhpyle/docassemble/releases/tag/v1.10.2) - 2026-07-01
 
 
