@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.10.3] - 2026-07-04
+
+### Fixed
+
+- Issue with `table css class`.
+- Issue with Google Drive and OneDrive sync.
+
 ## [1.10.2] - 2026-07-01
 
 ### Added

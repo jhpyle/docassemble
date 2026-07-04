@@ -94,7 +94,7 @@ def sync_with_google_drive(user_id):
         logmessage("sync_with_google_drive: credentials failed")
         return ReturnValue(ok=False, error="credentials expired", restart=False)
     try:
-        with flaskapp.app_context():
+        with flaskapp.app_context(), global_context(empty_globals()):
             http = credentials.authorize(httplib2.Http())
             service = apiclient.discovery.build('drive', 'v3', http=http)
             key = 'da:googledrive:mapping:userid:' + str(user_id)
@@ -382,7 +382,7 @@ def sync_with_onedrive(user_id):
         logmessage("sync_with_onedrive: credentials failed")
         return ReturnValue(ok=False, error="credentials expired", restart=False)
     try:
-        with flaskapp.app_context():
+        with flaskapp.app_context(), global_context(empty_globals()):
             http = credentials.authorize(httplib2.Http())
             # req, content = try_request(http, "https://graph.microsoft.com/v1.0/me/drive", "GET")
             # drive_id = json.loads(content)['id']

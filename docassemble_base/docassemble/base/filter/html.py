@@ -587,7 +587,7 @@ def markdown_to_html(a, trim=False, pclass=None, status=None, question=None, use
             # Try again because sometimes it fails randomly and maybe trying again will work.
             result = this_thread.markdown.reset().convert(a)
     result = re.sub(r'<table>', r'<div class="table-responsive"><table class=' + table_class + '>', result)
-    if thead_class != '':
+    if thead_class:
         result = re.sub(r'<thead>', r'<thead class=' + thead_class + '>', result)
     result = re.sub(r'</table>', r'</table></div>', result)
     result = re.sub(r'<(/?)TABLE', r'<\1table', result)
