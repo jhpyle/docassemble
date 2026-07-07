@@ -5,7 +5,7 @@ from docassemble.base.language.control import get_language, set_language
 from docassemble.base.logger import logmessage
 from docassemble.base.parse import InterviewStatus
 from docassemble.base.save_status import SS_NEW, SS_IGNORE
-from docassemble.base.thread_context import this_thread
+from docassemble.base.thread_context import this_thread, user_dict_context
 from docassemble.webapp.errors import error_notification
 from docassemble.webapp.interview.helpers import save_user_dict
 from docassemble.webapp.interview.user_dict import fetch_user_dict
@@ -97,7 +97,8 @@ def process_error(interview, session_code, yaml_filename, secret, user_info, url
     interview_status = InterviewStatus(current_info=the_current_info)
     old_language = get_language()
     try:
-        interview.assemble(user_dict, interview_status)
+        with user_dict_context(user_dict):
+            interview.assemble(user_dict, interview_status)
     except BaseException as e:
         if hasattr(e, 'traceback'):
             logmessage("Error in assembly during error callback: " + str(e.__class__.__name__) + ": " + str(e) + ": " + str(e.traceback))

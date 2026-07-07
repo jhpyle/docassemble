@@ -73,7 +73,12 @@ from docassemble.base.language.core import update_language_function
 from docassemble.base.language.language import comma_and_list
 from docassemble.base.language.words import update_word_collection, word
 from docassemble.base.pandoc import can_convert_word_to_markdown
-from docassemble.base.thread_context import this_thread
+from docassemble.base.thread_context import (
+    empty_globals,
+    global_context,
+    this_thread,
+    user_dict_context,
+)
 from docassemble.base.util import DAFile, DAFileList, DAFileCollection, DAStaticFile
 from docassemble.webapp.cloud.utils import cloud
 from docassemble.webapp.config import (
@@ -1793,7 +1798,8 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
         else:
             old_language = get_language()
             try:
-                interview.assemble(user_dict, interview_status)
+                with user_dict_context(user_dict), global_context(empty_globals()):
+                    interview.assemble(user_dict, interview_status)
                 has_error = False
             except BaseException as errmess:
                 has_error = True

@@ -65,7 +65,12 @@ from docassemble.base.interview_source import (
     interview_source_from_string,
     InterviewSourceString,
 )
-from docassemble.base.thread_context import this_thread
+from docassemble.base.thread_context import (
+    empty_globals,
+    global_context,
+    this_thread,
+    user_dict_context,
+)
 from docassemble.webapp.config import (
     final_default_yaml_filename,
     DEBUG,
@@ -4319,7 +4324,8 @@ def test_embed():
     this_thread.current_info = the_current_info
     interview_status = InterviewStatus(current_info=the_current_info)
     try:
-        interview.assemble(user_dict, interview_status)
+        with user_dict_context(user_dict), global_context(empty_globals()):
+            interview.assemble(user_dict, interview_status)
     except:
         pass
     current_language = get_language()

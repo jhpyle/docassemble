@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.10.4] - 2026-07-06
+
+### Fixed
+
+- Issue with the Playground variables list not being able to be
+  generated.
+
 ## [1.10.3] - 2026-07-04
 
 ### Fixed

@@ -24,7 +24,12 @@ from docassemble.base.pandoc import word_to_markdown
 from docassemble.base.parse import InterviewStatus
 from docassemble.base.pdftk import read_fields as base_read_fields
 from docassemble.base.save_status import SS_NEW, SS_OVERWRITE, SS_IGNORE
-from docassemble.base.thread_context import global_context, this_thread, copy_of_globals
+from docassemble.base.thread_context import (
+    copy_of_globals,
+    global_context,
+    this_thread,
+    user_dict_context,
+)
 from docassemble.webapp.config import (
     PAGINATION_LIMIT_PLUS_ONE,
     NOTIFICATION_CONTAINER,
@@ -590,7 +595,8 @@ def set_session_variables(yaml_filename, session_id, variables, secret=None, ret
             ci['secret'] = secret
             interview_status = InterviewStatus(current_info=ci)
             try:
-                interview.assemble(user_dict, interview_status)
+                with user_dict_context(user_dict):
+                    interview.assemble(user_dict, interview_status)
             except BaseException as err:
                 raise DAException("Error processing session: " + err.__class__.__name__ + ": " + str(err)) from err
         try:
@@ -723,7 +729,8 @@ def create_new_interview(yaml_filename, secret, url_args, referer, req):
         interview_status = InterviewStatus(current_info=ci)
         interview_status.checkin = True
         try:
-            interview.assemble(user_dict, interview_status)
+            with user_dict_context(user_dict):
+                interview.assemble(user_dict, interview_status)
         except DAErrorMissingVariable:
             pass
         except BaseException as e:
@@ -769,7 +776,8 @@ def get_question_data(yaml_filename, session_id, secret, use_lock=True, user_dic
             interview_status = InterviewStatus(current_info=ci)
             # interview_status.checkin = True
             try:
-                interview.assemble(user_dict, interview_status=interview_status, old_user_dict=old_user_dict)
+                with user_dict_context(user_dict):
+                    interview.assemble(user_dict, interview_status=interview_status, old_user_dict=old_user_dict)
             except DAErrorMissingVariable as err:
                 return {'questionType': 'undefined_variable', 'variable': err.variable, 'message_log': get_message_log()}
             except BaseException as e:
@@ -1014,7 +1022,8 @@ def run_action_in_session(kwargs):
             interview_status.checkin = True
         changed = True
         try:
-            interview.assemble(user_dict, interview_status)
+            with user_dict_context(user_dict):
+                interview.assemble(user_dict, interview_status)
         except DAErrorMissingVariable:
             if overwrite:
                 save_status = SS_OVERWRITE

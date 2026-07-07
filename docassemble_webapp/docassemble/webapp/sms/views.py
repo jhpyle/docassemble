@@ -20,7 +20,12 @@ from docassemble.base.parse import (
     extension_of_doc_format,
 )
 from docassemble.base.standardformatter import as_sms, get_choices_with_abb
-from docassemble.base.thread_context import global_context, this_thread, copy_of_globals
+from docassemble.base.thread_context import (
+    copy_of_globals,
+    global_context,
+    this_thread,
+    user_dict_context,
+)
 from docassemble.webapp.config import default_yaml_filename, DEBUG, DEFAULT_LANGUAGE
 from docassemble.webapp.daredis import r
 from docassemble.webapp.extensions import csrf, db
@@ -195,7 +200,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         #     action_manual = False
         ci['encrypted'] = is_encrypted
         interview_status = InterviewStatus(current_info=ci)
-        interview.assemble(user_dict, interview_status)
+        with user_dict_context(user_dict):
+            interview.assemble(user_dict, interview_status)
         logmessage("do_sms: back from assemble 1; had been seeking variable " + str(interview_status.sought))
         logmessage("do_sms: question is " + interview_status.question.name)
         if action is not None:
@@ -731,7 +737,8 @@ def do_sms(form, base_url, url_root, config='default', save=True):
         if changed and next_field is None and question.name not in user_dict['_internal']['answers']:
             logmessage("do_sms: setting internal answers for " + str(question.name))
             question.mark_as_answered(user_dict)
-        interview.assemble(user_dict, interview_status)
+        with user_dict_context(user_dict):
+            interview.assemble(user_dict, interview_status)
         logmessage("do_sms: back from assemble 2; had been seeking variable " + str(interview_status.sought))
         logmessage("do_sms: question is now " + str(interview_status.question.name))
         sess_info['question'] = interview_status.question.name

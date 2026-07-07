@@ -17,7 +17,7 @@ from docassemble.base.pandoc import (
 )
 from docassemble.base.parse import Interview, InterviewStatus, get_initial_dict
 from docassemble.base.pdftk import read_fields
-from docassemble.base.thread_context import this_thread
+from docassemble.base.thread_context import this_thread, user_dict_context
 from docassemble.base.util import DAObject, DADict, DAList
 from docassemble.webapp.config import DEFAULT_TIMEZONE
 from docassemble.webapp.files.hooks import save_numbered_file
@@ -504,7 +504,8 @@ class Playground(PlaygroundSection):
         user_dict['_internal']['starttime'] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         user_dict['_internal']['modtime'] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
         try:
-            interview.assemble(user_dict, interview_status)
+            with user_dict_context(user_dict):
+                interview.assemble(user_dict, interview_status)
         except:
             pass
         functions = set()
