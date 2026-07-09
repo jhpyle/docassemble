@@ -1,6 +1,11 @@
 FROM jhpyle/docassemble-os
 USER root
-COPY . /tmp/docassemble/
+
+# Layer 1: Docker infrastructure files
+COPY Docker/ /tmp/docassemble/Docker/
+COPY docassemble_webapp/docassemble.wsgi /tmp/docassemble/docassemble_webapp/docassemble.wsgi
+
+# Layer 2: System setup
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
 "apt-get -q -y update \
@@ -59,10 +64,7 @@ bash -c \
    certbot-nginx==5.6.0 \
    minio==7.2.20 \
    uWSGI==2.0.31 \
-&& pip install \
-   /tmp/docassemble/docassemble_base \
-   /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp \
+   nltk==3.9.2 \
 && mv /etc/crontab /usr/share/docassemble/cron/crontab \
 && ln -s /usr/share/docassemble/cron/crontab /etc/crontab \
 && mv /etc/cron.daily/apache2 /usr/share/docassemble/cron/apache2 \
@@ -89,22 +91,35 @@ bash -c \
 ; a2enconf docassemble \
 ; echo 'export TERM=xterm' >> /etc/bash.bashrc; }"
 
+# Layer 3: NLTK download (does NOT need docassemble packages)
 USER www-data
 RUN bash -c \
 "source /usr/share/docassemble/local3.14/bin/activate \
 && python /tmp/docassemble/Docker/nltkdownload.py \
 && cd /var/www/nltk_data/corpora \
 && unzip -o wordnet.zip \
-&& unzip -o omw-1.4.zip \
-&& cd /tmp \
-&& mkdir -p /tmp/conv \
-&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.yml --template=/usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.tex --from=markdown+raw_tex-latex_macros -s -o /tmp/temp.pdf /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/hello.md \
-&& rm /tmp/temp.pdf \
-&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false --template=/usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.rtf -s -o /tmp/temp.rtf /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/hello.md \
-&& rm /tmp/temp.rtf"
+&& unzip -o omw-1.4.zip"
 
+# Layer 4: Docassemble source packages
 USER root
-RUN rm -rf /tmp/docassemble
+COPY docassemble_base/ /tmp/docassemble/docassemble_base/
+COPY docassemble_demo/ /tmp/docassemble/docassemble_demo/
+COPY docassemble_webapp/ /tmp/docassemble/docassemble_webapp/
+
+# Layer 5: Install docassemble packages + pandoc precompilation + cleanup
+RUN bash -c \
+"source /usr/share/docassemble/local3.14/bin/activate \
+&& pip install \
+   /tmp/docassemble/docassemble_base \
+   /tmp/docassemble/docassemble_demo \
+   /tmp/docassemble/docassemble_webapp \
+&& mkdir -p /tmp/conv \
+&& pandoc --pdf-engine=lualatex -M latextmpdir=/tmp/conv -M pdfa=false /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.yml --template=/usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.tex --from=markdown+raw_tex-latex_macros -s -o /tmp/temp.pdf /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/hello.md \
+&& rm /tmp/temp.pdf \
+&& pandoc --pdf-engine=lualatex -M latextmpdir=/tmp/conv -M pdfa=false --template=/usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.rtf -s -o /tmp/temp.rtf /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/hello.md \
+&& rm /tmp/temp.rtf \
+&& rm -rf /tmp/docassemble \
+&& pip cache purge"
 
 EXPOSE 80 443 9001 514 25 465 8080 8081 8082 5432 6379 4369 5671 5672 25672
 ENV \
