@@ -3,6 +3,15 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.10.5](https://github.com/jhpyle/docassemble/releases/tag/v1.10.5) - 2026-07-13
+
+
+### Fixed
+
+- Issue with `_reorder_buttons()`.
+- `role="alert"` not added to flash messages that are part of the
+  HTML.
+
 ## [1.10.4](https://github.com/jhpyle/docassemble/releases/tag/v1.10.4) - 2026-07-06
 
 
