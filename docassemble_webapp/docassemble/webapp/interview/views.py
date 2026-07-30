@@ -964,37 +964,38 @@ def index(action_argument=None, refer=None):
                 post_data = {}
                 disregard_input = True
     if STRICT_MODE and not disregard_input:
-        field_info = interview_status.get_field_info()
-        known_datatypes = field_info['datatypes']
-        list_collect_list = field_info['list_collect_list']
-        if list_collect_list is not None:
-            exec(list_collect_list + '._allow_appending()', user_dict)
-        for checkbox_field, checkbox_value in field_info['checkboxes'].items():
-            if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
-                for k, v in known_varnames_visible.items():
-                    if v == checkbox_field:
-                        checkbox_field = k
-                        break
-                post_data.add(checkbox_field, checkbox_value)
-                no_input_values[checkbox_field] = checkbox_value
-        empty_fields = field_info['hiddens']
-        for empty_field, data_type in empty_fields.items():
-            if empty_field not in post_data:
-                post_data.add(empty_field, 'None')
-                no_input_values[empty_field] = 'None'
-        ml_info = field_info['ml_info']
-        field_list, list_collect_mappings, iterator_variable = interview_status.get_fields_and_sub_fields_and_collect_fields(user_dict)
-        authorized_fields = [from_safeid(field.saveas) for field in field_list if hasattr(field, 'saveas')]
-        if 'allowed_to_set' in interview_status.extras:
-            authorized_fields.extend(interview_status.extras['allowed_to_set'])
-        if interview_status.question.question_type == "multiple_choice":
-            authorized_fields.append('_multiple_choice')
-        authorized_fields = set(authorized_fields).union(interview_status.get_all_fields_used(user_dict))
-        if interview_status.extras.get('list_collect_is_final', False) and interview_status.extras['list_collect'].auto_gather:
-            if interview_status.extras['list_collect'].ask_number:
-                authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".target_number")
-            else:
-                authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".there_is_another")
+        with user_dict_context(user_dict):
+            field_info = interview_status.get_field_info()
+            known_datatypes = field_info['datatypes']
+            list_collect_list = field_info['list_collect_list']
+            if list_collect_list is not None:
+                exec(list_collect_list + '._allow_appending()', user_dict)
+            for checkbox_field, checkbox_value in field_info['checkboxes'].items():
+                if checkbox_field in visible_fields and checkbox_field not in post_data and not (checkbox_field in numbered_fields and numbered_fields[checkbox_field] in post_data):
+                    for k, v in known_varnames_visible.items():
+                        if v == checkbox_field:
+                            checkbox_field = k
+                            break
+                    post_data.add(checkbox_field, checkbox_value)
+                    no_input_values[checkbox_field] = checkbox_value
+            empty_fields = field_info['hiddens']
+            for empty_field, data_type in empty_fields.items():
+                if empty_field not in post_data:
+                    post_data.add(empty_field, 'None')
+                    no_input_values[empty_field] = 'None'
+            ml_info = field_info['ml_info']
+            field_list, list_collect_mappings, iterator_variable = interview_status.get_fields_and_sub_fields_and_collect_fields(user_dict)
+            authorized_fields = [from_safeid(field.saveas) for field in field_list if hasattr(field, 'saveas')]
+            if 'allowed_to_set' in interview_status.extras:
+                authorized_fields.extend(interview_status.extras['allowed_to_set'])
+            if interview_status.question.question_type == "multiple_choice":
+                authorized_fields.append('_multiple_choice')
+            authorized_fields = set(authorized_fields).union(interview_status.get_all_fields_used(user_dict))
+            if interview_status.extras.get('list_collect_is_final', False) and interview_status.extras['list_collect'].auto_gather:
+                if interview_status.extras['list_collect'].ask_number:
+                    authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".target_number")
+                else:
+                    authorized_fields.add(interview_status.extras['list_collect'].instanceName + ".there_is_another")
     else:
         field_list = []
         list_collect_mappings = {}
@@ -2221,8 +2222,7 @@ def index(action_argument=None, refer=None):
                             old_values_backed_up = False
                         old_values[the_var_name] = old_values[var_name]
                         user_dict[iterator_variable] = iterator_value
-                        with user_dict_context(user_dict):
-                            interview.invalidate_dependencies(the_var_name, user_dict, old_values)
+                        interview.invalidate_dependencies(the_var_name, user_dict, old_values)
                         if iterator_backed_up:
                             user_dict[iterator_variable] = iterator_backup
                         else:
@@ -2287,7 +2287,8 @@ def index(action_argument=None, refer=None):
         action = None
         with user_dict_context(user_dict):
             interview.assemble(user_dict, interview_status)
-    title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
+    with user_dict_context(user_dict):
+        title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     save_status = this_thread.misc.get('save_status', SS_NEW)
     if interview_status.question.question_type == "interview_exit":
         exit_link = title_info.get('exit link', 'leave')
@@ -2452,7 +2453,8 @@ def index(action_argument=None, refer=None):
             user_dict['_internal']['steps'] = steps
     if changed and interview.use_progress_bar and interview_status.question.progress is None and save_status == SS_NEW:
         advance_progress(user_dict, interview)
-    title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
+    with user_dict_context(user_dict):
+        title_info = interview.get_title(user_dict, status=interview_status, converter=lambda content, part: title_converter(content, part, interview_status))
     # Stash the values of the special_vars now, which is after
     # .assemble() has been called and before save_user_dict is called,
     # which would delete the values.
