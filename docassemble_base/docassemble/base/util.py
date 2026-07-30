@@ -13688,6 +13688,10 @@ class DAOAuth(DAObject):
     Attributes:
         url_args (dict): URL query parameters received from the OAuth2
             callback (must be passed as a keyword argument at construction).
+        extra_auth_args (dict): Additional keyword arguments to pass to the
+            OAuth authorization URL.
+        url_style_short (bool): If true, use the short interview URL style for
+            OAuth redirect URIs. Defaults to false.
     """
 
     def init(self, *pargs, **kwargs):
@@ -13695,6 +13699,9 @@ class DAOAuth(DAObject):
             raise DAError("DAOAuth: you must pass the url_args as a keyword parameter")
         self.url_args = kwargs['url_args']
         del kwargs['url_args']
+        self.extra_auth_args = kwargs.pop('extra_auth_args', {})
+        self._validate_extra_auth_args()
+        self.url_style_short = kwargs.pop('url_style_short', False)
         super().init(*pargs, **kwargs)
 
     def _get_flow(self):
@@ -13703,8 +13710,9 @@ class DAOAuth(DAObject):
         client_secret = app_credentials.get('secret', None)
         if client_id is None or client_secret is None:
             raise DAError('The application ' + self.appname + " is not configured in the Configuration")
+        redirect_uri = interview_url(style='short') if self.url_style_short else interview_url()
         return OAuth2Session(client_id,
-                             redirect_uri=re.sub(r'\?.*', '', interview_url()),
+                             redirect_uri=re.sub(r'\?.*', '', redirect_uri),
                              scope=self.scope)
 
     def _setup(self):
@@ -13736,6 +13744,51 @@ class DAOAuth(DAObject):
             lock = 'da:' + self.appname + ':lock:user:' + user_info().email
         return RedisCredStorage(key, lock, self.expires)
 
+    def _credentials_are_authorized(self, credentials):
+        return bool(
+            credentials
+            and not getattr(credentials, 'invalid', True)
+            and not getattr(credentials, 'access_token_expired', False)
+        )
+
+    def _save_credentials(self, storage, credentials):
+        try:
+            storage.put(credentials)
+        except Exception as err:
+            log("DAOAuth: could not save credentials for " + str(self.appname) + ": " + repr(err))
+
+    def _validate_extra_auth_args(self):
+        if not isinstance(self.extra_auth_args, dict):
+            raise DAError("DAOAuth: extra_auth_args must be a dictionary")
+        reserved_keys = {'redirect_uri', 'state'}
+        reserved_extra_auth_args = reserved_keys.intersection(self.extra_auth_args)
+        if reserved_extra_auth_args:
+            raise DAError("DAOAuth: extra_auth_args contains reserved OAuth parameter(s): " + ', '.join(sorted(reserved_extra_auth_args)))
+        return self.extra_auth_args
+
+    def _get_stored_credentials(self, refresh=False):
+        storage = self._get_redis_cred_storage()
+        credentials = storage.get()
+        if not refresh or not credentials:
+            return credentials
+        credentials_invalid = getattr(credentials, 'invalid', True)
+        credentials_have_refresh_token = bool(getattr(credentials, 'refresh_token', None))
+        credentials_can_refresh = not credentials_invalid and credentials_have_refresh_token
+        credentials_need_refresh = getattr(credentials, 'access_token_expired', False)
+        if credentials_can_refresh and credentials_need_refresh:
+            try:
+                credentials.refresh(httplib2.Http())
+            except oauth2client.client.AccessTokenRefreshError as err:
+                log("DAOAuth: token refresh failed for " + str(self.appname) + ": " + repr(err))
+                self._save_credentials(storage, credentials)
+                return credentials
+            except Exception as err:
+                log("DAOAuth: token refresh failed for " + str(self.appname) + ": " + repr(err))
+                self._save_credentials(storage, credentials)
+                return credentials
+            self._save_credentials(storage, credentials)
+        return credentials
+
     def _get_random_unique_id(self):
         r = DARedis()
         tries = 10
@@ -13748,7 +13801,7 @@ class DAOAuth(DAObject):
         raise DAError("DAOAuth: unable to set a random unique id")
 
     def get_credentials(self):
-        """Returns the stored credentials."""
+        """Returns the stored credentials, refreshing them when possible."""
         self._setup()
         r = DARedis()
         r_key = self._get_redis_key()
@@ -13808,11 +13861,12 @@ class DAOAuth(DAObject):
                 del self.url_args['state']
             else:
                 message("Please wait.", "You are in the process of authenticating.", dead_end=True)
-        storage = self._get_redis_cred_storage()
-        credentials = storage.get()
-        if not credentials or credentials.invalid:
+        credentials = self._get_stored_credentials(refresh=True)
+        if not self._credentials_are_authorized(credentials):
             flow = self._get_flow()
-            uri, state_string = flow.authorization_url(self.auth_uri, access_type='offline', prompt='consent')
+            auth_args = {'access_type': 'offline', 'prompt': 'consent'}
+            auth_args.update(self._validate_extra_auth_args())
+            uri, state_string = flow.authorization_url(self.auth_uri, **auth_args)
             pipe = r.pipeline()
             pipe.set(r_key, state_string)
             pipe.expire(r_key, 300)
@@ -13852,8 +13906,7 @@ class DAOAuth(DAObject):
     def active(self):
         """Returns True if user has stored credentials, whether they are valid or not.  Otherwise returns False."""
         self._setup()
-        storage = self._get_redis_cred_storage()
-        credentials = storage.get()
+        credentials = self._get_stored_credentials()
         if not credentials:
             return False
         return True
@@ -13861,11 +13914,8 @@ class DAOAuth(DAObject):
     def is_authorized(self):
         """Returns True if user has stored credentials and the credentials are valid."""
         self._setup()
-        storage = self._get_redis_cred_storage()
-        credentials = storage.get()
-        if not credentials or credentials.invalid:
-            return False
-        return True
+        credentials = self._get_stored_credentials(refresh=True)
+        return self._credentials_are_authorized(credentials)
 
 
 class RedisCredStorage(oauth2client.client.Storage):
@@ -13894,6 +13944,8 @@ class RedisCredStorage(oauth2client.client.Storage):
             json_creds = json_creds.decode()
             try:
                 creds = oauth2client.client.Credentials.new_from_json(json_creds)
+                if creds and hasattr(creds, 'set_store'):
+                    creds.set_store(self)
             except:
                 log("RedisCredStorage: could not read credentials from " + str(json_creds))
         return creds
