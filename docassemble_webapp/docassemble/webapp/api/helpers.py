@@ -13,8 +13,8 @@ from docassemble.webapp.extensions import db
 from docassemble.webapp.users.models import UserModel
 from docassemble.webapp.users.helpers import update_last_login
 
-def add_api_key(user_id, name, method, allowed):
-    info = {'constraints': allowed, 'method': method, 'name': name}
+def add_api_key(user_id, name, method, allowed, permissions=None):
+    info = {'constraints': allowed, 'method': method, 'name': name, 'permissions': permissions if permissions is not None else []}
     success = False
     for attempt in range(10):  # pylint: disable=unused-variable
         api_key = random_alphanumeric(32)

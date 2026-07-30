@@ -68,7 +68,28 @@ def do_api_user_api(user_id):
             return jsonify_with_status("The given name already exists", 400)
         if len(name) > 255:
             return jsonify_with_status("The name is invalid", 400)
-        new_api_key = add_api_key(user_id, name, method, allowed)
+        permissions = None
+        if current_user.has_role('admin') and current_user.has_role_or_permission('admin'):
+            permissions = post_data.get('permissions', None)
+            if permissions is not None:
+                if isinstance(permissions, str):
+                    try:
+                        permissions = json.loads(permissions)
+                    except:
+                        return jsonify_with_status("Permissions list not valid json", 400)
+                if not isinstance(permissions, list):
+                    return jsonify_with_status("Permissions list not a valid list", 400)
+                try:
+                    for item in permissions:
+                        assert isinstance(item, str)
+                except:
+                    return jsonify_with_status("Permissions list should contain all strings", 400)
+                try:
+                    for item in permissions:
+                        assert item in PERMISSIONS_LIST
+                except:
+                    return jsonify_with_status("Permissions list contained a permission that was not recognized", 400)
+        new_api_key = add_api_key(user_id, name, method, allowed, permissions=permissions)
         if new_api_key is None:
             return jsonify_with_status("Error creating API key", 400)
         return jsonify(new_api_key)
