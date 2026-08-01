@@ -51,12 +51,12 @@ bash -c \
 && cp /usr/local/bin/unoconvert /usr/bin/unoconvert \
 && python3 -m venv --copies /usr/share/docassemble/local3.14 \
 && source /usr/share/docassemble/local3.14/bin/activate \
-&& pip install --upgrade pip==26.0.1 \
-&& pip install --upgrade mod_wsgi==5.0.2 \
+&& pip install --upgrade pip==26.2 \
+&& pip install --upgrade mod_wsgi==6.0.5 \
 && pip install --upgrade \
-   certbot==5.6.0 \
-   certbot-apache==5.6.0 \
-   certbot-nginx==5.6.0 \
+   certbot==5.7.0 \
+   certbot-apache==5.7.0 \
+   certbot-nginx==5.7.0 \
    minio==7.2.20 \
    uWSGI==2.0.31 \
 && pip install \

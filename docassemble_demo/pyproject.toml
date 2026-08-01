@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==82.0.1"]
+requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "docassemble.demo"
@@ -11,7 +11,7 @@ authors = [
 ]
 license = "MIT"
 license-files = ["LICENSE.txt"]
-requires-python = ">= 3.9"
+requires-python = ">= 3.12"
 dependencies = [
   'docassemble.base==1.10.5'
 #  "ics",

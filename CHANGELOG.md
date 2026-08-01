@@ -1,5 +1,35 @@
 # Change Log
 
+## [1.10.6] - 2026-08-01
+
+### Added
+
+- New permission `read_packages` so that users without
+  `admin` or `developer` privileges can use the API to obtain a list
+  of packages.
+
+### Changed
+
+- Upgraded Python dependencies. Note that if you are using third-party
+  Python packages, you may encounter dependency conflicts. It is
+  possible that your interviews will need to be updated.
+- Python 3.12 or later is now required, so if you are running an old
+  Docker container with Python 3.10 or earlier, you cannot upgrade
+  beyond version 1.10.5.
+- Upgraded Font Awesome and CodeMirror.
+- `hide continue button` and `disable continue button` now accept a
+  YAML boolean rather than only a Python expression.
+- The `submit` screen part can be specified on a `question`.
+- `DAOAuth` can be configured with `extra_auth_args` and
+  `url_style_short`.
+- The Package Management page shows the same report as the
+  Configuration page.
+
+### Fixed
+
+- Action buttons were not listed in data version of a question.
+- Bug where the use of `value()` could raise an exception.
+
 ## [1.10.5] - 2026-07-13
 
 ### Fixed

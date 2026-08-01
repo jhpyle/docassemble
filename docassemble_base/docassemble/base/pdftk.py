@@ -218,10 +218,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     for key, val in data_strings:
         data_dict[key] = val
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-    if flattened_checkbox_label is not None or flattened_checkbox_unselected_label is not None:
-        use_pdftk = False
-    
-    if use_pdftk:
+    if pdfa or not editable or use_pdftk:
+    # if flattened_checkbox_label is not None or flattened_checkbox_unselected_label is not None:
+    #     use_pdftk = False
+    # if use_pdftk:
         fdf = Xfdf(pdf_url, data_dict)
         # fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
         fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".xfdf", delete=False)
@@ -298,13 +298,13 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                     elif field_type == "/Btn":
                         if hasattr(annot, "A"):
                             continue
-                        if not editable:
-                            annot.FT = pikepdf.Name("/Tx")
-                            if value == "Off":
-                                annot.V = pikepdf.String(flattened_checkbox_unselected_label if flattened_checkbox_unselected_label is not None else word("checkbox, unchecked"))
-                            else:
-                                annot.V = pikepdf.String(flattened_checkbox_label if flattened_checkbox_label is not None else word("checkbox, checked"))
-                            continue
+                        # if not editable:
+                        #     annot.FT = pikepdf.Name("/Tx")
+                        #     if value == "Off":
+                        #         annot.V = pikepdf.String(flattened_checkbox_unselected_label if flattened_checkbox_unselected_label is not None else word("checkbox, unchecked"))
+                        #     else:
+                        #         annot.V = pikepdf.String(flattened_checkbox_label if flattened_checkbox_label is not None else word("checkbox, checked"))
+                        #     continue
                         the_name = pikepdf.Name('/' + value)
                         # Could be radio button: if it is, set the appearance stream of the
                         # correct child annot
@@ -344,18 +344,18 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         except Exception as err:
             logmessage("fill_template: could not generate appearance streams: " + str(err))
         pdf.Root.AcroForm.NeedAppearances = True
-        if not editable:
-            try:
-                pdf.flatten_annotations(mode='all')
-            except Exception as err:
-                logmessage("fill_template: error flattening annotations with pikepdf: " + str(err))
+        # if not editable:
+        #     try:
+        #         pdf.flatten_annotations(mode='all')
+        #     except Exception as err:
+        #         logmessage("fill_template: error flattening annotations with pikepdf: " + str(err))
         if len(images) == 0:
             pdf.save(pdf_file.name)
             pdf.close()
-        else:
-            pdf.save(pdf_file.name)
-            pdf.close()
-            # Images will be overlaid later
+        # else:
+        #     pdf.save(pdf_file.name)
+        #     pdf.close()
+        #     # Images will be overlaid later
     if len(images) > 0:
         fields = {}
         for field, default, pageno, rect, field_type, export_value in the_fields:
@@ -411,8 +411,8 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         pdf.save(pdf_file.name)
         pdf.close()
     if (pdfa or not editable) and len(images) > 0:
-        if use_pdftk:
-            flatten_pdf(pdf_file.name)
+        # if use_pdftk:
+        flatten_pdf(pdf_file.name)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
     if password or owner_password:

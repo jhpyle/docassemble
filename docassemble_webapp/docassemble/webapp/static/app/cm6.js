@@ -62,7 +62,7 @@
   }
 
   function prevClusterBreak(str, pos, includeExtending) {
-    while (pos > 0) {
+    while (pos > 1) {
       let found = nextClusterBreak(str, pos - 2, includeExtending);
       if (found < pos) return found
       pos--;
@@ -1344,10 +1344,18 @@
       /**
       The upper boundary of the range.
       */
-      to, flags) {
+      to, flags, 
+      /**
+      The goal column (stored vertical offset) associated with a
+      cursor. This is used to preserve the vertical position when
+      [moving](https://codemirror.net/6/docs/ref/#view.EditorView.moveVertically) across
+      lines of different length.
+      */
+      goalColumn) {
           this.from = from;
           this.to = to;
           this.flags = flags;
+          this.goalColumn = goalColumn;
       }
       /**
       The anchor of the range—the side that doesn't move when you
@@ -1371,22 +1379,22 @@
       */
       get assoc() { return this.flags & 8 /* RangeFlag.AssocBefore */ ? -1 : this.flags & 16 /* RangeFlag.AssocAfter */ ? 1 : 0; }
       /**
+      A flag that, when set, makes some selection-extending commands
+      treat the range's head and anchor as exchangeable, so that for
+      example Shift-ArrowUp will make the lower side of the selection
+      the anchor, even if that was the head before. Used to implement
+      MacOS-style undirectional selections.
+      */
+      get undirectional() {
+          return (this.flags & 64 /* RangeFlag.Undirectional */) > 0;
+      }
+      /**
       The bidirectional text level associated with this cursor, if
       any.
       */
       get bidiLevel() {
           let level = this.flags & 7 /* RangeFlag.BidiLevelMask */;
           return level == 7 ? null : level;
-      }
-      /**
-      The goal column (stored vertical offset) associated with a
-      cursor. This is used to preserve the vertical position when
-      [moving](https://codemirror.net/6/docs/ref/#view.EditorView.moveVertically) across
-      lines of different length.
-      */
-      get goalColumn() {
-          let value = this.flags >> 6 /* RangeFlag.GoalColumnOffset */;
-          return value == 16777215 /* RangeFlag.NoGoalColumn */ ? undefined : value;
       }
       /**
       Map this range through a change, producing a valid range in the
@@ -1401,7 +1409,7 @@
               from = change.mapPos(this.from, 1);
               to = change.mapPos(this.to, -1);
           }
-          return from == this.from && to == this.to ? this : new SelectionRange(from, to, this.flags);
+          return from == this.from && to == this.to ? this : new SelectionRange(from, to, this.flags, this.goalColumn);
       }
       /**
       Extend this range to cover at least `from` to `to`.
@@ -1435,8 +1443,8 @@
       /**
       @internal
       */
-      static create(from, to, flags) {
-          return new SelectionRange(from, to, flags);
+      static create(from, to, flags, goalColumn) {
+          return new SelectionRange(from, to, flags, goalColumn);
       }
   }
   /**
@@ -1551,19 +1559,26 @@
       */
       static cursor(pos, assoc = 0, bidiLevel, goalColumn) {
           return SelectionRange.create(pos, pos, (assoc == 0 ? 0 : assoc < 0 ? 8 /* RangeFlag.AssocBefore */ : 16 /* RangeFlag.AssocAfter */) |
-              (bidiLevel == null ? 7 : Math.min(6, bidiLevel)) |
-              ((goalColumn !== null && goalColumn !== void 0 ? goalColumn : 16777215 /* RangeFlag.NoGoalColumn */) << 6 /* RangeFlag.GoalColumnOffset */));
+              (bidiLevel == null ? 7 : Math.min(6, bidiLevel)), goalColumn);
       }
       /**
       Create a selection range.
       */
       static range(anchor, head, goalColumn, bidiLevel, assoc) {
-          let flags = ((goalColumn !== null && goalColumn !== void 0 ? goalColumn : 16777215 /* RangeFlag.NoGoalColumn */) << 6 /* RangeFlag.GoalColumnOffset */) |
-              (bidiLevel == null ? 7 : Math.min(6, bidiLevel));
+          let flags = bidiLevel == null ? 7 : Math.min(6, bidiLevel);
           if (!assoc && anchor != head)
               assoc = head < anchor ? 1 : -1;
-          return head < anchor ? SelectionRange.create(head, anchor, 32 /* RangeFlag.Inverted */ | 16 /* RangeFlag.AssocAfter */ | flags)
-              : SelectionRange.create(anchor, head, (!assoc ? 0 : assoc < 0 ? 8 /* RangeFlag.AssocBefore */ : 16 /* RangeFlag.AssocAfter */) | flags);
+          if (assoc)
+              flags |= assoc < 0 ? 8 /* RangeFlag.AssocBefore */ : 16 /* RangeFlag.AssocAfter */;
+          return head < anchor ? SelectionRange.create(head, anchor, flags | 32 /* RangeFlag.Inverted */, goalColumn)
+              : SelectionRange.create(anchor, head, flags, goalColumn);
+      }
+      /**
+      Create an [undirectional](https://codemirror.net/6/docs/ref/#state.SelectionRange.undirectional)
+      selection range.
+      */
+      static undirectionalRange(from, to) {
+          return SelectionRange.create(from, to, 64 /* RangeFlag.Undirectional */, undefined);
       }
       /**
       @internal
@@ -1735,6 +1750,7 @@
               }
           };
       }
+      get extension() { return this; }
   }
   function compareArray(a, b, compare) {
       if (a.length != b.length)
@@ -1932,6 +1948,7 @@
           this.inner = inner;
           this.prec = prec;
       }
+      get extension() { return this; }
   }
   /**
   Extension compartments can be used to make a configuration
@@ -1966,6 +1983,7 @@
           this.compartment = compartment;
           this.inner = inner;
       }
+      get extension() { return this; }
   }
   class Configuration {
       constructor(base, compartments, dynamicSlots, address, staticValues, facets) {
@@ -2075,6 +2093,8 @@
           else {
               let content = ext.extension;
               if (!content)
+                  throw new Error(`Unrecognized extension value in extension set (${ext}).`);
+              if (content == ext)
                   throw new Error(`Unrecognized extension value in extension set (${ext}). This sometimes happens because multiple instances of @codemirror/state are loaded, breaking instanceof checks.`);
               inner(content, prec);
           }
@@ -4681,10 +4701,23 @@
   directly at `from` but not including `to`.
   */
   class BlockWrapper extends RangeValue {
-      constructor(tagName, attributes) {
+      constructor(
+      /**
+      @internal
+      */
+      tagName, 
+      /**
+      @internal
+      */
+      attributes, 
+      /**
+      @internal
+      */
+      rank) {
           super();
           this.tagName = tagName;
           this.attributes = attributes;
+          this.rank = rank;
       }
       eq(other) {
           return other == this ||
@@ -4695,7 +4728,7 @@
       attributes.
       */
       static create(spec) {
-          return new BlockWrapper(spec.tagName, spec.attributes || noAttrs$1);
+          return new BlockWrapper(spec.tagName, spec.attributes || noAttrs$1, spec.rank == null ? 50 : Math.max(0, Math.min(spec.rank, 100)));
       }
       /**
       Create a range set from the given block wrapper ranges.
@@ -4787,8 +4820,11 @@
   function maxOffset(node) {
       return node.nodeType == 3 ? node.nodeValue.length : node.childNodes.length;
   }
-  function flattenRect(rect, left) {
-      let x = left ? rect.left : rect.right;
+  function flattenRect(rect, toLeft) {
+      let { left, right } = rect;
+      if (left == right)
+          return rect;
+      let x = toLeft ? left : right;
       return { left: x, right: x, top: rect.top, bottom: rect.bottom };
   }
   function windowRect(win) {
@@ -6052,7 +6088,7 @@
           return this.posBefore(tile) + tile.length;
       }
       covers(side) { return true; }
-      coordsIn(pos, side) { return null; }
+      coordsIn(pos, side, rtl) { return null; }
       domPosFor(off, side) {
           let index = domIndex(this.dom);
           let after = this.length ? off > 0 : side > 0;
@@ -6239,6 +6275,9 @@
       }
       get domAttrs() { return this.attrs; }
       // Find the tile associated with a given position in this line.
+      // Side -2/2 is handled specially, in that it allows the position
+      // returned to be before (-2) or after (2) widgets that would always
+      // be after/before a cursor position.
       resolveInline(pos, side, forCoords) {
           let before = null, beforeOff = -1, after = null, afterOff = -1;
           function scan(tile, pos) {
@@ -6248,12 +6287,12 @@
                       if (child.isComposite()) {
                           scan(child, pos - off);
                       }
-                      else if ((!after || after.isHidden && (side > 0 || forCoords && onSameLine(after, child))) &&
-                          (end > pos || (child.flags & 32 /* TileFlag.After */))) {
+                      else if ((!after || after.isHidden && (side > 0 && !(after.flags & 32 /* TileFlag.After */) || forCoords && onSameLine(after, child))) &&
+                          (end > pos || (child.flags & 32 /* TileFlag.After */) && side <= 1)) {
                           after = child;
                           afterOff = pos - off;
                       }
-                      else if (off < pos || (child.flags & 16 /* TileFlag.Before */) && !child.isHidden) {
+                      else if (off < pos || (child.flags & 16 /* TileFlag.Before */) && !child.isHidden && side >= -1) {
                           before = child;
                           beforeOff = pos - off;
                       }
@@ -6265,11 +6304,11 @@
           let target = ((side < 0 ? before : after) || before || after);
           return target ? { tile: target, offset: target == before ? beforeOff : afterOff } : null;
       }
-      coordsIn(pos, side) {
+      coordsIn(pos, side, rtl) {
           let found = this.resolveInline(pos, side, true);
           if (!found)
               return fallbackRect(this);
-          return found.tile.coordsIn(Math.max(0, found.offset), side);
+          return found.tile.coordsIn(Math.max(0, found.offset), side, rtl);
       }
       domIn(pos, side) {
           let found = this.resolveInline(pos, side);
@@ -6333,7 +6372,7 @@
       }
       isText() { return true; }
       toString() { return JSON.stringify(this.text); }
-      coordsIn(pos, side) {
+      coordsIn(pos, side, rtl) {
           let length = this.dom.nodeValue.length;
           if (pos > length)
               pos = length;
@@ -6343,7 +6382,7 @@
                   if (pos) {
                       from--;
                       flatten = 1;
-                  } // FIXME this is wrong in RTL text
+                  }
                   else if (to < length) {
                       to++;
                       flatten = -1;
@@ -6362,7 +6401,7 @@
           let rect = rects[(flatten ? flatten < 0 : side >= 0) ? 0 : rects.length - 1];
           if (browser.safari && !flatten && rect.width == 0)
               rect = Array.prototype.find.call(rects, r => r.width) || rect;
-          return flatten ? flattenRect(rect, flatten < 0) : rect || null;
+          return rtl == null ? rect : flattenRect(rect, (flatten ? flatten > 0 : side < 0) == rtl);
       }
       static of(text, dom) {
           let tile = new TextTile(dom || document.createTextNode(text), text);
@@ -6438,7 +6477,10 @@
       }
       get isHidden() { return true; }
       get overrideDOMText() { return Text$1.empty; }
-      coordsIn(pos) { return this.dom.getBoundingClientRect(); }
+      coordsIn(pos, side, rtl) {
+          let rect = this.dom.getBoundingClientRect();
+          return rtl == null ? rect : flattenRect(rect, (side > 0) == rtl);
+      }
   }
   // Represents a position in the tile tree.
   class TilePointer {
@@ -6456,20 +6498,21 @@
           let { tile, index, beforeBreak, parents } = this;
           while (dist || side > 0) {
               if (!tile.isComposite()) {
-                  if (index == tile.length) {
+                  let len = tile.length;
+                  if (index < len && dist) {
+                      let take = Math.min(dist, len - index);
+                      if (walker)
+                          walker.skip(tile, index, index + take);
+                      dist -= take;
+                      index += take;
+                  }
+                  if (index == len) {
                       beforeBreak = !!tile.breakAfter;
                       ({ tile, index } = parents.pop());
                       index++;
                   }
                   else if (!dist) {
                       break;
-                  }
-                  else {
-                      let take = Math.min(dist, tile.length - index);
-                      if (walker)
-                          walker.skip(tile, index, index + take);
-                      dist -= take;
-                      index += take;
                   }
               }
               else if (beforeBreak) {
@@ -6596,6 +6639,7 @@
               this.cache.reused.set(oldTile, 2 /* Reused.DOM */);
           let text = new TextTile(composition.text, composition.text.nodeValue);
           text.flags |= 8 /* TileFlag.Composition */;
+          this.pos = composition.range.toB;
           head.append(text);
       }
       addInlineWidget(widget, marks, openStart) {
@@ -6694,7 +6738,8 @@
                   this.wrappers.splice(i, 1);
           for (let cur = this.blockWrappers; cur.value && cur.from <= this.pos; cur.next())
               if (cur.to >= this.pos) {
-                  let wrap = new OpenWrapper(cur.from, cur.to, cur.value, cur.rank), i = this.wrappers.length;
+                  let rank = (cur.rank * 102) + cur.value.rank;
+                  let wrap = new OpenWrapper(cur.from, cur.to, cur.value, rank), i = this.wrappers.length;
                   while (i > 0 && (this.wrappers[i - 1].rank - wrap.rank || this.wrappers[i - 1].to - wrap.to) < 0)
                       i--;
                   this.wrappers.splice(i, 0, wrap);
@@ -6798,8 +6843,8 @@
       find(cls, test, type = 2 /* Reused.DOM */) {
           let i = cls.bucket;
           let bucket = this.buckets[i], off = this.index[i];
-          for (let j = bucket.length - 1; j >= 0; j--) {
-              // Look at the most recently added items first (last-in, first-out)
+          for (let j = 0; j < bucket.length; j++) {
+              // Look at the most oldest items first (first-in, first-out)
               let index = (j + off) % bucket.length, tile = bucket[index];
               if ((!test || test(tile)) && !this.reused.has(tile)) {
                   bucket.splice(index, 1);
@@ -6901,6 +6946,7 @@
               if (composition && next.fromA <= composition.range.fromA && next.toA >= composition.range.toA) {
                   this.forward(next.fromA, composition.range.fromA, composition.range.fromA < composition.range.toA ? 1 : -1);
                   this.emit(posB, composition.range.fromB);
+                  this.builder.flushBuffer();
                   this.cache.clear(); // Must not reuse DOM across composition
                   this.builder.addComposition(composition, compositionContext);
                   this.text.skip(composition.range.toB - composition.range.fromB);
@@ -7001,7 +7047,7 @@
       }
       emit(from, to) {
           let pendingLineAttrs = null;
-          let b = this.builder, markCount = 0;
+          let b = this.builder, markCount = -1;
           let openEnd = RangeSet.spans(this.decorations, from, to, {
               point: (from, to, deco, active, openStart, index) => {
                   if (deco instanceof PointDecoration) {
@@ -7052,10 +7098,13 @@
                       }
                       pendingLineAttrs = null;
                   }
+                  markCount = active.length;
               }
           });
-          b.addLineStartIfNotCovered(pendingLineAttrs);
-          this.openWidget = openEnd > markCount;
+          if (markCount > -1)
+              this.openWidget = openEnd > markCount;
+          if (!this.openWidget)
+              b.addLineStartIfNotCovered(pendingLineAttrs);
           this.openMarks = openEnd;
       }
       forward(from, to, side = 1) {
@@ -7462,7 +7511,7 @@
       domAtPos(pos, side) {
           let { tile, offset } = this.tile.resolveBlock(pos, side);
           if (tile.isWidget())
-              return tile.domPosFor(pos, side);
+              return tile.domPosFor(offset, side);
           return tile.domIn(offset, side);
       }
       inlineDOMNearPos(pos, side) {
@@ -7499,14 +7548,16 @@
               after = null;
           return before && side < 0 || !after ? before.domIn(beforeOff, side) : after.domIn(afterOff, side);
       }
-      coordsAt(pos, side) {
+      // Get the coord of the element at the given side of the given
+      // position. If rtl is given, flatten it using that text direction.
+      coordsAt(pos, side, rtl) {
           let { tile, offset } = this.tile.resolveBlock(pos, side);
           if (tile.isWidget()) {
               if (tile.widget instanceof BlockGapWidget)
                   return null;
               return tile.coordsInWidget(offset, side, true);
           }
-          return tile.coordsIn(offset, side);
+          return tile.coordsIn(offset, side, rtl);
       }
       lineAt(pos, side) {
           let { tile } = this.tile.resolveBlock(pos, side);
@@ -7680,7 +7731,6 @@
           this.blockWrappers = this.view.state.facet(blockWrappers).map(v => typeof v == "function" ? v(this.view) : v);
       }
       scrollIntoView(target) {
-          var _a;
           if (target.isSnapshot) {
               let ref = this.view.viewState.lineBlockAt(target.range.head);
               this.view.scrollDOM.scrollTop = ref.top - target.yMargin;
@@ -7697,7 +7747,7 @@
               }
           }
           let { range } = target;
-          let rect = this.coordsAt(range.head, (_a = range.assoc) !== null && _a !== void 0 ? _a : (range.empty ? 0 : range.head > range.anchor ? -1 : 1)), other;
+          let rect = this.coordsAt(range.head, range.assoc || (range.head > range.anchor ? -1 : 1)), other;
           if (!rect)
               return;
           if (!range.empty && (other = this.coordsAt(range.anchor, range.anchor > range.head ? -1 : 1)))
@@ -7880,7 +7930,7 @@
               break;
           to = next;
       }
-      return EditorSelection.range(from + line.from, to + line.from);
+      return EditorSelection.undirectionalRange(from + line.from, to + line.from);
   }
   function posAtCoordsImprecise(view, contentRect, block, x, y) {
       let into = Math.round((x - contentRect.left) * view.defaultCharacterWidth);
@@ -8017,8 +8067,12 @@
           else {
               let from = skipAtomicRanges(atoms, range.from, -1);
               let to = skipAtomicRanges(atoms, range.to, 1);
-              if (from != range.from || to != range.to)
-                  updated = EditorSelection.range(range.from == range.anchor ? from : to, range.from == range.head ? from : to);
+              if (from != range.from || to != range.to) {
+                  if (range.undirectional)
+                      updated = EditorSelection.undirectionalRange(range.from, range.to);
+                  else
+                      updated = EditorSelection.range(range.from == range.anchor ? from : to, range.from == range.head ? from : to);
+              }
           }
           if (updated) {
               if (!ranges)
@@ -8114,13 +8168,12 @@
       }
       // Scan through the rectangles for the content of a tile with inline
       // content, looking for one that overlaps the queried position
-      // vertically andis
-      // closest horizontally. The caller is responsible for dividing its
-      // content into N pieces, and pass an array with N+1 positions
-      // (including the position after the last piece). For a text tile,
-      // these will be character clusters, for a composite tile, these
-      // will be child tiles.
-      scan(positions, getRects) {
+      // vertically and is closest horizontally. The caller is responsible
+      // for dividing its content into N pieces, and pass an array with
+      // N+1 positions (including the position after the last piece). For
+      // a text tile, these will be character clusters, for a composite
+      // tile, these will be child tiles.
+      scan(positions, getRects, recursed = false) {
           let lo = 0, hi = positions.length - 1, seen = new Set();
           let bidi = this.bidiIn(positions[0], positions[hi]);
           let above, below;
@@ -8191,21 +8244,23 @@
           // If no element with y overlap is found, find the nearest element
           // on the y axis, move this.y into it, and retry the scan.
           if (!closestRect) {
+              if (!below && !above)
+                  return { i: positions[0], after: false };
               let side = above && (!below || (this.y - above.bottom < below.top - this.y)) ? above : below;
               this.y = (side.top + side.bottom) / 2;
-              return this.scan(positions, getRects);
+              return this.scan(positions, getRects, true);
           }
           // Handle the case where closest matched a higher element on the
           // same line as an element below/above the coords
-          if (closestDx) {
+          if (closestDx && !recursed) {
               let { top, bottom } = closestRect;
               if (above && above.bottom > (top + top + bottom) / 3) {
                   this.y = above.bottom - 1;
-                  return this.scan(positions, getRects);
+                  return this.scan(positions, getRects, true);
               }
               if (below && below.top < (top + bottom + bottom) / 3) {
                   this.y = below.top + 1;
-                  return this.scan(positions, getRects);
+                  return this.scan(positions, getRects, true);
               }
           }
           let ltr = (bidi ? this.dirAt(positions[closestI], 1) : this.baseDir) == Direction.LTR;
@@ -8423,7 +8478,8 @@
               // Chrome will put the selection *inside* them, confusing
               // posFromDOM
               let vp = view.viewport;
-              if ((browser.ios || browser.chrome) && curSel.main.empty && head != anchor &&
+              if ((browser.ios || browser.chrome) && head != anchor &&
+                  Math.min(head, anchor) <= curSel.main.from && Math.max(head, anchor) >= curSel.main.to &&
                   (vp.from > 0 || vp.to < view.state.doc.length)) {
                   let from = Math.min(head, anchor), to = Math.max(head, anchor);
                   let offFrom = vp.from - from, offTo = vp.to - to;
@@ -8733,6 +8789,7 @@
           this.view = view;
           this.lastKeyCode = 0;
           this.lastKeyTime = 0;
+          this.touchActive = false;
           this.lastTouchTime = 0;
           this.lastTouchX = 0;
           this.lastTouchY = 0;
@@ -8744,13 +8801,15 @@
           // (after which we retroactively handle them and reset the DOM) to
           // avoid messing up the virtual keyboard state.
           this.pendingIOSKey = undefined;
-          /**
-          When enabled (>-1), tab presses are not given to key handlers,
-          leaving the browser's default behavior. If >0, the mode expires
-          at that timestamp, and any other keypress clears it.
-          Esc enables temporary tab focus mode for two seconds when not
-          otherwise handled.
-          */
+          // Set to a time stap by scroll events when touch isn't active on
+          // iOS, to work around an issue where Safari will abort the scroll
+          // momentum if we set scrollTop
+          this.lastIOSMomentumScroll = 0;
+          // When enabled (>-1), tab presses are not given to key handlers,
+          // leaving the browser's default behavior. If >0, the mode expires
+          // at that timestamp, and any other keypress clears it.
+          // Esc enables temporary tab focus mode for two seconds when not
+          // otherwise handled.
           this.tabFocusMode = -1;
           this.lastSelectionOrigin = null;
           this.lastSelectionTime = 0;
@@ -8858,11 +8917,16 @@
           // state. So we let it go through, and then, in
           // applyDOMChange, notify key handlers of it and reset to
           // the state they produce.
-          let pending;
-          if (browser.ios && !event.synthetic && !event.altKey && !event.metaKey && !event.shiftKey &&
-              ((pending = PendingKeys.find(key => key.keyCode == event.keyCode)) && !event.ctrlKey ||
+          if (browser.ios && !event.synthetic && !event.altKey && !event.metaKey &&
+              (PendingKeys.some(key => key.keyCode == event.keyCode) && !event.ctrlKey ||
                   EmacsyPendingKeys.indexOf(event.key) > -1 && event.ctrlKey)) {
-              this.pendingIOSKey = pending || event;
+              let mods = { ctrlKey: event.ctrlKey, altKey: event.altKey, metaKey: event.metaKey, shiftKey: event.shiftKey };
+              // On iOS with autocapitalize, drop the shift modifier for these
+              // keys, since it will be set at the start of every sentence.
+              if (mods.shiftKey && browser.ios && !/^(off|none)$/.test(this.view.contentDOM.autocapitalize) &&
+                  iosVirtualKeyboardOpen(this.view.win))
+                  mods.shiftKey = false;
+              this.pendingIOSKey = { key: event.key, keyCode: event.keyCode, mods };
               setTimeout(() => this.flushIOSKey(), 250);
               return true;
           }
@@ -8878,7 +8942,7 @@
           if (key.key == "Enter" && change && change.from < change.to && /^\S+$/.test(change.insert.toString()))
               return false;
           this.pendingIOSKey = undefined;
-          return dispatchKey(this.view.contentDOM, key.key, key.keyCode, key instanceof KeyboardEvent ? key : undefined);
+          return dispatchKey(this.view.contentDOM, key.key, key.keyCode, key.mods);
       }
       ignoreDuringComposition(event) {
           if (!/^key/.test(event.type) || event.synthetic)
@@ -8915,6 +8979,11 @@
           if (this.mouseSelection)
               this.mouseSelection.destroy();
       }
+  }
+  function iosVirtualKeyboardOpen(win) {
+      if (!win.visualViewport)
+          return false;
+      return win.visualViewport.height * win.visualViewport.scale / win.document.documentElement.clientHeight < 0.85;
   }
   function bindHandler(plugin, handler) {
       return (view, event) => {
@@ -9166,8 +9235,11 @@
       });
   }
   observers.scroll = view => {
-      view.inputState.lastScrollTop = view.scrollDOM.scrollTop;
-      view.inputState.lastScrollLeft = view.scrollDOM.scrollLeft;
+      let iState = view.inputState;
+      iState.lastScrollTop = view.scrollDOM.scrollTop;
+      iState.lastScrollLeft = view.scrollDOM.scrollLeft;
+      if (browser.ios && !iState.touchActive)
+          iState.lastIOSMomentumScroll = Date.now();
   };
   observers.wheel = observers.mousewheel = view => {
       view.inputState.lastWheelEvent = Date.now();
@@ -9180,6 +9252,7 @@
   };
   observers.touchstart = (view, e) => {
       let iState = view.inputState, touch = e.targetTouches[0];
+      iState.touchActive = true;
       iState.lastTouchTime = Date.now();
       if (touch) {
           iState.lastTouchX = touch.clientX;
@@ -9189,6 +9262,9 @@
   };
   observers.touchmove = view => {
       view.inputState.setSelectionOrigin("select.pointer");
+  };
+  observers.touchend = (view, e) => {
+      view.inputState.touchActive = false;
   };
   handlers.mousedown = (view, event) => {
       view.observer.flush();
@@ -9235,7 +9311,7 @@
           let from = visual ? visual.posAtStart : line.from, to = visual ? visual.posAtEnd : line.to;
           if (to < view.state.doc.length && to == line.to)
               to++;
-          return EditorSelection.range(from, to);
+          return EditorSelection.undirectionalRange(from, to);
       }
   }
   const BadMouseDetail = browser.ie && browser.ie_version <= 11;
@@ -9293,7 +9369,7 @@
           if (tile && tile.isWidget()) {
               let from = tile.posAtStart, to = from + tile.length;
               if (from >= range.to || to <= range.from)
-                  range = EditorSelection.range(from, to);
+                  range = EditorSelection.undirectionalRange(from, to);
           }
       }
       let { inputState } = view;
@@ -9499,7 +9575,7 @@
       view.inputState.compositionFirstChange = null;
       if (browser.chrome && browser.android) {
           // Delay flushing for a bit on Android because it'll often fire a
-          // bunch of contradictory changes in a row at end of compositon
+          // bunch of contradictory changes in a row at end of composition
           view.observer.flushSoon();
       }
       else if (view.inputState.compositionPendingChange) {
@@ -9630,8 +9706,7 @@
       }
       refresh(whiteSpace, lineHeight, charWidth, textHeight, lineLength, knownHeights) {
           let lineWrapping = wrappingWhiteSpace.indexOf(whiteSpace) > -1;
-          let changed = Math.abs(lineHeight - this.lineHeight) > 0.3 || this.lineWrapping != lineWrapping ||
-              Math.abs(charWidth - this.charWidth) > 0.1;
+          let changed = Math.abs(lineHeight - this.lineHeight) > 0.3 || this.lineWrapping != lineWrapping;
           this.lineWrapping = lineWrapping;
           this.lineHeight = lineHeight;
           this.charWidth = charWidth;
@@ -11084,6 +11159,7 @@
           padding: "0 2px 0 6px"
       },
       ".cm-layer": {
+          userSelect: "none", // #1708
           position: "absolute",
           left: 0,
           top: 0,
@@ -11215,6 +11291,8 @@
           backgroundColor: "#f5f5f5",
           color: "black"
       },
+      ".cm-panels-top": { top: "0" },
+      ".cm-panels-bottom": { bottom: "0" },
       "&light .cm-panels-top": {
           borderBottom: "1px solid #ddd"
       },
@@ -11918,7 +11996,6 @@
           for (let event in this.handlers)
               context.addEventListener(event, this.handlers[event]);
           this.measureReq = { read: view => {
-                  this.editContext.updateControlBounds(view.contentDOM.getBoundingClientRect());
                   let sel = getSelection(view.root);
                   if (sel && sel.rangeCount)
                       this.editContext.updateSelectionBounds(sel.getRangeAt(0).getBoundingClientRect());
@@ -12452,6 +12529,7 @@
                                   this.viewState.lineBlockAt(scrollAnchorPos).top;
                               let diff = (newAnchorHeight - scrollAnchorHeight) / this.scaleY;
                               if ((diff > 1 || diff < -1) &&
+                                  !(browser.ios && this.inputState.lastIOSMomentumScroll > Date.now() - 100) &&
                                   (scroll == this.scrollDOM || this.hasFocus ||
                                       Math.max(this.inputState.lastWheelEvent, this.inputState.lastTouchTime) > Date.now() - 100)) {
                                   scrollOffset = scrollOffset + diff;
@@ -12743,12 +12821,9 @@
       */
       coordsAtPos(pos, side = 1) {
           this.readMeasured();
-          let rect = this.docView.coordsAt(pos, side);
-          if (!rect || rect.left == rect.right)
-              return rect;
           let line = this.state.doc.lineAt(pos), order = this.bidiSpans(line);
           let span = order[BidiSpan.find(order, pos - line.from, -1, side)];
-          return flattenRect(rect, (span.dir == Direction.LTR) == (side > 0));
+          return this.docView.coordsAt(pos, side, span.dir == Direction.RTL);
       }
       /**
       Return the rectangle around a given character. If `pos` does not
@@ -13826,9 +13901,10 @@
       },
       class: "cm-selectionLayer"
   });
+  const selectionBg = browser.gecko && browser.gecko_version >= 153 ? "#ffffff01" : "transparent";
   const hideNativeSelection$2 = /*@__PURE__*/Prec.highest(/*@__PURE__*/EditorView.theme({
       ".cm-line": {
-          "& ::selection, &::selection": { backgroundColor: "transparent !important" },
+          "& ::selection, &::selection": { backgroundColor: `${selectionBg} !important` },
           caretColor: "transparent !important"
       },
       ".cm-content": {
@@ -14857,11 +14933,13 @@
           arrow: tooltips.some(t => t.arrow),
       };
   });
+  const hoverPlugin = /*@__PURE__*/Facet.define();
   class HoverPlugin {
-      constructor(view, source, field, setHover, hoverTime) {
+      constructor(view, source, field, locked, setHover, hoverTime) {
           this.view = view;
           this.source = source;
           this.field = field;
+          this.locked = locked;
           this.setHover = setHover;
           this.hoverTime = hoverTime;
           this.hoverTimeout = -1;
@@ -14872,7 +14950,7 @@
           view.dom.addEventListener("mouseleave", this.mouseleave = this.mouseleave.bind(this));
           view.dom.addEventListener("mousemove", this.mousemove = this.mousemove.bind(this));
       }
-      update() {
+      update(update) {
           if (this.pending) {
               this.pending = null;
               clearTimeout(this.restartTimeout);
@@ -14916,19 +14994,29 @@
               let rtl = bidi && bidi.dir == Direction.RTL ? -1 : 1;
               side = (lastMove.x < posCoords.left ? -rtl : rtl);
           }
+          this.activateHover(view, pos, side);
+      }
+      activateHover(view, pos, side, locked) {
           let open = this.source(view, pos, side);
-          if (open === null || open === void 0 ? void 0 : open.then) {
+          let done = (value) => {
+              if (value && !(Array.isArray(value) && !value.length)) {
+                  let tooltips = Array.isArray(value) ? value : [value];
+                  if (locked)
+                      this.locked.set(tooltips, locked);
+                  view.dispatch({ effects: this.setHover.of(tooltips) });
+              }
+          };
+          if (open && "then" in open) {
               let pending = this.pending = { pos };
               open.then(result => {
                   if (this.pending == pending) {
                       this.pending = null;
-                      if (result && !(Array.isArray(result) && !result.length))
-                          view.dispatch({ effects: this.setHover.of(Array.isArray(result) ? result : [result]) });
+                      done(result);
                   }
               }, e => logException(view.state, e, "hover tooltip"));
           }
-          else if (open && !(Array.isArray(open) && !open.length)) {
-              view.dispatch({ effects: this.setHover.of(Array.isArray(open) ? open : [open]) });
+          else {
+              done(open);
           }
       }
       get tooltip() {
@@ -14942,7 +15030,7 @@
           if (this.hoverTimeout < 0)
               this.hoverTimeout = setTimeout(this.checkHover, this.hoverTime);
           let { active, tooltip } = this;
-          if (active.length && tooltip && !isInTooltip(tooltip.dom, event) || this.pending) {
+          if (active.length && !this.locked.has(active) && tooltip && !isInTooltip(tooltip.dom, event) || this.pending) {
               let { pos } = active[0] || this.pending, end = (_b = (_a = active[0]) === null || _a === void 0 ? void 0 : _a.end) !== null && _b !== void 0 ? _b : pos;
               if ((pos == end ? this.view.posAtCoords(this.lastMove) != pos
                   : !isOverRange(this.view, pos, end, event.clientX, event.clientY))) {
@@ -14955,7 +15043,7 @@
           clearTimeout(this.hoverTimeout);
           this.hoverTimeout = -1;
           let { active } = this;
-          if (active.length) {
+          if (active.length && !this.locked.has(active)) {
               let { tooltip } = this;
               let inTooltip = tooltip && tooltip.dom.contains(event.relatedTarget);
               if (!inTooltip)
@@ -14967,7 +15055,8 @@
       watchTooltipLeave(tooltip) {
           let watch = (event) => {
               tooltip.removeEventListener("mouseleave", watch);
-              if (this.active.length && !this.view.dom.contains(event.relatedTarget))
+              let { active } = this;
+              if (active.length && !this.locked.has(active) && !this.view.dom.contains(event.relatedTarget))
                   this.view.dispatch({ effects: this.setHover.of([]) });
           };
           tooltip.addEventListener("mouseleave", watch);
@@ -15018,47 +15107,83 @@
   */
   function hoverTooltip(source, options = {}) {
       let setHover = StateEffect.define();
+      // This would be better stored in the state field, but we've set
+      // down the type of the field in our interface, so it's indirectly
+      // stored by array identity.
+      let locked = new WeakMap();
       let hoverState = StateField.define({
           create() { return []; },
           update(value, tr) {
+              let lock = locked.get(value);
               if (value.length) {
                   if (options.hideOnChange && (tr.docChanged || tr.selection))
                       value = [];
+                  else if (lock && lock(tr))
+                      value = [];
                   else if (options.hideOn)
                       value = value.filter(v => !options.hideOn(tr, v));
-                  if (tr.docChanged) {
-                      let mapped = [];
-                      for (let tooltip of value) {
-                          let newPos = tr.changes.mapPos(tooltip.pos, -1, MapMode.TrackDel);
-                          if (newPos != null) {
-                              let copy = Object.assign(Object.create(null), tooltip);
-                              copy.pos = newPos;
-                              if (copy.end != null)
-                                  copy.end = tr.changes.mapPos(copy.end);
-                              mapped.push(copy);
-                          }
+              }
+              if (tr.docChanged && value.length) {
+                  let mapped = [];
+                  for (let tooltip of value) {
+                      let newPos = tr.changes.mapPos(tooltip.pos, -1, MapMode.TrackDel);
+                      if (newPos != null) {
+                          let copy = Object.assign(Object.create(null), tooltip);
+                          copy.pos = newPos;
+                          if (copy.end != null)
+                              copy.end = tr.changes.mapPos(copy.end);
+                          mapped.push(copy);
                       }
-                      value = mapped;
                   }
+                  value = mapped;
               }
               for (let effect of tr.effects) {
-                  if (effect.is(setHover))
+                  if (effect.is(setHover)) {
                       value = effect.value;
-                  if (effect.is(closeHoverTooltipEffect))
+                      lock = undefined;
+                  }
+                  if (effect.is(closeHoverTooltipEffect) && !effect.value || effect.value == hoverState)
                       value = [];
               }
+              if (value.length && lock)
+                  locked.set(value, lock);
               return value;
           },
           provide: f => showHoverTooltip.from(f)
       });
+      const plugin = ViewPlugin.define(view => new HoverPlugin(view, source, hoverState, locked, setHover, options.hoverTime || 300 /* Hover.Time */));
       return {
           active: hoverState,
           extension: [
               hoverState,
-              ViewPlugin.define(view => new HoverPlugin(view, source, hoverState, setHover, options.hoverTime || 300 /* Hover.Time */)),
+              plugin,
+              hoverPlugin.of(plugin),
               showHoverTooltipHost
           ]
       };
+  }
+  /**
+  Activate hover tooltips for the given position and side. If you
+  provide a specific hover tooltip (the value returned from
+  [`hoverTooltip`](https://codemirror.net/6/docs/ref/#view.hoverTooltip)), only that one will be
+  activated. If not given, all hover tooltips at the given position
+  are triggered.
+
+  Note that tooltips opened this way don't close automatically, and
+  you'll want to pass an `until` callback or use
+  [`closeHoverTooltip`](https://codemirror.net/6/docs/ref/#view.closeHoverTooltip)/[`closeHoverTooltips`](https://codemirror.net/6/docs/ref/#view.closeHoverTooltips)
+  to deactivate them.
+  */
+  function activateHover(view, pos, side, options = {}) {
+      var _a;
+      let plugins = view.state.facet(hoverPlugin).map(p => view.plugin(p)).filter((p) => !!p);
+      if (options.tooltip && options.tooltip.active) {
+          let found = plugins.find(p => p.field == options.tooltip.active);
+          if (found)
+              plugins = [found];
+      }
+      for (let plugin of plugins)
+          plugin.activateHover(view, pos, side, (_a = options.until) !== null && _a !== void 0 ? _a : (() => false));
   }
   /**
   Get the active tooltip view for a given tooltip, if available.
@@ -15196,7 +15321,6 @@
           if (!this.dom) {
               this.dom = document.createElement("div");
               this.dom.className = this.top ? "cm-panels cm-panels-top" : "cm-panels cm-panels-bottom";
-              this.dom.style[this.top ? "top" : "bottom"] = "0";
               let parent = this.container || this.view.dom;
               parent.insertBefore(this.dom, this.top ? parent.firstChild : null);
           }
@@ -19151,8 +19275,7 @@
   }
   /**
   A subclass of [`Language`](https://codemirror.net/6/docs/ref/#language.Language) for use with Lezer
-  [LR parsers](https://lezer.codemirror.net/docs/ref#lr.LRParser)
-  parsers.
+  [LR parsers](https://lezer.codemirror.net/docs/ref#lr.LRParser).
   */
   class LRLanguage extends Language {
       constructor(data, parser, name) {
@@ -20257,17 +20380,24 @@
           if (tr.isUserEvent("delete"))
               tr.changes.iterChangedRanges((fromA, toA) => folded = clearTouchedFolds(folded, fromA, toA));
           folded = folded.map(tr.changes);
+          let rangesToFold = [];
           for (let e of tr.effects) {
               if (e.is(foldEffect) && !foldExists(folded, e.value.from, e.value.to)) {
-                  let { preparePlaceholder } = tr.state.facet(foldConfig);
-                  let widget = !preparePlaceholder ? foldWidget :
-                      Decoration.replace({ widget: new PreparedFoldWidget(preparePlaceholder(tr.state, e.value)) });
-                  folded = folded.update({ add: [widget.range(e.value.from, e.value.to)] });
+                  rangesToFold.push(e.value);
               }
               else if (e.is(unfoldEffect)) {
                   folded = folded.update({ filter: (from, to) => e.value.from != from || e.value.to != to,
                       filterFrom: e.value.from, filterTo: e.value.to });
               }
+          }
+          if (rangesToFold.length) {
+              let { preparePlaceholder } = tr.state.facet(foldConfig);
+              let decorations = rangesToFold.map(value => {
+                  let widget = !preparePlaceholder ? foldWidget :
+                      Decoration.replace({ widget: new PreparedFoldWidget(preparePlaceholder(tr.state, value)) });
+                  return widget.range(value.from, value.to);
+              });
+              folded = folded.update({ add: decorations });
           }
           // Clear folded ranges that cover the selection head
           if (tr.selection)
@@ -20584,7 +20714,7 @@
       or array of tags in their `tag` property, and either a single
       `class` property providing a static CSS class (for highlighter
       that rely on external styling), or a
-      [`style-mod`](https://github.com/marijnh/style-mod#documentation)-style
+      [`style-mod`](https://code.haverbeke.berlin/marijn/style-mod#documentation)-style
       set of CSS properties (which define the styling for those tags).
       
       The CSS rules created for a highlighter will be emitted in the
@@ -21977,8 +22107,10 @@
   on, if any.
   */
   const cursorMatchingBracket = ({ state, dispatch }) => toMatchingBracket(state, dispatch);
-  function extendSel(target, how) {
+  function extendSel(target, forward, how) {
       let selection = updateSel(target.state.selection, range => {
+          if (range.undirectional && (range.head >= range.anchor) != forward)
+              range = EditorSelection.range(range.head, range.anchor);
           let head = how(range);
           return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || undefined, head.assoc);
       });
@@ -21988,7 +22120,7 @@
       return true;
   }
   function selectByChar(view, forward) {
-      return extendSel(view, range => view.moveByChar(range, forward));
+      return extendSel(view, forward, range => view.moveByChar(range, forward));
   }
   /**
   Move the selection head one character to the left, while leaving
@@ -22008,7 +22140,7 @@
   */
   const selectCharBackward = view => selectByChar(view, false);
   function selectByGroup(view, forward) {
-      return extendSel(view, range => view.moveByGroup(range, forward));
+      return extendSel(view, forward, range => view.moveByGroup(range, forward));
   }
   /**
   Move the selection head one [group](https://codemirror.net/6/docs/ref/#commands.cursorGroupLeft) to
@@ -22030,13 +22162,19 @@
   /**
   Move the selection head over the next syntactic element to the left.
   */
-  const selectSyntaxLeft = view => extendSel(view, range => moveBySyntax(view.state, range, !ltrAtCursor(view)));
+  const selectSyntaxLeft = view => {
+      let forward = !ltrAtCursor(view);
+      return extendSel(view, forward, range => moveBySyntax(view.state, range, forward));
+  };
   /**
   Move the selection head over the next syntactic element to the right.
   */
-  const selectSyntaxRight = view => extendSel(view, range => moveBySyntax(view.state, range, ltrAtCursor(view)));
+  const selectSyntaxRight = view => {
+      let forward = ltrAtCursor(view);
+      return extendSel(view, forward, range => moveBySyntax(view.state, range, forward));
+  };
   function selectByLine(view, forward) {
-      return extendSel(view, range => view.moveVertically(range, forward));
+      return extendSel(view, forward, range => view.moveVertically(range, forward));
   }
   /**
   Move the selection head one line up.
@@ -22047,7 +22185,7 @@
   */
   const selectLineDown = view => selectByLine(view, true);
   function selectByPage(view, forward) {
-      return extendSel(view, range => view.moveVertically(range, forward, pageInfo(view).height));
+      return extendSel(view, forward, range => view.moveVertically(range, forward, pageInfo(view).height));
   }
   /**
   Move the selection head one page up.
@@ -22060,27 +22198,33 @@
   /**
   Move the selection head to the next line boundary.
   */
-  const selectLineBoundaryForward = view => extendSel(view, range => moveByLineBoundary(view, range, true));
+  const selectLineBoundaryForward = view => extendSel(view, true, range => moveByLineBoundary(view, range, true));
   /**
   Move the selection head to the previous line boundary.
   */
-  const selectLineBoundaryBackward = view => extendSel(view, range => moveByLineBoundary(view, range, false));
+  const selectLineBoundaryBackward = view => extendSel(view, false, range => moveByLineBoundary(view, range, false));
   /**
   Move the selection head one line boundary to the left.
   */
-  const selectLineBoundaryLeft = view => extendSel(view, range => moveByLineBoundary(view, range, !ltrAtCursor(view)));
+  const selectLineBoundaryLeft = view => {
+      let forward = !ltrAtCursor(view);
+      return extendSel(view, forward, range => moveByLineBoundary(view, range, forward));
+  };
   /**
   Move the selection head one line boundary to the right.
   */
-  const selectLineBoundaryRight = view => extendSel(view, range => moveByLineBoundary(view, range, ltrAtCursor(view)));
+  const selectLineBoundaryRight = view => {
+      let forward = ltrAtCursor(view);
+      return extendSel(view, forward, range => moveByLineBoundary(view, range, forward));
+  };
   /**
   Move the selection head to the start of the line.
   */
-  const selectLineStart = view => extendSel(view, range => EditorSelection.cursor(view.lineBlockAt(range.head).from));
+  const selectLineStart = view => extendSel(view, false, range => EditorSelection.cursor(view.lineBlockAt(range.head).from));
   /**
   Move the selection head to the end of the line.
   */
-  const selectLineEnd = view => extendSel(view, range => EditorSelection.cursor(view.lineBlockAt(range.head).to));
+  const selectLineEnd = view => extendSel(view, true, range => EditorSelection.cursor(view.lineBlockAt(range.head).to));
   /**
   Move the selection to the start of the document.
   */
@@ -22799,8 +22943,13 @@
           The current match (only holds a meaningful value after
           [`next`](https://codemirror.net/6/docs/ref/#search.SearchCursor.next) has been called and when
           `done` is false).
+          
+          The `precise` flag will be set to false if the match starts or
+          ends _inside_ a character that, when normalized, expands to
+          multiple characters. It indicates that the `from`-`to` range
+          covers content that isn't part of the actual match.
           */
-          this.value = { from: 0, to: 0 };
+          this.value = { from: 0, to: 0, precise: false };
           /**
           Whether the end of the iterated region has been reached.
           */
@@ -22851,44 +23000,45 @@
               this.bufferPos += codePointSize(next);
               let norm = this.normalize(str);
               if (norm.length)
-                  for (let i = 0, pos = start;; i++) {
+                  for (let i = 0, pos = start, posPrecise = true;; i++) {
                       let code = norm.charCodeAt(i);
-                      let match = this.match(code, pos, this.bufferPos + this.bufferStart);
-                      if (i == norm.length - 1) {
-                          if (match) {
-                              this.value = match;
-                              return this;
-                          }
-                          break;
+                      let match = this.match(code, pos, posPrecise, this.bufferPos + this.bufferStart, i == norm.length - 1);
+                      if (match) {
+                          this.value = match;
+                          return this;
                       }
-                      if (pos == start && i < str.length && str.charCodeAt(i) == code)
+                      if (i == norm.length - 1)
+                          break;
+                      if (posPrecise && i < str.length && str.charCodeAt(i) == code)
                           pos++;
+                      else
+                          posPrecise = false;
                   }
           }
       }
-      match(code, pos, end) {
+      match(code, pos, posPrecise, end, endPrecise) {
           let match = null;
-          for (let i = 0; i < this.matches.length; i += 2) {
-              let index = this.matches[i], keep = false;
-              if (this.query.charCodeAt(index) == code) {
-                  if (index == this.query.length - 1) {
-                      match = { from: this.matches[i + 1], to: end };
+          for (let i = 0; i < this.matches.length;) {
+              let partial = this.matches[i], keep = false;
+              if (this.query.charCodeAt(partial.index) == code) {
+                  if (partial.index == this.query.length - 1) {
+                      match = { from: partial.from, to: end, precise: endPrecise && partial.precise };
                   }
                   else {
-                      this.matches[i]++;
+                      partial.index++;
                       keep = true;
                   }
               }
-              if (!keep) {
-                  this.matches.splice(i, 2);
-                  i -= 2;
-              }
+              if (keep)
+                  i++;
+              else
+                  this.matches.splice(i, 1);
           }
           if (this.query.charCodeAt(0) == code) {
               if (this.query.length == 1)
-                  match = { from: pos, to: end };
+                  match = { from: pos, to: end, precise: posPrecise && endPrecise };
               else
-                  this.matches.push(1, pos);
+                  this.matches.push({ from: pos, index: 1, precise: posPrecise });
           }
           if (match && this.test && !this.test(match.from, match.to, this.buffer, this.bufferStart))
               match = null;
@@ -22898,7 +23048,7 @@
   if (typeof Symbol != "undefined")
       SearchCursor.prototype[Symbol.iterator] = function () { return this; };
 
-  const empty = { from: -1, to: -1, match: /*@__PURE__*//.*/.exec("") };
+  const empty = { from: -1, to: -1, match: /*@__PURE__*//.*/.exec(""), precise: true };
   const baseFlags = "gm" + (/x/.unicode == null ? "" : "u");
   /**
   This class is similar to [`SearchCursor`](https://codemirror.net/6/docs/ref/#search.SearchCursor)
@@ -22923,7 +23073,9 @@
           /**
           Will contain an object with the extent of the match and the
           match object when [`next`](https://codemirror.net/6/docs/ref/#search.RegExpCursor.next)
-          sucessfully finds a match.
+          sucessfully finds a match. The `precise` flag is always true for
+          this type of cursor, and only there to make sure this cursor is
+          a subtype of `SearchCursor`.
           */
           this.value = empty;
           if (/\\[sWDnr]|\n|\r|\[\^/.test(query))
@@ -22968,7 +23120,7 @@
                   if (from == this.curLineStart + this.curLine.length)
                       this.nextLine();
                   if ((from < to || from > this.value.to) && (!this.test || this.test(from, to, match))) {
-                      this.value = { from, to, match };
+                      this.value = { from, to, precise: true, match };
                       return this;
                   }
                   off = this.matchPos - this.curLineStart;
@@ -23041,7 +23193,7 @@
                   // again, since it'll likely be able to match more
                   if ((this.flat.to >= this.to || match.index + match[0].length <= this.flat.text.length - 10) &&
                       (!this.test || this.test(from, to, match))) {
-                      this.value = { from, to, match };
+                      this.value = { from, to, precise: true, match };
                       this.matchPos = toCharEnd(this.text, to + (from == to ? 1 : 0));
                       return this;
                   }
@@ -23676,7 +23828,10 @@
       let next = match;
       let changes = [], selection, replacement;
       let effects = [];
-      if (next.from == from && next.to == to) {
+      if (!next.precise) {
+          next = query.nextMatch(state, next.from, next.to);
+      }
+      else if (next.from == from && next.to == to) {
           replacement = state.toText(query.getReplacement(next));
           changes.push({ from: next.from, to: next.to, insert: replacement });
           next = query.nextMatch(state, next.from, next.to);
@@ -23703,10 +23858,12 @@
   const replaceAll = /*@__PURE__*/searchCommand((view, { query }) => {
       if (view.state.readOnly)
           return false;
-      let changes = query.matchAll(view.state, 1e9).map(match => {
-          let { from, to } = match;
-          return { from, to, insert: query.getReplacement(match) };
-      });
+      let changes = [];
+      for (let match of query.matchAll(view.state, 1e9)) {
+          let { from, to, precise } = match;
+          if (precise)
+              changes.push({ from, to, insert: query.getReplacement(match) });
+      }
       if (!changes.length)
           return false;
       let announceText = view.state.phrase("replaced $ matches", changes.length) + ".";
@@ -24454,8 +24611,8 @@
           let off = Math.floor(selected / max);
           return { from: off * max, to: (off + 1) * max };
       }
-      let off = Math.floor((total - selected) / max);
-      return { from: total - (off + 1) * max, to: total - off * max };
+      let off = Math.ceil((total - selected) / max);
+      return { from: total - off * max, to: total - (off - 1) * max };
   }
   class CompletionTooltip {
       constructor(view, stateField, applyCompletion) {
@@ -24986,7 +25143,7 @@
           let result = this.result.map ? this.result.map(this.result, mapping) : this.result;
           if (!result)
               return new ActiveSource(this.source, 0 /* State.Inactive */);
-          return new ActiveResult(this.source, this.explicit, mapping.mapPos(this.limit), this.result, mapping.mapPos(this.from), mapping.mapPos(this.to, 1));
+          return new ActiveResult(this.source, this.explicit, mapping.mapPos(this.limit), result, mapping.mapPos(this.from), mapping.mapPos(this.to, 1));
       }
       touches(tr) {
           return tr.changes.touchesRange(this.from, this.to);
@@ -25314,7 +25471,8 @@
           content: '"···"',
           opacity: 0.5,
           display: "block",
-          textAlign: "center"
+          textAlign: "center",
+          cursor: "pointer",
       },
       ".cm-tooltip.cm-completionInfo": {
           position: "absolute",
@@ -25437,6 +25595,9 @@
           for (let line of template.split(/\r\n?|\n/)) {
               while (m = /[#$]\{(?:(\d+)(?::([^{}]*))?|((?:\\[{}]|[^{}])*))\}/.exec(line)) {
                   let seq = m[1] ? +m[1] : null, rawName = m[2] || m[3] || "", found = -1;
+                  // `${0}` is the cursor's final position, after every other tab stop.
+                  if (seq === 0)
+                      seq = 1e9;
                   let name = rawName.replace(/\\[{}]/g, m => m[1]);
                   for (let i = 0; i < fields.length; i++) {
                       if (seq != null ? fields[i].seq == seq : name ? fields[i].name == name : false)
@@ -25551,7 +25712,8 @@
 
   The order of fields defaults to textual order, but you can add
   numbers to placeholders (`${1}` or `${1:defaultText}`) to provide
-  a custom order.
+  a custom order. `${0}` is special—it is always the last stop, where
+  the cursor ends up after tabbing through the other fields.
 
   To include a literal `{` or `}` in your template, put a backslash
   in front of it. This will be removed and the brace will not be
@@ -26138,7 +26300,7 @@
       return {
           pos: start,
           end: end,
-          above: view.state.doc.lineAt(start).to < end,
+          above: true,
           create() {
               return { dom: diagnosticsTooltip(view, found) };
           }
@@ -26183,6 +26345,10 @@
               return false;
       }
       view.dispatch({ selection: { anchor: next.from, head: next.to }, scrollIntoView: true });
+      activateHover(view, next.from, 1, {
+          tooltip: lintHover,
+          until: tr => tr.docChanged || tr.newSelection.main.head < next.from || tr.newSelection.main.head > next.to
+      });
       return true;
   };
   /**
@@ -26551,7 +26717,7 @@
           backgroundRepeat: "repeat-x",
           paddingBottom: "0.7px",
       },
-      ".cm-lintRange-error": { backgroundImage: /*@__PURE__*/underline("#d11") },
+      ".cm-lintRange-error": { backgroundImage: /*@__PURE__*/underline("#f11") },
       ".cm-lintRange-warning": { backgroundImage: /*@__PURE__*/underline("orange") },
       ".cm-lintRange-info": { backgroundImage: /*@__PURE__*/underline("#999") },
       ".cm-lintRange-hint": { backgroundImage: /*@__PURE__*/underline("#66d") },
@@ -26770,6 +26936,7 @@
           content: /*@__PURE__*/svg(`<circle cx="20" cy="20" r="15" fill="#f87" stroke="#f43" stroke-width="6"/>`)
       },
   });
+  const lintHover = /*@__PURE__*/hoverTooltip(lintTooltip, { hideOn: hideTooltip });
   const lintExtensions = [
       lintState,
       /*@__PURE__*/EditorView.decorations.compute([lintState], state => {
@@ -26778,7 +26945,7 @@
               activeMark.range(selected.from, selected.to)
           ]);
       }),
-      /*@__PURE__*/hoverTooltip(lintTooltip, { hideOn: hideTooltip }),
+      lintHover,
       baseTheme
   ];
   const lintGutterConfig = /*@__PURE__*/Facet.define({
@@ -29351,12 +29518,12 @@
   }
 
   // This file was generated by lezer-generator. You probably shouldn't edit it.
-  const descendantOp = 135,
+  const descendantOp = 148,
     Unit = 1,
-    identifier$2 = 136,
-    callee = 137,
+    identifier$2 = 149,
+    callee = 150,
     VariableName = 2,
-    queryIdentifier = 138,
+    queryIdentifier = 151,
     queryVariableName = 3,
     QueryCallee = 4;
 
@@ -29465,32 +29632,32 @@
   });
 
   // This file was generated by lezer-generator. You probably shouldn't edit it.
-  const spec_callee = {__proto__:null,lang:44, "nth-child":44, "nth-last-child":44, "nth-of-type":44, "nth-last-of-type":44, dir:44, "host-context":44, if:90, url:132, "url-prefix":132, domain:132, regexp:132};
-  const spec_queryIdentifier = {__proto__:null,or:104, and:104, not:112, only:112, layer:186};
-  const spec_QueryCallee = {__proto__:null,selector:118, layer:182};
-  const spec_AtKeyword = {__proto__:null,"@import":178, "@media":190, "@charset":194, "@namespace":198, "@keyframes":204, "@supports":216, "@scope":220, "@font-feature-values":226};
-  const spec_identifier$1 = {__proto__:null,to:223};
+  const spec_callee = {__proto__:null,lang:44, "nth-child":44, "nth-last-child":44, "nth-of-type":44, "nth-last-of-type":44, dir:44, "host-context":44, if:90, url:158, "url-prefix":158, domain:158, regexp:158};
+  const spec_queryIdentifier = {__proto__:null,or:104, and:104, not:112, only:112, layer:212};
+  const spec_QueryCallee = {__proto__:null,selector:118, style:124, layer:208};
+  const spec_AtKeyword = {__proto__:null,"@import":204, "@media":216, "@charset":220, "@namespace":224, "@keyframes":230, "@supports":242, "@scope":246, "@font-feature-values":252};
+  const spec_identifier$1 = {__proto__:null,to:249};
   const parser$6 = LRParser.deserialize({
     version: 14,
-    states: "IpQYQdOOO#}QdOOP$UO`OOO%OQaO'#CfOOQP'#Ce'#CeO%VQdO'#CgO%[Q`O'#CgO%aQaO'#FdO&XQdO'#CkO&xQaO'#CcO'SQdO'#CnO'_QdO'#DtO'dQdO'#DvO'oQdO'#D}O'oQdO'#EQOOQP'#Fd'#FdO)OQhO'#EsOOQS'#Fc'#FcOOQS'#Ev'#EvQYQdOOO)VQdO'#EWO*cQhO'#E^O)VQdO'#E`O*jQdO'#EbO*uQdO'#EeO)zQhO'#EkO*}QdO'#EmO+YQdO'#EpO+_QaO'#CfO+fQ`O'#ETO+kQ`O'#FnO+vQdO'#FnQOQ`OOP,QO&jO'#CaPOOO)CAR)CAROOQP'#Ci'#CiOOQP,59R,59RO%VQdO,59ROOQP'#Cm'#CmOOQP,59V,59VO&XQdO,59VO,]QdO,59YO'_QdO,5:`O'dQdO,5:bO'oQdO,5:iO'oQdO,5:kO'oQdO,5:lO'oQdO'#E}O,hQ`O,58}O,pQdO'#ESOOQS,58},58}OOQP'#Cq'#CqOOQO'#Dr'#DrOOQP,59Y,59YO,wQ`O,59YO,|Q`O,59YOOQP'#Du'#DuOOQP,5:`,5:`O-RQpO'#DwO-^QdO'#DxO-cQ`O'#DxO-hQpO,5:bO.RQaO,5:iO.iQaO,5:lOOQW'#D^'#D^O/eQhO'#DgO/xQhO,5;_O)zQhO'#DeO0VQ`O'#DkO0[QhO'#DnOOQW'#Fj'#FjOOQS,5;_,5;_O0aQ`O'#DhOOQS-E8t-E8tOOQ['#Cv'#CvO0fQdO'#CwO0|QdO'#C}O1dQdO'#DQO1zQ!pO'#DSO4TQ!jO,5:rOOQO'#DX'#DXO,|Q`O'#DWO4eQ!nO'#FgO6hQ`O'#DYO6mQ`O'#DoOOQ['#Fg'#FgO6rQhO'#FqO7QQ`O,5:xO7VQ!bO,5:zOOQS'#Ed'#EdO7_Q`O,5:|O7dQdO,5:|OOQO'#Eg'#EgO7lQ`O,5;PO7qQhO,5;VO'oQdO'#DjOOQS,5;X,5;XO0aQ`O,5;XO7yQdO,5;XOOQS'#FU'#FUO8RQdO'#ErO7QQ`O,5;[O8ZQdO,5:oO8kQdO'#FPO8xQ`O,5<YO8xQ`O,5<YPOOO'#Eu'#EuP9TO&jO,58{POOO,58{,58{OOQP1G.m1G.mOOQP1G.q1G.qOOQP1G.t1G.tO,wQ`O1G.tO,|Q`O1G.tOOQP1G/z1G/zO9`QpO1G/|O9hQaO1G0TO:OQaO1G0VO:fQaO1G0WO:|QaO,5;iOOQO-E8{-E8{OOQS1G.i1G.iO;WQ`O,5:nO;]QdO'#DsO;dQdO'#CuOOQO'#Dz'#DzOOQO,5:d,5:dO-^QdO,5:dOOQP1G/|1G/|O)VQdO1G/|O;kQ!jO'#D^O;yQ!bO,59yO<RQhO,5:ROOQO'#Fk'#FkO;|Q!bO,59}O<ZQhO'#FVO)zQhO,59{O)zQhO'#FVO=OQhO1G0yOOQS1G0y1G0yO=YQhO,5:PO>QQhO'#DlOOQW,5:V,5:VOOQW,5:Y,5:YOOQW,5:S,5:SO>[Q!fO'#FhOOQS'#Fh'#FhOOQS'#Ex'#ExO?lQdO,59cOOQ[,59c,59cO@SQdO,59iOOQ[,59i,59iO@jQdO,59lOOQ[,59l,59lOOQ[,59n,59nO)VQdO,59pOAQQhO'#EYOOQW'#EY'#EYOAlQ`O1G0^O4^QhO1G0^OOQ[,59r,59rO)zQhO'#D[OOQ[,59t,59tOAqQ#tO,5:ZOA|QhO'#FROBZQ`O,5<]OOQS1G0d1G0dOOQS1G0f1G0fOOQS1G0h1G0hOBfQ`O1G0hOBkQdO'#EhOOQS1G0k1G0kOOQS1G0q1G0qOBvQaO,5:UO7QQ`O1G0sOOQS1G0s1G0sO0aQ`O1G0sOOQS-E9S-E9SOOQS1G0v1G0vOB}Q!fO1G0ZOCeQ`O'#EVOOQO1G0Z1G0ZOOQO,5;k,5;kOCjQdO,5;kOOQO-E8}-E8}OCwQ`O1G1tPOOO-E8s-E8sPOOO1G.g1G.gOOQP7+$`7+$`OOQP7+%h7+%hO)VQdO7+%hOOQS1G0Y1G0YODSQaO'#FmOD^Q`O,5:_ODcQ!fO'#EwOEaQdO'#FfOEkQ`O,59aOOQO1G0O1G0OOEpQ!bO7+%hO)VQdO1G/eOE{QhO1G/iOOQW1G/m1G/mOOQW1G/g1G/gOF^QhO,5;qOOQW-E9T-E9TOOQS7+&e7+&eOGRQhO'#D^OGaQhO'#FlOGlQ`O'#FlOGqQ`O,5:WOOQS-E8v-E8vOOQ[1G.}1G.}OOQ[1G/T1G/TOOQ[1G/W1G/WOOQ[1G/[1G/[OGvQdO,5:tOOQS7+%x7+%xOG{Q`O7+%xOHQQhO'#D]OHYQ`O,59vO)zQhO,59vOOQ[1G/u1G/uOHbQ`O1G/uOHgQhO,5;mOOQO-E9P-E9POOQS7+&S7+&SOHuQbO'#DSOOQO'#Ej'#EjOITQ`O'#EiOOQO'#Ei'#EiOI`Q`O'#FSOIhQdO,5;SOOQS,5;S,5;SOOQ[1G/p1G/pOOQS7+&_7+&_O7QQ`O7+&_OIsQ!fO'#FOO)VQdO'#FOOJzQdO7+%uOOQO7+%u7+%uOOQO,5:q,5:qOOQO1G1V1G1VOK_Q!bO<<ISOKjQdO'#E|OKtQ`O,5<XOOQP1G/y1G/yOOQS-E8u-E8uOK|QdO'#E{OLWQ`O,5<QOOQ]1G.{1G.{OOQP<<IS<<ISOL`Q`O<<ISOLeQdO7+%POOQO'#D`'#D`OLlQ!bO7+%TOLtQhO'#EzOMRQ`O,5<WO)VQdO,5<WOOQW1G/r1G/rOOQO'#E['#E[OMZQ`O1G0`OOQS<<Id<<IdO)VQdO,59wOMzQhO1G/bOOQ[1G/b1G/bONRQ`O1G/bOOQW-E8w-E8wOOQ[7+%a7+%aOOQO,5;T,5;TOBnQdO'#FTOI`Q`O,5;nOOQS,5;n,5;nOOQS-E9Q-E9QOOQS1G0n1G0nOOQS<<Iy<<IyONZQ!fO,5;jOOQS-E8|-E8|OOQO<<Ia<<IaOOQPAN>nAN>nO! bQ`OAN>nO! gQaO,5;hOOQO-E8z-E8zO! qQdO,5;gOOQO-E8y-E8yOOQW<<Hk<<HkOOQW<<Ho<<HoO! {QhO<<HoO!!^QhO,5;fO!!iQ`O,5;fOOQO-E8x-E8xO!!nQdO1G1rOGvQdO'#FQO!!xQ`O7+%zOOQW7+%z7+%zO!#QQ!bO1G/cOOQ[7+$|7+$|O!#]QhO7+$|P!#dQ`O'#EyOOQO,5;o,5;oOOQO-E9R-E9ROOQS1G1Y1G1YOOQPG24YG24YO!#iQ`OAN>ZO)VQdO1G1QO!#nQ`O7+'^OOQO,5;l,5;lOOQO-E9O-E9OOOQW<<If<<IfOOQ[<<Hh<<HhPOQW,5;e,5;eOOQWG23uG23uO!#vQdO7+&l",
-    stateData: "!$Z~O$QOS$RQQ~OWVO^_O`WOcYOdYOl`OmZOp[O!r]O!u^O!{dO#ReO#TfO#VgO#YhO#`iO#bjO#ekO#|RO$XTO~OQmOWVO^_O`WOcYOdYOl`OmZOp[O!r]O!u^O!{dO#ReO#TfO#VgO#YhO#`iO#bjO#ekO#|lO$XTO~O#z$bP~P!jO$RqO~O`YXcYXdYXmYXpYXsYX!aYX!rYX!uYX#{YX$X[X~OgYX~P$ZO#|sO~O$XuO~O$XuO`$WXc$WXd$WXm$WXp$WXs$WX!a$WX!r$WX!u$WX#{$WXg$WX~O#|vO~O`xOcyOdyOmzOp{O!r|O!u!OO#{}O~Os!RO!a!PO~P&^Of!XO#|!TO#}!UO~O#|!YO~OW!^O#|![O$X!]O~OWVO^_O`WOcYOdYOmZOp[O!r]O!u^O#|RO$XTO~OS!fOc!gOd!gOh!cOs!RO!Y!eO!]!jO$O!bO~On!iO~P(dOQ!tOh!mOp!nOs!oOu!wOw!wO}!uO!d!vO#|!lO#}!rO$]!pO~OS!fOc!gOd!gOh!cO!Y!eO!]!jO$O!bO~Os$eP~P)zOw!|O!d!vO#|!{O~Ow#OO#|#OO~Oh#ROs!RO#c#TO~O#|#VO~Oc!xX~P$ZOc#YO~On#ZO#z$bXr$bX~O#z$bXr$bX~P!jO$S#^O$T#^O$U#`O~Of#eO#|!TO#}!UO~Os!RO!a!PO~Or$bP~P!jOh#oO~Oh#pO~Oo!kX!o!kX$X!mX~O#|#qO~O$X#sO~Oo#tO!o#uO~O`xOcyOdyOmzOp{O~Os!qa!a!qa!r!qa!u!qa#{!qag!qa~P-pOs!ta!a!ta!r!ta!u!ta#{!tag!ta~P-pOS!fOc!gOd!gOh!cO!Y!eO!]!jO~OR#yOu#yOw#yO$O#vO$]!pO~P/POn$PO!U#|O!a#}O~P(dOh$RO~O$O$TO~Oh#RO~O`$WOc$WOg$ZOl$WOm$WOn$WO~P)VO`$WOc$WOl$WOm$WOn$WOo$]O~P)VO`$WOc$WOl$WOm$WOn$WOr$_O~P)VOP$`OSvXcvXdvXhvXnvXyvX!YvX!]vX!}vX#PvX$OvX!WvXQvX`vXgvXlvXmvXpvXsvXuvXwvX}vX!dvX#|vX#}vX$]vXovXrvX!avX#zvX$dvX!pvX~Oy$aO!}$bO#P$cOn$eP~P)zOh#pOS$ZXc$ZXd$ZXn$ZXy$ZX!Y$ZX!]$ZX!}$ZX#P$ZX$O$ZXQ$ZX`$ZXg$ZXl$ZXm$ZXp$ZXs$ZXu$ZXw$ZX}$ZX!d$ZX#|$ZX#}$ZX$]$ZXo$ZXr$ZX!a$ZX#z$ZX$d$ZX!p$ZX~Oh$gO~Oh$iO~O!U#|O!a$jOs$eXn$eX~Os!RO~On$mOy$aO~On$nO~Ow$oO!d!vO~Os$pO~Os!RO!U#|O~Os!RO#c$vO~O#|#VOs#fX~O$d$zOn!wa#z!war!wa~P)VOn#sX#z#sXr#sX~P!jOn#ZO#z$bar$ba~O$S#^O$T#^O$U%RO~Oo%TO!o%UO~Os!qi!a!qi!r!qi!u!qi#{!qig!qi~P-pOs!si!a!si!r!si!u!si#{!sig!si~P-pOs!ti!a!ti!r!ti!u!ti#{!tig!ti~P-pOs#qa!a#qa~P&^Or%VO~Og$aP~P'oOg$YP~P)VOc!SXg!QX!U!QX!W!SX~Oc%_O!W%`O~Og%aO!U#|O~O!U#|OS#yXc#yXd#yXh#yXn#yXs#yX!Y#yX!]#yX!a#yX$O#yX~On%eO!a#}O~P(dO!U#|OS!Xac!Xad!Xah!Xan!Xas!Xa!Y!Xa!]!Xa!a!Xa$O!Xag!Xa~O$O%fOg$`P~P/POy$aOQ$[X`$[Xc$[Xg$[Xh$[Xl$[Xm$[Xn$[Xp$[Xs$[Xu$[Xw$[X}$[X!d$[X#|$[X#}$[X$]$[Xo$[Xr$[X~O`$WOc$WOg%kOl$WOm$WOn$WO~P)VO`$WOc$WOl$WOm$WOn$WOo%lO~P)VO`$WOc$WOl$WOm$WOn$WOr%mO~P)VOh%oOS!|Xc!|Xd!|Xn!|X!Y!|X!]!|X$O!|X~On%pO~Og%uOw%vO!e%vO~Os#uX!a#uXn#uX~P)zO!a$jOs$ean$ea~On%yO~Or&QO#|%{O$]%zO~Og&RO~P&^Oy$aO!a&VO$d$zOn!wi#z!wir!wi~P)VO$c&YO~On#sa#z#sar#sa~P!jOn#ZO#z$bir$bi~O!a&]Og$aX~P&^Og&_O~Oy$aOQ#kXg#kXh#kXp#kXs#kXu#kXw#kX}#kX!a#kX!d#kX#|#kX#}#kX$]#kX~O!a&aOg$YX~P)VOg&cO~Oo&dOy$aO!p&eO~OR#yOu#yOw#yO$O&gO$]!pO~O!U#|OS#yac#yad#yah#yan#yas#ya!Y#ya!]#ya!a#ya$O#ya~Oc!SXg!QX!U!QX!a!QX~O!U#|O!a&iOg$`X~Oc&kO~Og&lO~O#|&mO~On&oO~Oc&pO!U#|O~Og&rOn&qO~Og&uO~O!U#|Os#ua!a#uan#ua~OP$`OsvX!avXgvX~O$]%zOs#]X!a#]X~Os!RO!a&wO~Or&{O#|%{O$]%zO~Oy$aOQ#rXh#rXn#rXp#rXs#rXu#rXw#rX}#rX!a#rX!d#rX#z#rX#|#rX#}#rX$]#rX$d#rXr#rX~O!a&VO$d$zOn!wq#z!wqr!wq~P)VOo'QOy$aO!p'RO~Og#pX!a#pX~P'oO!a&]Og$aa~Og#oX!a#oX~P)VO!a&aOg$Ya~Oo'QO~Og'WO~P)VOg'XO!W'YO~O$O%fOg#nX!a#nX~P/PO!a&iOg$`a~O`'_Og'aO~OS#mac#mad#mah#ma!Y#ma!]#ma$O#ma~Og'cO~PMcOg'cOn'dO~Oy$aOQ#rah#ran#rap#ras#rau#raw#ra}#ra!a#ra!d#ra#z#ra#|#ra#}#ra$]#ra$d#rar#ra~Oo'iO~Og#pa!a#pa~P&^Og#oa!a#oa~P)VOR#yOu#yOw#yO$O&gO$]%zO~O!U#|Og#na!a#na~Oc'kO~O!a&iOg$`i~P)VO`'_Og'oO~Oy$aOg!Pin!Pi~Og'pO~PMcOn'qO~Og'rO~O!a&iOg$`q~Og#nq!a#nq~P)VO$Q!e$R$]`$]y!u~",
-    goto: "4h$fPPPPP$gP$jP$s%V$s%i%{P$sP&R$sPP&XPPP&_&i&iPPPPP&iPP&iP'VP&iP&i(Q&iP(n(q(w(w)Z(wP(wP(wP(w(wP)j(w)vP(w)yPP*m*s$s*y$s+P+P+V+ZPP$sP$s$sP+a,],j,q$jP,zP,}P$jP$jP$jP-T$jP-W-Z-^-e$jP$jPP$jP-j$jP-m-s.S.j.x/O/Y/`/f/l/r/|0S0Y0`0f0lPPPPPPPPPPP0r0{P1q1t2vP3O3x4R4U4XPP4_RrQ_aOPco!R#Z$}q_OP]^co|}!O!P!R#R#Z#o$}&]qSOP]^co|}!O!P!R#R#Z#o$}&]qUOP]^co|}!O!P!R#R#Z#o$}&]QtTR#auQwWR#bxQ!VYR#cyQ#c!XS$f!s!tR%S#e!V!wdf!m!n!o#Y#p#u$Y$[$^$a$y%U%Z%_&V&W&a&f&k&p'U'^'k's!U!wdf!m!n!o#Y#p#u$Y$[$^$a$y%U%Z%_&V&W&a&f&k&p'U'^'k'sU#y!c%`'YU%}$p&P&wR&v%|!V!sdf!m!n!o#Y#p#u$Y$[$^$a$y%U%Z%_&V&W&a&f&k&p'U'^'k'sR$h!uQ%s$gR&s%tq!h`ei!c!d!e!q#|#}$O$R$e$g$j%t&iQ#w!cQ%h$RQ&h%`Q'[&iR'j'YQ#UjQ$U!jQ$t#TR&T$vR$S!f!U!wdf!m!n!o#Y#p#u$Y$[$^$a$y%U%Z%_&V&W&a&f&k&p'U'^'k'sQ!|gR$o!}Q!WYR#dyQ#c!WR%S#dQ!ZZR#fzQ!_[R#g{T!^[{Q#r!]R%]#sQ!SXQ!i`Q#SjQ#m!QQ$P!dQ$l!yQ$r#QQ$u#UQ$x#XQ%e$OQ&S$tQ&y&OQ&|&TR'h&xSnP!RQ#]oQ$|#ZR&Z$}ZmPo!R#Z$}Q${#YQ&X$yR'P&WR$e!qQ&n%oR'm'_R!}gR#PhR$q#PS&O$p&PR'f&wV%|$p&P&wR#XkQ#_qR%Q#_QcOSoP!RU!kco$}R$}#ZQ%Z#pY&`%Z&f'U'^'sQ&f%_Q'U&aQ'^&kR's'kQ$Y!mQ$[!nQ$^!oV%j$Y$[$^Q%t$gR&t%tQ&j%gS']&j'lR'l'^Q&b%ZR'V&bQ&^%WR'T&^Q!QXR#l!QQ&W$yR'O&WQ#[nS%O#[%PR%P#]Q'`&nR'n'`Q$k!xR%x$kQ&P$pR&z&PQ&x&OR'g&xQ#WkR$w#WQ$O!dR%d$O_bOPco!R#Z$}^XOPco!R#Z$}Q!`]Q!a^Q#h|Q#i}Q#j!OQ#k!PQ$s#RQ%W#oR'S&]R%[#pQ!qdQ!zf[$V!m!n!o$Y$[$^Q$y#Yd%Y#p%Z%_&a&f&k'U'^'k'sQ%^#uQ%n$aS&U$y&WQ&[%UQ&}&VR'b&p]$X!m!n!o$Y$[$^Q!d`U!xe!q$eQ#QiQ#x!cS#{!d$OQ$Q!eQ%b#|Q%c#}Q%g$RS%r$g%tQ%w$jR'Z&iQ#z!cQ&h%`R'j'YR%i$RR%X#oQpPR#n!RQ!yeQ$d!qR%q$e",
-    nodeNames: "⚠ Unit VariableName VariableName QueryCallee Comment StyleSheet RuleSet UniversalSelector TagSelector TagName NamespacedTagSelector NamespaceName TagName NestingSelector ClassSelector . ClassName PseudoClassSelector : :: PseudoClassName PseudoClassName ) ( ArgList ValueName ParenthesizedValue AtKeyword # ; ] [ BracketedValue } { BracedValue ColorLiteral NumberLiteral StringLiteral BinaryExpression BinOp CallExpression Callee IfExpression if ArgList IfBranch KeywordQuery FeatureQuery FeatureName BinaryQuery LogicOp ComparisonQuery CompareOp UnaryQuery UnaryQueryOp ParenthesizedQuery SelectorQuery selector ParenthesizedSelector CallQuery ArgList , PseudoQuery CallLiteral CallTag ParenthesizedContent PseudoClassName ArgList IdSelector IdName AttributeSelector AttributeName NamespacedAttribute NamespaceName AttributeName MatchOp MatchFlag ChildSelector ChildOp DescendantSelector SiblingSelector SiblingOp Block Declaration PropertyName Important ImportStatement import Layer layer LayerName layer MediaStatement media CharsetStatement charset NamespaceStatement namespace NamespaceName KeyframesStatement keyframes KeyframeName KeyframeList KeyframeSelector KeyframeRangeName SupportsStatement supports ScopeStatement scope to FontFeatureStatement font-feature-values FontName AtRule Styles",
-    maxTerm: 159,
+    states: "MrQYQdOOO#}QdOOP$UO`OOO%OQaO'#CfOOQP'#Ce'#CeO%VQdO'#CgO%[Q`O'#CgO%aQaO'#FqO&XQdO'#CkO&xQaO'#CcO'SQdO'#CnO'_QdO'#ERO'dQdO'#ETO'oQdO'#E[O'oQdO'#E_OOQP'#Fq'#FqO)RQhO'#FQOOQS'#Fp'#FpOOQS'#FT'#FTQYQdOOO)YQdO'#EeO*iQhO'#EkO)YQdO'#EmO*pQdO'#EoO*{QdO'#ErO)}QhO'#ExO+TQdO'#EzO+`QdO'#E}O+eQaO'#CfO+lQ`O'#EbO+qQ`O'#F}O+|QdO'#F}QOQ`OOP,WO&jO'#CaPOOO)CA`)CA`OOQP'#Ci'#CiOOQP,59R,59RO%VQdO,59ROOQP'#Cm'#CmOOQP,59V,59VO&XQdO,59VO,cQdO,59YO'_QdO,5:mO'dQdO,5:oO'oQdO,5:vO'oQdO,5:xO'oQdO,5:yO'oQdO'#F[O,nQ`O,58}O,vQdO'#EaOOQS,58},58}OOQP'#Cq'#CqOOQO'#EP'#EPOOQP,59Y,59YO,}Q`O,59YO-SQ`O,59YOOQP'#ES'#ESOOQP,5:m,5:mO-XQpO'#EUO-dQdO'#EVO-iQ`O'#EVO-nQpO,5:oO.XQaO,5:vO.oQaO,5:yOOQW'#D^'#D^O/nQhO'#DgO0RQhO,5;lO)}QhO'#DeO0`Q`O'#DnO0eQhO'#D{OOQW'#Fw'#FwOOQS,5;l,5;lO0jQ`O'#DhO0oQ`O'#DkOOQS-E9R-E9ROOQ['#Cv'#CvO0tQdO'#CwO1[QdO'#C}O1rQdO'#DQO2YQ!pO'#DSO4fQ!jO,5;POOQO'#DX'#DXO-SQ`O'#DWO4vQ!nO'#FtO6|Q`O'#DYO7RQ`O'#D|OOQ['#Ft'#FtO7WQhO'#GQO7fQ`O,5;VO7kQ!bO,5;XOOQS'#Eq'#EqO7sQ`O,5;ZO7xQdO,5;ZOOQO'#Et'#EtO8QQ`O,5;^O8VQhO,5;dO'oQdO'#DjOOQS,5;f,5;fO0jQ`O,5;fO8_QdO,5;fOOQS'#Fc'#FcO8gQdO'#FPO7fQ`O,5;iO8oQdO,5:|O9PQdO'#F^O9^Q`O,5<iO9^Q`O,5<iPOOO'#FS'#FSP9iO&jO,58{POOO,58{,58{OOQP1G.m1G.mOOQP1G.q1G.qOOQP1G.t1G.tO,}Q`O1G.tO-SQ`O1G.tOOQP1G0X1G0XO9tQpO1G0ZO9|QaO1G0bO:dQaO1G0dO:zQaO1G0eO;bQaO,5;vOOQO-E9Y-E9YOOQS1G.i1G.iO;lQ`O,5:{O;qQdO'#EQO;xQdO'#CuOOQO'#EX'#EXOOQO,5:q,5:qO-dQdO,5:qOOQP1G0Z1G0ZO)YQdO1G0ZO<PQ!jO'#D^O<_Q!bO,59yO<gQhO,5:ROOQO'#Fx'#FxO<bQ!bO,59}O<oQhO'#FdO)}QhO,59{O)}QhO'#FdO=gQhO1G1WOOQS1G1W1G1WO=qQhO,5:PO>lQhO'#DoOOQW,5:Y,5:YOOQW,5:g,5:gOOQW,5:S,5:SO>vQhO,5:VO?bQ!fO'#FuOOQS'#Fu'#FuOOQS'#FV'#FVO@rQdO,59cOOQ[,59c,59cOAYQdO,59iOOQ[,59i,59iOApQdO,59lOOQ[,59l,59lOOQ[,59n,59nO)YQdO,59pOBWQhO'#EgOOQW'#Eg'#EgOBuQ`O1G0kO4oQhO1G0kOOQ[,59r,59rO)}QhO'#D[OOQ[,59t,59tOBzQ#tO,5:hOCVQhO'#F`OCdQ`O,5<lOOQS1G0q1G0qOOQS1G0s1G0sOOQS1G0u1G0uOCoQ`O1G0uOCtQdO'#EuOOQS1G0x1G0xOOQS1G1O1G1OODPQaO,5:UO7fQ`O1G1QOOQS1G1Q1G1QO0jQ`O1G1QOOQS-E9a-E9aOOQS1G1T1G1TODWQ!fO1G0hODnQ`O'#EdOOQO1G0h1G0hOOQO,5;x,5;xODsQdO,5;xOOQO-E9[-E9[OEQQ`O1G2TPOOO-E9Q-E9QPOOO1G.g1G.gOOQP7+$`7+$`OOQP7+%u7+%uO)YQdO7+%uOOQS1G0g1G0gOE]QaO'#F|OEgQ`O,5:lOElQ!fO'#FUOFjQdO'#FsOFtQ`O,59aOOQO1G0]1G0]OFyQ!bO7+%uO)YQdO1G/eOGUQhO1G/iOOQW1G/m1G/mOOQW1G/g1G/gOGgQhO,5<OOOQW-E9b-E9bOOQS7+&r7+&rOH_QhO'#D^OHmQhO'#F{OHxQ`O'#F{OH}Q`O,5:ZOISQ!bO'#D`O>vQhO'#DmOI_QhO'#DsOIgQhO'#DuOIlQ!jO'#FzOOQO'#Fz'#FzOIwQ`O'#DxOJPQ!bO'#DzOOQO'#Fy'#FyOJUQ`O1G/qOOQS-E9T-E9TOOQ[1G.}1G.}OOQ[1G/T1G/TOOQ[1G/W1G/WOOQ[1G/[1G/[OJZQdO,5;ROOQS7+&V7+&VOJ`Q`O7+&VOJeQhO'#D]OJmQ`O,59vO)}QhO,59vOOQ[1G0S1G0SOJuQ`O1G0SOJzQhO,5;zOOQO-E9^-E9^OOQS7+&a7+&aOKYQbO'#DSOOQO'#Ew'#EwOKhQ`O'#EvOOQO'#Ev'#EvOKsQ`O'#FaOK{QdO,5;aOOQS,5;a,5;aOOQ[1G/p1G/pOOQS7+&l7+&lO7fQ`O7+&lOLWQ!fO'#F]O)YQdO'#F]OM_QdO7+&SOOQO7+&S7+&SOOQO,5;O,5;OOOQO1G1d1G1dOMrQ!bO<<IaOM}QdO'#FZONXQ`O,5<hOOQP1G0W1G0WOOQS-E9S-E9SONaQdO'#FYONkQ`O,5<_OOQ]1G.{1G.{OOQP<<Ia<<IaONsQ`O<<IaONxQdO7+%POOQO'#D`'#D`O! PQ!bO7+%TO! XQhO'#FXO! fQ`O,5<gO)YQdO,5<gOOQW1G/u1G/uO! nQ`O,5:XO>vQhO'#DtOOQO,5:_,5:_O! sQhO,5:aO! {QhO,5:fO)YQdO,5:dOOQW7+%]7+%]OOQO'#Ei'#EiO!!SQ`O1G0mOOQS<<Iq<<IqO)YQdO,59wO!!vQhO1G/bOOQ[1G/b1G/bO!!}Q`O1G/bOOQW-E9U-E9UOOQ[7+%n7+%nOOQO,5;b,5;bOCwQdO'#FbOKsQ`O,5;{OOQS,5;{,5;{OOQS-E9_-E9_OOQS1G0{1G0{OOQS<<JW<<JWO!#VQ!fO,5;wOOQS-E9Z-E9ZOOQO<<In<<InOOQPAN>{AN>{O!$^Q`OAN>{O!$cQaO,5;uOOQO-E9X-E9XO!$mQdO,5;tOOQO-E9W-E9WOOQW<<Hk<<HkOOQW<<Ho<<HoO!$wQhO<<HoO!%YQhO'#D^O!%hQhO,5;sO!%sQ`O,5;sOOQO-E9V-E9VO!%xQdO1G2RO!&SQhO1G/sO!&[Q`O,5:`O>vQhO'#DwOOQO1G/{1G/{O!&aQ!bO1G0QO!&iQdO1G0OOJZQdO'#F_O!&pQ`O7+&XOOQW7+&X7+&XO!&xQ!bO1G/cOOQ[7+$|7+$|O!'TQhO7+$|P!'[Q`O'#FWOOQO,5;|,5;|OOQO-E9`-E9`OOQS1G1g1G1gOOQPG24gG24gO!'aQ`OAN>ZO)YQdO1G1_O!'fQ`O7+'mOOQO1G/z1G/zO!'nQ`O,5:cO!'sQhO7+%lOOQO,5;y,5;yOOQO-E9]-E9]OOQW<<Is<<IsOOQ[<<Hh<<HhPOQW,5;r,5;rOOQWG23uG23uO!'zQdO7+&yOOQO1G/}1G/}OOQO<<IW<<IW",
+    stateData: "!(_~O$_OS$`QQ~OWVO^_O`WOcYOdYOl`OmZOp[O#P]O#S^O#YdO#`eO#bfO#dgO#ghO#miO#ojO#rkO$ZRO$fTO~OQmOWVO^_O`WOcYOdYOl`OmZOp[O#P]O#S^O#YdO#`eO#bfO#dgO#ghO#miO#ojO#rkO$ZlO$fTO~O$X$qP~P!jO$`qO~O`YXcYXdYXmYXpYXsYX!eYX#PYX#SYX$YYX$f[X~OgYX~P$ZO$ZsO~O$fuO~O$fuO`$eXc$eXd$eXm$eXp$eXs$eX!e$eX#P$eX#S$eX$Y$eXg$eX~O$ZvO~O`xOcyOdyOmzOp{O#P|O#S!OO$Y}O~Os!RO!e!PO~P&^Of!XO$Z!TO$[!UO~O$Z!YO~OW!^O$Z![O$f!]O~OWVO^_O`WOcYOdYOmZOp[O#P]O#S^O$ZRO$fTO~OS!fOc!gOd!gOh!cOs!RO!Y!eO!]!jO!`!kO$]!bO~On!iO~P(dOQ!uOh!nOp!oOs!pOu!xOw!xO}!vO!q!wO$Z!mO$[!sO$j!qO~OS!fOc!gOd!gOh!cO!Y!eO!]!jO!`!kO$]!bO~Os$tP~P)}Ow!}O!q!wO$Z!|O~Ow#PO$Z#PO~Oh#SOs!RO#p#UO~O$Z#WO~Oc#VX~P$ZOc#ZO~On#[O$X$qXr$qX~O$X$qXr$qX~P!jO$a#_O$b#_O$c#aO~Of#fO$Z!TO$[!UO~Os!RO!e!PO~Or$qP~P!jOh#pO~Oh#qO~Oo!xX!|!xX$f!zX~O$Z#rO~O$f#tO~Oo#uO!|#vO~O`xOcyOdyOmzOp{O~Os#Oa!e#Oa#P#Oa#S#Oa$Y#Oag#Oa~P-vOs#Ra!e#Ra#P#Ra#S#Ra$Y#Rag#Ra~P-vOS!fOc!gOd!gOh!cO!Y!eO!]!jO!`!kO~OR#zOu#zOw#zO$]#wO$j!qO~P/VOn$QO!U#}O!e$OO~P(dOh$SO~O$]$UO~Oh#SO~Oh$WO~O`$YOc$YOg$]Ol$YOm$YOn$YO~P)YO`$YOc$YOl$YOm$YOn$YOo$_O~P)YO`$YOc$YOl$YOm$YOn$YOr$aO~P)YOP$bOSvXcvXdvXhvXnvXyvX!YvX!]vX!`vX#[vX#^vX$]vX!WvXQvX`vXgvXlvXmvXpvXsvXuvXwvX}vX!qvX$ZvX$[vX$jvXovXrvX!evX$XvX$svX!}vX~Oy$cO#[$dO#^$eOn$tP~P)}Oh#qOS$hXc$hXd$hXn$hXy$hX!Y$hX!]$hX!`$hX#[$hX#^$hX$]$hXQ$hX`$hXg$hXl$hXm$hXp$hXs$hXu$hXw$hX}$hX!q$hX$Z$hX$[$hX$j$hXo$hXr$hX!e$hX$X$hX$s$hX!}$hX~Oh$iO~Oh$kO~O!U#}O!e$lOs$tXn$tX~Os!RO~On$oOy$cO~On$pO~Ow$qO!q!wO~Os$rO~Os!RO!U#}O~Os!RO#p$xO~O$Z#WOs#sX~O$s$|On#Ua$X#Uar#Ua~P)YOn$QX$X$QXr$QX~P!jOn#[O$X$qar$qa~O$a#_O$b#_O$c%TO~Oo%VO!|%WO~Os#Oi!e#Oi#P#Oi#S#Oi$Y#Oig#Oi~P-vOs#Qi!e#Qi#P#Qi#S#Qi$Y#Qig#Qi~P-vOs#Ri!e#Ri#P#Ri#S#Ri$Y#Rig#Ri~P-vOs$Oa!e$Oa~P&^Or%XO~Og$pP~P'oOg$gP~P)YOc!SXg!QX!U!QX!W!SX~Oc%aO!W%bO~Og%cO!U#}O~O!U#}OS$WXc$WXd$WXh$WXn$WXs$WX!Y$WX!]$WX!`$WX!e$WX$]$WX~On%gO!e$OO~P(dO!U#}OS!Xac!Xad!Xah!Xan!Xas!Xa!Y!Xa!]!Xa!`!Xa!e!Xa$]!Xag!Xa~O$]%hOg$oP~P/VOR#zOS!fOh%mOu#zOw#zO!Y%nO$]%lO$j!qO~Oy$cOQ$iX`$iXc$iXg$iXh$iXl$iXm$iXn$iXp$iXs$iXu$iXw$iX}$iX!q$iX$Z$iX$[$iX$j$iXo$iXr$iX~O`$YOc$YOg%wOl$YOm$YOn$YO~P)YO`$YOc$YOl$YOm$YOn$YOo%xO~P)YO`$YOc$YOl$YOm$YOn$YOr%yO~P)YOh%{OS#ZXc#ZXd#ZXn#ZX!Y#ZX!]#ZX!`#ZX$]#ZX~On%|O~Og&ROw&SO!r&SO~Os$SX!e$SXn$SX~P)}O!e$lOs$tan$ta~On&VO~Or&^O$Z&XO$j&WO~Og&_O~P&^Oy$cO!e&cO$s$|On#Ui$X#Uir#Ui~P)YO$r&fO~On$Qa$X$Qar$Qa~P!jOn#[O$X$qir$qi~O!e&iOg$pX~P&^Og&kO~Oy$cOQ#xXg#xXh#xXp#xXs#xXu#xXw#xX}#xX!e#xX!q#xX$Z#xX$[#xX$j#xX~O!e&mOg$gX~P)YOg&oO~Oo&pOy$cO!}&qO~OR#zOu#zOw#zO$]&sO$j!qO~O!U#}OS$Wac$Wad$Wah$Wan$Was$Wa!Y$Wa!]$Wa!`$Wa!e$Wa$]$Wa~Oc!dXg!QX!U!QX!e!QX~O!U#}O!e&uOg$oX~Oc&wO~Og&xO~Oc!mXg!mX!W!SX~OS!fOh&zO~O!U&|O~O!U&|O!W&}Og$nX~Oc'OOg!lX~O!W&}O~Og'PO~O$Z'QO~On'SO~Oc'TO!U#}O~Og'VOn'UO~Og'YO~O!U#}Os$Sa!e$San$Sa~OP$bOsvX!evXgvX~O$j&WOs#jX!e#jX~Os!RO!e'[O~Or'`O$Z&XO$j&WO~Oy$cOQ$PXh$PXn$PXp$PXs$PXu$PXw$PX}$PX!e$PX!q$PX$X$PX$Z$PX$[$PX$j$PX$s$PXr$PX~O!e&cO$s$|On#Uq$X#Uqr#Uq~P)YOo'eOy$cO!}'fO~Og#}X!e#}X~P'oO!e&iOg$pa~Og#|X!e#|X~P)YO!e&mOg$ga~Oo'eO~Og'kO~P)YOg'lO!W'mO~O$]'nOg#{X!e#{X~P/VO!e&uOg$oa~Og'sO~OS!fOh'uO~OS!fO~PGUO`'yOg'{O~OS#zac#zad#zah#za!Y#za!]#za!`#za$]#za~Og'}O~P!![Og'}On(OO~Oy$cOQ$Pah$Pan$Pap$Pas$Pau$Paw$Pa}$Pa!e$Pa!q$Pa$X$Pa$Z$Pa$[$Pa$j$Pa$s$Par$Pa~Oo(TO~Og#}a!e#}a~P&^Og#|a!e#|a~P)YOR#zOu#zOw#zO$]&sO$j&WO~Oc!fXg!QX!U!QX!e!QX~O!U#}Og#{a!e#{a~Oc(VO~O!e&uOg$oi~P)YOg!ai!U!ji~Og(XO~O!W(ZOg!ni~Og!li~P)YO`'yOg(^O~Oy$cOg!Pin!Pi~Og(_O~P!![On(`O~Og(aO~O!e&uOg$oq~Og(cO~OS!fO~P!$wOg#{q!e#{q~P)YO$_!r$`$j`$jy#S~",
+    goto: "7g$uPPPPP$vP$yP%S%f%S%x&[P%SP&b%SPP&hPPP&n&x&xPPPPP&xPP&xP'hP&xP&x(k&xP)Z)^)d)d)v)dP)dP)dP)d)dP*])dP*i*o+e+hP+k*i+n*i+q+w+z,Q+z)d,WPP,|-S%S-Y%S-`-`-f-jPP%SP%S%SP-p.l.y/Q$yP/ZP/^P$yP$yP$yP/d$yP/g/j/m/t$yP$yPP$yP/y$yP/|0S0c0}1]1c1m1s1y2P2V2a2g2m2s2y3PPPPPPPPPPPP3V3`P4U4X5]P5e6_6t+z7Q7T7WPP7^RrQ_aOPco!R#[%Pq_OP]^co|}!O!P!R#S#[#p%P&iqSOP]^co|}!O!P!R#S#[#p%P&iqUOP]^co|}!O!P!R#S#[#p%P&iQtTR#buQwWR#cxQ!VYR#dyQ#d!XS$h!t!uR%U#f!Z!xdf!n!o!p#Z#q#v$[$^$`$c${%W%]%a&c&d&m&r&w'O'T'i'r'x(V(b!Y!xdf!n!o!p#Z#q#v$[$^$`$c${%W%]%a&c&d&m&r&w'O'T'i'r'x(V(bb#z!c$W%b%m&z&}'m'u(ZU&Z$r&]'[R'Z&Y!Z!tdf!n!o!p#Z#q#v$[$^$`$c${%W%]%a&c&d&m&r&w'O'T'i'r'x(V(bR$j!vQ&P$iR'W&Qq!h`ei!c!d!e!r#}$O$P$S$g$i$l&Q&uQ#x!cW%s$W%m&z'uQ&t%bQ'w&}Q(U'mR(d(ZQ#VjQ$V!jQ$v#UR&a$xX%q$W%m&z'up!h`ei!c!d!e!r#}$O$P$S$g$i$l&Q&uW%p$W%m&z'uQ&{%nQ'v&|Q'w&}R(d(ZR$T!fR%j$SR'p&uR&{%nX%o$W%m&z'uR'v&|X%t$W%m&z'uX%r$W%m&z'u!Y!xdf!n!o!p#Z#q#v$[$^$`$c${%W%]%a&c&d&m&r&w'O'T'i'r'x(V(bQ!}gR$q#OQ!WYR#eyQ#d!WR%U#eQ!ZZR#gzQ!_[R#h{T!^[{Q#s!]R%_#tQ!SXQ!i`Q#TjQ#n!QQ$Q!dQ$n!zQ$t#RQ$w#VQ$z#YQ%g$PQ&`$vQ'^&[Q'a&aR(S']SnP!RQ#^oQ%O#[R&g%PZmPo!R#[%PQ$}#ZQ&e${R'd&dR$g!rQ'R%{R(['yR#OgR#QhR$s#QS&[$r&]R(Q'[V&Y$r&]'[R#YkQ#`qR%S#`QcOSoP!RU!lco%PR%P#[Q%]#q[&l%]&r'i'r'x(bQ&r%aQ'i&mQ'r&wQ'x'OR(b(VQ$[!nQ$^!oQ$`!pV%v$[$^$`Q&Q$iR'X&QQ&v%iS'q&v(WR(W'rQ&n%]R'j&nQ&j%YR'h&jQ!QXR#m!QQ&d${R'c&dQ#]nS%Q#]%RR%R#^Q'z'RR(]'zQ$m!yR&U$mQ&]$rR'_&]Q']&[R(R']Q#XkR$y#XQ$P!dR%f$P_bOPco!R#[%P^XOPco!R#[%PQ!`]Q!a^Q#i|Q#j}Q#k!OQ#l!PQ$u#SQ%Y#pR'g&iR%^#qQ!rdQ!{f[$X!n!o!p$[$^$`Q${#Zh%[#q%]%a&m&r&w'O'i'r'x(V(bQ%`#vQ%z$cS&b${&dQ&h%WQ'b&cR'|'T]$Z!n!o!p$[$^$`Q!d`U!ye!r$gQ#RiQ#y!cS#|!d$PQ$R!eQ%d#}Q%e$OQ%i$SS&O$i&QQ&T$lR'o&uQ#{!cW%s$W%m&z'uQ&t%bQ'w&}Q(U'mR(d(ZQ%u$WQ&y%mQ't&zR(Y'uR%k$SR%Z#pQpPR#o!RQ!zeQ$f!rR%}$g",
+    nodeNames: "⚠ Unit VariableName VariableName QueryCallee Comment StyleSheet RuleSet UniversalSelector TagSelector TagName NamespacedTagSelector NamespaceName TagName NestingSelector ClassSelector . ClassName PseudoClassSelector : :: PseudoClassName PseudoClassName ) ( ArgList ValueName ParenthesizedValue AtKeyword # ; ] [ BracketedValue } { BracedValue ColorLiteral NumberLiteral StringLiteral BinaryExpression BinOp CallExpression Callee IfExpression if ArgList IfBranch KeywordQuery FeatureQuery FeatureName BinaryQuery LogicOp ComparisonQuery CompareOp UnaryQuery UnaryQueryOp ParenthesizedQuery SelectorQuery selector ParenthesizedSelector StyleQuery style ParenthesedQuery CallQuery ArgList ProperyName , ProperyName UnaryQuery ParenthesedQuery BinaryQuery ParenthesedQuery ParenthesedQuery StyleFeature ProperyName StyleRange PseudoQuery CallLiteral CallTag ParenthesizedContent PseudoClassName ArgList IdSelector IdName AttributeSelector AttributeName NamespacedAttribute NamespaceName AttributeName MatchOp MatchFlag ChildSelector ChildOp DescendantSelector SiblingSelector SiblingOp Block Declaration PropertyName Important ImportStatement import Layer layer LayerName layer MediaStatement media CharsetStatement charset NamespaceStatement namespace NamespaceName KeyframesStatement keyframes KeyframeName KeyframeList KeyframeSelector KeyframeRangeName SupportsStatement supports ScopeStatement scope to FontFeatureStatement font-feature-values FontName AtRule Styles",
+    maxTerm: 174,
     nodeProps: [
       ["isolate", -2,5,39,""],
       ["openedBy", 23,"(",31,"[",34,"{"],
       ["closedBy", 24,")",32,"]",35,"}"]
     ],
     propSources: [cssHighlighting],
-    skippedNodes: [0,5,117],
+    skippedNodes: [0,5,130],
     repeatNodeCount: 17,
-    tokenData: "K`~R!bOX%ZX^&R^p%Zpq&Rqr)ers)vst+jtu2Xuv%Zvw3Rwx3dxy5Ryz5dz{5i{|6S|}:u}!O;W!O!P;u!P!Q<^!Q![=V![!]>Q!]!^>|!^!_?_!_!`@Z!`!a@n!a!b%Z!b!cAo!c!k%Z!k!lC|!l!u%Z!u!vC|!v!}%Z!}#OD_#O#P%Z#P#QDp#Q#R2X#R#]%Z#]#^ER#^#g%Z#g#hC|#h#o%Z#o#pIf#p#qIw#q#rJ`#r#sJq#s#y%Z#y#z&R#z$f%Z$f$g&R$g#BY%Z#BY#BZ&R#BZ$IS%Z$IS$I_&R$I_$I|%Z$I|$JO&R$JO$JT%Z$JT$JU&R$JU$KV%Z$KV$KW&R$KW&FU%Z&FU&FV&R&FV;'S%Z;'S;=`KY<%lO%Z`%^SOy%jz;'S%j;'S;=`%{<%lO%j`%oS!e`Oy%jz;'S%j;'S;=`%{<%lO%j`&OP;=`<%l%j~&Wh$Q~OX%jX^'r^p%jpq'rqy%jz#y%j#y#z'r#z$f%j$f$g'r$g#BY%j#BY#BZ'r#BZ$IS%j$IS$I_'r$I_$I|%j$I|$JO'r$JO$JT%j$JT$JU'r$JU$KV%j$KV$KW'r$KW&FU%j&FU&FV'r&FV;'S%j;'S;=`%{<%lO%j~'yh$Q~!e`OX%jX^'r^p%jpq'rqy%jz#y%j#y#z'r#z$f%j$f$g'r$g#BY%j#BY#BZ'r#BZ$IS%j$IS$I_'r$I_$I|%j$I|$JO'r$JO$JT%j$JT$JU'r$JU$KV%j$KV$KW'r$KW&FU%j&FU&FV'r&FV;'S%j;'S;=`%{<%lO%jj)jS$dYOy%jz;'S%j;'S;=`%{<%lO%j~)yWOY)vZr)vrs*cs#O)v#O#P*h#P;'S)v;'S;=`+d<%lO)v~*hOw~~*kRO;'S)v;'S;=`*t;=`O)v~*wXOY)vZr)vrs*cs#O)v#O#P*h#P;'S)v;'S;=`+d;=`<%l)v<%lO)v~+gP;=`<%l)vj+oYmYOy%jz!Q%j!Q![,_![!c%j!c!i,_!i#T%j#T#Z,_#Z;'S%j;'S;=`%{<%lO%jj,dY!e`Oy%jz!Q%j!Q![-S![!c%j!c!i-S!i#T%j#T#Z-S#Z;'S%j;'S;=`%{<%lO%jj-XY!e`Oy%jz!Q%j!Q![-w![!c%j!c!i-w!i#T%j#T#Z-w#Z;'S%j;'S;=`%{<%lO%jj.OYuY!e`Oy%jz!Q%j!Q![.n![!c%j!c!i.n!i#T%j#T#Z.n#Z;'S%j;'S;=`%{<%lO%jj.uYuY!e`Oy%jz!Q%j!Q![/e![!c%j!c!i/e!i#T%j#T#Z/e#Z;'S%j;'S;=`%{<%lO%jj/jY!e`Oy%jz!Q%j!Q![0Y![!c%j!c!i0Y!i#T%j#T#Z0Y#Z;'S%j;'S;=`%{<%lO%jj0aYuY!e`Oy%jz!Q%j!Q![1P![!c%j!c!i1P!i#T%j#T#Z1P#Z;'S%j;'S;=`%{<%lO%jj1UY!e`Oy%jz!Q%j!Q![1t![!c%j!c!i1t!i#T%j#T#Z1t#Z;'S%j;'S;=`%{<%lO%jj1{SuY!e`Oy%jz;'S%j;'S;=`%{<%lO%jd2[UOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%jd2uS!oS!e`Oy%jz;'S%j;'S;=`%{<%lO%jb3WS^QOy%jz;'S%j;'S;=`%{<%lO%j~3gWOY3dZw3dwx*cx#O3d#O#P4P#P;'S3d;'S;=`4{<%lO3d~4SRO;'S3d;'S;=`4];=`O3d~4`XOY3dZw3dwx*cx#O3d#O#P4P#P;'S3d;'S;=`4{;=`<%l3d<%lO3d~5OP;=`<%l3dj5WShYOy%jz;'S%j;'S;=`%{<%lO%j~5iOg~n5pUWQyWOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%jj6ZWyW!uQOy%jz!O%j!O!P6s!P!Q%j!Q![9x![;'S%j;'S;=`%{<%lO%jj6xU!e`Oy%jz!Q%j!Q![7[![;'S%j;'S;=`%{<%lO%jj7cY!e`$]YOy%jz!Q%j!Q![7[![!g%j!g!h8R!h#X%j#X#Y8R#Y;'S%j;'S;=`%{<%lO%jj8WY!e`Oy%jz{%j{|8v|}%j}!O8v!O!Q%j!Q![9_![;'S%j;'S;=`%{<%lO%jj8{U!e`Oy%jz!Q%j!Q![9_![;'S%j;'S;=`%{<%lO%jj9fU!e`$]YOy%jz!Q%j!Q![9_![;'S%j;'S;=`%{<%lO%jj:P[!e`$]YOy%jz!O%j!O!P7[!P!Q%j!Q![9x![!g%j!g!h8R!h#X%j#X#Y8R#Y;'S%j;'S;=`%{<%lO%jj:zS!aYOy%jz;'S%j;'S;=`%{<%lO%jj;]WyWOy%jz!O%j!O!P6s!P!Q%j!Q![9x![;'S%j;'S;=`%{<%lO%jj;zU`YOy%jz!Q%j!Q![7[![;'S%j;'S;=`%{<%lO%j~<cTyWOy%jz{<r{;'S%j;'S;=`%{<%lO%j~<yS!e`$R~Oy%jz;'S%j;'S;=`%{<%lO%jj=[[$]YOy%jz!O%j!O!P7[!P!Q%j!Q![9x![!g%j!g!h8R!h#X%j#X#Y8R#Y;'S%j;'S;=`%{<%lO%jj>VUcYOy%jz![%j![!]>i!];'S%j;'S;=`%{<%lO%jj>pSdY!e`Oy%jz;'S%j;'S;=`%{<%lO%jj?RSnYOy%jz;'S%j;'S;=`%{<%lO%jh?dU!WWOy%jz!_%j!_!`?v!`;'S%j;'S;=`%{<%lO%jh?}S!WW!e`Oy%jz;'S%j;'S;=`%{<%lO%jl@bS!WW!oSOy%jz;'S%j;'S;=`%{<%lO%jj@uV!rQ!WWOy%jz!_%j!_!`?v!`!aA[!a;'S%j;'S;=`%{<%lO%jbAcS!rQ!e`Oy%jz;'S%j;'S;=`%{<%lO%jjArYOy%jz}%j}!OBb!O!c%j!c!}CP!}#T%j#T#oCP#o;'S%j;'S;=`%{<%lO%jjBgW!e`Oy%jz!c%j!c!}CP!}#T%j#T#oCP#o;'S%j;'S;=`%{<%lO%jjCW[lY!e`Oy%jz}%j}!OCP!O!Q%j!Q![CP![!c%j!c!}CP!}#T%j#T#oCP#o;'S%j;'S;=`%{<%lO%jhDRS!pWOy%jz;'S%j;'S;=`%{<%lO%jjDdSpYOy%jz;'S%j;'S;=`%{<%lO%jnDuSo^Oy%jz;'S%j;'S;=`%{<%lO%jjEWU!pWOy%jz#a%j#a#bEj#b;'S%j;'S;=`%{<%lO%jbEoU!e`Oy%jz#d%j#d#eFR#e;'S%j;'S;=`%{<%lO%jbFWU!e`Oy%jz#c%j#c#dFj#d;'S%j;'S;=`%{<%lO%jbFoU!e`Oy%jz#f%j#f#gGR#g;'S%j;'S;=`%{<%lO%jbGWU!e`Oy%jz#h%j#h#iGj#i;'S%j;'S;=`%{<%lO%jbGoU!e`Oy%jz#T%j#T#UHR#U;'S%j;'S;=`%{<%lO%jbHWU!e`Oy%jz#b%j#b#cHj#c;'S%j;'S;=`%{<%lO%jbHoU!e`Oy%jz#h%j#h#iIR#i;'S%j;'S;=`%{<%lO%jbIYS$cQ!e`Oy%jz;'S%j;'S;=`%{<%lO%jjIkSsYOy%jz;'S%j;'S;=`%{<%lO%jfI|U$XUOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%jjJeSrYOy%jz;'S%j;'S;=`%{<%lO%jfJvU!uQOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%j`K]P;=`<%l%Z",
-    tokenizers: [descendant, unitToken, identifiers, queryIdentifiers, 1, 2, 3, 4, new LocalTokenGroup("m~RRYZ[z{a~~g~aO$T~~dP!P!Qg~lO$U~~", 28, 142)],
-    topRules: {"StyleSheet":[0,6],"Styles":[1,116]},
-    dynamicPrecedences: {"84":1},
-    specialized: [{term: 137, get: (value) => spec_callee[value] || -1},{term: 138, get: (value) => spec_queryIdentifier[value] || -1},{term: 4, get: (value) => spec_QueryCallee[value] || -1},{term: 28, get: (value) => spec_AtKeyword[value] || -1},{term: 136, get: (value) => spec_identifier$1[value] || -1}],
-    tokenPrec: 2256
+    tokenData: "K`~R!bOX%ZX^&R^p%Zpq&Rqr)ers)vst+jtu2Xuv%Zvw3Rwx3dxy5Ryz5dz{5i{|6S|}:u}!O;W!O!P;u!P!Q<^!Q![=V![!]>Q!]!^>|!^!_?_!_!`@Z!`!a@n!a!b%Z!b!cAo!c!k%Z!k!lC|!l!u%Z!u!vC|!v!}%Z!}#OD_#O#P%Z#P#QDp#Q#R2X#R#]%Z#]#^ER#^#g%Z#g#hC|#h#o%Z#o#pIf#p#qIw#q#rJ`#r#sJq#s#y%Z#y#z&R#z$f%Z$f$g&R$g#BY%Z#BY#BZ&R#BZ$IS%Z$IS$I_&R$I_$I|%Z$I|$JO&R$JO$JT%Z$JT$JU&R$JU$KV%Z$KV$KW&R$KW&FU%Z&FU&FV&R&FV;'S%Z;'S;=`KY<%lO%Z`%^SOy%jz;'S%j;'S;=`%{<%lO%j`%oS!r`Oy%jz;'S%j;'S;=`%{<%lO%j`&OP;=`<%l%j~&Wh$_~OX%jX^'r^p%jpq'rqy%jz#y%j#y#z'r#z$f%j$f$g'r$g#BY%j#BY#BZ'r#BZ$IS%j$IS$I_'r$I_$I|%j$I|$JO'r$JO$JT%j$JT$JU'r$JU$KV%j$KV$KW'r$KW&FU%j&FU&FV'r&FV;'S%j;'S;=`%{<%lO%j~'yh$_~!r`OX%jX^'r^p%jpq'rqy%jz#y%j#y#z'r#z$f%j$f$g'r$g#BY%j#BY#BZ'r#BZ$IS%j$IS$I_'r$I_$I|%j$I|$JO'r$JO$JT%j$JT$JU'r$JU$KV%j$KV$KW'r$KW&FU%j&FU&FV'r&FV;'S%j;'S;=`%{<%lO%jj)jS$sYOy%jz;'S%j;'S;=`%{<%lO%j~)yWOY)vZr)vrs*cs#O)v#O#P*h#P;'S)v;'S;=`+d<%lO)v~*hOw~~*kRO;'S)v;'S;=`*t;=`O)v~*wXOY)vZr)vrs*cs#O)v#O#P*h#P;'S)v;'S;=`+d;=`<%l)v<%lO)v~+gP;=`<%l)vj+oYmYOy%jz!Q%j!Q![,_![!c%j!c!i,_!i#T%j#T#Z,_#Z;'S%j;'S;=`%{<%lO%jj,dY!r`Oy%jz!Q%j!Q![-S![!c%j!c!i-S!i#T%j#T#Z-S#Z;'S%j;'S;=`%{<%lO%jj-XY!r`Oy%jz!Q%j!Q![-w![!c%j!c!i-w!i#T%j#T#Z-w#Z;'S%j;'S;=`%{<%lO%jj.OYuY!r`Oy%jz!Q%j!Q![.n![!c%j!c!i.n!i#T%j#T#Z.n#Z;'S%j;'S;=`%{<%lO%jj.uYuY!r`Oy%jz!Q%j!Q![/e![!c%j!c!i/e!i#T%j#T#Z/e#Z;'S%j;'S;=`%{<%lO%jj/jY!r`Oy%jz!Q%j!Q![0Y![!c%j!c!i0Y!i#T%j#T#Z0Y#Z;'S%j;'S;=`%{<%lO%jj0aYuY!r`Oy%jz!Q%j!Q![1P![!c%j!c!i1P!i#T%j#T#Z1P#Z;'S%j;'S;=`%{<%lO%jj1UY!r`Oy%jz!Q%j!Q![1t![!c%j!c!i1t!i#T%j#T#Z1t#Z;'S%j;'S;=`%{<%lO%jj1{SuY!r`Oy%jz;'S%j;'S;=`%{<%lO%jd2[UOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%jd2uS!|S!r`Oy%jz;'S%j;'S;=`%{<%lO%jb3WS^QOy%jz;'S%j;'S;=`%{<%lO%j~3gWOY3dZw3dwx*cx#O3d#O#P4P#P;'S3d;'S;=`4{<%lO3d~4SRO;'S3d;'S;=`4];=`O3d~4`XOY3dZw3dwx*cx#O3d#O#P4P#P;'S3d;'S;=`4{;=`<%l3d<%lO3d~5OP;=`<%l3dj5WShYOy%jz;'S%j;'S;=`%{<%lO%j~5iOg~n5pUWQyWOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%jj6ZWyW#SQOy%jz!O%j!O!P6s!P!Q%j!Q![9x![;'S%j;'S;=`%{<%lO%jj6xU!r`Oy%jz!Q%j!Q![7[![;'S%j;'S;=`%{<%lO%jj7cY!r`$jYOy%jz!Q%j!Q![7[![!g%j!g!h8R!h#X%j#X#Y8R#Y;'S%j;'S;=`%{<%lO%jj8WY!r`Oy%jz{%j{|8v|}%j}!O8v!O!Q%j!Q![9_![;'S%j;'S;=`%{<%lO%jj8{U!r`Oy%jz!Q%j!Q![9_![;'S%j;'S;=`%{<%lO%jj9fU!r`$jYOy%jz!Q%j!Q![9_![;'S%j;'S;=`%{<%lO%jj:P[!r`$jYOy%jz!O%j!O!P7[!P!Q%j!Q![9x![!g%j!g!h8R!h#X%j#X#Y8R#Y;'S%j;'S;=`%{<%lO%jj:zS!eYOy%jz;'S%j;'S;=`%{<%lO%jj;]WyWOy%jz!O%j!O!P6s!P!Q%j!Q![9x![;'S%j;'S;=`%{<%lO%jj;zU`YOy%jz!Q%j!Q![7[![;'S%j;'S;=`%{<%lO%j~<cTyWOy%jz{<r{;'S%j;'S;=`%{<%lO%j~<yS!r`$`~Oy%jz;'S%j;'S;=`%{<%lO%jj=[[$jYOy%jz!O%j!O!P7[!P!Q%j!Q![9x![!g%j!g!h8R!h#X%j#X#Y8R#Y;'S%j;'S;=`%{<%lO%jj>VUcYOy%jz![%j![!]>i!];'S%j;'S;=`%{<%lO%jj>pSdY!r`Oy%jz;'S%j;'S;=`%{<%lO%jj?RSnYOy%jz;'S%j;'S;=`%{<%lO%jh?dU!WWOy%jz!_%j!_!`?v!`;'S%j;'S;=`%{<%lO%jh?}S!WW!r`Oy%jz;'S%j;'S;=`%{<%lO%jl@bS!WW!|SOy%jz;'S%j;'S;=`%{<%lO%jj@uV#PQ!WWOy%jz!_%j!_!`?v!`!aA[!a;'S%j;'S;=`%{<%lO%jbAcS#PQ!r`Oy%jz;'S%j;'S;=`%{<%lO%jjArYOy%jz}%j}!OBb!O!c%j!c!}CP!}#T%j#T#oCP#o;'S%j;'S;=`%{<%lO%jjBgW!r`Oy%jz!c%j!c!}CP!}#T%j#T#oCP#o;'S%j;'S;=`%{<%lO%jjCW[lY!r`Oy%jz}%j}!OCP!O!Q%j!Q![CP![!c%j!c!}CP!}#T%j#T#oCP#o;'S%j;'S;=`%{<%lO%jhDRS!}WOy%jz;'S%j;'S;=`%{<%lO%jjDdSpYOy%jz;'S%j;'S;=`%{<%lO%jnDuSo^Oy%jz;'S%j;'S;=`%{<%lO%jjEWU!}WOy%jz#a%j#a#bEj#b;'S%j;'S;=`%{<%lO%jbEoU!r`Oy%jz#d%j#d#eFR#e;'S%j;'S;=`%{<%lO%jbFWU!r`Oy%jz#c%j#c#dFj#d;'S%j;'S;=`%{<%lO%jbFoU!r`Oy%jz#f%j#f#gGR#g;'S%j;'S;=`%{<%lO%jbGWU!r`Oy%jz#h%j#h#iGj#i;'S%j;'S;=`%{<%lO%jbGoU!r`Oy%jz#T%j#T#UHR#U;'S%j;'S;=`%{<%lO%jbHWU!r`Oy%jz#b%j#b#cHj#c;'S%j;'S;=`%{<%lO%jbHoU!r`Oy%jz#h%j#h#iIR#i;'S%j;'S;=`%{<%lO%jbIYS$rQ!r`Oy%jz;'S%j;'S;=`%{<%lO%jjIkSsYOy%jz;'S%j;'S;=`%{<%lO%jfI|U$fUOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%jjJeSrYOy%jz;'S%j;'S;=`%{<%lO%jfJvU#SQOy%jz!_%j!_!`2n!`;'S%j;'S;=`%{<%lO%j`K]P;=`<%l%Z",
+    tokenizers: [descendant, unitToken, identifiers, queryIdentifiers, 1, 2, 3, 4, new LocalTokenGroup("m~RRYZ[z{a~~g~aO$b~~dP!P!Qg~lO$c~~", 28, 155)],
+    topRules: {"StyleSheet":[0,6],"Styles":[1,129]},
+    dynamicPrecedences: {"97":1},
+    specialized: [{term: 150, get: (value) => spec_callee[value] || -1},{term: 151, get: (value) => spec_queryIdentifier[value] || -1},{term: 4, get: (value) => spec_QueryCallee[value] || -1},{term: 28, get: (value) => spec_AtKeyword[value] || -1},{term: 149, get: (value) => spec_identifier$1[value] || -1}],
+    tokenPrec: 2444
   });
 
   let _properties = null;
@@ -30882,7 +31049,9 @@
           */
           this.depth = 0;
           /**
-          Any markers (i.e. block quote markers) parsed for the contexts. @internal
+          Any markers (i.e. block quote markers) parsed for the contexts.
+          A block parser that moves across lines, covering such marks, may
+          need to include these in its node structure.
           */
           this.markers = [];
           /**
@@ -31135,8 +31304,9 @@
   }
   function getListIndent(line, pos) {
       let indentAfter = line.countIndent(pos, line.pos, line.indent);
-      let indented = line.countIndent(line.skipSpace(pos), pos, indentAfter);
-      return indented >= indentAfter + 5 ? indentAfter + 1 : indented;
+      let skipped = line.skipSpace(pos);
+      let indented = line.countIndent(skipped, pos, indentAfter);
+      return indented >= indentAfter + 5 || skipped == line.text.length ? indentAfter + 1 : indented;
   }
   function addCodeText(marks, from, to) {
       let last = marks.length - 1;
@@ -31527,6 +31697,8 @@
                   }
               break;
           }
+          if (line.pos == line.text.length)
+              return this.nextLine() ? null : this.finish();
           let leaf = new LeafBlock(this.lineStart + line.pos, line.text.slice(line.pos));
           for (let parse of this.parser.leafBlockParsers)
               if (parse) {
@@ -32836,7 +33008,7 @@
       }
       return false;
   }
-  const delimiterLine = /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/;
+  const delimiterLine = /^[>\s]*\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/;
   class TableParser {
       constructor() {
           // Null means we haven't seen the second line yet, false means this
@@ -32851,7 +33023,7 @@
               if ((line.next == 45 || line.next == 58 || line.next == 124 /* '-:|' */) &&
                   delimiterLine.test(lineText = line.text.slice(line.pos))) {
                   let firstRow = [], firstCount = parseRow(cx, leaf.content, 0, firstRow, leaf.start);
-                  if (firstCount == parseRow(cx, lineText, line.pos))
+                  if (firstCount == parseRow(cx, lineText, 0))
                       this.rows = [cx.elt("TableHeader", leaf.start, leaf.start + leaf.content.length, firstRow),
                           cx.elt("TableDelimiter", cx.lineStart + line.pos, cx.lineStart + line.text.length)];
               }
@@ -32931,8 +33103,8 @@
           }]
   };
   const autolinkRE = /(www\.)|(https?:\/\/)|([\w.+-]{1,100}@)|(mailto:|xmpp:)/gy;
-  const urlRE = /[\w-]+(\.[\w-]+)+(\/[^\s<]*)?/gy;
-  const lastTwoDomainWords = /[\w-]+\.[\w-]+($|\/)/;
+  const urlRE = /[\w-]+(\.[\w-]+)+(:\d+)?(\/[^\s<]*)?/gy;
+  const lastTwoDomainWords = /[\w-]+\.[\w-]+($|[/:])/;
   const emailRE = /[\w.+-]+@[\w-]+(\.[\w.-]+)+/gy;
   const xmppResourceRE = /\/[a-zA-Z\d@.]+/gy;
   function count(str, from, to, ch) {
@@ -33437,7 +33609,7 @@
                       // Only apply this if we're on the line that has the
                       // construct's syntax, or there's only indentation in the
                       // target range
-                      (!inner.item || line.from <= inner.item.from || !/\S/.test(line.text.slice(0, inner.to)))) {
+                      ((inner.item && line.from <= inner.item.from) || /^[\s>]*$/.test(line.text.slice(0, inner.to)))) {
                       let start = line.from + inner.from;
                       // Replace a list item marker with blank space
                       if (inner.item && inner.node.from < inner.item.from && /\S/.test(line.text.slice(inner.from, inner.to))) {
@@ -33863,7 +34035,7 @@
   const spec_identifier = {__proto__:null,await:44, or:54, and:56, in:60, not:62, is:64, if:70, else:72, lambda:76, yield:94, from:96, async:102, for:104, None:162, True:164, False:164, del:178, pass:182, break:186, continue:190, return:194, raise:202, import:206, as:208, global:212, nonlocal:214, assert:218, type:223, elif:236, while:240, try:246, except:248, finally:250, with:254, def:258, class:268, match:279, case:285};
   const parser$3 = LRParser.deserialize({
     version: 14,
-    states: "##jO`QeOOP$}OSOOO&WQtO'#HUOOQS'#Co'#CoOOQS'#Cp'#CpO'vQdO'#CnO*UQtO'#HTOOQS'#HU'#HUOOQS'#DU'#DUOOQS'#HT'#HTO*rQdO'#D_O+VQdO'#DfO+gQdO'#DjO+zOWO'#DuO,VOWO'#DvO.[QtO'#GuOOQS'#Gu'#GuO'vQdO'#GtO0ZQtO'#GtOOQS'#Eb'#EbO0rQdO'#EcOOQS'#Gs'#GsO0|QdO'#GrOOQV'#Gr'#GrO1XQdO'#FYOOQS'#G^'#G^O1^QdO'#FXOOQV'#IS'#ISOOQV'#Gq'#GqOOQV'#Fq'#FqQ`QeOOO'vQdO'#CqO1lQdO'#C}O1sQdO'#DRO2RQdO'#HYO2cQtO'#EVO'vQdO'#EWOOQS'#EY'#EYOOQS'#E['#E[OOQS'#E^'#E^O2wQdO'#E`O3_QdO'#EdO3rQdO'#EfO3zQtO'#EfO1XQdO'#EiO0rQdO'#ElO1XQdO'#EnO0rQdO'#EtO0rQdO'#EwO4VQdO'#EyO4^QdO'#FOO4iQdO'#EzO0rQdO'#FOO1XQdO'#FQO1XQdO'#FVO4nQdO'#F[P4uOdO'#GpPOOO)CBd)CBdOOQS'#Ce'#CeOOQS'#Cf'#CfOOQS'#Cg'#CgOOQS'#Ch'#ChOOQS'#Ci'#CiOOQS'#Cj'#CjOOQS'#Cl'#ClO'vQdO,59OO'vQdO,59OO'vQdO,59OO'vQdO,59OO'vQdO,59OO'vQdO,59OO5TQdO'#DoOOQS,5:Y,5:YO5hQdO'#HdOOQS,5:],5:]O5uQ!fO,5:]O5zQtO,59YO1lQdO,59bO1lQdO,59bO1lQdO,59bO8jQdO,59bO8oQdO,59bO8vQdO,59jO8}QdO'#HTO:TQdO'#HSOOQS'#HS'#HSOOQS'#D['#D[O:lQdO,59aO'vQdO,59aO:zQdO,59aOOQS,59y,59yO;PQdO,5:RO'vQdO,5:ROOQS,5:Q,5:QO;_QdO,5:QO;dQdO,5:XO'vQdO,5:XO'vQdO,5:VOOQS,5:U,5:UO;uQdO,5:UO;zQdO,5:WOOOW'#Fy'#FyO<POWO,5:aOOQS,5:a,5:aO<[QdO'#HwOOOW'#Dw'#DwOOOW'#Fz'#FzO<lOWO,5:bOOQS,5:b,5:bOOQS'#F}'#F}O<zQtO,5:iO?lQtO,5=`O@VQ#xO,5=`O@vQtO,5=`OOQS,5:},5:}OA_QeO'#GWOBqQdO,5;^OOQV,5=^,5=^OB|QtO'#IPOCkQdO,5;tOOQS-E:[-E:[OOQV,5;s,5;sO4dQdO'#FQOOQV-E9o-E9oOCsQtO,59]OEzQtO,59iOFeQdO'#HVOFpQdO'#HVO1XQdO'#HVOF{QdO'#DTOGTQdO,59mOGYQdO'#HZO'vQdO'#HZO0rQdO,5=tOOQS,5=t,5=tO0rQdO'#EROOQS'#ES'#ESOGwQdO'#GPOHXQdO,58|OHXQdO,58|O*xQdO,5:oOHgQtO'#H]OOQS,5:r,5:rOOQS,5:z,5:zOHzQdO,5;OOI]QdO'#IOO1XQdO'#H}OOQS,5;Q,5;QOOQS'#GT'#GTOIqQtO,5;QOJPQdO,5;QOJUQdO'#IQOOQS,5;T,5;TOJdQdO'#H|OOQS,5;W,5;WOJuQdO,5;YO4iQdO,5;`O4iQdO,5;cOJ}QtO'#ITO'vQdO'#ITOKXQdO,5;eO4VQdO,5;eO0rQdO,5;jO1XQdO,5;lOK^QeO'#EuOLjQgO,5;fO!!kQdO'#IUO4iQdO,5;jO!!vQdO,5;lO!#OQdO,5;qO!#ZQtO,5;vO'vQdO,5;vPOOO,5=[,5=[P!#bOSO,5=[P!#jOdO,5=[O!&bQtO1G.jO!&iQtO1G.jO!)YQtO1G.jO!)dQtO1G.jO!+}QtO1G.jO!,bQtO1G.jO!,uQdO'#HcO!-TQtO'#GuO0rQdO'#HcO!-_QdO'#HbOOQS,5:Z,5:ZO!-gQdO,5:ZO!-lQdO'#HeO!-wQdO'#HeO!.[QdO,5>OOOQS'#Ds'#DsOOQS1G/w1G/wOOQS1G.|1G.|O!/[QtO1G.|O!/cQtO1G.|O1lQdO1G.|O!0OQdO1G/UOOQS'#DZ'#DZO0rQdO,59tOOQS1G.{1G.{O!0VQdO1G/eO!0gQdO1G/eO!0oQdO1G/fO'vQdO'#H[O!0tQdO'#H[O!0yQtO1G.{O!1ZQdO,59iO!2aQdO,5=zO!2qQdO,5=zO!2yQdO1G/mO!3OQtO1G/mOOQS1G/l1G/lO!3`QdO,5=uO!4VQdO,5=uO0rQdO1G/qO!4tQdO1G/sO!4yQtO1G/sO!5ZQtO1G/qOOQS1G/p1G/pOOQS1G/r1G/rOOOW-E9w-E9wOOQS1G/{1G/{O!5kQdO'#HxO0rQdO'#HxO!5|QdO,5>cOOOW-E9x-E9xOOQS1G/|1G/|OOQS-E9{-E9{O!6[Q#xO1G2zO!6{QtO1G2zO'vQdO,5<jOOQS,5<j,5<jOOQS-E9|-E9|OOQS,5<r,5<rOOQS-E:U-E:UOOQV1G0x1G0xO1XQdO'#GRO!7dQtO,5>kOOQS1G1`1G1`O!8RQdO1G1`OOQS'#DV'#DVO0rQdO,5=qOOQS,5=q,5=qO!8WQdO'#FrO!8cQdO,59oO!8kQdO1G/XO!8uQtO,5=uOOQS1G3`1G3`OOQS,5:m,5:mO!9fQdO'#GtOOQS,5<k,5<kOOQS-E9}-E9}O!9wQdO1G.hOOQS1G0Z1G0ZO!:VQdO,5=wO!:gQdO,5=wO0rQdO1G0jO0rQdO1G0jO!:xQdO,5>jO!;ZQdO,5>jO1XQdO,5>jO!;lQdO,5>iOOQS-E:R-E:RO!;qQdO1G0lO!;|QdO1G0lO!<RQdO,5>lO!<aQdO,5>lO!<oQdO,5>hO!=VQdO,5>hO!=hQdO'#EpO0rQdO1G0tO!=sQdO1G0tO!=xQgO1G0zO!AvQgO1G0}O!EqQdO,5>oO!E{QdO,5>oO!FTQtO,5>oO0rQdO1G1PO!F_QdO1G1PO4iQdO1G1UO!!vQdO1G1WOOQV,5;a,5;aO!FdQfO,5;aO!FiQgO1G1QO!JjQdO'#GZO4iQdO1G1QO4iQdO1G1QO!JzQdO,5>pO!KXQdO,5>pO1XQdO,5>pOOQV1G1U1G1UO!KaQdO'#FSO!KrQ!fO1G1WO!KzQdO1G1WOOQV1G1]1G1]O4iQdO1G1]O!LPQdO1G1]O!LXQdO'#F^OOQV1G1b1G1bO!#ZQtO1G1bPOOO1G2v1G2vP!L^OSO1G2vOOQS,5=},5=}OOQS'#Dp'#DpO0rQdO,5=}O!LfQdO,5=|O!LyQdO,5=|OOQS1G/u1G/uO!MRQdO,5>PO!McQdO,5>PO!MkQdO,5>PO!NOQdO,5>PO!N`QdO,5>POOQS1G3j1G3jOOQS7+$h7+$hO!8kQdO7+$pO#!RQdO1G.|O#!YQdO1G.|OOQS1G/`1G/`OOQS,5<`,5<`O'vQdO,5<`OOQS7+%P7+%PO#!aQdO7+%POOQS-E9r-E9rOOQS7+%Q7+%QO#!qQdO,5=vO'vQdO,5=vOOQS7+$g7+$gO#!vQdO7+%PO##OQdO7+%QO##TQdO1G3fOOQS7+%X7+%XO##eQdO1G3fO##mQdO7+%XOOQS,5<_,5<_O'vQdO,5<_O##rQdO1G3aOOQS-E9q-E9qO#$iQdO7+%]OOQS7+%_7+%_O#$wQdO1G3aO#%fQdO7+%_O#%kQdO1G3gO#%{QdO1G3gO#&TQdO7+%]O#&YQdO,5>dO#&sQdO,5>dO#&sQdO,5>dOOQS'#Dx'#DxO#'UO&jO'#DzO#'aO`O'#HyOOOW1G3}1G3}O#'fQdO1G3}O#'nQdO1G3}O#'yQ#xO7+(fO#(jQtO1G2UP#)TQdO'#GOOOQS,5<m,5<mOOQS-E:P-E:POOQS7+&z7+&zOOQS1G3]1G3]OOQS,5<^,5<^OOQS-E9p-E9pOOQS7+$s7+$sO#)bQdO,5=`O#){QdO,5=`O#*^QtO,5<aO#*qQdO1G3cOOQS-E9s-E9sOOQS7+&U7+&UO#+RQdO7+&UO#+aQdO,5<nO#+uQdO1G4UOOQS-E:Q-E:QO#,WQdO1G4UOOQS1G4T1G4TOOQS7+&W7+&WO#,iQdO7+&WOOQS,5<p,5<pO#,tQdO1G4WOOQS-E:S-E:SOOQS,5<l,5<lO#-SQdO1G4SOOQS-E:O-E:OO1XQdO'#EqO#-jQdO'#EqO#-uQdO'#IRO#-}QdO,5;[OOQS7+&`7+&`O0rQdO7+&`O#.SQgO7+&fO!JmQdO'#GXO4iQdO7+&fO4iQdO7+&iO#2QQtO,5<tO'vQdO,5<tO#2[QdO1G4ZOOQS-E:W-E:WO#2fQdO1G4ZO4iQdO7+&kO0rQdO7+&kOOQV7+&p7+&pO!KrQ!fO7+&rO!KzQdO7+&rO`QeO1G0{OOQV-E:X-E:XO4iQdO7+&lO4iQdO7+&lOOQV,5<u,5<uO#2nQdO,5<uO!JmQdO,5<uOOQV7+&l7+&lO#2yQgO7+&lO#6tQdO,5<vO#7PQdO1G4[OOQS-E:Y-E:YO#7^QdO1G4[O#7fQdO'#IWO#7tQdO'#IWO1XQdO'#IWOOQS'#IW'#IWO#8PQdO'#IVOOQS,5;n,5;nO#8XQdO,5;nO0rQdO'#FUOOQV7+&r7+&rO4iQdO7+&rOOQV7+&w7+&wO4iQdO7+&wO#8^QfO,5;xOOQV7+&|7+&|POOO7+(b7+(bO#8cQdO1G3iOOQS,5<c,5<cO#8qQdO1G3hOOQS-E9u-E9uO#9UQdO,5<dO#9aQdO,5<dO#9tQdO1G3kOOQS-E9v-E9vO#:UQdO1G3kO#:^QdO1G3kO#:nQdO1G3kO#:UQdO1G3kOOQS<<H[<<H[O#:yQtO1G1zOOQS<<Hk<<HkP#;WQdO'#FtO8vQdO1G3bO#;eQdO1G3bO#;jQdO<<HkOOQS<<Hl<<HlO#;zQdO7+)QOOQS<<Hs<<HsO#<[QtO1G1yP#<{QdO'#FsO#=YQdO7+)RO#=jQdO7+)RO#=rQdO<<HwO#=wQdO7+({OOQS<<Hy<<HyO#>nQdO,5<bO'vQdO,5<bOOQS-E9t-E9tOOQS<<Hw<<HwOOQS,5<g,5<gO0rQdO,5<gO#>sQdO1G4OOOQS-E9y-E9yO#?^QdO1G4OO<[QdO'#H{OOOO'#D{'#D{OOOO'#F|'#F|O#?oO&jO,5:fOOOW,5>e,5>eOOOW7+)i7+)iO#?zQdO7+)iO#@SQdO1G2zO#@mQdO1G2zP'vQdO'#FuO0rQdO<<IpO1XQdO1G2YP1XQdO'#GSO#AOQdO7+)pO#AaQdO7+)pOOQS<<Ir<<IrP1XQdO'#GUP0rQdO'#GQOOQS,5;],5;]O#ArQdO,5>mO#BQQdO,5>mOOQS1G0v1G0vOOQS<<Iz<<IzOOQV-E:V-E:VO4iQdO<<JQOOQV,5<s,5<sO4iQdO,5<sOOQV<<JQ<<JQOOQV<<JT<<JTO#BYQtO1G2`P#BdQdO'#GYO#BkQdO7+)uO#BuQgO<<JVO4iQdO<<JVOOQV<<J^<<J^O4iQdO<<J^O!KrQ!fO<<J^O#FpQgO7+&gOOQV<<JW<<JWO#FzQgO<<JWOOQV1G2a1G2aO1XQdO1G2aO#JuQdO1G2aO4iQdO<<JWO1XQdO1G2bP0rQdO'#G[O#KQQdO7+)vO#K_QdO7+)vOOQS'#FT'#FTO0rQdO,5>rO#KgQdO,5>rO#KrQdO,5>rO#K}QdO,5>qO#L`QdO,5>qOOQS1G1Y1G1YOOQS,5;p,5;pOOQV<<Jc<<JcO#LhQdO1G1dOOQS7+)T7+)TP#LmQdO'#FwO#L}QdO1G2OO#MbQdO1G2OO#MrQdO1G2OP#M}QdO'#FxO#N[QdO7+)VO#NlQdO7+)VO#NlQdO7+)VO#NtQdO7+)VO$ UQdO7+(|O8vQdO7+(|OOQSAN>VAN>VO$ oQdO<<LmOOQSAN>cAN>cO0rQdO1G1|O$!PQtO1G1|P$!ZQdO'#FvOOQS1G2R1G2RP$!hQdO'#F{O$!uQdO7+)jO$#`QdO,5>gOOOO-E9z-E9zOOOW<<MT<<MTO$#nQdO7+(fOOQSAN?[AN?[OOQS7+'t7+'tO$$XQdO<<M[OOQS,5<q,5<qO$$jQdO1G4XOOQS-E:T-E:TOOQVAN?lAN?lOOQV1G2_1G2_O4iQdOAN?qO$$xQgOAN?qOOQVAN?xAN?xO4iQdOAN?xOOQV<<JR<<JRO4iQdOAN?rO4iQdO7+'{OOQV7+'{7+'{O1XQdO7+'{OOQVAN?rAN?rOOQS7+'|7+'|O$(sQdO<<MbOOQS1G4^1G4^O0rQdO1G4^OOQS,5<w,5<wO$)QQdO1G4]OOQS-E:Z-E:ZOOQU'#G_'#G_O$)cQfO7+'OO$)nQdO'#F_O$*uQdO7+'jO$+VQdO7+'jOOQS7+'j7+'jO$+bQdO<<LqO$+rQdO<<LqO$+rQdO<<LqO$+zQdO'#H^OOQS<<Lh<<LhO$,UQdO<<LhOOQS7+'h7+'hOOQS'#D|'#D|OOOO1G4R1G4RO$,oQdO1G4RO$,wQdO1G4RP!=hQdO'#GVOOQVG25]G25]O4iQdOG25]OOQVG25dG25dOOQVG25^G25^OOQV<<Kg<<KgO4iQdO<<KgOOQS7+)x7+)xP$-SQdO'#G]OOQU-E:]-E:]OOQV<<Jj<<JjO$-vQtO'#FaOOQS'#Fc'#FcO$.WQdO'#FbO$.xQdO'#FbOOQS'#Fb'#FbO$.}QdO'#IYO$)nQdO'#FiO$)nQdO'#FiO$/fQdO'#FjO$)nQdO'#FkO$/mQdO'#IZOOQS'#IZ'#IZO$0[QdO,5;yOOQS<<KU<<KUO$0dQdO<<KUO$0tQdOANB]O$1UQdOANB]O$1^QdO'#H_OOQS'#H_'#H_O1sQdO'#DcO$1wQdO,5=xOOQSANBSANBSOOOO7+)m7+)mO$2`QdO7+)mOOQVLD*wLD*wOOQVANARANARO5uQ!fO'#GaO$2hQtO,5<SO$)nQdO'#FmOOQS,5<W,5<WOOQS'#Fd'#FdO$3YQdO,5;|O$3_QdO,5;|OOQS'#Fg'#FgO$)nQdO'#G`O$4PQdO,5<QO$4kQdO,5>tO$4{QdO,5>tO1XQdO,5<PO$5^QdO,5<TO$5cQdO,5<TO$)nQdO'#I[O$5hQdO'#I[O$5mQdO,5<UOOQS,5<V,5<VO0rQdO'#FpOOQU1G1e1G1eO4iQdO1G1eOOQSAN@pAN@pO$5rQdOG27wO$6SQdO,59}OOQS1G3d1G3dOOOO<<MX<<MXOOQS,5<{,5<{OOQS-E:_-E:_O$6XQtO'#FaO$6`QdO'#I]O$6nQdO'#I]O$6vQdO,5<XOOQS1G1h1G1hO$6{QdO1G1hO$7QQdO,5<zOOQS-E:^-E:^O$7lQdO,5=OO$8TQdO1G4`OOQS-E:b-E:bOOQS1G1k1G1kOOQS1G1o1G1oO$8eQdO,5>vO$)nQdO,5>vOOQS1G1p1G1pOOQS,5<[,5<[OOQU7+'P7+'PO$+zQdO1G/iO$)nQdO,5<YO$8sQdO,5>wO$8zQdO,5>wOOQS1G1s1G1sOOQS7+'S7+'SP$)nQdO'#GdO$9SQdO1G4bO$9^QdO1G4bO$9fQdO1G4bOOQS7+%T7+%TO$9tQdO1G1tO$:SQtO'#FaO$:ZQdO,5<}OOQS,5<},5<}O$:iQdO1G4cOOQS-E:a-E:aO$)nQdO,5<|O$:pQdO,5<|O$:uQdO7+)|OOQS-E:`-E:`O$;PQdO7+)|O$)nQdO,5<ZP$)nQdO'#GcO$;XQdO1G2hO$)nQdO1G2hP$;gQdO'#GbO$;nQdO<<MhO$;xQdO1G1uO$<WQdO7+(SO8vQdO'#C}O8vQdO,59bO8vQdO,59bO8vQdO,59bO$<fQtO,5=`O8vQdO1G.|O0rQdO1G/XO0rQdO7+$pP$<yQdO'#GOO'vQdO'#GtO$=WQdO,59bO$=]QdO,59bO$=dQdO,59mO$=iQdO1G/UO1sQdO'#DRO8vQdO,59j",
+    states: "##jQ`QeOOP$}OSOOO&WQtO'#HUOOQS'#Co'#CoOOQS'#Cp'#CpO'vQdO'#CnO*UQtO'#HTOOQS'#HU'#HUOOQS'#DU'#DUOOQS'#HT'#HTO*rQdO'#D_O+VQdO'#DfO+gQdO'#DjO+zOWO'#DuO,VOWO'#DvO.[QtO'#GuOOQS'#Gu'#GuO'vQdO'#GtO0ZQtO'#GtOOQS'#Eb'#EbO0rQdO'#EcOOQS'#Gs'#GsO0|QdO'#GrOOQV'#Gr'#GrO1XQdO'#FYOOQS'#G^'#G^O1^QdO'#FXOOQV'#IS'#ISOOQV'#Gq'#GqOOQV'#Fq'#FqQ`QeOOO'vQdO'#CqO1lQdO'#C}O1sQdO'#DRO2RQdO'#HYO2cQtO'#EVO'vQdO'#EWOOQS'#EY'#EYOOQS'#E['#E[OOQS'#E^'#E^O2wQdO'#E`O3_QdO'#EdO3rQdO'#EfO3zQtO'#EfO1XQdO'#EiO0rQdO'#ElO1XQdO'#EnO0rQdO'#EtO0rQdO'#EwO4VQdO'#EyO4^QdO'#FOO4iQdO'#EzO0rQdO'#FOO1XQdO'#FQO1XQdO'#FVO4nQdO'#F[P4uOdO'#GpPOOO)CBd)CBdOOQS'#Ce'#CeOOQS'#Cf'#CfOOQS'#Cg'#CgOOQS'#Ch'#ChOOQS'#Ci'#CiOOQS'#Cj'#CjOOQS'#Cl'#ClO'vQdO,59OO'vQdO,59OO'vQdO,59OO'vQdO,59OO'vQdO,59OO'vQdO,59OO5TQdO'#DoOOQS,5:Y,5:YO5hQdO'#HdOOQS,5:],5:]O5uQ!fO,5:]O5zQtO,59YO1lQdO,59bO1lQdO,59bO1lQdO,59bO8jQdO,59bO8oQdO,59bO8vQdO,59jO8}QdO'#HTO:TQdO'#HSOOQS'#HS'#HSOOQS'#D['#D[O:lQdO,59aO'vQdO,59aO:zQdO,59aOOQS,59y,59yO;PQdO,5:RO'vQdO,5:ROOQS,5:Q,5:QO;_QdO,5:QO;dQdO,5:XO'vQdO,5:XO'vQdO,5:VOOQS,5:U,5:UO;uQdO,5:UO;zQdO,5:WOOOW'#Fy'#FyO<POWO,5:aOOQS,5:a,5:aO<[QdO'#HwOOOW'#Dw'#DwOOOW'#Fz'#FzO<lOWO,5:bOOQS,5:b,5:bOOQS'#F}'#F}O<zQtO,5:iO?lQtO,5=`O@VQ#xO,5=`O@vQtO,5=`OOQS,5:},5:}OA_QeO'#GWOBqQdO,5;^OOQV,5=^,5=^OB|QtO'#IPOCkQdO,5;tOOQS-E:[-E:[OOQV,5;s,5;sO4dQdO'#FQOOQV-E9o-E9oOCsQtO,59]OEzQtO,59iOFeQdO'#HVOFpQdO'#HVO1XQdO'#HVOF{QdO'#DTOGTQdO,59mOGYQdO'#HZO'vQdO'#HZO0rQdO,5=tOOQS,5=t,5=tO0rQdO'#EROOQS'#ES'#ESOGwQdO'#GPOHXQdO,58|OHXQdO,58|O*xQdO,5:oOHgQtO'#H]OOQS,5:r,5:rOOQS,5:z,5:zOHzQdO,5;OOI]QdO'#IOO1XQdO'#H}OOQS,5;Q,5;QOOQS'#GT'#GTOIqQtO,5;QOJPQdO,5;QOJUQdO'#IQOOQS,5;T,5;TOJdQdO'#H|OOQS,5;W,5;WOJuQdO,5;YO4iQdO,5;`O4iQdO,5;cOJ}QtO'#ITO'vQdO'#ITOKXQdO,5;eO4VQdO,5;eO0rQdO,5;jO1XQdO,5;lOK^QeO'#EuOLjQgO,5;fO!!kQdO'#IUO4iQdO,5;jO!!vQdO,5;lO!#OQdO,5;qO!#ZQtO,5;vO'vQdO,5;vPOOO,5=[,5=[P!#bOSO,5=[P!#jOdO,5=[O!&bQtO1G.jO!&iQtO1G.jO!)YQtO1G.jO!)dQtO1G.jO!+}QtO1G.jO!,bQtO1G.jO!,uQdO'#HcO!-TQtO'#GuO0rQdO'#HcO!-_QdO'#HbOOQS,5:Z,5:ZO!-gQdO,5:ZO!-lQdO'#HeO!-wQdO'#HeO!.[QdO,5>OOOQS'#Ds'#DsOOQS1G/w1G/wOOQS1G.|1G.|O!/[QtO1G.|O!/cQtO1G.|O1lQdO1G.|O!0OQdO1G/UOOQS'#DZ'#DZO0rQdO,59tOOQS1G.{1G.{O!0VQdO1G/eO!0gQdO1G/eO!0oQdO1G/fO'vQdO'#H[O!0tQdO'#H[O!0yQtO1G.{O!1ZQdO,59iO!2aQdO,5=zO!2qQdO,5=zO!2yQdO1G/mO!3OQtO1G/mOOQS1G/l1G/lO!3`QdO,5=uO!4VQdO,5=uO0rQdO1G/qO!4tQdO1G/sO!4yQtO1G/sO!5ZQtO1G/qOOQS1G/p1G/pOOQS1G/r1G/rOOOW-E9w-E9wOOQS1G/{1G/{O!5kQdO'#HxO0rQdO'#HxO!5|QdO,5>cOOOW-E9x-E9xOOQS1G/|1G/|OOQS-E9{-E9{O!6[Q#xO1G2zO!6{QtO1G2zO'vQdO,5<jOOQS,5<j,5<jOOQS-E9|-E9|OOQS,5<r,5<rOOQS-E:U-E:UOOQV1G0x1G0xO1XQdO'#GRO!7dQtO,5>kOOQS1G1`1G1`O!8RQdO1G1`OOQS'#DV'#DVO0rQdO,5=qOOQS,5=q,5=qO!8WQdO'#FrO!8cQdO,59oO!8kQdO1G/XO!8uQtO,5=uOOQS1G3`1G3`OOQS,5:m,5:mO!9fQdO'#GtOOQS,5<k,5<kOOQS-E9}-E9}O!9wQdO1G.hOOQS1G0Z1G0ZO!:VQdO,5=wO!:gQdO,5=wO0rQdO1G0jO0rQdO1G0jO!:xQdO,5>jO!;ZQdO,5>jO1XQdO,5>jO!;lQdO,5>iOOQS-E:R-E:RO!;qQdO1G0lO!;|QdO1G0lO!<RQdO,5>lO!<aQdO,5>lO!<oQdO,5>hO!=VQdO,5>hO!=hQdO'#EpO0rQdO1G0tO!=sQdO1G0tO!=xQgO1G0zO!AvQgO1G0}O!EqQdO,5>oO!E{QdO,5>oO!FTQtO,5>oO0rQdO1G1PO!F_QdO1G1PO4iQdO1G1UO!!vQdO1G1WOOQV,5;a,5;aO!FdQfO,5;aO!FiQgO1G1QO!JjQdO'#GZO4iQdO1G1QO4iQdO1G1QO!JzQdO,5>pO!KXQdO,5>pO1XQdO,5>pOOQV1G1U1G1UO!KaQdO'#FSO!KrQ!fO1G1WO!KzQdO1G1WOOQV1G1]1G1]O4iQdO1G1]O!LPQdO1G1]O!LXQdO'#F^OOQV1G1b1G1bO!#ZQtO1G1bPOOO1G2v1G2vP!L^OSO1G2vOOQS,5=},5=}OOQS'#Dp'#DpO0rQdO,5=}O!LfQdO,5=|O!LyQdO,5=|OOQS1G/u1G/uO!MRQdO,5>PO!McQdO,5>PO!MkQdO,5>PO!NOQdO,5>PO!N`QdO,5>POOQS1G3j1G3jOOQS7+$h7+$hO!8kQdO7+$pO#!RQdO1G.|O#!YQdO1G.|OOQS1G/`1G/`OOQS,5<`,5<`O'vQdO,5<`OOQS7+%P7+%PO#!aQdO7+%POOQS-E9r-E9rOOQS7+%Q7+%QO#!qQdO,5=vO'vQdO,5=vOOQS7+$g7+$gO#!vQdO7+%PO##OQdO7+%QO##TQdO1G3fOOQS7+%X7+%XO##eQdO1G3fO##mQdO7+%XOOQS,5<_,5<_O'vQdO,5<_O##rQdO1G3aOOQS-E9q-E9qO#$iQdO7+%]OOQS7+%_7+%_O#$wQdO1G3aO#%fQdO7+%_O#%kQdO1G3gO#%{QdO1G3gO#&TQdO7+%]O#&YQdO,5>dO#&sQdO,5>dO#&sQdO,5>dOOQS'#Dx'#DxO#'UO&jO'#DzO#'aO`O'#HyOOOW1G3}1G3}O#'fQdO1G3}O#'nQdO1G3}O#'yQ#xO7+(fO#(jQtO1G2UP#)TQdO'#GOOOQS,5<m,5<mOOQS-E:P-E:POOQS7+&z7+&zOOQS1G3]1G3]OOQS,5<^,5<^OOQS-E9p-E9pOOQS7+$s7+$sO#)bQdO,5=`O#){QdO,5=`O#*^QtO,5<aO#*qQdO1G3cOOQS-E9s-E9sOOQS7+&U7+&UO#+RQdO7+&UO#+aQdO,5<nO#+uQdO1G4UOOQS-E:Q-E:QO#,WQdO1G4UOOQS1G4T1G4TOOQS7+&W7+&WO#,iQdO7+&WOOQS,5<p,5<pO#,tQdO1G4WOOQS-E:S-E:SOOQS,5<l,5<lO#-SQdO1G4SOOQS-E:O-E:OO1XQdO'#EqO#-jQdO'#EqO#-uQdO'#IRO#-}QdO,5;[OOQS7+&`7+&`O0rQdO7+&`O#.SQgO7+&fO!JmQdO'#GXO4iQdO7+&fO4iQdO7+&iO#2QQtO,5<tO'vQdO,5<tO#2[QdO1G4ZOOQS-E:W-E:WO#2fQdO1G4ZO4iQdO7+&kO0rQdO7+&kOOQV7+&p7+&pO!KrQ!fO7+&rO!KzQdO7+&rO`QeO1G0{OOQV-E:X-E:XO4iQdO7+&lO4iQdO7+&lOOQV,5<u,5<uO#2nQdO,5<uO!JmQdO,5<uOOQV7+&l7+&lO#2yQgO7+&lO#6tQdO,5<vO#7PQdO1G4[OOQS-E:Y-E:YO#7^QdO1G4[O#7fQdO'#IWO#7tQdO'#IWO1XQdO'#IWOOQS'#IW'#IWO#8PQdO'#IVOOQS,5;n,5;nO#8XQdO,5;nO0rQdO'#FUOOQV7+&r7+&rO4iQdO7+&rOOQV7+&w7+&wO4iQdO7+&wO#8^QfO,5;xOOQV7+&|7+&|POOO7+(b7+(bO#8cQdO1G3iOOQS,5<c,5<cO#8qQdO1G3hOOQS-E9u-E9uO#9UQdO,5<dO#9aQdO,5<dO#9tQdO1G3kOOQS-E9v-E9vO#:UQdO1G3kO#:^QdO1G3kO#:nQdO1G3kO#:UQdO1G3kOOQS<<H[<<H[O#:yQtO1G1zOOQS<<Hk<<HkP#;WQdO'#FtO8vQdO1G3bO#;eQdO1G3bO#;jQdO<<HkOOQS<<Hl<<HlO#;zQdO7+)QOOQS<<Hs<<HsO#<[QtO1G1yP#<{QdO'#FsO#=YQdO7+)RO#=jQdO7+)RO#=rQdO<<HwO#=wQdO7+({OOQS<<Hy<<HyO#>nQdO,5<bO'vQdO,5<bOOQS-E9t-E9tOOQS<<Hw<<HwOOQS,5<g,5<gO0rQdO,5<gO#>sQdO1G4OOOQS-E9y-E9yO#?^QdO1G4OO<[QdO'#H{OOOO'#D{'#D{OOOO'#F|'#F|O#?oO&jO,5:fOOOW,5>e,5>eOOOW7+)i7+)iO#?zQdO7+)iO#@SQdO1G2zO#@mQdO1G2zP'vQdO'#FuO0rQdO<<IpO1XQdO1G2YP1XQdO'#GSO#AOQdO7+)pO#AaQdO7+)pOOQS<<Ir<<IrP1XQdO'#GUP0rQdO'#GQOOQS,5;],5;]O#ArQdO,5>mO#BQQdO,5>mOOQS1G0v1G0vOOQS<<Iz<<IzOOQV-E:V-E:VO4iQdO<<JQOOQV,5<s,5<sO4iQdO,5<sOOQV<<JQ<<JQOOQV<<JT<<JTO#BYQtO1G2`P#BdQdO'#GYO#BkQdO7+)uO#BuQgO<<JVO4iQdO<<JVOOQV<<J^<<J^O4iQdO<<J^O!KrQ!fO<<J^O#FpQgO7+&gOOQV<<JW<<JWO#FzQgO<<JWOOQV1G2a1G2aO1XQdO1G2aO#JuQdO1G2aO4iQdO<<JWO1XQdO1G2bP0rQdO'#G[O#KQQdO7+)vO#K_QdO7+)vOOQS'#FT'#FTO0rQdO,5>rO#KgQdO,5>rO#KrQdO,5>rO#K}QdO,5>qO#L`QdO,5>qOOQS1G1Y1G1YOOQS,5;p,5;pOOQV<<Jc<<JcO#LhQdO1G1dOOQS7+)T7+)TP#LmQdO'#FwO#L}QdO1G2OO#MbQdO1G2OO#MrQdO1G2OP#M}QdO'#FxO#N[QdO7+)VO#NlQdO7+)VO#NlQdO7+)VO#NtQdO7+)VO$ UQdO7+(|O8vQdO7+(|OOQSAN>VAN>VO$ oQdO<<LmOOQSAN>cAN>cO0rQdO1G1|O$!PQtO1G1|P$!ZQdO'#FvOOQS1G2R1G2RP$!hQdO'#F{O$!uQdO7+)jO$#`QdO,5>gOOOO-E9z-E9zOOOW<<MT<<MTO$#nQdO7+(fOOQSAN?[AN?[OOQS7+'t7+'tO$$XQdO<<M[OOQS,5<q,5<qO$$jQdO1G4XOOQS-E:T-E:TOOQVAN?lAN?lOOQV1G2_1G2_O4iQdOAN?qO$$xQgOAN?qOOQVAN?xAN?xO4iQdOAN?xOOQV<<JR<<JRO4iQdOAN?rO4iQdO7+'{OOQV7+'{7+'{O1XQdO7+'{OOQVAN?rAN?rOOQS7+'|7+'|O$(sQdO<<MbOOQS1G4^1G4^O0rQdO1G4^OOQS,5<w,5<wO$)QQdO1G4]OOQS-E:Z-E:ZOOQU'#G_'#G_O$)cQfO7+'OO$)nQdO'#F_O$*uQdO7+'jO$+VQdO7+'jOOQS7+'j7+'jO$+bQdO<<LqO$+rQdO<<LqO$+rQdO<<LqO$+zQdO'#H^OOQS<<Lh<<LhO$,UQdO<<LhOOQS7+'h7+'hOOQS'#D|'#D|OOOO1G4R1G4RO$,oQdO1G4RO$,wQdO1G4RP!=hQdO'#GVOOQVG25]G25]O4iQdOG25]OOQVG25dG25dOOQVG25^G25^OOQV<<Kg<<KgO4iQdO<<KgOOQS7+)x7+)xP$-SQdO'#G]OOQU-E:]-E:]OOQV<<Jj<<JjO$-vQtO'#FaOOQS'#Fc'#FcO$.WQdO'#FbO$.xQdO'#FbOOQS'#Fb'#FbO$.}QdO'#IYO$)nQdO'#FiO$)nQdO'#FiO$/fQdO'#FjO$)nQdO'#FkO$/mQdO'#IZOOQS'#IZ'#IZO$0[QdO,5;yOOQS<<KU<<KUO$0dQdO<<KUO$0tQdOANB]O$1UQdOANB]O$1^QdO'#H_OOQS'#H_'#H_O1sQdO'#DcO$1wQdO,5=xOOQSANBSANBSOOOO7+)m7+)mO$2`QdO7+)mOOQVLD*wLD*wOOQVANARANARO5uQ!fO'#GaO$2hQtO,5<SO$)nQdO'#FmOOQS,5<W,5<WOOQS'#Fd'#FdO$3YQdO,5;|O$3_QdO,5;|OOQS'#Fg'#FgO$)nQdO'#G`O$4PQdO,5<QO$4kQdO,5>tO$4{QdO,5>tO1XQdO,5<PO$5^QdO,5<TO$5cQdO,5<TO$)nQdO'#I[O$5hQdO'#I[O$5mQdO,5<UOOQS,5<V,5<VO0rQdO'#FpOOQU1G1e1G1eO4iQdO1G1eOOQSAN@pAN@pO$5rQdOG27wO$6SQdO,59}OOQS1G3d1G3dOOOO<<MX<<MXOOQS,5<{,5<{OOQS-E:_-E:_O$6XQtO'#FaO$6`QdO'#I]O$6nQdO'#I]O$6vQdO,5<XOOQS1G1h1G1hO$6{QdO1G1hO$7QQdO,5<zOOQS-E:^-E:^O$7lQdO,5=OO$8TQdO1G4`OOQS-E:b-E:bOOQS1G1k1G1kOOQS1G1o1G1oO$8eQdO,5>vO$)nQdO,5>vOOQS1G1p1G1pOOQS,5<[,5<[OOQU7+'P7+'PO$+zQdO1G/iO$)nQdO,5<YO$8sQdO,5>wO$8zQdO,5>wOOQS1G1s1G1sOOQS7+'S7+'SP$)nQdO'#GdO$9SQdO1G4bO$9^QdO1G4bO$9fQdO1G4bOOQS7+%T7+%TO$9tQdO1G1tO$:SQtO'#FaO$:ZQdO,5<}OOQS,5<},5<}O$:iQdO1G4cOOQS-E:a-E:aO$)nQdO,5<|O$:pQdO,5<|O$:uQdO7+)|OOQS-E:`-E:`O$;PQdO7+)|O$)nQdO,5<ZP$)nQdO'#GcO$;XQdO1G2hO$)nQdO1G2hP$;gQdO'#GbO$;nQdO<<MhO$;xQdO1G1uO$<WQdO7+(SO8vQdO'#C}O8vQdO,59bO8vQdO,59bO8vQdO,59bO$<fQtO,5=`O8vQdO1G.|O0rQdO1G/XO0rQdO7+$pP$<yQdO'#GOO'vQdO'#GtO$=WQdO,59bO$=]QdO,59bO$=dQdO,59mO$=iQdO1G/UO1sQdO'#DRO8vQdO,59j",
     stateData: "$>S~O%cOS%^OSSOS%]PQ~OPdOVaOfoOhYOopOs!POvqO!PrO!Q{O!T!SO!U!RO!XZO!][O!h`O!r`O!s`O!t`O!{tO!}uO#PvO#RwO#TxO#XyO#ZzO#^|O#_|O#a}O#c!OO#l!QO#o!TO#s!UO#u!VO#z!WO#}hO$P!XO%oRO%pRO%tSO%uWO&Z]O&[]O&]]O&^]O&_]O&`]O&a]O&b]O&c^O&d^O&e^O&f^O&g^O&h^O&i^O&j^O~O%]!YO~OV!aO_!aOa!bOh!iO!X!kO!f!mO%j![O%k!]O%l!^O%m!_O%n!_O%o!`O%p!`O%q!aO%r!aO%s!aO~Ok%xXl%xXm%xXn%xXo%xXp%xXs%xXz%xX{%xX!x%xX#g%xX%[%xX%_%xX%z%xXg%xX!T%xX!U%xX%{%xX!W%xX![%xX!Q%xX#[%xXt%xX!m%xX~P%SOfoOhYO!XZO!][O!h`O!r`O!s`O!t`O%oRO%pRO%tSO%uWO&Z]O&[]O&]]O&^]O&_]O&`]O&a]O&b]O&c^O&d^O&e^O&f^O&g^O&h^O&i^O&j^O~Oz%wX{%wX#g%wX%[%wX%_%wX%z%wX~Ok!pOl!qOm!oOn!oOo!rOp!sOs!tO!x%wX~P)pOV!zOg!|Oo0cOv0qO!PrO~P'vOV#OOo0cOv0qO!W#PO~P'vOV#SOa#TOo0cOv0qO![#UO~P'vOQ#XO%`#XO%a#ZO~OQ#^OR#[O%`#^O%a#`O~OV%iX_%iXa%iXh%iXk%iXl%iXm%iXn%iXo%iXp%iXs%iXz%iX!X%iX!f%iX%j%iX%k%iX%l%iX%m%iX%n%iX%o%iX%p%iX%q%iX%r%iX%s%iXg%iX!T%iX!U%iX~O&Z]O&[]O&]]O&^]O&_]O&`]O&a]O&b]O&c^O&d^O&e^O&f^O&g^O&h^O&i^O&j^O{%iX!x%iX#g%iX%[%iX%_%iX%z%iX%{%iX!W%iX![%iX!Q%iX#[%iXt%iX!m%iX~P,eOz#dO{%hX!x%hX#g%hX%[%hX%_%hX%z%hX~Oo0cOv0qO~P'vO#g#gO%[#iO%_#iO~O%uWO~O!T#nO#u!VO#z!WO#}hO~OopO~P'vOV#sOa#tO%uWO{wP~OV#xOo0cOv0qO!Q#yO~P'vO{#{O!x$QO%z#|O#g!yX%[!yX%_!yX~OV#xOo0cOv0qO#g#SX%[#SX%_#SX~P'vOo0cOv0qO#g#WX%[#WX%_#WX~P'vOh$WO%uWO~O!f$YO!r$YO%uWO~OV$eO~P'vO!U$gO#s$hO#u$iO~O{$jO~OV$qO~P'vOS$sO%[$rO%_$rO%c$tO~OV$}Oa$}Og%POo0cOv0qO~P'vOo0cOv0qO{%SO~P'vO&Y%UO~Oa!bOh!iO!X!kO!f!mOVba_bakbalbambanbaobapbasbazba{ba!xba#gba%[ba%_ba%jba%kba%lba%mba%nba%oba%pba%qba%rba%sba%zbagba!Tba!Uba%{ba!Wba![ba!Qba#[batba!mba~On%ZO~Oo%ZO~P'vOo0cO~P'vOk0eOl0fOm0dOn0dOo0mOp0nOs0rOg%wX!T%wX!U%wX%{%wX!W%wX![%wX!Q%wX#[%wX!m%wX~P)pO%{%]Og%vXz%vX!T%vX!U%vX!W%vX{%vX~Og%_Oz%`O!T%dO!U%cO~Og%_O~Oz%gO!T%dO!U%cO!W&SX~O!W%kO~Oz%lO{%nO!T%dO!U%cO![%}X~O![%rO~O![%sO~OQ#XO%`#XO%a%uO~OV%wOo0cOv0qO!PrO~P'vOQ#^OR#[O%`#^O%a%zO~OV!qa_!qaa!qah!qak!qal!qam!qan!qao!qap!qas!qaz!qa{!qa!X!qa!f!qa!x!qa#g!qa%[!qa%_!qa%j!qa%k!qa%l!qa%m!qa%n!qa%o!qa%p!qa%q!qa%r!qa%s!qa%z!qag!qa!T!qa!U!qa%{!qa!W!qa![!qa!Q!qa#[!qat!qa!m!qa~P#yOz%|O{%ha!x%ha#g%ha%[%ha%_%ha%z%ha~P%SOV&OOopOvqO{%ha!x%ha#g%ha%[%ha%_%ha%z%ha~P'vOz%|O{%ha!x%ha#g%ha%[%ha%_%ha%z%ha~OPdOVaOopOvqO!PrO!Q{O!{tO!}uO#PvO#RwO#TxO#XyO#ZzO#^|O#_|O#a}O#c!OO#g$zX%[$zX%_$zX~P'vO#g#gO%[&TO%_&TO~O!f&UOh&sX%[&sXz&sX#[&sX#g&sX%_&sX#Z&sXg&sX~Oh!iO%[&WO~Okealeameaneaoeapeaseazea{ea!xea#gea%[ea%_ea%zeagea!Tea!Uea%{ea!Wea![ea!Qea#[eatea!mea~P%SOsqazqa{qa#gqa%[qa%_qa%zqa~Ok!pOl!qOm!oOn!oOo!rOp!sO!xqa~PEcO%z&YOz%yX{%yX~O%uWOz%yX{%yX~Oz&]O{wX~O{&_O~Oz%lO#g%}X%[%}X%_%}Xg%}X{%}X![%}X!m%}X%z%}X~OV0lOo0cOv0qO!PrO~P'vO%z#|O#gUa%[Ua%_Ua~Oz&hO#g&PX%[&PX%_&PXn&PX~P%SOz&kO!Q&jO#g#Wa%[#Wa%_#Wa~Oz&lO#[&nO#g&rX%[&rX%_&rXg&rX~O!f$YO!r$YO#Z&qO%uWO~O#Z&qO~Oz&sO#g&tX%[&tX%_&tX~Oz&uO#g&pX%[&pX%_&pX{&pX~O!X&wO%z&xO~Oz&|On&wX~P%SOn'PO~OPdOVaOopOvqO!PrO!Q{O!{tO!}uO#PvO#RwO#TxO#XyO#ZzO#^|O#_|O#a}O#c!OO%['UO~P'vOt'YO#p'WO#q'XOP#naV#naf#nah#nao#nas#nav#na!P#na!Q#na!T#na!U#na!X#na!]#na!h#na!r#na!s#na!t#na!{#na!}#na#P#na#R#na#T#na#X#na#Z#na#^#na#_#na#a#na#c#na#l#na#o#na#s#na#u#na#z#na#}#na$P#na%X#na%o#na%p#na%t#na%u#na&Z#na&[#na&]#na&^#na&_#na&`#na&a#na&b#na&c#na&d#na&e#na&f#na&g#na&h#na&i#na&j#na%Z#na%_#na~Oz'ZO#[']O{&xX~Oh'_O!X&wO~Oh!iO{$jO!X&wO~O{'eO~P%SO%['hO%_'hO~OS'iO%['hO%_'hO~OV!aO_!aOa!bOh!iO!X!kO!f!mO%l!^O%m!_O%n!_O%o!`O%p!`O%q!aO%r!aO%s!aOkWilWimWinWioWipWisWizWi{Wi!xWi#gWi%[Wi%_Wi%jWi%zWigWi!TWi!UWi%{Wi!WWi![Wi!QWi#[WitWi!mWi~O%k!]O~P!#uO%kWi~P!#uOV!aO_!aOa!bOh!iO!X!kO!f!mO%o!`O%p!`O%q!aO%r!aO%s!aOkWilWimWinWioWipWisWizWi{Wi!xWi#gWi%[Wi%_Wi%jWi%kWi%lWi%zWigWi!TWi!UWi%{Wi!WWi![Wi!QWi#[WitWi!mWi~O%m!_O%n!_O~P!&pO%mWi%nWi~P!&pOa!bOh!iO!X!kO!f!mOkWilWimWinWioWipWisWizWi{Wi!xWi#gWi%[Wi%_Wi%jWi%kWi%lWi%mWi%nWi%oWi%pWi%zWigWi!TWi!UWi%{Wi!WWi![Wi!QWi#[WitWi!mWi~OV!aO_!aO%q!aO%r!aO%s!aO~P!)nOVWi_Wi%qWi%rWi%sWi~P!)nO!T%dO!U%cOg&VXz&VX~O%z'kO%{'kO~P,eOz'mOg&UX~Og'oO~Oz'pO{'rO!W&XX~Oo0cOv0qOz'pO{'sO!W&XX~P'vO!W'uO~Om!oOn!oOo!rOp!sOkjisjizji{ji!xji#gji%[ji%_ji%zji~Ol!qO~P!.aOlji~P!.aOk0eOl0fOm0dOn0dOo0mOp0nO~Ot'wO~P!/jOV'|Og'}Oo0cOv0qO~P'vOg'}Oz(OO~Og(QO~O!U(SO~Og(TOz(OO!T%dO!U%cO~P%SOk0eOl0fOm0dOn0dOo0mOp0nOgqa!Tqa!Uqa%{qa!Wqa![qa!Qqa#[qatqa!mqa~PEcOV'|Oo0cOv0qO!W&Sa~P'vOz(WO!W&Sa~O!W(XO~Oz(WO!T%dO!U%cO!W&Sa~P%SOV(]Oo0cOv0qO![%}a#g%}a%[%}a%_%}ag%}a{%}a!m%}a%z%}a~P'vOz(^O![%}a#g%}a%[%}a%_%}ag%}a{%}a!m%}a%z%}a~O![(aO~Oz(^O!T%dO!U%cO![%}a~P%SOz(dO!T%dO!U%cO![&Ta~P%SOz(gO{&lX![&lX!m&lX%z&lX~O{(kO![(mO!m(nO%z(jO~OV&OOopOvqO{%hi!x%hi#g%hi%[%hi%_%hi%z%hi~P'vOz(pO{%hi!x%hi#g%hi%[%hi%_%hi%z%hi~O!f&UOh&sa%[&saz&sa#[&sa#g&sa%_&sa#Z&sag&sa~O%[(uO~OV#sOa#tO%uWO~Oz&]O{wa~OopOvqO~P'vOz(^O#g%}a%[%}a%_%}ag%}a{%}a![%}a!m%}a%z%}a~P%SOz(zO#g%hX%[%hX%_%hX%z%hX~O%z#|O#gUi%[Ui%_Ui~O#g&Pa%[&Pa%_&Pan&Pa~P'vOz(}O#g&Pa%[&Pa%_&Pan&Pa~O%uWO#g&ra%[&ra%_&rag&ra~Oz)SO#g&ra%[&ra%_&rag&ra~Og)VO~OV)WOh$WO%uWO~O#Z)XO~O%uWO#g&ta%[&ta%_&ta~Oz)ZO#g&ta%[&ta%_&ta~Oo0cOv0qO#g&pa%[&pa%_&pa{&pa~P'vOz)^O#g&pa%[&pa%_&pa{&pa~OV)`Oa)`O%uWO~O%z)eO~Ot)hO#j)gOP#hiV#hif#hih#hio#his#hiv#hi!P#hi!Q#hi!T#hi!U#hi!X#hi!]#hi!h#hi!r#hi!s#hi!t#hi!{#hi!}#hi#P#hi#R#hi#T#hi#X#hi#Z#hi#^#hi#_#hi#a#hi#c#hi#l#hi#o#hi#s#hi#u#hi#z#hi#}#hi$P#hi%X#hi%o#hi%p#hi%t#hi%u#hi&Z#hi&[#hi&]#hi&^#hi&_#hi&`#hi&a#hi&b#hi&c#hi&d#hi&e#hi&f#hi&g#hi&h#hi&i#hi&j#hi%Z#hi%_#hi~Ot)iOP#kiV#kif#kih#kio#kis#kiv#ki!P#ki!Q#ki!T#ki!U#ki!X#ki!]#ki!h#ki!r#ki!s#ki!t#ki!{#ki!}#ki#P#ki#R#ki#T#ki#X#ki#Z#ki#^#ki#_#ki#a#ki#c#ki#l#ki#o#ki#s#ki#u#ki#z#ki#}#ki$P#ki%X#ki%o#ki%p#ki%t#ki%u#ki&Z#ki&[#ki&]#ki&^#ki&_#ki&`#ki&a#ki&b#ki&c#ki&d#ki&e#ki&f#ki&g#ki&h#ki&i#ki&j#ki%Z#ki%_#ki~OV)kOn&wa~P'vOz)lOn&wa~Oz)lOn&wa~P%SOn)pO~O%Y)tO~Ot)wO#p'WO#q)vOP#niV#nif#nih#nio#nis#niv#ni!P#ni!Q#ni!T#ni!U#ni!X#ni!]#ni!h#ni!r#ni!s#ni!t#ni!{#ni!}#ni#P#ni#R#ni#T#ni#X#ni#Z#ni#^#ni#_#ni#a#ni#c#ni#l#ni#o#ni#s#ni#u#ni#z#ni#}#ni$P#ni%X#ni%o#ni%p#ni%t#ni%u#ni&Z#ni&[#ni&]#ni&^#ni&_#ni&`#ni&a#ni&b#ni&c#ni&d#ni&e#ni&f#ni&g#ni&h#ni&i#ni&j#ni%Z#ni%_#ni~OV)zOo0cOv0qO{$jO~P'vOo0cOv0qO{&xa~P'vOz*OO{&xa~OV*SOa*TOg*WO%q*UO%uWO~O{$jO&{*YO~Oh'_O~Oh!iO{$jO~O%[*_O~O%[*aO%_*aO~OV$}Oa$}Oo0cOv0qOg&Ua~P'vOz*dOg&Ua~Oo0cOv0qO{*gO!W&Xa~P'vOz*hO!W&Xa~Oo0cOv0qOz*hO{*kO!W&Xa~P'vOo0cOv0qOz*hO!W&Xa~P'vOz*hO{*kO!W&Xa~Om0dOn0dOo0mOp0nOgjikjisjizji!Tji!Uji%{ji!Wji{ji![ji#gji%[ji%_ji!Qji#[jitji!mji%zji~Ol0fO~P!NkOlji~P!NkOV'|Og*pOo0cOv0qO~P'vOn*rO~Og*pOz*tO~Og*uO~OV'|Oo0cOv0qO!W&Si~P'vOz*vO!W&Si~O!W*wO~OV(]Oo0cOv0qO![%}i#g%}i%[%}i%_%}ig%}i{%}i!m%}i%z%}i~P'vOz*zO!T%dO!U%cO![&Ti~Oz*}O![%}i#g%}i%[%}i%_%}ig%}i{%}i!m%}i%z%}i~O![+OO~Oa+QOo0cOv0qO![&Ti~P'vOz*zO![&Ti~O![+SO~OV+UOo0cOv0qO{&la![&la!m&la%z&la~P'vOz+VO{&la![&la!m&la%z&la~O!]+YO&n+[O![!nX~O![+^O~O{(kO![+_O~O{(kO![+_O!m+`O~OV&OOopOvqO{%hq!x%hq#g%hq%[%hq%_%hq%z%hq~P'vOz$ri{$ri!x$ri#g$ri%[$ri%_$ri%z$ri~P%SOV&OOopOvqO~P'vOV&OOo0cOv0qO#g%ha%[%ha%_%ha%z%ha~P'vOz+aO#g%ha%[%ha%_%ha%z%ha~Oz$ia#g$ia%[$ia%_$ian$ia~P%SO#g&Pi%[&Pi%_&Pin&Pi~P'vOz+dO#g#Wq%[#Wq%_#Wq~O#[+eOz$va#g$va%[$va%_$vag$va~O%uWO#g&ri%[&ri%_&rig&ri~Oz+gO#g&ri%[&ri%_&rig&ri~OV+iOh$WO%uWO~O%uWO#g&ti%[&ti%_&ti~Oo0cOv0qO#g&pi%[&pi%_&pi{&pi~P'vO{#{Oz#eX!W#eX~Oz+mO!W&uX~O!W+oO~Ot+rO#j)gOP#hqV#hqf#hqh#hqo#hqs#hqv#hq!P#hq!Q#hq!T#hq!U#hq!X#hq!]#hq!h#hq!r#hq!s#hq!t#hq!{#hq!}#hq#P#hq#R#hq#T#hq#X#hq#Z#hq#^#hq#_#hq#a#hq#c#hq#l#hq#o#hq#s#hq#u#hq#z#hq#}#hq$P#hq%X#hq%o#hq%p#hq%t#hq%u#hq&Z#hq&[#hq&]#hq&^#hq&_#hq&`#hq&a#hq&b#hq&c#hq&d#hq&e#hq&f#hq&g#hq&h#hq&i#hq&j#hq%Z#hq%_#hq~On$|az$|a~P%SOV)kOn&wi~P'vOz+yOn&wi~Oz,TO{$jO#[,TO~O#q,VOP#nqV#nqf#nqh#nqo#nqs#nqv#nq!P#nq!Q#nq!T#nq!U#nq!X#nq!]#nq!h#nq!r#nq!s#nq!t#nq!{#nq!}#nq#P#nq#R#nq#T#nq#X#nq#Z#nq#^#nq#_#nq#a#nq#c#nq#l#nq#o#nq#s#nq#u#nq#z#nq#}#nq$P#nq%X#nq%o#nq%p#nq%t#nq%u#nq&Z#nq&[#nq&]#nq&^#nq&_#nq&`#nq&a#nq&b#nq&c#nq&d#nq&e#nq&f#nq&g#nq&h#nq&i#nq&j#nq%Z#nq%_#nq~O#[,WOz%Oa{%Oa~Oo0cOv0qO{&xi~P'vOz,YO{&xi~O{#{O%z,[Og&zXz&zX~O%uWOg&zXz&zX~Oz,`Og&yX~Og,bO~O%Y,eO~O!T%dO!U%cOg&Viz&Vi~OV$}Oa$}Oo0cOv0qOg&Ui~P'vO{,hOz$la!W$la~Oo0cOv0qO{,iOz$la!W$la~P'vOo0cOv0qO{*gO!W&Xi~P'vOz,lO!W&Xi~Oo0cOv0qOz,lO!W&Xi~P'vOz,lO{,oO!W&Xi~Og$hiz$hi!W$hi~P%SOV'|Oo0cOv0qO~P'vOn,qO~OV'|Og,rOo0cOv0qO~P'vOV'|Oo0cOv0qO!W&Sq~P'vOz$gi![$gi#g$gi%[$gi%_$gig$gi{$gi!m$gi%z$gi~P%SOV(]Oo0cOv0qO~P'vOa+QOo0cOv0qO![&Tq~P'vOz,sO![&Tq~O![,tO~OV(]Oo0cOv0qO![%}q#g%}q%[%}q%_%}qg%}q{%}q!m%}q%z%}q~P'vO{,uO~OV+UOo0cOv0qO{&li![&li!m&li%z&li~P'vOz,zO{&li![&li!m&li%z&li~O!]+YO&n+[O![!na~O{(kO![,}O~OV&OOo0cOv0qO#g%hi%[%hi%_%hi%z%hi~P'vOz-OO#g%hi%[%hi%_%hi%z%hi~O%uWO#g&rq%[&rq%_&rqg&rq~Oz-RO#g&rq%[&rq%_&rqg&rq~OV)`Oa)`O%uWO!W&ua~Oz-TO!W&ua~On$|iz$|i~P%SOV)kO~P'vOV)kOn&wq~P'vOt-XOP#myV#myf#myh#myo#mys#myv#my!P#my!Q#my!T#my!U#my!X#my!]#my!h#my!r#my!s#my!t#my!{#my!}#my#P#my#R#my#T#my#X#my#Z#my#^#my#_#my#a#my#c#my#l#my#o#my#s#my#u#my#z#my#}#my$P#my%X#my%o#my%p#my%t#my%u#my&Z#my&[#my&]#my&^#my&_#my&`#my&a#my&b#my&c#my&d#my&e#my&f#my&g#my&h#my&i#my&j#my%Z#my%_#my~O%Z-]O%_-]O~P`O#q-^OP#nyV#nyf#nyh#nyo#nys#nyv#ny!P#ny!Q#ny!T#ny!U#ny!X#ny!]#ny!h#ny!r#ny!s#ny!t#ny!{#ny!}#ny#P#ny#R#ny#T#ny#X#ny#Z#ny#^#ny#_#ny#a#ny#c#ny#l#ny#o#ny#s#ny#u#ny#z#ny#}#ny$P#ny%X#ny%o#ny%p#ny%t#ny%u#ny&Z#ny&[#ny&]#ny&^#ny&_#ny&`#ny&a#ny&b#ny&c#ny&d#ny&e#ny&f#ny&g#ny&h#ny&i#ny&j#ny%Z#ny%_#ny~Oz-aO{$jO#[-aO~Oo0cOv0qO{&xq~P'vOz-dO{&xq~O%z,[Og&zaz&za~O{#{Og&zaz&za~OV*SOa*TO%q*UO%uWOg&ya~Oz-hOg&ya~O$S-lO~OV$}Oa$}Oo0cOv0qO~P'vOo0cOv0qO{-mOz$li!W$li~P'vOo0cOv0qOz$li!W$li~P'vO{-mOz$li!W$li~Oo0cOv0qO{*gO~P'vOo0cOv0qO{*gO!W&Xq~P'vOz-pO!W&Xq~Oo0cOv0qOz-pO!W&Xq~P'vOs-sO!T%dO!U%cOg&Oq!W&Oq![&Oqz&Oq~P!/jOa+QOo0cOv0qO![&Ty~P'vOz$ji![$ji~P%SOa+QOo0cOv0qO~P'vOV+UOo0cOv0qO~P'vOV+UOo0cOv0qO{&lq![&lq!m&lq%z&lq~P'vO{(kO![-xO!m-yO%z-wO~OV&OOo0cOv0qO#g%hq%[%hq%_%hq%z%hq~P'vO%uWO#g&ry%[&ry%_&ryg&ry~OV)`Oa)`O%uWO!W&ui~Ot-}OP#m!RV#m!Rf#m!Rh#m!Ro#m!Rs#m!Rv#m!R!P#m!R!Q#m!R!T#m!R!U#m!R!X#m!R!]#m!R!h#m!R!r#m!R!s#m!R!t#m!R!{#m!R!}#m!R#P#m!R#R#m!R#T#m!R#X#m!R#Z#m!R#^#m!R#_#m!R#a#m!R#c#m!R#l#m!R#o#m!R#s#m!R#u#m!R#z#m!R#}#m!R$P#m!R%X#m!R%o#m!R%p#m!R%t#m!R%u#m!R&Z#m!R&[#m!R&]#m!R&^#m!R&_#m!R&`#m!R&a#m!R&b#m!R&c#m!R&d#m!R&e#m!R&f#m!R&g#m!R&h#m!R&i#m!R&j#m!R%Z#m!R%_#m!R~Oo0cOv0qO{&xy~P'vOV*SOa*TO%q*UO%uWOg&yi~O$S-lO%Z.VO%_.VO~OV.aOh._O!X.^O!].`O!h.YO!s.[O!t.[O%p.XO%uWO&Z]O&[]O&]]O&^]O&_]O&`]O&a]O&b]O~Oo0cOv0qOz$lq!W$lq~P'vO{.fOz$lq!W$lq~Oo0cOv0qO{*gO!W&Xy~P'vOz.gO!W&Xy~Oo0cOv.kO~P'vOs-sO!T%dO!U%cOg&Oy!W&Oy![&Oyz&Oy~P!/jO{(kO![.nO~O{(kO![.nO!m.oO~OV*SOa*TO%q*UO%uWO~Oh.tO!f.rOz$TX#[$TX%j$TXg$TX~Os$TX{$TX!W$TX![$TX~P$-bO%o.vO%p.vOs$UXz$UX{$UX#[$UX%j$UX!W$UXg$UX![$UX~O!h.xO~Oz.|O#[/OO%j.yOs&|X{&|X!W&|Xg&|X~Oa/RO~P$)zOh.tOs&}Xz&}X{&}X#[&}X%j&}X!W&}Xg&}X![&}X~Os/VO{$jO~Oo0cOv0qOz$ly!W$ly~P'vOo0cOv0qO{*gO!W&X!R~P'vOz/ZO!W&X!R~Og&RXs&RX!T&RX!U&RX!W&RX![&RXz&RX~P!/jOs-sO!T%dO!U%cOg&Qa!W&Qa![&Qaz&Qa~O{(kO![/^O~O!f.rOh$[as$[az$[a{$[a#[$[a%j$[a!W$[ag$[a![$[a~O!h/eO~O%o.vO%p.vOs$Uaz$Ua{$Ua#[$Ua%j$Ua!W$Uag$Ua![$Ua~O%j.yOs$Yaz$Ya{$Ya#[$Ya!W$Yag$Ya![$Ya~Os&|a{&|a!W&|ag&|a~P$)nOz/jOs&|a{&|a!W&|ag&|a~O!W/mO~Og/mO~O{/oO~O![/pO~Oo0cOv0qO{*gO!W&X!Z~P'vO{/sO~O%z/tO~P$-bOz/uO#[/OO%j.yOg'PX~Oz/uOg'PX~Og/wO~O!h/xO~O#[/OOs%Saz%Sa{%Sa%j%Sa!W%Sag%Sa![%Sa~O#[/OO%j.yOs%Waz%Wa{%Wa!W%Wag%Wa~Os&|i{&|i!W&|ig&|i~P$)nOz/zO#[/OO%j.yO!['Oa~Og'Pa~P$)nOz0SOg'Pa~Oa0UO!['Oi~P$)zOz0WO!['Oi~Oz0WO#[/OO%j.yO!['Oi~O#[/OO%j.yOg$biz$bi~O%z0ZO~P$-bO#[/OO%j.yOg%Vaz%Va~Og'Pi~P$)nO{0^O~Oa0UO!['Oq~P$)zOz0`O!['Oq~O#[/OO%j.yOz%Ui![%Ui~Oa0UO~P$)zOa0UO!['Oy~P$)zO#[/OO%j.yOg$ciz$ci~O#[/OO%j.yOz%Uq![%Uq~Oz+aO#g%ha%[%ha%_%ha%z%ha~P%SOV&OOo0cOv0qO~P'vOn0hO~Oo0hO~P'vO{0iO~Ot0jO~P!/jO&]&Z&j&h&i&g&f&d&e&c&b&`&a&_&^&[%u~",
     goto: "!=j'QPPPPPP'RP'Z*s+[+t,_,y-fP.SP'Z.r.r'ZPPP'Z2[PPPPPP2[5PPP5PP7b7k=sPP=v>h>kPP'Z'ZPP>zPP'Z'ZPP'Z'Z'Z'Z'Z?O?w'ZP?zP@QDXGuGyPG|HWH['ZPPPH_Hk'RP'R'RP'RP'RP'RP'RP'R'R'RP'RPP'RPP'RP'RPHqH}IVPI^IdPI^PI^I^PPPI^PKrPK{LVL]KrPI^LfPI^PLmLsPLwM]MzNeLwLwNkNxLwLwLwLw! ^! d! g! l! o! y!!P!!]!!o!!u!#P!#V!#s!#y!$P!$Z!$a!$g!$y!%T!%Z!%a!%k!%q!%w!%}!&T!&Z!&e!&k!&u!&{!'U!'[!'k!'s!'}!(UPPPPPPPPPPP!([!(_!(e!(n!(x!)TPPPPPPPPPPPP!-u!/Z!3^!6oPP!6w!7W!7a!8Y!8P!8c!8i!8l!8o!8r!8z!9jPPPPPPPPPPPPPPPPP!9m!9q!9wP!:]!:a!:m!:v!;S!;j!;m!;p!;v!;|!<S!<VP!<_!<h!=d!=g]eOn#g$j)t,P'}`OTYZ[adnoprtxy}!P!Q!R!U!X!c!d!e!f!g!h!i!k!o!p!q!s!t!z#O#S#T#[#d#g#x#y#{#}$Q$e$g$h$j$q$}%S%Z%^%`%c%g%l%n%w%|&O&Z&_&h&j&k&u&x&|'P'W'Z'l'm'p'r's'w'|(O(S(W(](^(d(g(p(r(z(})^)e)g)k)l)p)t)z*O*Y*d*g*h*k*q*r*t*v*y*z*}+Q+U+V+Y+a+c+d+k+x+y,P,X,Y,],g,h,i,k,l,o,q,s,u,w,y,z-O-d-f-m-p-s.f.g/V/Z/s0c0d0e0f0h0i0j0k0l0n0r{!cQ#c#p$R$d$p%e%j%p%q&`'O'g(q(|)j*o*x+w,v0g}!dQ#c#p$R$d$p$u%e%j%p%q&`'O'g(q(|)j*o*x+w,v0g!P!eQ#c#p$R$d$p$u$v%e%j%p%q&`'O'g(q(|)j*o*x+w,v0g!R!fQ#c#p$R$d$p$u$v$w%e%j%p%q&`'O'g(q(|)j*o*x+w,v0g!T!gQ#c#p$R$d$p$u$v$w$x%e%j%p%q&`'O'g(q(|)j*o*x+w,v0g!V!hQ#c#p$R$d$p$u$v$w$x$y%e%j%p%q&`'O'g(q(|)j*o*x+w,v0g!Z!hQ!n#c#p$R$d$p$u$v$w$x$y$z%e%j%p%q&`'O'g(q(|)j*o*x+w,v0g'}TOTYZ[adnoprtxy}!P!Q!R!U!X!c!d!e!f!g!h!i!k!o!p!q!s!t!z#O#S#T#[#d#g#x#y#{#}$Q$e$g$h$j$q$}%S%Z%^%`%c%g%l%n%w%|&O&Z&_&h&j&k&u&x&|'P'W'Z'l'm'p'r's'w'|(O(S(W(](^(d(g(p(r(z(})^)e)g)k)l)p)t)z*O*Y*d*g*h*k*q*r*t*v*y*z*}+Q+U+V+Y+a+c+d+k+x+y,P,X,Y,],g,h,i,k,l,o,q,s,u,w,y,z-O-d-f-m-p-s.f.g/V/Z/s0c0d0e0f0h0i0j0k0l0n0r&eVOYZ[dnprxy}!P!Q!U!i!k!o!p!q!s!t#[#d#g#y#{#}$Q$h$j$}%S%Z%^%`%g%l%n%w%|&Z&_&j&k&u&x'P'W'Z'l'm'p'r's'w(O(W(^(d(g(p(r(z)^)e)g)p)t)z*O*Y*d*g*h*k*q*r*t*v*y*z*}+U+V+Y+a+d+k,P,X,Y,],g,h,i,k,l,o,q,s,u,w,y,z-O-d-f-m-p-s.f.g/V/Z/s0c0d0e0f0h0i0j0k0n0r%oXOYZ[dnrxy}!P!Q!U!i!k#[#d#g#y#{#}$Q$h$j$}%S%^%`%g%l%n%w%|&Z&_&j&k&u&x'P'W'Z'l'm'p'r's'w(O(W(^(d(g(p(r(z)^)e)g)p)t)z*O*Y*d*g*h*k*q*t*v*y*z*}+U+V+Y+a+d+k,P,X,Y,],g,h,i,k,l,o,s,u,w,y,z-O-d-f-m-p.f.g/V/Z0i0j0kQ#vqQ/[.kR0o0q't`OTYZ[adnoprtxy}!P!Q!R!U!X!c!d!e!f!g!h!k!o!p!q!s!t!z#O#S#T#[#d#g#x#y#{#}$Q$e$g$h$j$q$}%S%Z%^%`%c%g%l%n%w%|&O&Z&_&h&j&k&u&x&|'P'W'Z'l'p'r's'w'|(O(S(W(](^(d(g(p(r(z(})^)e)g)k)l)p)t)z*O*Y*g*h*k*q*r*t*v*y*z*}+Q+U+V+Y+a+c+d+k+x+y,P,X,Y,],h,i,k,l,o,q,s,u,w,y,z-O-d-f-m-p-s.f.g/V/Z/s0c0d0e0f0h0i0j0k0l0n0rh#jhz{$W$Z&l&q)S)X+f+g-RW#rq&].k0qQ$]|Q$a!OQ$n!VQ$o!WW$|!i'm*d,gS&[#s#tQ'S$iQ(s&UQ)U&nU)Y&s)Z+jW)a&w+m-T-{Q*Q']W*R'_,`-h.TQ+l)`S,_*S*TQ-Q+eQ-_,TQ-c,WQ.R-al.W-l.^._.a.z.|/R/j/o/t/y0U0Z0^Q/S.`Q/a.tQ/l/OU0P/u0S0[X0V/z0W0_0`R&Z#r!_!wYZ!P!Q!k%S%`%g'p'r's(O(W)g*g*h*k*q*t*v,h,i,k,l,o-m-p.f.g/ZR%^!vQ!{YQ%x#[Q&d#}Q&g$QR,{+YT.j-s/s!Y!jQ!n#c#p$R$d$p$u$v$w$x$y$z%e%j%p%q&`'O'g(q(|)j*o*x+w,v0gQ&X#kQ'c$oR*^'dR'l$|Q%V!mR/_.r'|_OTYZ[adnoprtxy}!P!Q!R!U!X!c!d!e!f!g!h!i!k!o!p!q!s!t!z#O#S#T#[#d#g#x#y#{#}$Q$e$g$h$j$q$}%S%Z%^%`%c%g%l%n%w%|&O&Z&_&h&j&k&u&x&|'P'W'Z'l'm'p'r's'w'|(O(S(W(](^(d(g(p(r(z(})^)e)g)k)l)p)t)z*O*Y*d*g*h*k*q*r*t*v*y*z*}+Q+U+V+Y+a+c+d+k+x+y,P,X,Y,],g,h,i,k,l,o,q,s,u,w,y,z-O-d-f-m-p-s.f.g/V/Z/s0c0d0e0f0h0i0j0k0l0n0rS#a_#b!P.[-l.^._.`.a.t.z.|/R/j/o/t/u/y/z0S0U0W0Z0[0^0_0`'|_OTYZ[adnoprtxy}!P!Q!R!U!X!c!d!e!f!g!h!i!k!o!p!q!s!t!z#O#S#T#[#d#g#x#y#{#}$Q$e$g$h$j$q$}%S%Z%^%`%c%g%l%n%w%|&O&Z&_&h&j&k&u&x&|'P'W'Z'l'm'p'r's'w'|(O(S(W(](^(d(g(p(r(z(})^)e)g)k)l)p)t)z*O*Y*d*g*h*k*q*r*t*v*y*z*}+Q+U+V+Y+a+c+d+k+x+y,P,X,Y,],g,h,i,k,l,o,q,s,u,w,y,z-O-d-f-m-p-s.f.g/V/Z/s0c0d0e0f0h0i0j0k0l0n0rT#a_#bT#^^#_R(o%xa(l%x(n(o+`,{-y-z.oT+[(k+]R-z,{Q$PsQ+l)aQ,^*RR-e,_X#}s$O$P&fQ&y$aQ'a$nQ'd$oR)s'SQ)b&wV-S+m-T-{ZgOn$j)t,PXkOn)t,PQ$k!TQ&z$bQ&{$cQ'^$mQ'b$oQ)q'RQ)x'WQ){'XQ)|'YQ*Z'`S*]'c'dQ+s)gQ+u)hQ+v)iQ+z)oS+|)r*[Q,Q)vQ,R)wS,S)y)zQ,d*^Q-V+rQ-W+tQ-Y+{S-Z+},OQ-`,UQ-b,VQ-|-XQ.O-[Q.P-^Q.Q-_Q.p-}Q.q.RQ/W.dR/r/XWkOn)t,PR#mjQ'`$nS)r'S'aR,O)sQ,]*RR-f,^Q*['`Q+})rR-[,OZiOjn)t,PQ'f$pR*`'gT-j,e-ku.c-l.^._.a.t.z.|/R/j/o/t/u/y0S0U0Z0[0^t.c-l.^._.a.t.z.|/R/j/o/t/u/y0S0U0Z0[0^Q/S.`X0V/z0W0_0`!P.Z-l.^._.`.a.t.z.|/R/j/o/t/u/y/z0S0U0W0Z0[0^0_0`Q.w.YR/f.xg.z.].{/b/i/n/|0O0Q0]0a0bu.b-l.^._.a.t.z.|/R/j/o/t/u/y0S0U0Z0[0^X.u.W.b/a0PR/c.tV0R/u0S0[R/X.dQnOS#on,PR,P)tQ&^#uR(x&^S%m#R#wS(_%m(bT(b%p&`Q%a!yQ%h!}W(P%a%h(U(YQ(U%eR(Y%jQ&i$RR)O&iQ(e%qQ*{(`T+R(e*{Q'n%OR*e'nS'q%R%SY*i'q*j,m-q.hU*j'r's'tU,m*k*l*mS-q,n,oR.h-rQ#Y]R%t#YQ#_^R%y#_Q(h%vS+W(h+XR+X(iQ+](kR,|+]Q#b_R%{#bQ#ebQ%}#cW&Q#e%}({+bQ({&cR+b0gQ$OsS&e$O&fR&f$PQ&v$_R)_&vQ&V#jR(t&VQ&m$VS)T&m+hR+h)UQ$Z{R&p$ZQ&t$]R)[&tQ+n)bR-U+nQ#hfR&S#hQ)f&zR+q)fQ&}$dS)m&})nR)n'OQ'V$kR)u'VQ'[$lS*P'[,ZR,Z*QQ,a*VR-i,aWjOn)t,PR#ljQ-k,eR.U-kd.{.]/b/i/n/|0O0Q0]0a0bR/h.{U.s.W/a0PR/`.sQ/{/nS0X/{0YR0Y/|S/v/b/cR0T/vQ.}.]R/k.}R!ZPXmOn)t,PWlOn)t,PR'T$jYfOn$j)t,PR&R#g[sOn#g$j)t,PR&d#}&dQOYZ[dnprxy}!P!Q!U!i!k!o!p!q!s!t#[#d#g#y#{#}$Q$h$j$}%S%Z%^%`%g%l%n%w%|&Z&_&j&k&u&x'P'W'Z'l'm'p'r's'w(O(W(^(d(g(p(r(z)^)e)g)p)t)z*O*Y*d*g*h*k*q*r*t*v*y*z*}+U+V+Y+a+d+k,P,X,Y,],g,h,i,k,l,o,q,s,u,w,y,z-O-d-f-m-p-s.f.g/V/Z/s0c0d0e0f0h0i0j0k0n0rQ!nTQ#caQ#poU$Rt%c(SS$d!R$gQ$p!XQ$u!cQ$v!dQ$w!eQ$x!fQ$y!gQ$z!hQ%e!zQ%j#OQ%p#SQ%q#TQ&`#xQ'O$eQ'g$qQ(q&OU(|&h(}+cW)j&|)l+x+yQ*o'|Q*x(]Q+w)kQ,v+QR0g0lQ!yYQ!}ZQ$b!PQ$c!QQ%R!kQ't%S^'{%`%g(O(W*q*t*v^*f'p*h,k,l-p.g/ZQ*l'rQ*m'sQ+t)gQ,j*gQ,n*kQ-n,hQ-o,iQ-r,oQ.e-mR/Y.f[bOn#g$j)t,P!^!vYZ!P!Q!k%S%`%g'p'r's(O(W)g*g*h*k*q*t*v,h,i,k,l,o-m-p.f.g/ZQ#R[Q#fdS#wrxQ$UyW$_}$Q'P)pS$l!U$hW${!i'm*d,gS%v#[+Y`&P#d%|(p(r(z+a-O0kQ&a#yQ&b#{Q&c#}Q'j$}Q'z%^W([%l(^*y*}Q(`%nQ(i%wQ(v&ZS(y&_0iQ)P&jQ)Q&kU)]&u)^+kQ)d&xQ)y'WY)}'Z*O,X,Y-dQ*b'lS*n'w0jW+P(d*z,s,wW+T(g+V,y,zQ+p)eQ,U)zQ,c*YQ,x+UQ-P+dQ-e,]Q-v,uQ.S-fR/q/VhUOn#d#g$j%|&_'w(p(r)t,P%U!uYZ[drxy}!P!Q!U!i!k#[#y#{#}$Q$h$}%S%^%`%g%l%n%w&Z&j&k&u&x'P'W'Z'l'm'p'r's(O(W(^(d(g(z)^)e)g)p)z*O*Y*d*g*h*k*q*t*v*y*z*}+U+V+Y+a+d+k,X,Y,],g,h,i,k,l,o,s,u,w,y,z-O-d-f-m-p.f.g/V/Z0i0j0kQ#qpW%W!o!s0d0nQ%X!pQ%Y!qQ%[!tQ%f0cS'v%Z0hQ'x0eQ'y0fQ,p*rQ-u,qS.i-s/sR0p0rU#uq.k0qR(w&][cOn#g$j)t,PZ!xY#[#}$Q+YQ#W[Q#zrR$TxQ%b!yQ%i!}Q%o#RQ'j${Q(V%eQ(Z%jQ(c%pQ(f%qQ*|(`Q,f*bQ-t,pQ.m-uR/].lQ$StQ(R%cR*s(SQ.l-sR/}/sR#QZR#V[R%Q!iQ%O!iV*c'm*d,g!Z!lQ!n#c#p$R$d$p$u$v$w$x$y$z%e%j%p%q&`'O'g(q(|)j*o*x+w,v0gR%T!kT#]^#_Q%x#[R,{+YQ(m%xS+_(n(oQ,}+`Q-x,{S.n-y-zR/^.oT+Z(k+]Q$`}Q&g$QQ)o'PR+{)pQ$XzQ)W&qR+i)XQ$XzQ&o$WQ)W&qR+i)XQ#khW$Vz$W&q)XQ$[{Q&r$ZZ)R&l)S+f+g-RR$^|R)c&wXlOn)t,PQ$f!RR'Q$gQ$m!UR'R$hR*X'_Q*V'_V-g,`-h.TQ.d-lQ/P.^R/Q._U.]-l.^._Q/U.aQ/b.tQ/g.zU/i.|/j/yQ/n/RQ/|/oQ0O/tU0Q/u0S0[Q0]0UQ0a0ZR0b0^R/T.`R/d.t",
     nodeNames: "⚠ print Escape { Comment Script AssignStatement * BinaryExpression BitOp BitOp BitOp BitOp ArithOp ArithOp @ ArithOp ** UnaryExpression ArithOp BitOp AwaitExpression await ) ( ParenthesizedExpression BinaryExpression or and CompareOp in not is UnaryExpression ConditionalExpression if else LambdaExpression lambda ParamList VariableName AssignOp , : NamedExpression AssignOp YieldExpression yield from TupleExpression ComprehensionExpression async for LambdaExpression ] [ ArrayExpression ArrayComprehensionExpression } { DictionaryExpression DictionaryComprehensionExpression SetExpression SetComprehensionExpression CallExpression ArgList AssignOp MemberExpression . PropertyName Number String FormatString FormatReplacement FormatSelfDoc FormatConversion FormatSpec FormatReplacement FormatSelfDoc ContinuedString Ellipsis None Boolean TypeDef AssignOp UpdateStatement UpdateOp ExpressionStatement DeleteStatement del PassStatement pass BreakStatement break ContinueStatement continue ReturnStatement return YieldStatement PrintStatement RaiseStatement raise ImportStatement import as ScopeStatement global nonlocal AssertStatement assert TypeDefinition type TypeParamList TypeParam StatementGroup ; IfStatement Body elif WhileStatement while ForStatement TryStatement try except finally WithStatement with FunctionDefinition def ParamList AssignOp TypeDef ClassDefinition class DecoratedStatement Decorator At MatchStatement match MatchBody MatchClause case CapturePattern LiteralPattern ArithOp ArithOp AsPattern OrPattern LogicOp AttributePattern SequencePattern MappingPattern StarPattern ClassPattern PatternArgList KeywordPattern KeywordPattern Guard",
@@ -35228,11 +35400,11 @@
    */
 
 
-  /** @arg {typeof import("./cm_adapter").CodeMirror} CM */
+  /** @arg {import("./types").CodeMirrorConstructor} CM */
   function initVim(CM) {
 
   /**
-   * @typedef { import("./cm_adapter").CodeMirror } CodeMirror
+   * @typedef { import("./types").CM5EditorInterface } CodeMirror
    * @typedef { import("./types").CodeMirrorV} CodeMirrorV
    * @typedef { import("./types").Pos } Pos
    * @typedef { import("./types").vimState } vimState 
@@ -35366,6 +35538,7 @@
       { keys: 'g~', type: 'operator', operator: 'changeCase' },
       { keys: 'gu', type: 'operator', operator: 'changeCase', operatorArgs: {toLower: true}, isEdit: true },
       { keys: 'gU', type: 'operator', operator: 'changeCase', operatorArgs: {toLower: false}, isEdit: true },
+      { keys: 'gc', type: 'operator', operator: 'toggleComment', isEdit: true },
       { keys: 'n', type: 'motion', motion: 'findNext', motionArgs: { forward: true, toJumplist: true }},
       { keys: 'N', type: 'motion', motion: 'findNext', motionArgs: { forward: false, toJumplist: true }},
       { keys: 'gn', type: 'motion', motion: 'findAndSelectNextInclusive', motionArgs: { forward: true }},
@@ -35488,6 +35661,7 @@
       { name: 'startinsert', shortName: 'start' },
       { name: 'nohlsearch', shortName: 'noh' },
       { name: 'yank', shortName: 'y' },
+      { name: 'put', shortName: 'pu' },
       { name: 'delmarks', shortName: 'delm' },
       { name: 'marks',  excludeFromCommandHistory: true },
       { name: 'registers', shortName: 'reg', excludeFromCommandHistory: true },
@@ -37171,6 +37345,12 @@
           if (vim.visualMode) {
             promptOptions.value = '\'<,\'>';
             promptOptions.selectValueOnOpen = false;
+          } else {
+            var repeat = vim.inputState.getRepeat();
+            if (repeat > 1) {
+              promptOptions.value = '.,.+' + (repeat - 1);
+              promptOptions.selectValueOnOpen = false;
+            }
           }
           showPrompt(cm, promptOptions);
         }
@@ -37631,21 +37811,15 @@
           default:
             vim.lastHSPos = cm.charCoords(cur,'div').left;
         }
-        var repeat = motionArgs.repeat;
-        var res=cm.findPosV(cur,(motionArgs.forward ? repeat : -repeat),'line',vim.lastHSPos);
-        if (res.hitSide) {
-          if (motionArgs.forward) {
-            var lastCharCoords = cm.charCoords(res, 'div');
-            var goalCoords = { top: lastCharCoords.top + 8, left: vim.lastHSPos };
-            res = cm.coordsChar(goalCoords, 'div');
-          } else {
-            var resCoords = cm.charCoords(new Pos(cm.firstLine(), 0), 'div');
-            resCoords.left = vim.lastHSPos;
-            res = cm.coordsChar(resCoords, 'div');
-          }
+        var repeat = Math.round(motionArgs.repeat);
+        for (var i = 0; i < repeat; i++) {
+          var res=cm.findPosV(cur,(motionArgs.forward ? 1 : -1),'line',vim.lastHSPos);
+          if (res.hitSide) break;
+          cur = res;
         }
-        vim.lastHPos = res.ch;
-        return res;
+        if (cur != head)
+          vim.lastHPos = cur.ch;
+        return cur;
       },
       moveByPage: function(cm, head, motionArgs) {
         // CodeMirror only exposes functions that move the cursor page down, so
@@ -37869,11 +38043,9 @@
         var repeat = motionArgs.repeat;
         var forward = motionArgs.forward === lastSearch.forward;
         var increment = (lastSearch.increment ? 1 : 0) * (forward ? -1 : 1);
-        cm.moveH(-increment, 'char');
         motionArgs.inclusive = forward ? true : false;
-        var curEnd = moveToCharacter(cm, repeat, forward, lastSearch.selectedCharacter);
+        var curEnd = moveToCharacter(cm, repeat, forward, lastSearch.selectedCharacter, offsetCursor(head, 0, -increment));
         if (!curEnd) {
-          cm.moveH(increment, 'char');
           return head;
         }
         curEnd.ch += increment;
@@ -38049,6 +38221,10 @@
         if (endRow > from && operatorArgs.linewise) endRow--;
         return operatorArgs.keepCursor ? oldAnchor : new Pos(endRow, 0);
       },
+      toggleComment: function(cm, _args, ranges, oldAnchor, newHead) {
+        cm.execCommand("toggleLineComment");
+        return newHead;
+      },
       changeCase: function(cm, args, ranges, oldAnchor, newHead) {
         var selections = cm.getSelections();
         var swapped = [];
@@ -38089,6 +38265,9 @@
         vimGlobalState.registerController.pushText(
             args.registerName, 'yank',
             text, args.linewise, vim.visualBlock);
+        
+        var lineCount = Math.abs(cm.getCursor("end").line - cm.getCursor("start").line) || 1;      
+        showConfirm(cm, lineCount + ' lines yanked' + (args.registerName ? ' into "' + args.registerName : ''), false, 1500);
         return endPos;
       },
       rot13: function(cm, args, ranges, oldAnchor, newHead) {
@@ -38479,7 +38658,7 @@
         if (actionArgs.repeat > 1) {
           text = Array(actionArgs.repeat + 1).join(text);
         }
-        var linewise = register.linewise;
+        var linewise = actionArgs.linewise == undefined ? register.linewise : actionArgs.linewise;
         var blockwise = register.blockwise;
         var textLines = blockwise ? text.split('\n') : undefined;
         if (textLines) {
@@ -40468,8 +40647,8 @@
       return n;
     }
 
-    /** @arg {CodeMirror} cm  @arg {any} template  @arg {boolean} [long]*/
-    function showConfirm(cm, template, long) {
+    /** @arg {CodeMirror} cm  @arg {any} template  @arg {boolean} [long] @arg {number} [duration]*/
+    function showConfirm(cm, template, long, duration) {
       var pre = dom('div', {$color: 'red', $whiteSpace: 'pre', class: 'cm-vim-message'}, template);
       if (cm.openNotification) {
         if (long) {
@@ -40479,9 +40658,9 @@
           }
           cm.state.closeVimNotification = cm.openNotification(pre, {bottom: true, duration: 0});
         } else {
-          cm.openNotification(pre, {bottom: true, duration: 15000});
+          cm.openNotification(pre, {bottom: true, duration: duration || 15000});
         }
-      } else {
+      } else if (!duration) {
         alert(pre.innerText);
       }
     }
@@ -40808,7 +40987,7 @@
           this.parseInput_(cm, inputStream, params);
         } catch(e) {
           showConfirm(cm, e + "");
-          throw e;
+          return;
         }
 
         if (vim.visualMode) {
@@ -40860,7 +41039,7 @@
       }
       /**
        * @param {CodeMirrorV} cm
-       * @param {import("@codemirror/language").StringStream} inputStream
+       * @param {import("./types").StringStream} inputStream
        * @param {{ callback?: (() => void) | undefined; input?: string | undefined; line?: any; commandName?: any; lineEnd?: any; selectionLine?: any; selectionLineEnd?: any; }} result
        */
       parseInput_(cm, inputStream, result) {
@@ -40869,6 +41048,12 @@
         if (inputStream.eat('%')) {
           result.line = cm.firstLine();
           result.lineEnd = cm.lastLine();
+        } else if (inputStream.eat('*')) {
+          var lastSelection = cm.state.vim.lastSelection;
+          var anchor = lastSelection?.anchorMark.find()?.line || 0;
+          var head = lastSelection?.headMark.find()?.line || 0;
+          result.line = Math.max(anchor, head);
+          result.lineEnd = Math.min(anchor, head);
         } else {
           result.line = this.parseLineSpec_(cm, inputStream);
           if (result.line !== undefined && inputStream.eat(',')) {
@@ -40888,6 +41073,7 @@
           result.selectionLineEnd = result.lineEnd;
         }
 
+        inputStream.eatSpace();
         // Parse command name.
         var commandMatch = inputStream.match(/^(\w+|!!|@@|[!#&*<=>@~])/);
         if (commandMatch) {
@@ -40900,53 +41086,78 @@
       }
       /**
        * @param {CodeMirrorV} cm
-       * @param {import("@codemirror/language").StringStream} inputStream
+       * @param {import("./types").StringStream} inputStream
        */
       parseLineSpec_(cm, inputStream) {
-        var numberMatch = inputStream.match(/^(\d+)/);
+        var numberMatch = inputStream.match(/^([\d]+)/);
         if (numberMatch) {
-          // Absolute line number plus offset (N+M or N-M) is probably a typo,
-          // not something the user actually wanted. (NB: vim does allow this.)
-          return parseInt(numberMatch[1], 10) - 1;
+          return this.parseLineSpecOffset_(cm, inputStream, parseInt(numberMatch[1], 10) - 1);
         }
         switch (inputStream.next()) {
           case '.':
-            return this.parseLineSpecOffset_(inputStream, cm.getCursor().line);
+            return this.parseLineSpecOffset_(cm, inputStream, cm.getCursor().line);
           case '$':
-            return this.parseLineSpecOffset_(inputStream, cm.lastLine());
+            return this.parseLineSpecOffset_(cm, inputStream, cm.lastLine());
           case '\'':
             var markName = inputStream.next() || "";
             var markPos = getMarkPos(cm, cm.state.vim, markName);
             if (!markPos) throw new Error('Mark not set');
-            return this.parseLineSpecOffset_(inputStream, markPos.line);
+            return this.parseLineSpecOffset_(cm, inputStream, markPos.line);
           case '-':
           case '+':
+          case '/':
+          case '?':
             inputStream.backUp(1);
             // Offset is relative to current line if not otherwise specified.
-            return this.parseLineSpecOffset_(inputStream, cm.getCursor().line);
+            return this.parseLineSpecOffset_(cm, inputStream, cm.getCursor().line);
           default:
             inputStream.backUp(1);
             return undefined;
         }
       }
       /**
-       * @param {string | import("@codemirror/language").StringStream} inputStream
+       * @param {CodeMirrorV} cm
+       * @param {string | import("./types").StringStream} inputStream
        * @param {number} line
        */
-      parseLineSpecOffset_(inputStream, line) {
-        var offsetMatch = inputStream.match(/^([+-])?(\d+)/);
-        if (offsetMatch) {
-          var offset = parseInt(offsetMatch[2], 10);
-          if (offsetMatch[1] == "-") {
-            line -= offset;
+      parseLineSpecOffset_(cm, inputStream, line) {
+        while (true) {
+          var offsetMatch = inputStream.match(/^([\/\?]|\\[\?\/])|([+-]?)(\d*)/);
+          if (!offsetMatch || !offsetMatch[0])
+            break;
+
+          if (offsetMatch[1]) {
+            var queryString = "";
+            var forward = !offsetMatch[1].endsWith("?");
+            if (offsetMatch[1].length == 1) {
+              var queryMatch = inputStream.match(forward ? /^([^\/\\]|\\\/)*/ : /^([^\/\?]|\\\?)*/);
+              inputStream.match(forward ? /^\/?/ : /^\??/);
+              queryString = queryMatch && queryMatch[0];
+            }
+            if (!queryString) {
+              queryString = vimGlobalState.registerController.getRegister('/')?.toString() || "";
+            }
+            var query = new RegExp(queryString);
+            var cursor = cm.getSearchCursor(query, new Pos(line + (forward ? 1 : 0), 0));
+            if (forward) {
+              cursor.findNext(); 
+            } else {
+              cursor.findPrevious(); 
+            }
+            var nextPos = cursor.from();
+            if (!nextPos) {
+              throw new Error("Pattern not found" + query);
+            }
+            line = nextPos.line;
           } else {
+            var offset = parseInt(offsetMatch[2] + (offsetMatch[3] || '1'), 10);
             line += offset;
           }
         }
         return line;
       }
       /**
-       * @param {import("@codemirror/language").StringStream} inputStream
+       * @param {import("./types").StringStream} inputStream
        * @param {import("./types").exCommandArgs} params
        * @param {import("./types").exCommandDefinition} command
        */
@@ -41240,16 +41451,17 @@
       },
       /** @arg {CodeMirrorV} cm @arg {ExParams} params*/
       sort: function(cm, params) {
-        var reverse, ignoreCase, unique, number, pattern;
+        var reverse, ignoreCase, unique, number, pattern, includeMatch;
         function parseArgs() {
           if (params.argString) {
             var args = new CM.StringStream(params.argString);
             if (args.eat('!')) { reverse = true; }
             if (args.eol()) { return; }
             if (!args.eatSpace()) { return 'Invalid arguments'; }
-            var opts = args.match(/([dinuox]+)?\s*(\/.+\/)?\s*/);
+            var opts = args.match(/([dinuoxr]+)?\s*(\/.+\/)?\s*/);
             if (!opts || !args.eol()) { return 'Invalid arguments'; }
             if (opts[1]) {
+              includeMatch = opts[1].indexOf('r') != -1;
               ignoreCase = opts[1].indexOf('i') != -1;
               unique = opts[1].indexOf('u') != -1;
               var decimal = opts[1].indexOf('d') != -1 || opts[1].indexOf('n') != -1;
@@ -41283,6 +41495,9 @@
         if (number || pattern) {
           for (var i = 0; i < text.length; i++) {
             var matchPart = pattern ? text[i].match(pattern) : null;
+            if (matchPart && matchPart.index != null && !includeMatch) {
+              matchPart[0] = text[i].slice(matchPart.index + matchPart[0].length);
+            }
             if (matchPart && matchPart[0] != '') {
               numPart.push(matchPart);
             } else if (numberRegex && numberRegex.exec(text[i])) {
@@ -41545,13 +41760,40 @@
       nohlsearch: function(cm) {
         clearSearchHighlight(cm);
       },
-      /** @arg {CodeMirrorV} cm */
-      yank: function (cm) {
-        var cur = copyCursor(cm.getCursor());
-        var line = cur.line;
-        var lineText = cm.getLine(line);
+      /** @arg {CodeMirrorV} cm  @arg {ExParams} params */
+      yank: function (cm, params) {
+        var line = params.selectionLine;
+        var lineEnd = isNaN(params.selectionLineEnd) ? line : params.selectionLineEnd;
+        if (lineEnd < line) { 
+          var tmp = lineEnd;
+          lineEnd = line;
+          line = tmp;
+        }
+        var text = cm.getRange(new Pos(line, 0), new Pos(lineEnd + 1, 0));
+        var registerName = params.args && params.args[0] ? params.args[0] : '0';
         vimGlobalState.registerController.pushText(
-          '0', 'yank', lineText, true, true);
+          registerName, 'yank', text, true, false);
+        showConfirm(cm, (lineEnd + 1 - line) + ' lines yanked' + (registerName ? ' into "' + registerName : ''), false, 1500);
+      },
+      /** @arg {CodeMirrorV} cm @arg {ExParams} params @arg {boolean} [matchIndent]*/
+      put: function(cm, params, matchIndent) {
+        var actionArgs = { after: true, isEdit: true, matchIndent: !!matchIndent, repeat: 1, lineWise: true, registerName: '' };
+        var args = params.args || [];
+        if (args[0] == "!") {
+          actionArgs.after = false;
+          args.shift();
+        }
+        if (args[0]) {
+          actionArgs.registerName = args[0];
+        }
+        var line = params.selectionLine; 
+        if (line != undefined)
+          cm.setCursor(new Pos(line, 0));
+        actions.paste(cm, actionArgs, cm.state.vim);
+      },
+      /** @arg {CodeMirrorV} cm @arg {ExParams} params*/
+      iput: function(cm, params) {
+        this.put(cm, params, true);
       },
       /** @arg {CodeMirrorV} cm @arg {ExParams} params*/
       delete: function(cm, params) {
@@ -41635,7 +41877,7 @@
     var exCommandDispatcher = new ExCommandDispatcher();
 
     vimApi.defineEx("version", "ve", (cm) => {
-      showConfirm(cm, "Codemirror-vim version: 6.3.0");
+      showConfirm(cm, "Codemirror-vim version: <DEV>");
     });
 
     /**
@@ -42645,8 +42887,8 @@
       }
       ;
       execCommand(name) {
-          if (name == "indentAuto")
-              CodeMirror.commands.indentAuto(this);
+          if (CodeMirror.commands.hasOwnProperty(name))
+              CodeMirror.commands[name](this);
           else if (name == "goLineLeft")
               cursorLineBoundaryBackward(this.cm6);
           else if (name == "goLineRight") {
@@ -43031,6 +43273,7 @@
   CodeMirror.Pos = Pos;
   CodeMirror.StringStream = StringStream;
   CodeMirror.commands = {
+      toggleLineComment: function (cm) { toggleLineComment(cm.cm6); },
       cursorCharLeft: function (cm) { cursorCharLeft(cm.cm6); },
       redo: function (cm) { runHistoryCommand(cm, false); },
       undo: function (cm) { runHistoryCommand(cm, true); },
@@ -43611,7 +43854,7 @@
                   return;
               cm.state.vim.mode = e.mode;
               if (e.subMode) {
-                  cm.state.vim.mode += " block";
+                  cm.state.vim.mode += e.subMode === "linewise" ? " line" : " block";
               }
               cm.state.vim.status = "";
               this.blockCursor.scheduleRedraw();

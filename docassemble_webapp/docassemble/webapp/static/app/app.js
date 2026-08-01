@@ -53,7 +53,8 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (e) {
       console.error(
         "Error with JavaScript code of CustomDataType " +
-          daCustomItems[i].datatype, e.stack
+          daCustomItems[i].datatype,
+        e.stack,
       );
     }
   }
@@ -2739,7 +2740,7 @@ function daValidationHandler(form) {
       setTimeout(function () {
         try {
           daProcessAjax(
-            $.parseJSON(
+            JSON.parse(
               daUnfakeHtmlResponse($("#dauploadiframe").contents().text()),
             ),
             form,
@@ -2748,7 +2749,7 @@ function daValidationHandler(form) {
         } catch (e) {
           try {
             daProcessAjax(
-              $.parseJSON($("#dauploadiframe").contents().text()),
+              JSON.parse($("#dauploadiframe").contents().text()),
               form,
               1,
             );
@@ -2889,7 +2890,7 @@ function daResumeUploadSubmission(
     iframe.bind("load", function () {
       setTimeout(function () {
         daProcessAjax(
-          $.parseJSON($("#dauploadiframe").contents().text()),
+          JSON.parse($("#dauploadiframe").contents().text()),
           form,
           1,
         );
@@ -3319,7 +3320,7 @@ function daReviewAction(e) {
     return false;
   }
   //action_perform_with_next($(this).data('action'), null, daNextAction);
-  var info = $.parseJSON(atou($(this).data("action")));
+  var info = JSON.parse(atou($(this).data("action")));
   da_action_perform(info["action"], info["arguments"]);
   e.preventDefault();
   return false;
@@ -5075,7 +5076,7 @@ function daInitialize(doScroll) {
   }
   $("input.dauncheckspecificothers").on("change", function () {
     if ($(this).is(":checked")) {
-      var theIds = $.parseJSON(atou($(this).data("unchecklist")));
+      var theIds = JSON.parse(atou($(this).data("unchecklist")));
       var n = theIds.length;
       for (var i = 0; i < n; ++i) {
         var elem = document.getElementById(theIds[i]);
@@ -5085,7 +5086,7 @@ function daInitialize(doScroll) {
     }
   });
   $("input.dauncheckspecificothers").each(function () {
-    var theIds = $.parseJSON(atou($(this).data("unchecklist")));
+    var theIds = JSON.parse(atou($(this).data("unchecklist")));
     var n = theIds.length;
     var oThis = this;
     for (var i = 0; i < n; ++i) {
@@ -5110,7 +5111,7 @@ function daInitialize(doScroll) {
   });
   $("input.dacheckspecificothers").on("change", function () {
     if ($(this).is(":checked")) {
-      var theIds = $.parseJSON(atou($(this).data("checklist")));
+      var theIds = JSON.parse(atou($(this).data("checklist")));
       var n = theIds.length;
       for (var i = 0; i < n; ++i) {
         var elem = document.getElementById(theIds[i]);
@@ -5120,7 +5121,7 @@ function daInitialize(doScroll) {
     }
   });
   $("input.dacheckspecificothers").each(function () {
-    var theIds = $.parseJSON(atou($(this).data("checklist")));
+    var theIds = JSON.parse(atou($(this).data("checklist")));
     var n = theIds.length;
     var oThis = this;
     for (var i = 0; i < n; ++i) {
@@ -5194,7 +5195,7 @@ function daInitialize(doScroll) {
   daVarLookupRevMulti = Object();
   daVarLookupOption = Object();
   if ($("input[name='_varnames']").length) {
-    the_hash = $.parseJSON(atou($("input[name='_varnames']").val()));
+    the_hash = JSON.parse(atou($("input[name='_varnames']").val()));
     for (var key in the_hash) {
       if (the_hash.hasOwnProperty(key)) {
         daVarLookup[the_hash[key]] = key;
@@ -5214,7 +5215,7 @@ function daInitialize(doScroll) {
     var patt = new RegExp(/\[B['"][^\]]*['"]\]$/);
     var pattObj = new RegExp(/\[O['"][^\]]*['"]\]$/);
     var pattRaw = new RegExp(/\[R['"][^\]]*['"]\]$/);
-    the_hash = $.parseJSON(atou($("input[name='_checkboxes']").val()));
+    the_hash = JSON.parse(atou($("input[name='_checkboxes']").val()));
     for (var key in the_hash) {
       if (the_hash.hasOwnProperty(key)) {
         var checkboxName = atou(key);

@@ -236,6 +236,7 @@ if [ "${RESTOREFROMBACKUP}" == "true" ]; then
             cd /
             tar -xf /tmp/letsencrypt.tar.gz
             rm -f /tmp/letsencrypt.tar.gz
+	    cd /tmp
         else
             rm -f /etc/letsencrypt/da_using_lets_encrypt
         fi
@@ -294,6 +295,7 @@ if [ "${RESTOREFROMBACKUP}" == "true" ]; then
             cd /
             tar -xf /tmp/letsencrypt.tar.gz
             rm -f /tmp/letsencrypt.tar.gz
+	    cd /tmp
         else
             rm -f /etc/letsencrypt/da_using_lets_encrypt
         fi
@@ -388,6 +390,7 @@ if [ "${RESTOREFROMBACKUP}" == "true" ]; then
             echo "initialize: Restoring Let's Encrypt information from backup" >&2
             cd /
             tar -xf "${DA_ROOT}/backup/letsencrypt.tar.gz"
+	    cd /tmp
         fi
         if [[ $CONTAINERROLE =~ .*:(all|web|log):.* ]] && [ -d "${DA_ROOT}/backup/apache" ]; then
             echo "initialize: Restoring Apache information from backup" >&2
@@ -1443,6 +1446,7 @@ if [ "${DAWEBSERVER:-nginx}" = "nginx" ]; then
             rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
             tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
         fi
+	cd /tmp
     fi
     if [[ $CONTAINERROLE =~ .*:(all|web):.* ]]; then
 	if [ "${ENABLEMONITOR:-true}" = "true" ]; then
@@ -1482,6 +1486,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                     s4cmd -f put /tmp/letsencrypt.tar.gz "s3://${S3BUCKET}/letsencrypt.tar.gz"
                     rm -f /tmp/letsencrypt.tar.gz
                 fi
+		cd /tmp
             fi
             if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
                 echo "initialize: Copying Apache to S3" >&2
@@ -1497,6 +1502,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                     az storage blob upload --no-progress --overwrite true --only-show-errors --output none --container-name "${AZURECONTAINER}" -f "/tmp/letsencrypt.tar.gz" -n "letsencrypt.tar.gz"
                     rm -f /tmp/letsencrypt.tar.gz
                 fi
+		cd /tmp
             fi
             echo "initialize: Looking for Apache folder on Azure Blob Storage, if applicable" >&2
             if [[ $CONTAINERROLE =~ .*:(all):.* ]] || [[ ! $(python -m docassemble.webapp.list-cloud apache) ]]; then
@@ -1513,6 +1519,7 @@ if [ "${DAWEBSERVER:-nginx}" = "apache" ]; then
                     cd /
                     rm -f "${DA_ROOT}/backup/letsencrypt.tar.gz"
                     tar -zcf "${DA_ROOT}/backup/letsencrypt.tar.gz" etc/letsencrypt
+		    cd /tmp
                 fi
                 mkdir -p "${DA_ROOT}/backup/apache"
                 rsync -auq --delete /etc/apache2/sites-available/ "${DA_ROOT}/backup/apache/"
