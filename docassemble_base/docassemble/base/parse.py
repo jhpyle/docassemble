@@ -2284,11 +2284,21 @@ class Question:
             else:
                 raise DASourceError("When allowed to set is not a list, it must be plain text." + self.idebug(data))
         if 'hide continue button' in data and 'question' in data:
-            self.hide_continue_button = compile(data['hide continue button'], '<hide continue button>', 'eval')
-            self.find_fields_in(data['hide continue button'])
+            if isinstance(data['hide continue button'], str):
+                data['hide continue button'] = data['hide continue button'].strip()
+                if data['hide continue button'] != '':
+                    self.hide_continue_button = compile(data['hide continue button'], '<hide continue button>', 'eval')
+                    self.find_fields_in(data['hide continue button'])
+            elif data['hide continue button']:
+                self.hide_continue_button = True
         if 'disable continue button' in data and 'question' in data:
-            self.disable_continue_button = compile(data['disable continue button'], '<disable continue button>', 'eval')
-            self.find_fields_in(data['disable continue button'])
+            if isinstance(data['disable continue button'], str):
+                data['disable continue button'] = data['disable continue button'].strip()
+                if data['disable continue button'] != '':
+                    self.disable_continue_button = compile(data['disable continue button'], '<disable continue button>', 'eval')
+                    self.find_fields_in(data['disable continue button'])
+            elif data['disable continue button']:
+                self.disable_continue_button = True
         if 'usedefs' in data:
             defs = []
             if isinstance(data['usedefs'], list):
@@ -5777,7 +5787,11 @@ class Question:
                         raise DAError("allowed to set code did not evaluate to a list of text items")
         for item in ('hide_continue_button', 'disable_continue_button'):
             if hasattr(self, item):
-                extras[item] = bool(eval(getattr(self, item), user_dict))
+                val = getattr(self, item)
+                if isinstance(val, bool):
+                    extras[item] = val
+                else:
+                    extras[item] = bool(eval(val, user_dict))
         if self.reload_after is not None:
             number = str(self.reload_after.text(user_dict))
             if number not in ("False", "false", "Null", "None", "none", "null"):
