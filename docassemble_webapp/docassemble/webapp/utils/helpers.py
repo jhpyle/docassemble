@@ -19,6 +19,7 @@ import subprocess
 from subprocess import Popen, PIPE
 import tempfile
 import time
+import traceback
 import types
 import unicodedata
 import uuid
@@ -1805,7 +1806,7 @@ def get_vars_in_use(interview, interview_status, debug_mode=False, return_json=F
                 has_error = True
                 error_message = str(errmess)
                 error_type = type(errmess)
-                logmessage("get_vars_in_use: failed assembly with error type " + str(error_type) + " and message: " + error_message)
+                logmessage("get_vars_in_use: failed assembly with error type " + str(error_type) + " and message: " + error_message + "\n" + traceback.format_exc())
             set_language(old_language)
     fields_used = set()
     names_used = set()
