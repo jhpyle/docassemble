@@ -717,6 +717,7 @@ class InterviewStatus:
             for item in self.extras['action_buttons']:
                 new_item = copy.deepcopy(item)
                 new_item['label'] = markdown_to_html(item['label'], trim=True, do_terms=False, status=self, verbatim=not encode)
+                result['additional_buttons'].append(new_item)
                 if debug:
                     output['question'] += '<p>' + new_item['label'] + '</p>'
         if hasattr(self, 'question_text') and getattr(self, 'question_text') is not None:
