@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.10.7] - 2026-08-01
+
+### Fixed
+
+- Downgraded `nltk` in order to avoid requiring a system upgrade.
+
 ## [1.10.6] - 2026-08-01
 
 ### Added
