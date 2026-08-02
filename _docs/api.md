@@ -2892,7 +2892,9 @@ Parameters:
 Required privileges:
 
  - `admin` or
- - `developer`
+ - `developer` or
+ - [permissions] of `manage_packages` or
+ - [permissions] of `read_packages`
 
 Responses on failure:
 
@@ -2953,7 +2955,8 @@ File data:
 Required privileges:
 
  - `admin` or
- - `developer`
+ - `developer` or
+ - [permissions] of `manage_packages`
 
 Responses on failure:
 
@@ -3003,7 +3006,8 @@ Parameters:
 Required privileges:
 
  - `admin` or
- - `developer`
+ - `developer` or
+ - [permissions] of `manage_packages`
 
 Responses on failure:
 
