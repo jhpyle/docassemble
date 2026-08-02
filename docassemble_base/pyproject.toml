@@ -3,7 +3,7 @@ requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "docassemble.base"
-version = '1.10.5'
+version = '1.10.6'
 description = "The base components of the docassemble system."
 readme = "README.md"
 authors = [
