@@ -11,7 +11,7 @@ import PIL
 from cairosvg import svg2png
 from ..logger import logmessage
 from ..hooks import file_finder, fg_make_png_for_pdf_path, fg_make_pdf_for_word_path
-from ..rtfng.object.picture import Image
+from docassemble_rtfng.object.picture import Image
 from .utils import (
     convert_length,
     replace_fields,

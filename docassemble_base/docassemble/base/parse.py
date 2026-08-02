@@ -32,6 +32,8 @@ try:
 except ImportError:
     from backports import zoneinfo  # type: ignore[no-redef]
 from bs4 import BeautifulSoup
+from docassemble_mako.exceptions import SyntaxException, CompileException
+from docassemble_mako.template import Template as MakoTemplate
 from docassemble_textstat.textstat import textstat
 import qrcode
 import qrcode.image.svg
@@ -114,8 +116,6 @@ from .hooks import (
 from .jinja import custom_jinja_env
 from .language.control import set_language
 from .logger import logmessage
-from .mako.exceptions import SyntaxException, CompileException
-from .mako.template import Template as MakoTemplate
 from .pandoc import MyPandoc, word_to_pdf, update_references
 from .pdftk import fill_template
 from .thread_context import this_thread
