@@ -3,12 +3,9 @@ USER root
 COPY . /tmp/docassemble/
 RUN DEBIAN_FRONTEND=noninteractive TERM=xterm LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
-"apt-get -q -y update \
-&& ln -s /var/mail/mail /var/mail/root \
-&& cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
+"cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/VERSION /usr/share/docassemble/webapp/ \
-&& cp /tmp/docassemble/Docker/pip.conf /usr/share/docassemble/local3.14/ \
 && cp /tmp/docassemble/Docker/config/* /usr/share/docassemble/config/ \
 && cp /tmp/docassemble/Docker/cgi-bin/index.sh /usr/lib/cgi-bin/ \
 && cp /tmp/docassemble/Docker/syslog-ng.conf /usr/share/docassemble/webapp/syslog-ng.conf \
@@ -44,22 +41,8 @@ bash -c \
    /usr/share/docassemble/log \
    /usr/share/docassemble/files \
 && chmod ogu+r /usr/share/docassemble/config/config.yml.dist \
-&& chmod 755 /etc/ssl/docassemble \
-&& cd /tmp \
-&& /usr/bin/pip3 install --break-system-packages unoserver==3.6 \
-&& cp /usr/local/bin/unoserver /usr/bin/unoserver \
-&& cp /usr/local/bin/unoconvert /usr/bin/unoconvert \
-&& python3 -m venv --copies /usr/share/docassemble/local3.14 \
 && source /usr/share/docassemble/local3.14/bin/activate \
-&& pip install --upgrade pip==26.2 \
-&& pip install --upgrade mod_wsgi==6.0.5 \
-&& pip install --upgrade \
-   certbot==5.7.0 \
-   certbot-apache==5.7.0 \
-   certbot-nginx==5.7.0 \
-   minio==7.2.20 \
-   uWSGI==2.0.31 \
-&& pip install \
+&& pip install --no-cache-dir \
    /tmp/docassemble/docassemble_base \
    /tmp/docassemble/docassemble_demo \
    /tmp/docassemble/docassemble_webapp \
@@ -71,40 +54,7 @@ bash -c \
 && ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base \
 && mv /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/syslogng/syslog-ng.conf \
 && ln -s /usr/share/docassemble/syslogng/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf \
-&& { if [[ '$(dpkg --print-architecture)' == 'amd64' ]]; then cp /usr/share/docassemble/local3.14/lib/python3.14/site-packages/mod_wsgi/server/mod_wsgi-py314.cpython-314-x86_64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.14; else cp /usr/share/docassemble/local3.14/lib/python3.14/site-packages/mod_wsgi/server/mod_wsgi-py314.cpython-314-aarch64-linux-gnu.so /usr/lib/apache2/modules/mod_wsgi.so-3.14; fi; } \
-&& rm -f /usr/lib/apache2/modules/mod_wsgi.so \
-&& ln -s /usr/lib/apache2/modules/mod_wsgi.so-3.14 /usr/lib/apache2/modules/mod_wsgi.so \
-&& rm -f /etc/cron.daily/apt-compat \
-&& sed -i -e 's/^\(daemonize\s*\)yes\s*$/\1no/g' -e 's/^bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf \
-&& sed -i -e 's/#APACHE_ULIMIT_MAX_FILES/APACHE_ULIMIT_MAX_FILES/' -e 's/ulimit -n 65536/ulimit -n 8192/' /etc/apache2/envvars \
-&& sed -i '/session    required     pam_loginuid.so/c\#session    required   pam_loginuid.so' /etc/pam.d/cron \
-&& LANG=en_US.UTF-8 \
-&& { a2dismod ssl \
-; a2enmod rewrite \
-; a2enmod xsendfile \
-; a2enmod proxy \
-; a2enmod proxy_http \
-; a2enmod proxy_wstunnel \
-; a2enmod headers \
-; a2enconf docassemble \
-; echo 'export TERM=xterm' >> /etc/bash.bashrc; }"
-
-USER www-data
-RUN bash -c \
-"source /usr/share/docassemble/local3.14/bin/activate \
-&& python /tmp/docassemble/Docker/nltkdownload.py \
-&& cd /var/www/nltk_data/corpora \
-&& unzip -o wordnet.zip \
-&& unzip -o omw-1.4.zip \
-&& cd /tmp \
-&& mkdir -p /tmp/conv \
-&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.yml --template=/usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.tex --from=markdown+raw_tex-latex_macros -s -o /tmp/temp.pdf /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/hello.md \
-&& rm /tmp/temp.pdf \
-&& pandoc --pdf-engine=lualatex -M latextmpdir=./conv -M pdfa=false --template=/usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/Legal-Template.rtf -s -o /tmp/temp.rtf /usr/share/docassemble/local3.14/lib/python3.14/site-packages/docassemble/base/data/templates/hello.md \
-&& rm /tmp/temp.rtf"
-
-USER root
-RUN rm -rf /tmp/docassemble
+&& rm -rf /tmp/docassemble"
 
 EXPOSE 80 443 9001 514 25 465 8080 8081 8082 5432 6379 4369 5671 5672 25672
 ENV \
