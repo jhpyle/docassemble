@@ -1,7 +1,8 @@
+# syntax=docker/dockerfile:1
 FROM jhpyle/docassemble-os
 USER root
-COPY . /tmp/docassemble/
-RUN DEBIAN_FRONTEND=noninteractive TERM=xterm LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
+RUN --mount=type=bind,source=.,target=/tmp/docassemble \
+DEBIAN_FRONTEND=noninteractive TERM=xterm LC_CTYPE=C.UTF-8 LANG=C.UTF-8 \
 bash -c \
 "cp /tmp/docassemble/docassemble_webapp/docassemble.wsgi /usr/share/docassemble/webapp/ \
 && cp /tmp/docassemble/Docker/*.sh /usr/share/docassemble/webapp/ \
@@ -42,10 +43,15 @@ bash -c \
    /usr/share/docassemble/files \
 && chmod ogu+r /usr/share/docassemble/config/config.yml.dist \
 && source /usr/share/docassemble/local3.14/bin/activate \
+&& cp -r /tmp/docassemble/docassemble_base /tmp/build_base \
+&& cp -r /tmp/docassemble/docassemble_demo /tmp/build_demo \
+&& cp -r /tmp/docassemble/docassemble_webapp /tmp/build_webapp \
 && pip install --no-cache-dir \
-   /tmp/docassemble/docassemble_base \
-   /tmp/docassemble/docassemble_demo \
-   /tmp/docassemble/docassemble_webapp \
+   /tmp/build_base \
+   /tmp/build_demo \
+   /tmp/build_webapp \
+&& rm -rf /tmp/build_base /tmp/build_demo /tmp/build_webapp \
+&& pip cache purge \
 && mv /etc/crontab /usr/share/docassemble/cron/crontab \
 && ln -s /usr/share/docassemble/cron/crontab /etc/crontab \
 && mv /etc/cron.daily/apache2 /usr/share/docassemble/cron/apache2 \
@@ -53,8 +59,7 @@ bash -c \
 && mv /etc/cron.daily/exim4-base /usr/share/docassemble/cron/exim4-base \
 && ln -s /usr/share/docassemble/cron/exim4-base /etc/cron.daily/exim4-base \
 && mv /etc/syslog-ng/syslog-ng.conf /usr/share/docassemble/syslogng/syslog-ng.conf \
-&& ln -s /usr/share/docassemble/syslogng/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf \
-&& rm -rf /tmp/docassemble"
+&& ln -s /usr/share/docassemble/syslogng/syslog-ng.conf /etc/syslog-ng/syslog-ng.conf"
 
 EXPOSE 80 443 9001 514 25 465 8080 8081 8082 5432 6379 4369 5671 5672 25672
 ENV \
