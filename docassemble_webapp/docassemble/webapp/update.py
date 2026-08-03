@@ -463,13 +463,24 @@ def get_home_page_dict():
 
 
 def add_dependencies(session, user_id, start_time=None):
+    """This function creates Package and Install entries for packages that are
+    already installed on this system.
+
+    A package may already be installed on this system because it was installed
+    through the installation of docassemble.webapp, or it may be installed because
+    it is a dependency of a package installed because it was given a Package entry.
+    """
     if start_time is None:
         start_time = time.time()
     # logmessage('add_dependencies: user_id is ' + str(user_id))
     logmessage("add_dependencies: starting after " + str(time.time() - start_time) + " seconds")
     packages_known = set()
-    for package in session.execute(select(Package.name).filter_by(active=True)):
-        packages_known.add(package.name)
+    deleted_packages = set()
+    for package in session.execute(select(Package.name, Package.active)):
+        if package.active:
+            packages_known.add(package.name)
+        else:
+            deleted_packages.add(package.name)
     installed_packages = get_installed_distributions(start_time=start_time)
     # logmessage("add_dependencies: installed_packages is " + repr(installed_packages))
     home_pages = None
@@ -477,11 +488,14 @@ def add_dependencies(session, user_id, start_time=None):
     for package in installed_packages:
         # logmessage("add_dependencies: package is " + repr(package.key))
         if package.key in packages_known:
+            # if the package already exists in the Package table as an active package, we will not create a Package/Install for it.
             continue
         if package.key.startswith('mysqlclient') or package.key.startswith('mysql-connector') or package.key.startswith('MySQL-python'):
             continue
-        logmessage("add_dependencies: deleting package record " + repr(package.key))
-        session.execute(delete(Package).filter_by(name=package.key))
+        if package.key in deleted_packages:
+            # if the package had been marked as needing to be uninstalled, we should remove that Package entry to prevent problems.
+            logmessage("add_dependencies: deleting package record " + repr(package.key))
+            session.execute(delete(Package).filter_by(name=package.key))
         packages_to_add.append(package)
     session.flush()
     did_something = False
