@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.10.7](https://github.com/jhpyle/docassemble/releases/tag/v1.10.7) - 2026-08-01
+
+
+### Fixed
+
+- Downgraded `nltk` in order to avoid requiring a system upgrade.
+
 ## [1.10.6](https://github.com/jhpyle/docassemble/releases/tag/v1.10.6) - 2026-08-01
 
 
