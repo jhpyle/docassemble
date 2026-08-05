@@ -16,7 +16,10 @@ class Package(Base):
         Integer,
         ForeignKey(dbtableprefix + "uploads.indexno", ondelete="CASCADE"),
     )
-    package_auth: Mapped[Optional["PackageAuth"]] = relationship(primaryjoin="PackageAuth.package_id==Package.id")
+    package_auth: Mapped[Optional["PackageAuth"]] = relationship(
+        primaryjoin="PackageAuth.package_id==Package.id",
+        passive_deletes=True,
+    )
     version: Mapped[Optional[int]] = mapped_column(Integer, server_default=text('1'))
     packageversion: Mapped[Optional[str]] = mapped_column(Text)
     limitation: Mapped[Optional[str]] = mapped_column(Text)
