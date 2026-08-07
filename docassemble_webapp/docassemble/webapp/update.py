@@ -195,15 +195,15 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
                 logmessage("check_for_updates: uninstalling docassemble")
                 uninstall_package(DummyPackage('docassemble'), start_time=start_time)
                 changed = True
-            if 'pdfminer.six' in here_already:
-                try:
-                    from pdfminer.pdfparser import PDFParser  # noqa: F401 # pylint: disable=import-outside-toplevel,unused-import
-                    from pdfminer.pdfdocument import PDFDocument  # noqa: F401 # pylint: disable=import-outside-toplevel,unused-import
-                except:
-                    logmessage("check_for_updates: reinstalling pdfminer.six")
-                    uninstall_package(DummyPackage('pdfminer.six'), start_time=start_time)
-                    install_package(DummyPackage('pdfminer.six'), start_time=start_time)
-            else:
+            if 'pdfminer.six' not in here_already:
+            #     try:
+            #         from pdfminer.pdfparser import PDFParser  # noqa: F401 # pylint: disable=import-outside-toplevel,unused-import
+            #         from pdfminer.pdfdocument import PDFDocument  # noqa: F401 # pylint: disable=import-outside-toplevel,unused-import
+            #     except:
+            #         logmessage("check_for_updates: reinstalling pdfminer.six")
+            #         uninstall_package(DummyPackage('pdfminer.six'), start_time=start_time)
+            #         install_package(DummyPackage('pdfminer.six'), start_time=start_time)
+            # else:
                 logmessage("check_for_updates: installing pdfminer.six")
                 install_package(DummyPackage('pdfminer.six'), start_time=start_time)
                 changed = True
