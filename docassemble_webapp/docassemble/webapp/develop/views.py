@@ -2510,7 +2510,11 @@ def playground_packages():
     if request.method == 'POST' and 'uploadfile' not in request.files and form.validate():
         validated = True
     the_directory = directory_for(area['playgroundpackages'], current_project)
-    files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    if os.path.isdir(the_directory):
+        files = sorted([f for f in os.listdir(the_directory) if os.path.isfile(os.path.join(the_directory, f)) and re.search(r'^[A-Za-z0-9]', f)])
+    else:
+        logmessage(f"{the_directory} not found")
+        files = []
     editable_files = []
     for a_file in files:
         editable_files.append({'name': re.sub(r'^docassemble\.', r'', a_file), 'modtime': os.path.getmtime(os.path.join(the_directory, a_file))})
