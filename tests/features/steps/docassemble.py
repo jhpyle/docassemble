@@ -10,6 +10,7 @@ from behave import (
 )  # pylint: disable=import-error,no-name-in-module
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
@@ -131,6 +132,13 @@ def wait_forever(context):
 def launch_interview(context, interview_name):
     context.browser.get(context.da_path + "/interview?i=" + interview_name + '&reset=2')
     time.sleep(1)
+
+
+@step(r'I visit the page "(?P<path>[^"]+)"')
+def visit_page(context, path):
+    do_wait(context)
+    context.browser.get(context.da_path + path)
+    context.browser.wait_for_it()
 
 
 @step(r'I start the interview "(?P<interview_name>[^"]+)"')
@@ -617,6 +625,39 @@ def change_window_size(context, xdimen, ydimen):
 @step(r'I unfocus')
 def unfocus(context):
     context.browser.execute_script("document.activeElement.blur();")
+
+
+@step(r'I focus the (?P<page_type>interview|site) skip link')
+def focus_skip_link(context, page_type):
+    target = "#daquestion" if page_type == "interview" else "#damain"
+    skip_link = context.browser.find_element(By.CSS_SELECTOR, f'a[href="{target}"]')
+    assert skip_link.get_attribute("tabindex") == "0"
+    context.browser.execute_script("arguments[0].focus();", skip_link)
+
+
+@step(r'the (?P<page_type>interview|site) skip link should have focus')
+def skip_link_has_focus(context, page_type):
+    target = "#daquestion" if page_type == "interview" else "#damain"
+
+    def active_skip_link(browser):
+        active_element = browser.switch_to.active_element
+        href = active_element.get_attribute("href")
+        return active_element if href and href.endswith(target) else False
+
+    WebDriverWait(context.browser, 10).until(active_skip_link)
+
+
+@step(r'I activate the focused link')
+def activate_focused_link(context):
+    context.browser.switch_to.active_element.send_keys(Keys.ENTER)
+
+
+@step(r'the (?P<page_type>interview|site) main content should have focus')
+def main_content_has_focus(context, page_type):
+    target = "daquestion" if page_type == "interview" else "damain"
+    WebDriverWait(context.browser, 10).until(
+        lambda browser: browser.switch_to.active_element.get_attribute("id") == target
+    )
 
 
 @step(r'I click the final link "(?P<link_name>[^"]+)"')
