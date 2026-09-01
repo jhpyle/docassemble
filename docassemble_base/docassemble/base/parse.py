@@ -8447,8 +8447,8 @@ class Interview:
             for title_name, title_abb in mapping:
                 if title_abb in self.default_title[lang]:
                     continue
-                if parts.get('main page ' + title_name, '') != '':
-                    self.default_title[lang][title_abb] = parts['main page ' + title_name].strip()
+                if str(parts.get('main page ' + title_name, '')).strip() != '':
+                    self.default_title[lang][title_abb] = str(parts['main page ' + title_name]).strip()
 
     def make_sorter(self):
         lookup_dict = self.orderings_by_question
