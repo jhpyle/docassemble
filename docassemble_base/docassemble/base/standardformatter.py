@@ -943,7 +943,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     else:
         decoration_text = ''
     master_output = ''
-    master_output += '          <div id="daquestion" aria-labelledby="dapagetitle" role="main" class="tab-pane fade show active ' + grid_class + '">\n'
+    master_output += '          <div id="daquestion" aria-labelledby="dapagetitle" role="main" tabindex="-1" class="tab-pane fade show active ' + grid_class + '">\n'
     output = ''
     if the_progress_bar:
         if status.question.question_type == "signature":

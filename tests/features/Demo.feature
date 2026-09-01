@@ -2,6 +2,27 @@ Feature: Demonstration interview
   In order to ensure docassemble is running properly, I want
   to run the example interviews.
 
+  Scenario: Skip to main content in an interview
+    Given I start the interview "docassemble.demo:data/questions/questions.yml"
+    When I focus the interview skip link
+    Then the interview skip link should have focus
+    When I activate the focused link
+    Then the interview main content should have focus
+    And I click the "English" option
+    And I wait 1 second
+    And I click the "Continue" button
+    Then I should see the phrase "Welcome to the docassemble demonstration."
+    And I unfocus
+    When I focus the interview skip link
+    Then the interview skip link should have focus
+
+  Scenario: Skip to main content on a standard page
+    Given I visit the page "/user/sign-in"
+    When I focus the site skip link
+    Then the site skip link should have focus
+    When I activate the focused link
+    Then the site main content should have focus
+
   Scenario: Test whole interview
     Given I start the interview "docassemble.demo:data/questions/questions.yml"
     Then I should see the phrase "What language do you speak?"

@@ -2836,6 +2836,7 @@ def index(action_argument=None, refer=None):
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params, extra_class='dainvisible')
     else:
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params)
+    output = '    <a class="visually-hidden-focusable" href="#daquestion" tabindex="0">' + word("Skip to main content") + '</a>\n' + output
     output += flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
         if interview_status.using_navigation == 'vertical':
