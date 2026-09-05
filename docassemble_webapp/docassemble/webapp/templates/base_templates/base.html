@@ -75,6 +75,7 @@
     <link href="{{ url_for('static', filename='app/app.min.css', v=config['DA_VERSION']) }}" rel="stylesheet">{{ extra_css }}{{ config['GLOBAL_CSS']|safe }}
   </head>
   <body class="{% if bodyclass %}{{ bodyclass }}{% else %}dabody{% endif %} da-pad-for-navbar{% if footer_content %} da-pad-for-footer{% endif %}">
+    <a class="visually-hidden-focusable daskiplink" href="#damain" tabindex="0">{{ word("Skip to main content") }}</a>
     <div class="danavbarcontainer" data-bs-theme="{% if config['INVERSE_NAVBAR'] %}dark{% else %}light{% endif %}">
       <div class="navbar fixed-top navbar-expand-md {% if config['INVERSE_NAVBAR'] %}bg-dark{% else %}bg-body-tertiary{% endif %}" role="banner">
         <div class="{% if userclass %}{{ config['CONTAINER_CLASS'] }} danavcontainer{% else %}{{ config['CONTAINER_CLASS'] }}{% endif %} danavcontainer justify-content-start">
@@ -148,7 +149,7 @@
         </div>
       </div>
     </div>
-    <div class="{{ config['CONTAINER_CLASS'] }}" id="damain">
+    <div class="{{ config['CONTAINER_CLASS'] }}" id="damain" role="main" tabindex="-1">
     {%- block top %}{% endblock %}
     {%- block flash_messages %}
       {%- with messages = get_flashed_messages(with_categories=true) -%}

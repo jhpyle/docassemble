@@ -5027,7 +5027,8 @@ function daInitialize(doScroll) {
         });
       }
     });
-    $("body").focus();
+    // Reset sequential focus navigation after replacing interview content.
+    $("body").attr("tabindex", "-1").focus().removeAttr("tabindex");
     if (!daJsEmbed && !isAndroid) {
       setTimeout(function () {
         var firstInput = $("#daform .da-field-container")
@@ -5059,16 +5060,6 @@ function daInitialize(doScroll) {
                 console.log(err.message);
               }
             }
-          }
-        } else {
-          var firstButton = $("#danavbar-collapse .nav-link")
-            .filter(":visible")
-            .first();
-          if (firstButton.length > 0 && $(firstButton).visible()) {
-            setTimeout(function () {
-              $(firstButton).focus();
-              $(firstButton).blur();
-            }, 0);
           }
         }
       }, 15);

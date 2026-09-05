@@ -2831,11 +2831,13 @@ def index(action_argument=None, refer=None):
             scripts += additional_css(interview_status, js_only=True)
         else:
             start_output += current_app.config['GLOBAL_CSS'] + additional_css(interview_status)
-            start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <div id="dabody">\n'
+            start_output += '\n    <title>' + interview_status.tabtitle + '</title>\n  </head>\n  <body class="' + bodyclass + '">\n  <a class="visually-hidden-focusable daskiplink" href="#daquestion" tabindex="0">' + word("Skip to main content") + '</a>\n  <div id="dabody">\n'
     if interview.options.get('hide navbar', False):
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params, extra_class='dainvisible')
     else:
         output = make_navbar(interview_status, (steps - user_dict['_internal']['steps_offset']), interview.consolidated_metadata.get('show login', SHOW_LOGIN), user_dict['_internal']['livehelp'], debug_mode, index_params)
+    if is_js:
+        output = '    <a class="visually-hidden-focusable daskiplink" href="#daquestion" tabindex="0">' + word("Skip to main content") + '</a>\n' + output
     output += flash_content + '    <div class="container">' + "\n      " + '<div class="row tab-content">' + "\n"
     if the_nav_bar != '':
         if interview_status.using_navigation == 'vertical':
