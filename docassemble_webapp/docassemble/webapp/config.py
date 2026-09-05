@@ -211,8 +211,8 @@ DEFAULT_VOICE = daconfig.get('voice', None)
 LOGSERVER = daconfig.get('log server', None)
 CHECKIN_INTERVAL = int(daconfig.get('checkin interval', 6000))
 # message_sequence = dbtableprefix + 'message_id_seq'
-NOTIFICATION_CONTAINER = daconfig.get('alert container html', '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>')
-NOTIFICATION_MESSAGE = daconfig.get('alert html', '<div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>')
+NOTIFICATION_CONTAINER = daconfig.get('alert container html', '<div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash" aria-live="polite" aria-atomic="true">%s</div>')
+NOTIFICATION_MESSAGE = daconfig.get('alert html', '<div class="da-alert alert alert-%s alert-dismissible fade show">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>')
 
 USING_SUPERVISOR = bool(os.environ.get('SUPERVISOR_SERVER_URL', None))
 

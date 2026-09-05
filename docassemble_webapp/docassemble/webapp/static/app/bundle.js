@@ -21707,513 +21707,6 @@ var windowIsDefined =
 });
 
 /*!
- * LABELAUTY jQuery Plugin
- *
- * @file: jquery-labelauty.js
- * @author: Francisco Neves (@fntneves)
- * @site: www.francisconeves.com
- * @license: MIT License
- */
-
-// Edited by Jonathan Pyle, 2018-2019
-
-(function ($) {
-  $.fn.labelauty = function (options) {
-    /*
-     * Our default settings
-     * Hope you don't need to change anything, with these settings
-     */
-    var settings = $.extend(
-      {
-        // Development Mode
-        // This will activate console debug messages
-        development: false,
-
-        // Trigger Class
-        // This class will be used to apply styles
-        class: "labelauty",
-
-        // Use icon?
-        // If false, then only a text label represents the input
-        icon: true,
-
-        // Use text label ?
-        // If false, then only an icon represents the input
-        label: true,
-
-        // Separator between labels' messages
-        // If you use this separator for anything, choose a new one
-        separator: "|",
-
-        // Default Checked Message
-        // This message will be visible when input is checked
-        checked_label: "Checked",
-
-        // Default UnChecked Message
-        // This message will be visible when input is unchecked
-        unchecked_label: "Unchecked",
-
-        // Force random ID's
-        // Replace original ID's with random ID's,
-        force_random_id: false,
-
-        // Minimum Label Width
-        // This value will be used to apply a minimum width to the text labels
-        minimum_width: false,
-
-        // Use the greatest width between two text labels ?
-        // If this has a true value, then label width will be the greatest between labels
-        same_width: false,
-      },
-      options,
-    );
-
-    /*
-     * Let's create the core function
-     * It will try to cover all settings and mistakes of using
-     */
-    return this.each(function () {
-      var $object = $(this);
-      var selected = $object.is(":checked");
-      var type = $object.attr("type");
-      var use_icons = true;
-      var use_labels = true;
-      var labels;
-      var labels_object;
-      var color;
-      var classes;
-      var input_id;
-
-      //Get the aria label from the input element
-      var aria_label = $object.attr("aria-label");
-
-      // Hide the object form screen readers
-      $object.attr("aria-hidden", true);
-
-      // Test if object is a check input
-      // Don't mess me up, come on
-      if ($object.is(":checkbox") === false && $object.is(":radio") === false)
-        return this;
-
-      classes = $object
-        .attr("class")
-        .split(/\s+/)
-        .filter(function (value, index, arr) {
-          return value != "da-to-labelauty";
-        });
-      // Add "labelauty" class to all checkboxes
-      // So you can apply some custom styles
-      $object.addClass(settings.class);
-
-      // Get the value of "data-labelauty" attribute
-      // Then, we have the labels for each case (or not, as we will see)
-      labels = $object.attr("data-labelauty");
-      color = $object.attr("data-color");
-
-      use_labels = settings.label;
-      use_icons = settings.icon;
-
-      // It's time to check if it's going to the right way
-      // Null values, more labels than expected or no labels will be handled here
-      if (use_labels === true) {
-        if (labels == null || labels.length === 0) {
-          // If attribute has no label and we want to use, then use the default labels
-          labels_object = [settings.unchecked_label, settings.checked_label];
-        } else {
-          // Ok, ok, it's time to split Checked and Unchecked labels
-          // We split, by the "settings.separator" option
-          labels_object = labels.split(settings.separator);
-
-          // Now, let's check if exist _only_ two labels
-          // If there's more than two, then we do not use labels :(
-          // Else, do some additional tests
-          if (labels_object.length > 2) {
-            use_labels = false;
-            debug(
-              settings.development,
-              "There's more than two labels. LABELAUTY will not use labels.",
-            );
-          } else {
-            // If there's just one label (no split by "settings.separator"), it will be used for both cases
-            // Here, we have the possibility of use the same label for both cases
-            if (labels_object.length === 1)
-              debug(
-                settings.development,
-                "There's just one label. LABELAUTY will use this one for both cases.",
-              );
-          }
-        }
-      }
-
-      /*
-       * Let's begin the beauty
-       */
-
-      // Start hiding ugly checkboxes
-      // Obviously, we don't need native checkboxes :O
-      $object.css({ display: "none" });
-
-      // We don't need more data-labelauty attributes!
-      // Ok, ok, it's just for beauty improvement
-      $object.removeAttr("data-labelauty");
-
-      // Now, grab checkbox ID Attribute for "label" tag use
-      // If there's no ID Attribute, then generate a new one
-      input_id = $object.attr("id");
-
-      if (
-        settings.force_random_id ||
-        input_id == null ||
-        input_id.trim() === ""
-      ) {
-        var input_id_number = 1 + Math.floor(Math.random() * 1024000);
-        input_id = "labelauty-" + input_id_number;
-
-        // Is there any element with this random ID ?
-        // If exists, then increment until get an unused ID
-        while ($(input_id).length !== 0) {
-          input_id_number++;
-          input_id = "labelauty-" + input_id_number;
-          debug(
-            settings.development,
-            "Holy crap, between 1024 thousand numbers, one raised a conflict. Trying again.",
-          );
-        }
-
-        $object.attr("id", input_id);
-      }
-
-      // Now, add necessary tags to make this work
-      // Here, we're going to test some control variables and act properly
-
-      var element = jQuery(
-        create(
-          input_id,
-          aria_label,
-          selected,
-          type,
-          labels_object,
-          use_labels,
-          use_icons,
-        ),
-      );
-
-      for (var idx = 0; idx < classes.length; idx++) {
-        $(element).addClass(classes[idx]);
-      }
-      if ($object.is(":checked")) {
-        $(element).addClass("btn-" + color);
-        $(element).removeClass(
-          "btn-light bg-secondary-subtle text-light-emphasis",
-        );
-        $(element).attr("aria-checked", true);
-      } else {
-        $(element).removeClass("btn-" + color);
-        $(element).addClass(
-          "btn-light bg-secondary-subtle text-light-emphasis",
-        );
-        $(element).attr("aria-checked", false);
-      }
-      var the_name = $object.attr("name");
-      if (type == "radio") {
-        $object.on("change", function () {
-          $object
-            .parents(".da-fieldset")
-            .first()
-            .find(".da-has-error")
-            .remove();
-          var anyChecked = false;
-          $('input.labelauty[name="' + the_name + '"]:enabled').each(
-            function () {
-              if ($(this).is(":checked")) {
-                $(this)
-                  .next()
-                  .addClass("btn-" + color);
-                $(this)
-                  .next()
-                  .removeClass(
-                    "btn-light bg-secondary-subtle text-light-emphasis",
-                  );
-                $(this).next().attr("aria-checked", true);
-                anyChecked = true;
-              } else {
-                $(this)
-                  .next()
-                  .removeClass("btn-" + color);
-                $(this)
-                  .next()
-                  .addClass(
-                    "btn-light bg-secondary-subtle text-light-emphasis",
-                  );
-                $(this).next().attr("aria-checked", false);
-              }
-            },
-          );
-          if (anyChecked) {
-            $('input.labelauty[name="' + the_name + '"]:enabled').each(
-              function () {
-                if ($(this).is(":checked")) {
-                  $(this).next().attr("tabindex", 0);
-                } else {
-                  $(this).next().attr("tabindex", -1);
-                }
-              },
-            );
-          }
-        });
-      } else {
-        $object.on("change", function () {
-          $object
-            .parents(".da-fieldset")
-            .first()
-            .find(".da-has-error")
-            .remove();
-          if ($(this).is(":checked")) {
-            $(this)
-              .next()
-              .addClass("btn-" + color);
-            $(this)
-              .next()
-              .removeClass("btn-light bg-secondary-subtle text-light-emphasis");
-            $(this).next().attr("aria-checked", true);
-          } else {
-            $(this)
-              .next()
-              .removeClass("btn-" + color);
-            $(this)
-              .next()
-              .addClass("btn-light bg-secondary-subtle text-light-emphasis");
-            $(this).next().attr("aria-checked", false);
-          }
-        });
-      }
-
-      element.keydown(function (event) {
-        $object.parents(".da-fieldset").first().find(".da-has-error").remove();
-        var theCode = event.which || event.keyCode;
-        if ($object.closest(".dachoicewithhelp").length > 0) {
-          if (theCode === 40) {
-            event.preventDefault();
-            var nextElement = $object
-              .closest(".dachoicewithhelp")
-              .next("div")
-              .find("label");
-            if (nextElement.length) {
-              nextElement.focus();
-              nextElement.click();
-            }
-            return false;
-          }
-          if (theCode === 38) {
-            event.preventDefault();
-            var prevElement = $object
-              .closest(".dachoicewithhelp")
-              .prev("div")
-              .find("label");
-            if (prevElement.length) {
-              prevElement.focus();
-              prevElement.click();
-            }
-            return false;
-          }
-        } else {
-          if (theCode === 40) {
-            event.preventDefault();
-            var nextElement = $object.next("label").next("input").next("label");
-            if (nextElement.length) {
-              nextElement.focus();
-              nextElement.click();
-            }
-            return false;
-          }
-          if (theCode === 38) {
-            event.preventDefault();
-            var prevElement = $object.prev("label");
-            if (prevElement.length) {
-              prevElement.focus();
-              prevElement.click();
-            }
-            return false;
-          }
-        }
-        if (theCode === 32 || theCode === 13) {
-          event.preventDefault();
-          if ($object.is(":checked")) {
-            $(this).addClass("btn-" + color);
-            $(this).removeClass(
-              "btn-light bg-secondary-subtle text-light-emphasis",
-            );
-            $object.prop("checked", false);
-            $(this).attr("aria-checked", true);
-          } else {
-            $(this).addClass("btn-" + color);
-            $(this).removeClass(
-              "btn-light bg-secondary-subtle text-light-emphasis",
-            );
-            $object.prop("checked", true);
-            $(this).attr("aria-checked", false);
-          }
-          $object.trigger("change");
-        }
-      });
-
-      $object.after(element);
-
-      // Now, add "min-width" to label
-      // Let's say the truth, a fixed width is more beautiful than a variable width
-      if (settings.minimum_width !== false)
-        $object
-          .next("label[for='" + input_id + "']")
-          .css({ "min-width": settings.minimum_width });
-
-      // Now, add "min-width" to label
-      // Let's say the truth, a fixed width is more beautiful than a variable width
-      if (settings.same_width != false && settings.label == true) {
-        var label_object = $object.next("label[for='" + input_id + "']");
-        var unchecked_width = getRealWidth(
-          label_object.find("span.labelauty-unchecked"),
-        );
-        var checked_width = getRealWidth(
-          label_object.find("span.labelauty-checked"),
-        );
-
-        if (unchecked_width > checked_width)
-          label_object.find("span.labelauty-checked").width(unchecked_width);
-        else label_object.find("span.labelauty-unchecked").width(checked_width);
-      }
-    });
-  };
-
-  /*
-   * Tricky code to work with hidden elements, like tabs.
-   * Note: This code is based on jquery.actual plugin.
-   * https://github.com/dreamerslab/jquery.actual
-   */
-  function getRealWidth(element) {
-    var width = 0;
-    var $target = element;
-    var css_class = "hiddenelement";
-
-    $target = $target.clone().attr("class", css_class).appendTo("body");
-    width = $target.width(true);
-    $target.remove();
-
-    return width;
-  }
-
-  function debug(debug, message) {
-    if (debug && window.console && window.console.log)
-      window.console.log("jQuery-LABELAUTY: " + message);
-  }
-
-  function decode_html(text) {
-    text = text.replace(/&amp;/g, "&");
-    text = text.replace(/&lt;/g, "<");
-    text = text.replace(/&gt;/g, ">");
-    text = text.replace(/&quot;/g, '"');
-    return text;
-  }
-  function create(
-    input_id,
-    aria_label,
-    selected,
-    type,
-    messages_object,
-    label,
-    icon,
-  ) {
-    var block;
-    var unchecked_message;
-    var checked_message;
-    var aria = "";
-
-    if (messages_object == null) unchecked_message = checked_message = "";
-    else {
-      unchecked_message = messages_object[0];
-
-      // If checked message is null, then put the same text of unchecked message
-      if (messages_object[1] == null) checked_message = unchecked_message;
-      else checked_message = messages_object[1];
-    }
-    var uncheck_icon;
-    if (type == "checkbox") {
-      uncheck_icon = '<i class="fa-regular fa-square fa-fw"></i>';
-    } else {
-      uncheck_icon = '<i class="fa-regular fa-circle fa-fw"></i>';
-    }
-    var check_icon;
-    if (type == "checkbox") {
-      check_icon = '<i class="fa-solid fa-check fa-fw"></i>';
-    } else {
-      check_icon = '<i class="fa-solid fa-check-circle fa-fw"></i>';
-    }
-
-    if (aria_label == null) aria = "";
-    else
-      aria =
-        'tabindex="0" role="' +
-        type +
-        '" aria-checked="' +
-        selected +
-        '" aria-label="' +
-        aria_label +
-        '"';
-
-    if (label == true && icon == true) {
-      block =
-        '<label class="text-start btn btn-light bg-secondary-subtle text-light-emphasis dalabelauty" for="' +
-        input_id +
-        '" ' +
-        aria +
-        ">" +
-        '<span class="labelauty-unchecked-image text-body-secondary">' +
-        uncheck_icon +
-        "</span>" +
-        '<span class="labelauty-unchecked">' +
-        decode_html(unchecked_message) +
-        "</span>" +
-        '<span class="labelauty-checked-image">' +
-        check_icon +
-        "</span>" +
-        '<span class="labelauty-checked">' +
-        decode_html(checked_message) +
-        "</span>" +
-        "</label>";
-    } else if (label == true) {
-      block =
-        '<label class="text-start btn btn-light bg-secondary-subtle text-light-emphasis dalabelauty" for="' +
-        input_id +
-        '" ' +
-        aria +
-        ">" +
-        '<span class="labelauty-unchecked">' +
-        decode_html(unchecked_message) +
-        "</span>" +
-        '<span class="labelauty-checked">' +
-        decode_html(checked_message) +
-        "</span>" +
-        "</label>";
-    } else {
-      block =
-        '<label class="text-start btn btn-light bg-secondary-subtle text-light-emphasis dalabelauty" for="' +
-        input_id +
-        '" ' +
-        aria +
-        ">" +
-        '<span class="labelauty-unchecked-image text-body-secondary">' +
-        uncheck_icon +
-        "</span>" +
-        '<span class="labelauty-checked-image">' +
-        check_icon +
-        "</span>" +
-        "</label>";
-    }
-
-    return block;
-  }
-})(window.jQuery);
-
-/*!
  * The buffer module from node.js, for the browser.
  *
  * Modified from https://github.com/feross/buffer to be used standalone on browser based apps.
@@ -41482,6 +40975,26 @@ var daAddressAjaxTimeout = null;
 var daAddressAjaxTimeoutRunning = null;
 var daAddressAjaxTimeoutCallAfter = null;
 var daShowHideHappened = false;
+var daShowIfSetupComplete = false;
+var daShowIfAnnounceTimeout = null;
+function daAnnounceShowIfReveal() {
+  if (!daShowIfSetupComplete) {
+    return;
+  }
+  var announcer = document.getElementById("daShowIfAnnouncer");
+  if (announcer == null) {
+    return;
+  }
+  var message = announcer.getAttribute("data-message");
+  announcer.textContent = "";
+  if (daShowIfAnnounceTimeout != null) {
+    window.clearTimeout(daShowIfAnnounceTimeout);
+  }
+  daShowIfAnnounceTimeout = window.setTimeout(function () {
+    announcer.textContent = message;
+    daShowIfAnnounceTimeout = null;
+  }, 100);
+}
 var daCheckinInterval = null;
 var daInitialCheckinTimeout = null;
 var daReloader = null;
@@ -41546,6 +41059,7 @@ var daEmailAddressRequired;
 var daNeedCompleteEmail;
 var daDefaultPopoverTrigger;
 var daToggleWord;
+var daPleaseWaitWord;
 var daCheckinUrlWithInterview;
 var daReloadAfterSeconds;
 var daCustomItems;
@@ -42766,7 +42280,7 @@ function daInjectTrim(handler) {
         element.type !== "file")
     ) {
       setTimeout(function () {
-        element.value = $.trim(element.value);
+        element.value = element.value.trim();
       }, 10);
     }
     return handler.call(this, element, event);
@@ -42829,7 +42343,7 @@ function daValidationHandler(form) {
       if (
         $(this).attr("name") &&
         $(this).attr("type") != "hidden" &&
-        (($(this).hasClass("da-active-invisible") &&
+        (($(this).hasClass("da-to-labelauty") &&
           $(this).parent().is(":visible")) ||
           $(this).is(":visible"))
       ) {
@@ -44179,15 +43693,22 @@ function daStopCheckingIn() {
 function daShowSpinner() {
   if ($("#daquestion").length > 0) {
     $(
-      '<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner"><i class="fa-solid fa-spinner fa-spin"></i></span></div></div></div></div>',
+      '<div id="daSpinner" class="da-spinner-container da-top-for-navbar" role="status"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner" aria-hidden="true"><i class="fa-solid fa-spinner fa-spin"></i></span><span class="visually-hidden">' +
+        daPleaseWaitWord +
+        "</span></div></div></div></div>",
     ).appendTo(daTargetDiv);
   } else {
     var newSpan = document.createElement("span");
-    var newI = document.createElement("i");
-    $(newI).addClass("fa-solid fa-spinner fa-spin");
-    $(newI).appendTo(newSpan);
     $(newSpan).attr("id", "daSpinner");
     $(newSpan).addClass("da-sig-spinner da-top-for-navbar");
+    $(newSpan).attr("role", "status");
+    var newI = document.createElement("i");
+    $(newI).addClass("fa-solid fa-spinner fa-spin");
+    $(newI).attr("aria-hidden", "true");
+    $(newI).appendTo(newSpan);
+    $('<span class="visually-hidden">' + daPleaseWaitWord + "</span>").appendTo(
+      newSpan,
+    );
     $(newSpan).appendTo("#dasigtoppart");
   }
   daShowingSpinner = true;
@@ -45030,12 +44551,6 @@ function daInitialize(doScroll) {
       selects[i].appendChild(document.createElement("optgroup"));
     }
   }
-  $(".da-to-labelauty").labelauty({
-    class: "labelauty da-active-invisible dafullwidth",
-  });
-  $(".da-to-labelauty-icon").labelauty({ label: false });
-  $("input[type=radio].da-to-labelauty:checked").trigger("change");
-  $("input[type=radio].da-to-labelauty-icon:checked").trigger("change");
   $("button").on("click", function () {
     daWhichButton = this;
     return true;
@@ -45423,9 +44938,13 @@ function daInitialize(doScroll) {
       var prev = $(this).prev();
       if (prev && !prev.hasClass("active")) {
         var toggler;
+        var boxId = $(box).attr("id");
+        var ariaControls = boxId ? ' aria-controls="' + boxId + '"' : "";
         if ($(box).hasClass("danotshowing")) {
           toggler = $(
-            '<a href="#" class="toggler" role="button" aria-pressed="false">',
+            '<button type="button" class="toggler" aria-expanded="false"' +
+              ariaControls +
+              ">",
           );
           $('<i class="fa-solid fa-caret-right">').appendTo(toggler);
           $(
@@ -45433,14 +44952,16 @@ function daInitialize(doScroll) {
           ).appendTo(toggler);
         } else {
           toggler = $(
-            '<a href="#" class="toggler" role="button" aria-pressed="true">',
+            '<button type="button" class="toggler" aria-expanded="true"' +
+              ariaControls +
+              ">",
           );
           $('<i class="fa-solid fa-caret-down">').appendTo(toggler);
           $(
             '<span class="visually-hidden">' + daToggleWord + "</span>",
           ).appendTo(toggler);
         }
-        toggler.appendTo(prev);
+        toggler.insertAfter(prev);
         toggler.on("click", function (e) {
           var oThis = this;
           $(this)
@@ -45451,14 +44972,14 @@ function daInitialize(doScroll) {
                 $(this).addClass("fa-caret-right");
                 $(this).attr("data-icon", "caret-right");
                 $(box).hide();
-                $(oThis).attr("aria-pressed", "false");
+                $(oThis).attr("aria-expanded", "false");
                 $(box).toggleClass("danotshowing");
               } else if ($(this).attr("data-icon") == "caret-right") {
                 $(this).removeClass("fa-caret-right");
                 $(this).addClass("fa-caret-down");
                 $(this).attr("data-icon", "caret-down");
                 $(box).show();
-                $(oThis).attr("aria-pressed", "true");
+                $(oThis).attr("aria-expanded", "true");
                 $(box).toggleClass("danotshowing");
               }
             });
@@ -45832,6 +45353,7 @@ function daInitialize(doScroll) {
     }
   }
   daShowIfInProcess = true;
+  daShowIfSetupComplete = false;
   var daTriggerQueries = [];
   var daInputsSeen = {};
   function daOnlyUnique(value, index, self) {
@@ -45889,6 +45411,7 @@ function daInitialize(doScroll) {
             if (showIfSign) {
               if ($(showIfDiv).data("isVisible") != "1") {
                 daShowHideHappened = true;
+                daAnnounceShowIfReveal();
               }
               if (showIfMode == 0) {
                 $(showIfDiv).show(speed);
@@ -45981,6 +45504,7 @@ function daInitialize(doScroll) {
             } else {
               if ($(showIfDiv).data("isVisible") != "1") {
                 daShowHideHappened = true;
+                daAnnounceShowIfReveal();
               }
               if (showIfMode == 0) {
                 $(showIfDiv).show(speed);
@@ -46163,6 +45687,7 @@ function daInitialize(doScroll) {
           if (showIfSign) {
             if ($(showIfDiv).data("isVisible") != "1") {
               daShowHideHappened = true;
+              daAnnounceShowIfReveal();
             }
             if (showIfMode == 0) {
               $(showIfDiv).show(speed);
@@ -46257,6 +45782,7 @@ function daInitialize(doScroll) {
           } else {
             if ($(showIfDiv).data("isVisible") != "1") {
               daShowHideHappened = true;
+              daAnnounceShowIfReveal();
             }
             if (showIfMode == 0) {
               $(showIfDiv).show(speed);
@@ -46365,6 +45891,7 @@ function daInitialize(doScroll) {
   if (daTriggerQueries.length > 0) {
     daTriggerAllShowHides();
   }
+  daShowIfSetupComplete = true;
   $(".danavlink").last().addClass("thelast");
   $(".danavlink").each(function () {
     if ($(this).hasClass("btn") && !$(this).hasClass("danotavailableyet")) {
@@ -46547,7 +46074,7 @@ function daConfigureJqueryFuncs() {
         }
       } else if (element.parent(".input-group").length) {
         error.insertAfter(element.parent());
-      } else if (element.hasClass("da-active-invisible")) {
+      } else if (element.hasClass("da-to-labelauty")) {
         var choice_with_help = $(element).parents(".dachoicewithhelp").first();
         if (choice_with_help.length > 0) {
           $(choice_with_help).parent().append(error);

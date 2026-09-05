@@ -1,0 +1,55 @@
+metadata:
+  title: Edit list
+  short title: Edit list
+  documentation: "https://docassemble.org/docs/groups.html#acknowledge"
+  example start: 1
+  example end: 3
+---
+modules:
+  .tabledeletion
+---
+objects:
+  - person: PeopleList.using(there_are_any=True)
+---
+table: person.table
+rows: person
+columns:
+  - Name: |
+      row_item.name.full()
+  - Fruit: |
+      row_item.favorite_fruit
+edit:
+  - name.first
+  - favorite_fruit
+---
+code: |
+  person[i].name.first
+  person[i].favorite_fruit
+  person[i].complete = True
+---
+question: |
+  Who is the ${ ordinal(i) } person?
+fields:
+  - First Name: person[i].name.first
+  - Last Name: person[i].name.last
+---
+question: |
+  What is ${ person[i].possessive('favorite fruit') }?
+fields:
+  - Fruit: person[i].favorite_fruit
+---
+question: |
+  Are there any more people
+  you would like to mention?
+yesno: person.there_is_another
+---
+mandatory: True
+question: |
+  All done
+subquestion: |
+  The people are ${ person }.
+
+  ${ person.table }
+
+  ${ person.add_action() }
+---

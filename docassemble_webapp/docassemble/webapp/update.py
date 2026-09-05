@@ -227,7 +227,7 @@ def check_for_updates(start_time=None, invalidate_cache=True, full=True):
                     here_already[package.key] = package.version
         logmessages = ''
         packages = {}  # packages that the database says are active and that have a type; package id -> package row
-        installs = {}  # install rows representing what the database says in installed; package id -> install row
+        installs = {}  # install rows representing what the database says is installed; package id -> install row
         to_install = []  # package rows of packages to install
         to_uninstall = []  # package rows of packages to uninstall
         system_packages_to_fix = []

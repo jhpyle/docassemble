@@ -132,7 +132,7 @@ def url_finder(file_reference, kwargs) -> Any:
     raise NotImplementedError("Not implemented")
 
 @hookimpl(trylast=True)
-def navigation_bar(nav, interview, wrapper, inner_div_class, inner_div_extra, show_links, hide_inactive_subs, a_class, show_nesting, include_arrows, always_open, return_dict) -> Any:
+def navigation_bar(nav, interview, wrapper, inner_div_class, inner_div_extra, show_links, hide_inactive_subs, a_class, show_nesting, include_arrows, always_open, return_dict, li_class) -> Any:
     raise NotImplementedError("Not implemented")
 
 @hookimpl(trylast=True)

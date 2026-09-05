@@ -127,7 +127,7 @@ def to_text(html_doc) -> Any:
 def url_finder(file_reference, **kwargs) -> Any:
     return pm.hook.url_finder(file_reference=file_reference, kwargs=kwargs)
 
-def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=None, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None) -> Any:
+def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=None, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None, li_class=None) -> Any:
     return pm.hook.navigation_bar(
         nav=nav,
         interview=interview,
@@ -141,6 +141,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         include_arrows=include_arrows,
         always_open=always_open,
         return_dict=return_dict,
+        li_class=li_class,
     )
 
 def chat_partners_available(session_id, yaml_filename, the_user_id, mode, partner_roles) -> Any:

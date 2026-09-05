@@ -1144,10 +1144,9 @@ def standard_app_values():
         "daSecureCookies": bool(current_app.config['SESSION_COOKIE_SECURE']),
         "daEmailAddressRequired": word("An e-mail address is required."),
         "daNeedCompleteEmail": word("You need to enter a complete e-mail address."),
-        "daToggleWord": word("Toggle")
+        "daToggleWord": word("Toggle"),
+        "daPleaseWaitWord": word("Please wait...")
     }
-
-
 
 
 def get_history(interview, interview_status):

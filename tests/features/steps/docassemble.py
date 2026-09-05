@@ -531,20 +531,18 @@ def set_mc_option_under(context, option, label):
         label += " "
         div = context.browser.find_element(By.XPATH, '//div[contains(@class, "da-legend")][text()="' + label + '"]/following-sibling::div')
     try:
-        span = div.find_element(By.XPATH, './/span[text()="' + option + '"]')
+        option_label = div.find_element(By.XPATH, './/label[text()="' + option + '"]')
     except:
-        span = div.find_element(By.XPATH, './/span[text()[contains(.,"' + option + '")]]')
-    option_label = span.find_element(By.XPATH, "..")
+        option_label = div.find_element(By.XPATH, './/label[text()[contains(.,"' + option + '")]]')
     option_label.click()
 
 
 @step(r'I click the "(?P<choice>[^"]+)" option')
 def set_mc_option(context, choice):
     try:
-        span_elem = context.browser.find_element(By.XPATH, '//form[@id="daform"]//span[text()="' + choice + '"]')
+        label_elem = context.browser.find_element(By.XPATH, '//form[@id="daform"]//label[text()="' + choice + '"]')
     except NoSuchElementException:
-        span_elem = context.browser.find_element(By.XPATH, '//form[@id="daform"]//span[text()[contains(.,"' + choice + '")]]')
-    label_elem = span_elem.find_element(By.XPATH, "..")
+        label_elem = context.browser.find_element(By.XPATH, '//form[@id="daform"]//label[text()[contains(.,"' + choice + '")]]')
     label_elem.click()
 
 
@@ -556,32 +554,28 @@ def set_mc_option_under_pre(context, option, label):
         label += " "
         div = context.browser.find_element(By.XPATH, '//div[contains(@class, "da-legend")][text()="' + label + '"]/following-sibling::div')
     try:
-        span = div.find_element(By.XPATH, './/span[text()="' + option + '"]')
+        option_label = div.find_element(By.XPATH, './/label[text()="' + option + '"]')
     except:
-        span = div.find_element(By.XPATH, './/span[text()[contains(.,"' + option + '")]]')
-    option_label = span.find_element(By.XPATH, "..")
+        option_label = div.find_element(By.XPATH, './/label[text()[contains(.,"' + option + '")]]')
     option_label.click()
 
 
 @step(r'I click the option "(?P<choice>[^"]+)"')
 def set_mc_option_pre(context, choice):
     try:
-        span_elem = context.browser.find_element(By.XPATH, '//span[text()="' + choice + '"]')
+        label_elem = context.browser.find_element(By.XPATH, '//label[text()="' + choice + '"]')
     except NoSuchElementException:
-        span_elem = context.browser.find_element(By.XPATH, '//span[text()[contains(.,"' + choice + '")]]')
-    label_elem = span_elem.find_element(By.XPATH, "..")
+        label_elem = context.browser.find_element(By.XPATH, '//label[text()[contains(.,"' + choice + '")]]')
     label_elem.click()
 
 
 @step(r'I click the (?P<ordinal>first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth) option "(?P<choice>[^"]+)"')
 def set_nth_mc_option_pre(context, ordinal, choice):
     try:
-        span_elem = context.browser.find_element(By.XPATH, '(//span[text()="' + choice + '"])[' + str(number_from_ordinal[ordinal]) + ']')
+        label_elem = context.browser.find_element(By.XPATH, '(//label[text()="' + choice + '"])[' + str(number_from_ordinal[ordinal]) + ']')
     except NoSuchElementException:
-        span_elem = context.browser.find_element(By.XPATH, '(//span[text()[contains(.,"' + choice + '")]])[' + str(number_from_ordinal[ordinal]) + ']')
-    label_elem = span_elem.find_element(By.XPATH, "..")
+        label_elem = context.browser.find_element(By.XPATH, '(//label[text()[contains(.,"' + choice + '")]])[' + str(number_from_ordinal[ordinal]) + ']')
     label_elem.click()
-    # span_elem.click()
 
 
 @step(r'I should see "(?P<title>[^"]+)" as the title of the page')

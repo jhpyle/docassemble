@@ -2279,6 +2279,7 @@ def index(action_argument=None, refer=None):
         user_code, user_dict = reset_session(yaml_filename, secret)
         user_dict['url_args'] = url_args
         user_dict['_internal']['referer'] = referer
+        the_current_info.update({'session': user_code, 'encrypted': True})
         if 'visitor_secret' not in request.cookies:
             save_user_dict_key(user_code, yaml_filename)
             update_session(yaml_filename, uid=user_code, key_logged=True)
@@ -2488,7 +2489,7 @@ def index(action_argument=None, refer=None):
             notification_interior += NOTIFICATION_MESSAGE % (classname, str(message))
         flash_content = NOTIFICATION_CONTAINER % (notification_interior,)
     else:
-        flash_content = ''
+        flash_content = NOTIFICATION_CONTAINER % ('',)
     if 'reload_after' in interview_status.extras:
         reload_after = 1000 * int(interview_status.extras['reload_after'])
     else:
@@ -2735,7 +2736,7 @@ def index(action_argument=None, refer=None):
             current_dict = {}
             dropdown_nav_bar = navigation_bar(user_dict['nav'], interview, wrapper=False, a_class='dropdown-item', hide_inactive_subs=False, always_open=True, return_dict=current_dict)
             if dropdown_nav_bar != '':
-                dropdown_nav_bar = '        <div class="col d-md-none text-end">\n          <div class="dropdown danavlinks">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections">' + dropdown_nav_bar + '\n          </div>\n          </div>\n        </div>\n'
+                dropdown_nav_bar = '        <div class="col d-md-none text-end">\n          <div class="dropdown danavlinks">\n            <button class="btn btn-primary dropdown-toggle" type="button" id="daDropdownSections" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' + current_dict.get('title', word("Sections")) + '</button>\n            <div class="dropdown-menu" aria-labelledby="daDropdownSections"><ul class="list-unstyled mb-0" role="list">' + dropdown_nav_bar + '</ul>\n          </div>\n          </div>\n        </div>\n'
         else:
             dropdown_nav_bar = ''
         if interview.use_navigation == 'horizontal':
@@ -2745,7 +2746,7 @@ def index(action_argument=None, refer=None):
                 nav_class = ''
             the_nav_bar = navigation_bar(user_dict['nav'], interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
             if the_nav_bar != '':
-                the_nav_bar = dropdown_nav_bar + '        <div class="col' + nav_class + '">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + the_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
+                the_nav_bar = dropdown_nav_bar + '        <div class="col' + nav_class + '">\n          <ul class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz" role="list">\n            ' + the_nav_bar + '\n          </ul>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
         else:
             if interview.use_navigation_on_small_screens == 'dropdown':
                 if dropdown_nav_bar:
@@ -2755,7 +2756,7 @@ def index(action_argument=None, refer=None):
             elif interview.use_navigation_on_small_screens:
                 horiz_nav_bar = navigation_bar(user_dict['nav'], interview, wrapper=False, inner_div_class='nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz danavnested-horiz')
                 if horiz_nav_bar != '':
-                    horiz_nav_bar = dropdown_nav_bar + '        <div class="col d-md-none">\n          <div class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz">\n            ' + horiz_nav_bar + '\n          </div>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
+                    horiz_nav_bar = dropdown_nav_bar + '        <div class="col d-md-none">\n          <ul class="nav flex-row justify-content-center align-items-center nav-pills danav danavlinks danav-horiz" role="list">\n            ' + horiz_nav_bar + '\n          </ul>\n        </div>\n      </div>\n      <div class="row tab-content">\n'
             else:
                 horiz_nav_bar = ''
             the_nav_bar = navigation_bar(user_dict['nav'], interview)

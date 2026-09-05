@@ -964,16 +964,18 @@ def test_for_valid_var(varname):
         raise DAError(varname + " is not a valid name.  A valid name consists only of letters, numbers, and underscores, and begins with a letter.")
 
 @hookimpl(specname='navigation_bar')
-def navigation_bar_adapter(nav, interview, wrapper, inner_div_class, inner_div_extra, show_links, hide_inactive_subs, a_class, show_nesting, include_arrows, always_open, return_dict):
-    return navigation_bar(nav, interview, wrapper=wrapper, inner_div_class=inner_div_class, inner_div_extra=inner_div_extra, show_links=show_links, hide_inactive_subs=hide_inactive_subs, a_class=a_class, show_nesting=show_nesting, include_arrows=include_arrows, always_open=always_open, return_dict=return_dict)
+def navigation_bar_adapter(nav, interview, wrapper, inner_div_class, inner_div_extra, show_links, hide_inactive_subs, a_class, show_nesting, include_arrows, always_open, return_dict, li_class=None):
+    return navigation_bar(nav, interview, wrapper=wrapper, inner_div_class=inner_div_class, inner_div_extra=inner_div_extra, show_links=show_links, hide_inactive_subs=hide_inactive_subs, a_class=a_class, show_nesting=show_nesting, include_arrows=include_arrows, always_open=always_open, return_dict=return_dict, li_class=li_class)
 
-def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=None, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None):
+def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div_extra=None, show_links=None, hide_inactive_subs=True, a_class=None, show_nesting=True, include_arrows=False, always_open=False, return_dict=None, li_class=None):
     if show_links is None:
         show_links = not bool(hasattr(nav, 'disabled') and nav.disabled)
     if inner_div_class is None:
         inner_div_class = 'nav flex-column nav-pills danav danavlinks danav-vertical danavnested'
     if inner_div_extra is None:
         inner_div_extra = ''
+    if li_class is None:
+        li_class = 'nav-item'
     if a_class is None:
         a_class = 'nav-link danavlink'
         muted_class = ' text-body-secondary'
@@ -1004,8 +1006,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             the_section = list(the_sections[0])[0]
         else:
             the_section = the_sections[0]
+    nav_instance_id = uuid.uuid4().hex[:8]
     if wrapper:
-        output = '<div role="navigation" class="' + daconfig['grid classes']['vertical navigation']['bar'] + ' d-none d-md-block danavdiv">\n  <div class="nav flex-column nav-pills danav danav-vertical danavlinks">\n'
+        output = '<div role="navigation" class="' + daconfig['grid classes']['vertical navigation']['bar'] + ' d-none d-md-block danavdiv">\n  <ul class="nav flex-column nav-pills danav danav-vertical danavlinks" role="list">\n'
     else:
         output = ''
     section_reached = False
@@ -1014,8 +1017,9 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
     on_first = True
     # logmessage("Sections is " + repr(the_sections))
     for x in the_sections:
+        item_output = ''
         if include_arrows and not on_first:
-            output += '<span class="dainlinearrow"><i class="fa-solid fa-chevron-right"></i></span>'
+            item_output += '<span class="dainlinearrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>'
         on_first = False
         indexno += 1
         the_key = None
@@ -1052,6 +1056,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
             section_reached = True
             currently_active = True
             active_class = ' active'
+            active_aria = ' aria-current="step"'
             if return_dict is not None:
                 return_dict['parent_key'] = the_key
                 return_dict['parent_title'] = the_title
@@ -1059,6 +1064,7 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                 return_dict['title'] = the_title
         else:
             active_class = ''
+            active_aria = ''
             # output += '<li class="' + li_class + '" role="presentation">'
         new_key = the_title if the_key is None else the_key
         seen.add(new_key)
@@ -1074,27 +1080,28 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
         if show_links and (seen_more or currently_active or not section_reached) and the_key is not None and interview is not None and the_key in interview.questions:
             # url = interview_url_action(the_key)
             if section_reached and not currently_active and not seen_more:
-                output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
+                item_output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
             else:
                 if active_class == '' and not section_reached and not seen_more:
-                    output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
+                    item_output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
                 else:
-                    output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" class="daclickable ' + a_class + active_class + '">' + str(the_title) + '</a>'
+                    item_output += '<a href="#" data-key="' + the_key + '" data-index="' + str(indexno) + '" ' + active_aria + 'class="daclickable ' + a_class + active_class + '">' + str(the_title) + '</a>'
         else:
             if section_reached and not currently_active and not seen_more:
-                output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
+                item_output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(the_title) + '</span>'
             else:
                 if active_class == '' and not section_reached and not seen_more:
-                    output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
+                    item_output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' inactive' + muted_class + '">' + str(the_title) + '</span>'
                 else:
-                    output += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + active_class + '">' + str(the_title) + '</a>'
+                    item_output += '<a tabindex="-1" data-index="' + str(indexno) + '"' + active_aria + ' class="' + a_class + active_class + '">' + str(the_title) + '</a>'
         suboutput = ''
         if subitems:
             current_is_within = False
             oldindexno = indexno
             for y in subitems:
+                sub_item_output = ''
                 if include_arrows:
-                    suboutput += '<span class="dainlinearrow"><i class="fa-solid fa-chevron-right"></i></span>'
+                    sub_item_output += '<span class="dainlinearrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>'
                 indexno += 1
                 sub_currently_active = False
                 if isinstance(y, dict):
@@ -1113,11 +1120,13 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                     current_is_within = True
                     sub_currently_active = True
                     sub_active_class = ' active'
+                    sub_active_aria = ' aria-current="step"'
                     if return_dict is not None:
                         return_dict['key'] = sub_key
                         return_dict['title'] = sub_title
                 else:
                     sub_active_class = ''
+                    sub_active_aria = ''
                     # suboutput += '<li class="' + li_class + '" role="presentation">'
                 new_sub_key = sub_title if sub_key is None else sub_key
                 seen.add(new_sub_key)
@@ -1131,25 +1140,26 @@ def navigation_bar(nav, interview, wrapper=True, inner_div_class=None, inner_div
                 # logmessage("First sub is %s, indexno is %d, sub_currently_active is %s, sub_key is %s, sub_title is %s, section_reached is %s, current_is_within is %s, sub_active_class is %s, new_sub_key is %s, seen_more is %s, section_reached is %s, show_links is %s" % (str(first_sub), indexno, str(sub_currently_active), sub_key, sub_title, section_reached, current_is_within, sub_active_class, new_sub_key, str(seen_more), str(section_reached), str(show_links)))
                 if show_links and (seen_more or sub_currently_active or not section_reached) and sub_key is not None and interview is not None and sub_key in interview.questions:
                     # url = interview_url_action(sub_key)
-                    suboutput += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '" class="daclickable ' + a_class + sub_active_class + '">' + str(sub_title) + '</a>'
+                    sub_item_output += '<a href="#" data-key="' + sub_key + '" data-index="' + str(indexno) + '"' + sub_active_aria + ' class="daclickable ' + a_class + sub_active_class + '">' + str(sub_title) + '</a>'
                 else:
                     if section_reached and not sub_currently_active and not seen_more:
-                        suboutput += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(sub_title) + '</span>'
+                        sub_item_output += '<span tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + ' danotavailableyet' + muted_class + '">' + str(sub_title) + '</span>'
                     else:
-                        suboutput += '<a tabindex="-1" data-index="' + str(indexno) + '" class="' + a_class + sub_active_class + ' inactive">' + str(sub_title) + '</a>'
-                # suboutput += "</li>"
+                        sub_item_output += '<a tabindex="-1" data-index="' + str(indexno) + '"' + sub_active_aria + ' class="' + a_class + sub_active_class + ' inactive">' + str(sub_title) + '</a>'
+                suboutput += '<li class="danavitem ' + li_class + '">' + sub_item_output + '</li>'
             if currently_active or current_is_within or hide_inactive_subs is False or show_nesting:
+                nested_id = 'danavnested-' + nav_instance_id + '-' + str(oldindexno)
                 if currently_active or current_is_within or auto_open:
-                    suboutput = '<div class="' + inner_div_class + '"' + inner_div_extra + '>' + suboutput
+                    suboutput = '<ul id="' + nested_id + '" class="' + inner_div_class + '"' + inner_div_extra + ' role="list">' + suboutput
                 else:
-                    suboutput = '<div style="display: none;" class="danotshowing ' + inner_div_class + '"' + inner_div_extra + '>' + suboutput
-                suboutput += "</div>"
-                output += suboutput
+                    suboutput = '<ul id="' + nested_id + '" style="display: none;" class="danotshowing ' + inner_div_class + '"' + inner_div_extra + ' role="list">' + suboutput
+                suboutput += "</ul>"
+                item_output += suboutput
             else:
                 indexno = oldindexno
-        # output += "</li>"
+        output += '<li class="danavitem ' + li_class + '">' + item_output + '</li>'
     if wrapper:
-        output += "\n</div>\n</div>\n"
+        output += "\n</ul>\n</div>\n"
     if (not non_progressive) and (not section_reached):
         logmessage("Section \"" + str(the_section) + "\" did not exist.")
     return output

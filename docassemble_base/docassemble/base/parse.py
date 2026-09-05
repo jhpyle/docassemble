@@ -1876,6 +1876,8 @@ class Question:
         for key, value in orig_data.items():
             data[key.lower()] = value
         should_append = True
+        # register_target is the root-level Question, so that if __init__ is called from a sub-question,
+        # the code knows what the root Question is.
         if 'register_target' in kwargs:
             register_target = kwargs['register_target']
             main_list = False
@@ -3075,6 +3077,7 @@ class Question:
             self.process_attachment_code(data['attachment code'])
         elif 'attachments code' in data:
             self.process_attachment_code(data['attachments code'])
+        # this code shouldn't run unless there are attachments
         if 'allow emailing' in data:
             self.allow_emailing = data['allow emailing']
         if 'allow downloading' in data:
@@ -8640,6 +8643,7 @@ class Interview:
                 # else:
                 #    logmessage("assemble: there is no action in the current_info")
                 try:
+                    # Why is this done inside the loop rather than outside of it?
                     if not self.imports_util:
                         if self.consolidated_metadata.get('suppress loading util', False):
                             exec(import_process_action, user_dict)
@@ -8651,9 +8655,10 @@ class Interview:
                         this_thread.current_question = force_question
                         interview_status.populate(force_question.ask(user_dict, old_user_dict, 'None', [], None, None))
                         raise MandatoryQuestion()
+                    # run process action before any of the questions
                     if not self.calls_process_action:
                         exec(run_process_action, user_dict)
-                    question = None
+                    question = None  # why is this here?
                     for question in self.questions_list:
                         if question.question_type == 'code' and (question.is_initial or (question.initial_code is not None and eval(question.initial_code, user_dict))):
                             # logmessage("Running some initial code:\n\n" + question.sourcecode)

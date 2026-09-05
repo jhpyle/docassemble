@@ -18,7 +18,7 @@ for min_file in app/app.min.css app/pygments.min.css bootstrap-slider/dist/css/b
     fi
 done
 
-for min_file in app/app.min.js app/config.min.js app/manage_api.min.js app/update_package.min.js app/updatingpackages.min.js app/pullplaygroundpacakge.min.js app/501.min.js app/train.min.js app/admin.min.js app/cm6.min.js app/monitor.min.js app/playground.min.js labelauty/source/jquery-labelauty.min.js bootstrap-combobox/js/bootstrap-combobox.min.js ; do
+for min_file in app/app.min.js app/config.min.js app/manage_api.min.js app/update_package.min.js app/updatingpackages.min.js app/pullplaygroundpacakge.min.js app/501.min.js app/train.min.js app/admin.min.js app/cm6.min.js app/monitor.min.js app/playground.min.js bootstrap-combobox/js/bootstrap-combobox.min.js ; do
     orig_file="${min_file/.min/}"
     map_file=$(basename $min_file).map
     if [[ docassemble_webapp/docassemble/webapp/static/${orig_file} -nt docassemble_webapp/docassemble/webapp/static/${min_file} ]]; then

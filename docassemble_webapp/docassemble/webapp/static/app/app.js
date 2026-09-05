@@ -1041,6 +1041,26 @@ var daAddressAjaxTimeout = null;
 var daAddressAjaxTimeoutRunning = null;
 var daAddressAjaxTimeoutCallAfter = null;
 var daShowHideHappened = false;
+var daShowIfSetupComplete = false;
+var daShowIfAnnounceTimeout = null;
+function daAnnounceShowIfReveal() {
+  if (!daShowIfSetupComplete) {
+    return;
+  }
+  var announcer = document.getElementById("daShowIfAnnouncer");
+  if (announcer == null) {
+    return;
+  }
+  var message = announcer.getAttribute("data-message");
+  announcer.textContent = "";
+  if (daShowIfAnnounceTimeout != null) {
+    window.clearTimeout(daShowIfAnnounceTimeout);
+  }
+  daShowIfAnnounceTimeout = window.setTimeout(function () {
+    announcer.textContent = message;
+    daShowIfAnnounceTimeout = null;
+  }, 100);
+}
 var daCheckinInterval = null;
 var daInitialCheckinTimeout = null;
 var daReloader = null;
@@ -1105,6 +1125,7 @@ var daEmailAddressRequired;
 var daNeedCompleteEmail;
 var daDefaultPopoverTrigger;
 var daToggleWord;
+var daPleaseWaitWord;
 var daCheckinUrlWithInterview;
 var daReloadAfterSeconds;
 var daCustomItems;
@@ -2325,7 +2346,7 @@ function daInjectTrim(handler) {
         element.type !== "file")
     ) {
       setTimeout(function () {
-        element.value = $.trim(element.value);
+        element.value = element.value.trim();
       }, 10);
     }
     return handler.call(this, element, event);
@@ -2388,7 +2409,7 @@ function daValidationHandler(form) {
       if (
         $(this).attr("name") &&
         $(this).attr("type") != "hidden" &&
-        (($(this).hasClass("da-active-invisible") &&
+        (($(this).hasClass("da-to-labelauty") &&
           $(this).parent().is(":visible")) ||
           $(this).is(":visible"))
       ) {
@@ -3738,15 +3759,22 @@ function daStopCheckingIn() {
 function daShowSpinner() {
   if ($("#daquestion").length > 0) {
     $(
-      '<div id="daSpinner" class="da-spinner-container da-top-for-navbar"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner"><i class="fa-solid fa-spinner fa-spin"></i></span></div></div></div></div>',
+      '<div id="daSpinner" class="da-spinner-container da-top-for-navbar" role="status"><div class="container"><div class="row"><div class="col text-center"><span class="da-spinner" aria-hidden="true"><i class="fa-solid fa-spinner fa-spin"></i></span><span class="visually-hidden">' +
+        daPleaseWaitWord +
+        "</span></div></div></div></div>",
     ).appendTo(daTargetDiv);
   } else {
     var newSpan = document.createElement("span");
-    var newI = document.createElement("i");
-    $(newI).addClass("fa-solid fa-spinner fa-spin");
-    $(newI).appendTo(newSpan);
     $(newSpan).attr("id", "daSpinner");
     $(newSpan).addClass("da-sig-spinner da-top-for-navbar");
+    $(newSpan).attr("role", "status");
+    var newI = document.createElement("i");
+    $(newI).addClass("fa-solid fa-spinner fa-spin");
+    $(newI).attr("aria-hidden", "true");
+    $(newI).appendTo(newSpan);
+    $('<span class="visually-hidden">' + daPleaseWaitWord + "</span>").appendTo(
+      newSpan,
+    );
     $(newSpan).appendTo("#dasigtoppart");
   }
   daShowingSpinner = true;
@@ -4589,12 +4617,6 @@ function daInitialize(doScroll) {
       selects[i].appendChild(document.createElement("optgroup"));
     }
   }
-  $(".da-to-labelauty").labelauty({
-    class: "labelauty da-active-invisible dafullwidth",
-  });
-  $(".da-to-labelauty-icon").labelauty({ label: false });
-  $("input[type=radio].da-to-labelauty:checked").trigger("change");
-  $("input[type=radio].da-to-labelauty-icon:checked").trigger("change");
   $("button").on("click", function () {
     daWhichButton = this;
     return true;
@@ -4982,9 +5004,13 @@ function daInitialize(doScroll) {
       var prev = $(this).prev();
       if (prev && !prev.hasClass("active")) {
         var toggler;
+        var boxId = $(box).attr("id");
+        var ariaControls = boxId ? ' aria-controls="' + boxId + '"' : "";
         if ($(box).hasClass("danotshowing")) {
           toggler = $(
-            '<a href="#" class="toggler" role="button" aria-pressed="false">',
+            '<button type="button" class="toggler" aria-expanded="false"' +
+              ariaControls +
+              ">",
           );
           $('<i class="fa-solid fa-caret-right">').appendTo(toggler);
           $(
@@ -4992,14 +5018,16 @@ function daInitialize(doScroll) {
           ).appendTo(toggler);
         } else {
           toggler = $(
-            '<a href="#" class="toggler" role="button" aria-pressed="true">',
+            '<button type="button" class="toggler" aria-expanded="true"' +
+              ariaControls +
+              ">",
           );
           $('<i class="fa-solid fa-caret-down">').appendTo(toggler);
           $(
             '<span class="visually-hidden">' + daToggleWord + "</span>",
           ).appendTo(toggler);
         }
-        toggler.appendTo(prev);
+        toggler.insertAfter(prev);
         toggler.on("click", function (e) {
           var oThis = this;
           $(this)
@@ -5010,14 +5038,14 @@ function daInitialize(doScroll) {
                 $(this).addClass("fa-caret-right");
                 $(this).attr("data-icon", "caret-right");
                 $(box).hide();
-                $(oThis).attr("aria-pressed", "false");
+                $(oThis).attr("aria-expanded", "false");
                 $(box).toggleClass("danotshowing");
               } else if ($(this).attr("data-icon") == "caret-right") {
                 $(this).removeClass("fa-caret-right");
                 $(this).addClass("fa-caret-down");
                 $(this).attr("data-icon", "caret-down");
                 $(box).show();
-                $(oThis).attr("aria-pressed", "true");
+                $(oThis).attr("aria-expanded", "true");
                 $(box).toggleClass("danotshowing");
               }
             });
@@ -5391,6 +5419,7 @@ function daInitialize(doScroll) {
     }
   }
   daShowIfInProcess = true;
+  daShowIfSetupComplete = false;
   var daTriggerQueries = [];
   var daInputsSeen = {};
   function daOnlyUnique(value, index, self) {
@@ -5448,6 +5477,7 @@ function daInitialize(doScroll) {
             if (showIfSign) {
               if ($(showIfDiv).data("isVisible") != "1") {
                 daShowHideHappened = true;
+                daAnnounceShowIfReveal();
               }
               if (showIfMode == 0) {
                 $(showIfDiv).show(speed);
@@ -5540,6 +5570,7 @@ function daInitialize(doScroll) {
             } else {
               if ($(showIfDiv).data("isVisible") != "1") {
                 daShowHideHappened = true;
+                daAnnounceShowIfReveal();
               }
               if (showIfMode == 0) {
                 $(showIfDiv).show(speed);
@@ -5722,6 +5753,7 @@ function daInitialize(doScroll) {
           if (showIfSign) {
             if ($(showIfDiv).data("isVisible") != "1") {
               daShowHideHappened = true;
+              daAnnounceShowIfReveal();
             }
             if (showIfMode == 0) {
               $(showIfDiv).show(speed);
@@ -5816,6 +5848,7 @@ function daInitialize(doScroll) {
           } else {
             if ($(showIfDiv).data("isVisible") != "1") {
               daShowHideHappened = true;
+              daAnnounceShowIfReveal();
             }
             if (showIfMode == 0) {
               $(showIfDiv).show(speed);
@@ -5924,6 +5957,7 @@ function daInitialize(doScroll) {
   if (daTriggerQueries.length > 0) {
     daTriggerAllShowHides();
   }
+  daShowIfSetupComplete = true;
   $(".danavlink").last().addClass("thelast");
   $(".danavlink").each(function () {
     if ($(this).hasClass("btn") && !$(this).hasClass("danotavailableyet")) {
@@ -6106,7 +6140,7 @@ function daConfigureJqueryFuncs() {
         }
       } else if (element.parent(".input-group").length) {
         error.insertAfter(element.parent());
-      } else if (element.hasClass("da-active-invisible")) {
+      } else if (element.hasClass("da-to-labelauty")) {
         var choice_with_help = $(element).parents(".dachoicewithhelp").first();
         if (choice_with_help.length > 0) {
           $(choice_with_help).parent().append(error);

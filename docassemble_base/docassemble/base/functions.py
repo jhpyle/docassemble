@@ -2189,16 +2189,18 @@ class DANav:
             else:
                 show_links = True
         if style == "inline":
-            the_class = 'danavlinks dainline'
-            interior_class = 'dainlineinside'
+            the_class = 'danavlinks dainline list-inline m-0'
+            interior_class = 'dainlineinside list-inline m-0'
             a_class = "btn " + get_button_class_prefix() + "secondary danavlink "
+            li_class = 'list-inline-item'
         else:
             if not self.visible():
                 return ''
-            the_class = 'danavlinks'
+            the_class = 'danavlinks list-unstyled m-0'
             interior_class = None
             a_class = None
-        return '  <div class="dasections"><div class="' + the_class + '">' + "\n" + navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True) + '  </div></div>' + "\n"
+            li_class = 'nav-item'
+        return '  <div class="dasections"><ol class="' + the_class + '" role="list">' + "\n" + navigation_bar(self, this_thread.interview, wrapper=False, inner_div_class=interior_class, a_class=a_class, show_links=show_links, show_nesting=False, include_arrows=True, li_class=li_class) + '  </ol></div>' + "\n"
 
 # word('This field is required.')
 # word('Country Code')
