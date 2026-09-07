@@ -3725,10 +3725,10 @@ class DAList(DAObject):
     def _reorder_buttons(self, classes, index):
         return '<span class="text-nowrap"><a href="#" role="button" class="' + classes + '" data-tablename="' + myb64quote(self.instanceName) + '" data-tableitem="' + str(index) + '" title=' + json.dumps(word("Reorder by moving up")) + '><i class="fa-solid fa-arrow-up"></i><span class="visually-hidden">' + word("Move up") + '</span></a> <a href="#" role="button" class="btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('reorder', 'info') + ' btn-darevisit databledown"><i class="fa-solid fa-arrow-down" title=' + json.dumps(word("Reorder by moving down")) + '></i><span class="visually-hidden">' + word("Move down") + '</span></a></span> '
 
-    def _edit_button(self, url, classes):
+    def _edit_button(self, url, classes, item):  # pylint: disable=unused-argument
         return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-pencil-alt"></i> {word("Edit")}</span></a> '
 
-    def _delete_button(self, url, classes):
+    def _delete_button(self, url, classes, item):  # pylint: disable=unused-argument
         return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-trash"></i> {word("Delete")}</span></a>'
 
     def item_actions(self, *pargs, **kwargs):
@@ -3780,13 +3780,13 @@ class DAList(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_list_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += self._edit_button(url_action('_da_list_edit', items=items), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('edit', 'secondary') + ' btn-darevisit')
+            output += self._edit_button(url_action('_da_list_edit', items=items), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('edit', 'secondary') + ' btn-darevisit', item)
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += self._delete_button(url_action('_da_list_remove', list=self.instanceName, item=repr(index)), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
+            output += self._delete_button(url_action('_da_list_remove', list=self.instanceName, item=repr(index)), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure, item)
         if kwargs.get('edit_url_only', False):
             return url_action('_da_list_edit', items=items)
         if kwargs.get('delete_url_only', False):
@@ -5256,10 +5256,10 @@ class DADict(DAObject):
             return capitalize_func(output)
         return output
 
-    def _edit_button(self, url, classes):
+    def _edit_button(self, url, classes, item):  # pylint: disable=unused-argument
         return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-pencil-alt"></i> {word("Edit")}</span></a> '
 
-    def _delete_button(self, url, classes):
+    def _delete_button(self, url, classes, item):  # pylint: disable=unused-argument
         return f'<a href="{url}" role="button" class="{classes}"><span class="text-nowrap"><i class="fa-solid fa-trash"></i> {word("Delete")}</span></a>'
 
     def item_actions(self, *pargs, **kwargs):
@@ -5309,13 +5309,13 @@ class DADict(DAObject):
                 items += [{'action': '_da_define', 'arguments': {'variables': [item.instanceName + '.' + attrib for attrib in self._complete_attributes()]}}]
             if ensure_complete:
                 items += [{'action': '_da_dict_ensure_complete', 'arguments': {'group': self.instanceName}}]
-            output += self._edit_button(url_action('_da_dict_edit', items=items), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('edit', 'secondary') + ' btn-darevisit')
+            output += self._edit_button(url_action('_da_dict_edit', items=items), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('edit', 'secondary') + ' btn-darevisit', item)
         if use_delete and can_delete:
             if kwargs.get('confirm', False):
                 areyousure = ' daremovebutton'
             else:
                 areyousure = ''
-            output += self._delete_button(url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure)
+            output += self._delete_button(url_action('_da_dict_remove', dict=self.instanceName, item=repr(index)), 'btn btn-sm ' + get_button_class_prefix() + get_configuration()['button colors'].get('delete', 'danger') + ' btn-darevisit' + areyousure, item)
         if kwargs.get('edit_url_only', False):
             return url_action('_da_dict_edit', items=items)
         if kwargs.get('delete_url_only', False):

@@ -88,13 +88,7 @@ def login(context, username, password):
 
 @step(r'I upload the file "(?P<value>[^"]*)"')
 def do_upload(context, value):
-    time.sleep(2)
-    div = context.browser.find_element(By.CSS_SELECTOR, 'div.btn-file')
-    context.browser.execute_script('arguments[0].style = ""; arguments[0].style.position = "inherit";', div)
-    span = context.browser.find_element(By.CSS_SELECTOR, 'span.hidden-xs')
-    context.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "none";', span)
     elem = context.browser.find_element(By.CSS_SELECTOR, 'input[type="file"]')
-    context.browser.execute_script('arguments[0].style = ""; arguments[0].style.display = "block"; arguments[0].style.visibility = "visible"; arguments[0].style.opacity = "100";', elem)
     elem.clear()
     elem.send_keys(value)
     time.sleep(2)
@@ -278,6 +272,15 @@ def click_link(context, link_name):
             EC.element_to_be_clickable((By.XPATH, '//a[text()="' + link_name + '"]'))
         )
         elem.click()
+    context.browser.wait_for_it()
+
+
+@step(r'I click the summary "(?P<summary_name>[^"]+)"')
+def click_summary(context, summary_name):
+    elem = WebDriverWait(context.browser, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//summary[text()[contains(.,"' + summary_name + '")]]'))
+    )
+    elem.click()
     context.browser.wait_for_it()
 
 

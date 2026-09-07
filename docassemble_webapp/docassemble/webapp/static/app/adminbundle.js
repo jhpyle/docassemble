@@ -9678,7 +9678,6 @@ if ( typeof noGlobal === "undefined" ) {
 return jQuery;
 
 } );
-
 /*!
   * Bootstrap v5.3.8 (https://getbootstrap.com/)
   * Copyright 2011-2025 The Bootstrap Authors (https://github.com/twbs/bootstrap/graphs/contributors)
@@ -15991,7 +15990,6 @@ return jQuery;
 
 }));
 //# sourceMappingURL=bootstrap.bundle.js.map
-
 var daWhichButton = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -16124,4 +16122,3 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-

@@ -17,6 +17,7 @@
 "Add another": Null
 "Add a user": Null
 "Add Email": Null
+"Additional fields have appeared on the screen.": Null
 "Add": Null
 "Add Privilege": Null
 "Add User": Null
@@ -128,7 +129,6 @@
 "Central African Republic": Null
 "Chad": Null
 "Changed name of interview": Null
-"Change": Null
 "Change password": Null
 "Change Password": Null
 "Change username": Null
@@ -213,6 +213,7 @@
 "Deleted interview": Null
 "Deleted interviews": Null
 "(Deleted)": Null
+"Deleted": Null
 "Deleted package": Null
 "delete my account": Null
 "Delete": Null
@@ -771,7 +772,6 @@
 "Please wait.  Interview will start when sync is complete.": Null
 "Please wait . . .": Null
 "Please wait.": Null
-"Please wait...": Null
 "Please wait.  Packages are updating.  The screen will refresh when the process is complete.  This may take several minutes.": Null
 "Please wait.  System is restarting.": Null
 "Poland": Null
@@ -779,7 +779,6 @@
 "Possibly not defined": Null
 "Possibly not used": Null
 "Prediction": Null
-"Press one of the following buttons:": Null
 "Press the Publish button to publish the package on PyPI.": Null
 "Preview": Null
 "Privilege": Null
@@ -835,7 +834,6 @@
 "remaining on disk": Null
 "Remember me": Null
 "Removed": Null
-"Remove": Null
 "Rename": Null
 "Rename project": Null
 "Reorder by moving down": Null
@@ -894,7 +892,6 @@
 "Security Method": Null
 "Select a package": Null
 "Select a value between": Null
-"Select file": Null
 "Select...": Null
 "Select one": Null
 "Select the folder from your OneDrive that you want to be synchronized with the Playground.": Null
@@ -1004,7 +1001,6 @@
 "Telephone assistance": Null
 "Template files": Null
 "Templates": Null
-"(term definition)": Null
 "Terms used in this question:": Null
 "Terms used:": Null
 "Thailand": Null

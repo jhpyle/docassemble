@@ -7,9 +7,6 @@ metadata:
 modules:
   - .progressivedisclosure
 ---
-features:
-  css: progressivedisclosure.css
----
 template: fruit_explanation
 subject: |
   Tell me more about fruit

@@ -1,5 +1,50 @@
 # Change Log
 
+## [1.10.8] - 2026-09-07
+
+### Changed
+
+- The `_edit_button()` and `_delete_button()` methods now have a third
+  positional argument, `item`. *Note that this is a breaking change*
+  if you use `_edit_button()` or `_delete_button()`, so you will need
+  to update your methods.
+- Checkboxes and radio buttons no longer use JavaScript.
+- Users of screen readers will hear "Deleted" after pressing a
+  "Delete" button on a `table`.
+- Changed aria settings of the elements containing flash messages, so
+  that messages are announced to screen readers. If you have modified
+  `alert container html` and/or `alert html`, you may want to make
+  note of these changes.
+- Users of screen readers now see a "Skip to main content" link that
+  focuses the question, bypassing navigation.
+- When the spinner appears, users of screen readers will hear
+  "Please wait."
+- When fields appear due to a `show if` being triggered, users of
+  screen readers will hear "Additional fields have appeared."
+- Users of screen readers will hear the list of sections in the
+  navigation bar as separate items.
+- The progress bar's `aria-valuenow` is now always an integer.
+- Updated the progressive disclosure recipe to use
+  `<details>`/`<summary>`.
+- Changed the HTML of "terms" to add `role="button"` and to use a
+  trigger based on focus.
+- Removed `bootstrap-fileinput` plugin for styling file input
+  elements.
+- After a new screen is loaded, the focus will switch either to a form
+  field or to the text of the `question`.
+- Removed the unnecessary `visually-hidden` `<legend>` messages that
+  provided context (e.g. "press one of the following buttons");
+  replaced `<fieldset>` with `<div>`.
+- The `log()` function now accepts a `priority` of `aria`, which shows
+  a message in a `visually-hidden` `<div>` inside of `#daflash`.
+
+### Fixed
+
+- Fixed issue with the session id not being set in the global
+  variables immediately after a `new_session` is created.
+- Prevented error message appearing under some circumstances when a
+  package is deleted.
+
 ## [1.10.7] - 2026-08-01
 
 ### Fixed

@@ -22,7 +22,6 @@ from docassemble.base.filter.html import (
     video_control,
     noquote,
     to_text,
-    my_escape,
     process_target,
     get_icon_html,
 )
@@ -565,11 +564,11 @@ def embed_input(status, variable):
 def help_wrap(content, helptext, status):
     if helptext is None:
         return content
-    help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-' + (status.extras.get('help button color', None) or BUTTON_COLOR_HELP) + '"><a tabindex="0" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="left" data-bs-content=%s aria-label="%s" role="button"><i class="fa-solid fa-question-circle"></i></a></div></div></div>'
+    help_wrapper = '<div class="dachoicewithhelp"><div><div>%s</div><div class="dachoicehelp text-' + (status.extras.get('help button color', None) or BUTTON_COLOR_HELP) + '"><a tabindex="0" role="button" data-bs-container="body" data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=%s aria-label="%s" title="' + word("Help") + '" role="button"><i class="fa-solid fa-question-circle"></i></a></div></div></div>'
     return help_wrapper % (content, noquote(markdown_to_html(helptext, trim=True, status=status, do_terms=False)), word('Information'))
 
 
-def field_item(field, grid_info, pre=None, row=True, floating=False, classes=None, hidden_message=None, label_for=None, label_classes=None, label_content=None, grid_type=None, content_classes=None, content=None, side_note=None, under_text=None, use_fieldset=0, required=False):
+def field_item(field, grid_info, pre=None, row=True, floating=False, classes=None, label_for=None, label_classes=None, label_content=None, grid_type=None, content_classes=None, content=None, side_note=None, under_text=None, use_fieldset=0, required=False):
     if use_fieldset:
         enclosing_type = 'div'
         label_type = 'div'
@@ -580,7 +579,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
         if use_fieldset == 1:
             aria_req += 'role="radiogroup" '
         id_for_label = f'da-label-{field.number}'
-        aria_lb = f' aria-labelledby="{id_for_label}" '
+        aria_lb = f' role="group" aria-labelledby="{id_for_label}" '
         label_id = f' id="{id_for_label}"'
     else:
         enclosing_type = 'div'
@@ -615,10 +614,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
             label_text += label_content
             label_text += '</' + label_type + '>'
         else:
-            if use_fieldset:
-                label_text = '<legend class="visually-hidden">' + hidden_message + '</legend>'
-            else:
-                label_text = None
+            label_text = None
         grid_label_above = label_text and not floating and not row and grid_type is None
         # update_parent_classes(fieldlist, grid_info[field.number]['index'], classes)
         output = '                <' + enclosing_type + aria_lb + aria_req
@@ -670,8 +666,6 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
         output += '>'
         if grid_type in ('offset', 'horizontal'):
             output += '\n                <div class="row">'
-        # if hidden_message:
-        #     output += '\n                <span class="visually-hidden">' + hidden_message + '</span>'
         if label_text and not floating and not grid_label_above:
             output += label_text
         if content_classes:
@@ -721,10 +715,7 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
             label_text += label_content
             label_text += '</' + label_type + '>'
         else:
-            if use_fieldset:
-                label_text = '<legend class="visually-hidden">' + str(hidden_message) + '</legend>'
-            else:
-                label_text = None
+            label_text = None
         output = '                <' + enclosing_type + aria_lb + aria_req
         if pre:
             output += pre
@@ -742,8 +733,6 @@ def field_item(field, grid_info, pre=None, row=True, floating=False, classes=Non
         if len(all_classes) > 0:
             output += 'class="' + (" ".join(all_classes)) + '"'
         output += '>'
-        # if hidden_message:
-        #     output += '\n                  <span class="visually-hidden">' + hidden_message + '</span>'
         if label_text and not floating:
             output += label_text
         all_content_classes = []
@@ -975,7 +964,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if status.pre:
             output += '                <div class="d-none d-sm-block da-d-sm-block">' + markdown_to_html(status.pre, trim=False, status=status) + '</div>\n'
         if status.question_text:
-            output += '                <div class="da-page-header d-none d-sm-block da-d-sm-block"><h1 class="h3">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+            output += '                <div class="da-page-header d-none d-sm-block da-d-sm-block"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         output += '              </div>'
         if status.subquestion_text:
             output += '                <div id="dasigmidpart" class="dasigmidpart da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
@@ -988,13 +977,12 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if status.submit:
             output += '                <div class="d-none d-sm-block da-d-sm-block">' + markdown_to_html(status.submit, trim=False, status=status) + '</div>\n'
         output += """
-              <fieldset class="da-button-set d-none d-sm-block da-d-sm-block da-signature">
-                <legend class="visually-hidden">""" + word('Press one of the following buttons:') + """</legend>
+              <div class="da-button-set d-none d-sm-block da-d-sm-block da-signature">
                 <div class="dasigbuttons mt-3">""" + back_button + additional_buttons_before + """
                   <a href="#" role="button" class="btn """ + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + """ dasigsave">""" + continue_label + """</a>
                   <a href="#" role="button" class="btn """ + BUTTON_STYLE + BUTTON_COLOR_CLEAR + ' ' + BUTTON_CLASS + """ dasigclear">""" + word('Clear') + """</a>""" + additional_buttons_after + help_button + """
                 </div>
-              </fieldset>
+              </div>
 """
         output += help_button_area
         if not STRICT_MODE:
@@ -1010,19 +998,19 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformyesno">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <fieldset class="da-button-set da-field-' + status.question.question_type + '">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+        output += '                <div class="da-button-set da-field-' + status.question.question_type + '">'
         output += back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_YES + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_NO + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.no() + '</button>'
         if status.question.question_type == 'yesnomaybe':
             output += '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_MAYBE + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + markdown_to_html(status.question.maybe(), trim=True, do_terms=False, status=status) + '</button>'
         output += additional_buttons_after
         output += help_button
-        output += '\n                </fieldset>\n'
+        output += '\n                </div>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if show_under_text:
@@ -1038,19 +1026,19 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformnoyes">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <fieldset class="da-button-set da-field-' + status.question.question_type + '">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+        output += '                <div class="da-button-set da-field-' + status.question.question_type + '">'
         output += back_button + additional_buttons_before + '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_YES + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="False">' + status.question.yes() + '</button>\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_NO + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="True">' + status.question.no() + '</button>'
         if status.question.question_type == 'noyesmaybe':
             output += '\n                  <button class="btn ' + BUTTON_STYLE + BUTTON_COLOR_MAYBE + ' ' + BUTTON_CLASS + '" name="' + escape_id(status.question.fields[0].saveas) + '" type="submit" value="None">' + status.question.maybe() + '</button>'
         output += additional_buttons_after
         output += help_button
-        output += '\n                </fieldset>\n'
+        output += '\n                </div>\n'
         output += help_button_area
         if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
@@ -1155,7 +1143,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         fieldlist.append('                <div class="row da-review da-review-help"><div class="col">' + markdown_to_html(status.helptexts[field.number], status=status, strip_newlines=True) + '</div></div>\n')
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformreview" method="POST">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
@@ -1172,15 +1160,15 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         else:
             resume_button_label = word('Resume')
         output += status.submit
-        output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+        output += '                <div class="da-button-set da-field-buttons">'
         if hasattr(status.question, 'review_saveas'):
             output += back_button + additional_buttons_before
             output += '\n                <button type="submit" class="btn ' + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + '" ' + show_continue_button + disable_continue_button + 'name="' + escape_id(safeid(status.question.review_saveas)) + '" value="True">' + continue_label + '</button>'
-            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += additional_buttons_after + help_button + '\n                </div>\n'
         else:
             output += back_button + additional_buttons_before
             output += '\n                <button class="btn ' + BUTTON_STYLE + continue_button_color + ' ' + BUTTON_CLASS + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + resume_button_label + '</button>'
-            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += additional_buttons_after + help_button + '\n                </div>\n'
         output += help_button_area
         if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
@@ -1482,7 +1470,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     field_class += ' da-field-container-inputtype-dropdown'
             field_class += extra_container_class
             if field.number in status.helptexts:
-                helptext_start = '<a tabindex="0" class="text-info ms-1 dapointer" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True, status=status)) + ' aria-label="' + word("Information") + '" role="button">'
+                helptext_start = '<a tabindex="0" role="button" class="text-info ms-1 dapointer" data-bs-container="body" data-bs-trigger="focus" data-bs-toggle="popover" data-bs-placement="bottom" title="' + word("Help") + '" data-bs-content=' + noquote(markdown_to_html(status.helptexts[field.number], trim=True, status=status)) + ' aria-label="' + word("Information") + '" role="button">'
                 helptext_end = '<i class="fa-solid fa-question-circle"></i></a>'
             else:
                 helptext_start = ''
@@ -1815,23 +1803,23 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 else:
                     label_for = ''
                 if status.labels[field.number] == 'no label':
-                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=class_def + side_note_parent + req_tag + field_class + ' da-field-container-nolabel', hidden_message=word("Answer here"), grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=class_def + side_note_parent + req_tag + field_class + ' da-field-container-nolabel', grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                     # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + class_def + '' + side_note_parent + req_tag + field_class + ' da-field-container-nolabel">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field) + '</div>' + side_note + '\n                </div>\n')
                 elif hasattr(field, 'inputtype') and field.inputtype in ['yesnowide', 'noyeswide']:
-                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                    fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, grid_type='wide', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                     # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row dayesnospacing ' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="col dawidecol dafieldpart">' + input_for(status, field) + '</div>' + side_note + '\n                </div>\n')
                 elif floating_labels or (hasattr(field, 'floating_label') and status.extras['floating_label'][field.number]):
                     if (hasattr(field, 'datatype') and field.datatype in ['file', 'files', 'camera', 'user', 'environment', 'camcorder', 'microphone']):
                         if status.labels[field.number] == '':
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                         else:
                             fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, label_classes='form-label da-top-label', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                     else:
                         if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, label_content='', use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, label_content='', use_fieldset=use_fieldset, required=is_required))
                             # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                         elif status.labels[field.number] == '':
-                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                            fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                             # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                         else:
                             floating_label = markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True)
@@ -1841,20 +1829,20 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                             # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group-floating form-floating mb-3' + side_note_parent + req_tag + field_class + class_def + '">\n                  ' + input_for(status, field, floating_label=strip_quote(to_text(floating_label, {}, []).strip())) + side_note + '\n                  <label ' + label_for + '>' + floating_label + '</label>\n                </div>\n')
                 elif (labels_above and not (hasattr(field, 'label_above_field') and not status.extras['label_above_field'][field.number])) or (hasattr(field, 'label_above_field') and status.extras['label_above_field'][field.number]):
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, hidden_message=word("Check if applicable"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes='dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group dayesnospacing' + side_note_parent + field_class + ' da-field-container-nolabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Check if applicable") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                     elif status.labels[field.number] == '':
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '">\n                  <span class="visually-hidden">' + word("Answer here") + '</span>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                     else:
                         fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, row=False, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, label_classes='form-label da-top-label', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group' + side_note_parent + req_tag + field_class + class_def + '">\n                  <label class="form-label da-top-label"' + label_for + '>' + markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end + '</label>\n                  <div class="dafieldpart">' + input_for(status, field) + side_note + '</div>\n                </div>\n')
                 else:
                     if hasattr(field, 'inputtype') and field.inputtype in ['yesno', 'noyes']:
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Check if applicable"), grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes='dayesnospacing' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, grid_type='offset', content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row dayesnospacing' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '"><span  class="visually-hidden">' + word("Check if applicable") + '</span><div class="offset-' + daconfig['grid classes']['label width'] + ' col-' + daconfig['grid classes']['field width'] + ' dafieldpart">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                     elif status.labels[field.number] == '':
-                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, hidden_message=word("Answer here"), grid_type='offset', content_classes='dafieldpart danolabel', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
+                        fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def, grid_type='offset', content_classes='dafieldpart danolabel', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
                         # fieldlist.append('                <div ' + style_def + data_def + 'class="da-form-group row' + side_note_parent + req_tag + field_class + ' da-field-container-emptylabel' + class_def + '"><span class="visually-hidden">' + word("Answer here") + '</span><div class="offset-' + daconfig['grid classes']['label width'] + ' col-' + daconfig['grid classes']['field width'] + ' dafieldpart danolabel">' + input_for(status, field) + '</div>' + side_note + '</div>\n')
                     else:
                         fieldlist.append(field_item(field, grid_info, pre=style_def + data_def, classes=side_note_parent + req_tag + field_class + class_def, label_for=label_for, grid_type='horizontal', label_content=markdown_to_html(status.labels[field.number], trim=True, status=status, strip_newlines=True) + helptext_start + helptext_end, content_classes='dafieldpart', content=input_for(status, field), side_note=side_note, under_text=under_text, use_fieldset=use_fieldset, required=is_required))
@@ -1865,8 +1853,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                 fieldlist.append('                </div>\n')
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformfields" method="POST"' + enctype_string + autofill + '>\n'
-        output += '                <div id="daShowIfAnnouncer" class="visually-hidden" aria-live="polite" aria-atomic="true" data-message=' + noquote(word("Additional fields have appeared.")) + '></div>\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + subquestion_text
             output += '                </div>\n'
@@ -1895,15 +1882,15 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         if null_question:
             output += '                <input type="hidden" name="_null_question" value="1" />\n'
         output += status.submit
-        output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+        output += '                <div class="da-button-set da-field-buttons">'
         if hasattr(status.question, 'fields_saveas'):
             output += back_button + additional_buttons_before
             output += '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'name="' + escape_id(safeid(status.question.fields_saveas)) + '" value="True">' + continue_label + '</button>'
-            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += additional_buttons_after + help_button + '\n                </div>\n'
         else:
             output += back_button + additional_buttons_before
             output += '\n                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + continue_label + '</button>'
-            output += additional_buttons_after + help_button + '\n                </fieldset>\n'
+            output += additional_buttons_after + help_button + '\n                </div>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if show_under_text:
@@ -1924,16 +1911,16 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         datatypes[status.question.fields[0].saveas] = "boolean"
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformcontinue">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+        output += '                <div class="da-button-set da-field-buttons">'
         output += back_button + additional_buttons_before
         output += '\n                <button type="submit" class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'name="' + escape_id(status.question.fields[0].saveas) + '" value="True">' + continue_label + '</button>'
-        output += additional_buttons_after + help_button + '\n                </fieldset>\n'
+        output += additional_buttons_after + help_button + '\n                </div>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if show_under_text:
@@ -1955,7 +1942,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             datatypes[status.question.fields[0].saveas] = status.question.fields[0].datatype
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" method="POST" class="daformmultiplechoice">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
@@ -1968,7 +1955,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             inner_fieldlist = []
             if status.question.question_variety == "radio":
                 verb = 'check'
-                output += '                <fieldset class="da-field-' + status.question.question_variety + '">\n                  <legend class="visually-hidden">' + word("Choices (choose one):") + "</legend>\n"
+                output += '                <div class="da-field-' + status.question.question_variety + '">\n'
             else:
                 verb = 'select'
                 if status.question.question_variety == "dropdown":
@@ -1986,7 +1973,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         random.shuffle(group_order)
                     groups = {}
                     for idx, p in zip(group_order, pairlist):
-                        if not p.get('group') in groups:
+                        if p.get('group') not in groups:
                             groups[p.get('group')] = idx
                     if using_shuffle:
                         pairlist = sorted(pairlist, key=lambda p: groups[p.get('group')] * 1000 + random.randint(1, 1000))
@@ -2115,16 +2102,16 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             if status.question.question_variety != 'combobox':
                 output += '                <div id="daerrorcontainer" style="display:none"></div>\n'
             if status.question.question_variety == "radio":
-                output += "                </fieldset>\n"
+                output += "                </div>\n"
             output += status.submit
-            output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+            output += '                <div class="da-button-set da-field-buttons">'
             output += back_button + additional_buttons_before + '\n'
             output += '                  <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + continue_label + '</button>'
             output += additional_buttons_after + help_button + '\n'
-            output += '                </fieldset>\n'
+            output += '                </div>\n'
         else:
             output += status.submit
-            output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+            output += '                <div class="da-button-set da-field-buttons">'
             output += back_button + additional_buttons_before + '\n'
             if hasattr(status.question.fields[0], 'saveas'):
                 if hasattr(status.question.fields[0], 'has_code') and status.question.fields[0].has_code:
@@ -2222,7 +2209,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     indexno += 1
             output += additional_buttons_after
             output += help_button
-            output += '                </fieldset>\n'
+            output += '                </div>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if show_under_text:
@@ -2235,15 +2222,15 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
         output += '            </form>\n'
     elif status.question.question_type == 'deadend':
         output += status.pre
-        output += indent_by(audio_text, 12) + '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += indent_by(audio_text, 12) + '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         if back_button != '' or help_button != '' or additional_buttons_after != '' or additional_buttons_before != '':
             output += status.submit
-            output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
-            output += back_button + additional_buttons_before + additional_buttons_after + help_button + '</fieldset>\n'
+            output += '                <div class="da-button-set da-field-buttons">'
+            output += back_button + additional_buttons_before + additional_buttons_after + help_button + '</div>\n'
         output += help_button_area
         if show_under_text:
             output += markdown_to_html(status.extras['underText'], status=status, divclass="daundertext")
@@ -2253,7 +2240,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
             output += '            </form>\n'
     elif status.question.question_type == 'wait':
         output += '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + markdown_to_html(status.question_text or word("Please wait . . ."), trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + markdown_to_html(status.question_text or word("Please wait . . ."), trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if show_under_text:
@@ -2264,16 +2251,16 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
     else:
         output += status.pre
         output += indent_by(audio_text, 12) + '            <form aria-labelledby="daMainQuestion" action="' + root + '" id="daform" class="form-horizontal daformcontinueother" method="POST">\n'
-        output += '                <div class="da-page-header"><h1 class="h3" id="daMainQuestion">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
+        output += '                <div class="da-page-header"><h1 class="h3 da-no-outline" id="daMainQuestion" tabindex="-1">' + decoration_text + markdown_to_html(status.question_text, trim=True, status=status, strip_newlines=True) + '</h1><div class="daclear"></div></div>\n'
         if status.subquestion_text:
             output += '                <div class="da-subquestion">\n' + markdown_to_html(status.subquestion_text, status=status) + '                </div>\n'
         if video_text:
             output += indent_by(video_text, 12)
         output += status.submit
-        output += '                <fieldset class="da-button-set da-field-buttons">\n                  <legend class="visually-hidden">' + word('Press one of the following buttons:') + '</legend>'
+        output += '                <div class="da-button-set da-field-buttons">'
         output += back_button + additional_buttons_before
         output += '\n                <button class="btn ' + BUTTON_CLASS + ' ' + BUTTON_STYLE + continue_button_color + '" ' + show_continue_button + disable_continue_button + 'type="submit">' + continue_label + '</button>'
-        output += additional_buttons_after + help_button + '\n                </fieldset>\n'
+        output += additional_buttons_after + help_button + '\n                </div>\n'
         # output += question_name_tag(status.question)
         output += help_button_area
         if show_under_text:
@@ -2783,7 +2770,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                 random.shuffle(group_order)
             groups = {}
             for idx, p in zip(group_order, pairlist):
-                if not p.get('group') in groups:
+                if p.get('group') not in groups:
                     groups[p.get('group')] = idx
             if using_shuffle:
                 pairlist = sorted(pairlist, key=lambda p: (groups[p.get('group')], random.random()))
@@ -2878,7 +2865,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                     output += '<div class="da-field-group da-field-checkboxes daobject"'
                 else:
                     output += '<div class="da-field-group da-field-checkboxes"'
-                output += ' data-varname=' + myb64doublequote(from_safeid(field.saveas)) + ' role="group">'
+                output += ' data-varname=' + myb64doublequote(from_safeid(field.saveas)) + '>'
                 if item_grid:
                     output += '<div class="row">'
             all_checked = True
@@ -3337,7 +3324,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                 if file_class == 'None':
                     file_class = 'form-control'
             else:
-                file_class = 'dafile'
+                file_class = 'form-control'
             file_class += extra_class
             if field.datatype == 'files':
                 multipleflag = ' multiple'
@@ -3376,8 +3363,7 @@ def input_for(status, field, embedded=False, floating_label=None):
             if embedded:
                 output += '<span class="da-inline-error-wrapper"><input alt="' + word("You can upload a file here") + '" type="file" class="dafile-embedded" name="' + escape_id(saveas_string) + '"' + title_text + ' id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + disabled_attr + '/></span>'
             else:
-                output += '<input alt=' + fix_double_quote(word("You can upload a file here")) + ' type="file" tabindex="-1" class="' + file_class + '" data-show-upload="false" ' + maximagesize + imagetype + ' data-preview-file-type="text" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + disabled_attr + ' /><div class="da-has-error invalid-feedback" role="alert" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
-            # output += '<div class="fileinput fileinput-new input-group" data-provides="fileinput"><div class="form-control" data-trigger="fileinput"><i class="fa-solid fa-file fileinput-exists"></i><span class="fileinput-filename"></span></div><span class="input-group-addon btn btn-secondary btn-file"><span class="fileinput-new">' + word('Select file') + '</span><span class="fileinput-exists">' + word('Change') + '</span><input type="file" name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + '></span><a href="#" class="input-group-addon btn btn-secondary fileinput-exists" data-dismiss="fileinput">' + word('Remove') + '</a></div>\n'
+                output += '<input alt=' + fix_double_quote(word("You can upload a file here")) + ' type="file" tabindex="-1" class="' + file_class + '" ' + maximagesize + imagetype + ' name="' + escape_id(saveas_string) + '" id="' + escape_id(saveas_string) + '"' + multipleflag + accept + disable_others_data + req_attr + disabled_attr + ' /><div class="da-has-error invalid-feedback" role="alert" style="display: none;" id="' + escape_id(saveas_string) + '-error"></div>'
         elif field.datatype == 'range' and not is_hidden:
             ok = True
             for key in ['min', 'max']:

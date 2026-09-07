@@ -1176,7 +1176,7 @@ def progress_bar(progress, interview):
         percentage = str(int(progress)) + '%'
     else:
         percentage = ''
-    return '<div class="progress mt-2" role="progressbar" aria-label="' + noquote(word('Interview Progress')) + '" aria-valuenow="' + str(progress) + '" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n'
+    return '<div class="progress mt-2" role="progressbar" aria-label="' + noquote(word('Interview Progress')) + '" aria-valuenow="' + f'{progress:.0f}' + '"><div class="progress-bar" style="width: ' + str(progress) + '%;">' + percentage + '</div></div>\n'
 
 
 def make_navbar(status, steps, show_login, chat_info, debug_mode, index_params, extra_class=None):  # pylint: disable=unused-argument

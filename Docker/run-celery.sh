@@ -1,5 +1,7 @@
 #!/bin/bash
 
+umask 002
+
 export DA_ROOT="${DA_ROOT:-/usr/share/docassemble}"
 
 export DA_DEFAULT_LOCAL="local3.14"

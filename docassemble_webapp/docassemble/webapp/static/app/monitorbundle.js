@@ -4906,7 +4906,6 @@
 
 }));
 //# sourceMappingURL=socket.io.js.map
-
 var $;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -6149,4 +6148,3 @@ function daReadyFunction() {
     return false;
   });
 }
-

@@ -670,9 +670,7 @@ def add_terms_mako(termname, terms, status=None, question=None):
     lower_termname = re.sub(r'\s+', ' ', str(termname).lower(), re.DOTALL)
     if lower_termname in terms:
         term_as_text = to_text(markdown_to_html(str(termname), trim=False, do_terms=False, status=status, question=question), None, None)
-        return '<a tabindex="0" class="daterm" aria-label=' + noquote(term_as_text + ' ' + word("(term definition)")) +\
-            ' data-bs-toggle="popover" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' +\
-            noquote(markdown_to_html(terms[lower_termname]['definition'].text({}),
+        return '<a tabindex="0" class="daterm" role="button" data-bs-toggle="popover" data-bs-trigger="focus" title="' + term_as_text + '" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' + noquote(markdown_to_html(terms[lower_termname]['definition'].text({}),
                                      trim=True,
                                      default_image_width='100%',
                                      do_terms=False,
@@ -691,8 +689,7 @@ def add_terms(termname, terms, label=None, status=None, question=None):
     lower_termname = re.sub(r'\s+', ' ', termname.lower(), re.DOTALL)
     if lower_termname in terms:
         term_as_text = to_text(markdown_to_html(label, trim=False, do_terms=False, status=status, question=question), None, None)
-        return '<a tabindex="0" class="daterm" aria-label=' + noquote(term_as_text + ' ' + word("(term definition)")) +\
-            ' data-bs-toggle="popover" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' +\
+        return '<a tabindex="0" class="daterm" role="button" data-bs-toggle="popover" data-bs-trigger="focus" title="' + term_as_text + '" data-bs-container="body" data-bs-placement="bottom" data-bs-content=' +\
             noquote(markdown_to_html(terms[lower_termname]['definition'],
                                      trim=True,
                                      default_image_width='100%',

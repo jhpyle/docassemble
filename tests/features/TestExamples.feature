@@ -7193,6 +7193,7 @@ Feature: Example interviews
     Then I should see the phrase "Summary"
     And I click the first link " Delete"
     Then I should see the phrase "Summary"
+    And I wait 4 seconds
     And I should not see the phrase "Delete"
 
   Scenario: Test the interview "Edit table for dictionary"
@@ -7437,7 +7438,7 @@ Feature: Example interviews
     Given I start the interview "docassemble.demo:data/questions/examples/progressive-disclosure.yml"
     Then I should see the phrase "What is your favorite fruit?"
     And I should not see the phrase "What is a fruit?"
-    And I click the link " Tell me more about fruit"
+    And I click the summary "Tell me more about fruit"
     And I wait 1 second
     Then I should see the phrase "What is a fruit?"
 
