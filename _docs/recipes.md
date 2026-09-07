@@ -184,49 +184,36 @@ question: |
 
 # <a name="progressive disclosure"></a>Progressive disclosure
 
+"Progressive disclosure" is a way that you can allow the user to learn
+more about a topic without making the screen excessively long.
+
 {% include demo-side-by-side.html demo="progressive-disclosure" %}
-
-Add `progressivedisclosure.css` to the "static" data folder of your package.
-
-{% highlight css %}
-a span.pdcaretopen {
-    display: inline;
-}
-
-a span.pdcaretclosed {
-    display: none;
-}
-
-a.collapsed .pdcaretopen {
-    display: none;
-}
-
-a.collapsed .pdcaretclosed {
-    display: inline;
-}
-{% endhighlight %}
 
 Add `progressivedisclosure.py` as a Python module file in your
 package.
 
 {% highlight python %}
-import re
+# do not pre-load
 
 __all__ = ['prog_disclose']
+
 
 def prog_disclose(template, classname=None):
     if classname is None:
         classname = ' bg-secondary-subtle'
     else:
         classname = ' ' + classname.strip()
-    the_id = re.sub(r'[^A-Za-z0-9]', '', template.instanceName)
-    return u"""\
-<a class="collapsed" data-bs-toggle="collapse" href="#{}" role="button" aria-expanded="false" aria-controls="collapseExample"><span class="pdcaretopen"><i class="fas fa-caret-down"></i></span><span class="pdcaretclosed"><i class="fas fa-caret-right"></i></span> {}</a>
-<div class="collapse" id="{}"><div class="card card-body{} pb-1">{}</div></div>\
-""".format(the_id, template.subject_as_html(trim=True), the_id, classname, template.content_as_html())
+    return f"""\
+<details class="mb-2">
+  <summary class="text-primary">
+    {template.subject_as_html(trim=True)}
+  </summary>
+  <div class="card card-body{classname} pb-0">
+    {template.content_as_html()}
+  </div>
+</details>
+"""
 {% endhighlight %}
-
-This uses the [collapse feature] of [Bootstrap].
 
 # <a name="accordion"></a>Accordion user interface
 

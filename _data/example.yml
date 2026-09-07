@@ -59,7 +59,7 @@
       set_save_status('ignore')
 "action-buttons-http":
   "height": !!int |-
-    258
+    291
   "width": !!int |-
     488
   "yaml": |-
@@ -1817,7 +1817,7 @@
       - "": target_variable
 "branch-error":
   "height": !!int |-
-    623
+    119
   "width": !!int |-
     488
   "yaml": |-
@@ -2134,7 +2134,7 @@
           "image": "map"}]
 "buttons-icons-code-upload":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -2311,8 +2311,11 @@
       - '#3B3EAC'
 "chat":
   "yaml": |-
-    interview help: |
-      This is the interview help.
+    features:
+      javascript:
+        - my-functions.js
+      css:
+        - fruit.css
 "chat-example-1":
   "height": !!int |-
     308
@@ -2521,7 +2524,7 @@
           'color': "success"}]
 "choices-icons":
   "height": !!int |-
-    445
+    441
   "width": !!int |-
     488
   "yaml": |-
@@ -3627,7 +3630,7 @@
         datatype: datetime
 "daweb":
   "height": !!int |-
-    630
+    618
   "width": !!int |-
     488
   "yaml": |-
@@ -3699,6 +3702,19 @@
     \ types of fruit in the\n  world.\n  \n  ${ explain(\"Peaches\") }\n  ${ explain(\"\
     Oranges\") }\n  ${ deride(\"Strawberries\") }\nusedefs:\n - my_explanation\nmandatory:\
     \ True"
+"def-test":
+  "height": !!int |-
+    122
+  "width": !!int |-
+    488
+  "yaml": "objects:\n  list_of_things: DAList.using(object_type=Thing)\n  list_of_things[i].sub_list:\
+    \ DAList\n  dict_of_things: DADict.using(object_type=Thing)\n  dict_of_things[i].sub_list:\
+    \ DAList\n  list_of_strings: DAList\n  dict_of_strings: DADict\n---\nmandatory:\
+    \ True\ncode: |\n  list_of_things\n  dict_of_things\n  list_of_strings\n  dict_of_strings\n\
+    ---\nmandatory: True\ncode: |\n  list_of_things.append_object()\n  list_of_things.append_object()\
+    \  \n  list_of_things.gathered = True\n---\nmandatory: True\ncode: |\n  list_of_things[0].name.text\
+    \ = 'First Thing'\n  list_of_things[0].sub_list.append('First Thing')\n  list_of_things[0].sub_list.gathered\
+    \ = True"
 "default-date-min":
   "height": !!int |-
     176
@@ -4075,7 +4091,7 @@
       [${ interview_url() }](${ interview_url() })
 "dialog-box":
   "height": !!int |-
-    122
+    154
   "width": !!int |-
     488
   "yaml": |-
@@ -5238,7 +5254,7 @@
           - mineshaft
 "emoji-inline":
   "height": !!int |-
-    459
+    455
   "width": !!int |-
     488
   "yaml": |-
@@ -5615,7 +5631,7 @@
       final_screen
 "error-help":
   "height": !!int |-
-    659
+    843
   "width": !!int |-
     488
   "yaml": |-
@@ -5627,7 +5643,7 @@
         [the administrator](mailto:admin@example.com).
 "error-help-language":
   "height": !!int |-
-    659
+    843
   "width": !!int |-
     488
   "yaml": "metadata:\n  error help:\n    en: |\n      We are sorry.\n      An error\
@@ -8768,7 +8784,7 @@
         input type: area
 "grid2":
   "height": !!int |-
-    386
+    362
   "width": !!int |-
     488
   "yaml": |-
@@ -8851,7 +8867,7 @@
           label width: 3
 "grid5":
   "height": !!int |-
-    402
+    370
   "width": !!int |-
     488
   "yaml": |-
@@ -8925,7 +8941,7 @@
         grid: 2
 "grid6":
   "height": !!int |-
-    402
+    370
   "width": !!int |-
     488
   "yaml": |-
@@ -9058,7 +9074,7 @@
           breakpoint: ${ breakpoint }
 "grid9":
   "height": !!int |-
-    270
+    262
   "width": !!int |-
     488
   "yaml": |-
@@ -10563,7 +10579,7 @@
     manual attachment list: True
 "markdown":
   "height": !!int |-
-    849
+    747
   "width": !!int |-
     488
   "yaml": "question: |\n  Introduction to Markdown\nsubquestion: |\n  Markdown allows\
@@ -10577,7 +10593,7 @@
     \ learn more.\nmandatory: True"
 "markdown-demo":
   "height": !!int |-
-    782
+    568
   "width": !!int |-
     488
   "yaml": |-
@@ -10704,7 +10720,7 @@
       documentation: "https://docassemble.org/docs/initial.html#metadata"
 "metadata-screen-parts":
   "height": !!int |-
-    340
+    270
   "width": !!int |-
     488
   "yaml": |-
@@ -10924,7 +10940,7 @@
       response(response=the_data, content_type='application/json')
 "ml-export-yaml":
   "height": !!int |-
-    297
+    298
   "width": !!int |-
     488
   "yaml": |-
@@ -11407,6 +11423,14 @@
         datatype: integer
       - Ounces of gold: gold_ounces
         datatype: number
+"number-field-numeric":
+  "height": !!int |-
+    230
+  "width": !!int |-
+    488
+  "yaml": |-
+    features:
+      numeric inputs: True
 "number-field-step":
   "height": !!int |-
     262
@@ -11915,7 +11939,7 @@
       - villain: Individual
 "ocr":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -11932,7 +11956,7 @@
         datatype: files
 "ocr-background":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -11987,7 +12011,7 @@
       ${ quote_paragraphs(text_of_the_file) }
 "ocr-chord":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -12026,7 +12050,7 @@
       - Refresh: refresh
 "ocr-chord-refresh":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -12418,7 +12442,7 @@
     mandatory: True
 "pdf-concatenate":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -13365,7 +13389,7 @@
           </div>
 "read-qr":
   "height": !!int |-
-    515
+    208
   "width": !!int |-
     488
   "yaml": |-
@@ -13502,7 +13526,7 @@
     \  \n  The value is \"${ r.get(key).decode() }\"."
 "redis-data":
   "height": !!int |-
-    547
+    240
   "width": !!int |-
     488
   "yaml": |-
@@ -14048,7 +14072,7 @@
     edit:\n  - name.first\n  - favorite_fruit"
 "review-edit-list-custom-button":
   "height": !!int |-
-    405
+    410
   "width": !!int |-
     488
   "yaml": |-
@@ -14057,7 +14081,7 @@
       review button icon: pencil-alt
 "review-edit-list-table":
   "height": !!int |-
-    389
+    394
   "width": !!int |-
     488
   "yaml": "need: person.table\nmandatory: true\nquestion: |\n  Thank you for your\
@@ -14768,7 +14792,7 @@
       Have a nice day!
 "send-email-with-attachment":
   "height": !!int |-
-    623
+    370
   "width": !!int |-
     488
   "yaml": |-
@@ -14790,7 +14814,7 @@
       client: Individual
 "server-capabilities":
   "height": !!int |-
-    466
+    490
   "width": !!int |-
     488
   "yaml": |-
@@ -16733,7 +16757,7 @@
       update_terms({'zombie pigman': 'A nether dweller', 'nether': 'The underworld'})
 "upload":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": "question: |\n  Please upload a picture of yourself.\nfields:\n  - Picture:\
@@ -16741,7 +16765,7 @@
     ois!\nsubquestion: |\n  ${ user_picture }\nmandatory: True"
 "upload-accept":
   "height": !!int |-
-    515
+    208
   "width": !!int |-
     488
   "yaml": |-
@@ -16754,7 +16778,7 @@
           "image/jpeg, image/png"
 "upload-max-image-size":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16772,7 +16796,7 @@
     mandatory: True
 "upload-max-image-size-features":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16780,7 +16804,7 @@
       maximum image size: 100
 "upload-max-image-size-type":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16799,7 +16823,7 @@
     mandatory: True
 "upload-max-image-size-type-features":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16808,7 +16832,7 @@
       image upload type: jpeg
 "upload-multiple":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16837,7 +16861,7 @@
         file css class: None
 "upload-show":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16848,7 +16872,7 @@
     mandatory: True
 "upload-show-width":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -16859,7 +16883,7 @@
     mandatory: True
 "upload_audio":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -17309,7 +17333,7 @@
     mandatory: True
 "zip-file":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -17330,7 +17354,7 @@
 
 "ab-test":
   "height": !!int |-
-    362
+    214
   "width": !!int |-
     488
   "yaml": |-
@@ -17439,7 +17463,7 @@
     \ <li class=\"list-group-item\">${ message }</li>\n  % endfor\n  </ul>"
 "bates-number":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-
@@ -17502,7 +17526,7 @@
         % endif
 "button-checkboxes":
   "height": !!int |-
-    332
+    416
   "width": !!int |-
     488
   "yaml": |-
@@ -17978,11 +18002,11 @@
     \ of the session, any time `g.key` is set to\n  `${ repr(g.key) }`. The data will\
     \ only be deleted if someone runs\n  `g.delete()` or the user deletes their account.\n\
     \  % elif g.base == 'interview':\n  `g.fruits` will be the same in this interview,\n\
-    \  `${ user_info().filename }`, regardless of the user and regardless\n  of the\
-    \ session, any time `g.key` is set to `${ repr(g.key) }`.\n  The data will not\
-    \ be deleted unless someone runs `g.delete()`.\n  % else:\n  `g.fruits` will be\
-    \ the same on this server, regardless of the user,\n  session, or interview, any\
-    \ time `g.key` is set to\n  `${ repr(g.key) }`.  The data will not be deleted\
+    \  `${ current_context().filename }`, regardless of the user and regardless\n\
+    \  of the session, any time `g.key` is set to `${ repr(g.key) }`.\n  The data\
+    \ will not be deleted unless someone runs `g.delete()`.\n  % else:\n  `g.fruits`\
+    \ will be the same on this server, regardless of the user,\n  session, or interview,\
+    \ any time `g.key` is set to\n  `${ repr(g.key) }`.  The data will not be deleted\
     \ unless someone\n  runs `g.delete()`.\n  % endif\n\n  The attributes of `g` do\
     \ not live in the interview answers; they\n  live in a separate, global area.\
     \ Every time the interview answers\n  load, the attributes of `g` are fetched\
@@ -19198,7 +19222,7 @@
       Thank you for that information.
 "indexdemoquery":
   "height": !!int |-
-    134
+    206
   "width": !!int |-
     488
   "yaml": |-
@@ -19442,7 +19466,7 @@
       ${ single_to_double_newlines(life_story_text) }
 "macros":
   "height": !!int |-
-    465
+    470
   "width": !!int |-
     488
   "yaml": |-
@@ -19455,7 +19479,7 @@
       docx template file: team.docx
 "make-ocr-pdf":
   "height": !!int |-
-    523
+    216
   "width": !!int |-
     488
   "yaml": "mandatory: True\ncode: |\n  ocr_finished\n  final_screen\n---\ncode: |\n\
@@ -19465,7 +19489,7 @@
     question: |\n  Your OCR PDF\nsubquestion: |\n  ${ uploaded_file }"
 "make-ocr-pdf-in-background":
   "height": !!int |-
-    523
+    216
   "width": !!int |-
     488
   "yaml": |-
@@ -19497,7 +19521,7 @@
       ${ uploaded_file }
 "make-ocr-pdf-in-background-2":
   "height": !!int |-
-    515
+    208
   "width": !!int |-
     488
   "yaml": |-
@@ -19871,6 +19895,89 @@
     ---\nevent: final_screen\nquestion: |\n  Here is the signed contract.\nattachment:\n\
     \  name: |\n    An agreement between\n    ${ firstparty } and\n    ${ secondparty\
     \ }\n  filename: agreement\n  docx template file: Agreement_To_Transfer.docx"
+"navbar-button-action":
+  "height": !!int |-
+    176
+  "width": !!int |-
+    488
+  "yaml": |-
+    default screen parts:
+      navigation bar html: |
+        % if current_context().question_id not in ('ask_lawyer_page_one', 'ask_lawyer_page_two'):
+        <li class="nav-item"><a class="btn btn-primary" href="${ url_action('ask_lawyer') }">Message a Lawyer</a></li>
+        % endif
+    ---
+    event: ask_lawyer
+    code: |
+      force_ask('question_for_lawyer', {'recompute': 'question_emailed_to_lawyer'}, 'question_for_lawyer_acknowledgment')
+    ---
+    id: ask_lawyer_page_one
+    question: |
+      What would you like to ask the attorney on duty?
+    fields:
+      - Your email address: user_email_address
+        datatype: email
+      - Question: question_for_lawyer
+        input type: area
+    ---
+    template: email_to_lawyer
+    subject: |
+      Question from ${ user_email_address }
+    content: |
+      The user at ${ user_email_address } wants to know:
+
+      > ${ single_paragraph(question_for_lawyer) }
+    ---
+    code: |
+      # send_email(to='jhpyle@gmail.com', template=email_to_lawyer)
+      del question_for_lawyer
+      question_emailed_to_lawyer = True
+    ---
+    id: ask_lawyer_page_two
+    question: |
+      Thank you for your question.
+    subquestion: |
+      The lawyer on duty will answer your question promptly.
+    continue button field: question_for_lawyer_acknowledgment
+    continue button label: Resume interview
+    ---
+    mandatory: True
+    code: |
+      favorite_fruit
+      favorite_vegetable
+      favorite_legume
+      final_screen
+    ---
+    question: |
+      What is your favorite fruit?
+    fields:
+      - Fruit: favorite_fruit
+    ---
+    question: |
+      What is your favorite vegetable?
+    fields:
+      - Vegetable: favorite_vegetable
+    ---
+    question: |
+      What is your favorite legume?
+    fields:
+      - Legume: favorite_legume
+    ---
+    event: final_screen
+    question: |
+      Thank you for that information.
+    subquestion: |
+      Your food preferences are very valuable.
+
+      I will make lots of money by selling your
+      food preferences to data brokers so that
+      you will receive targeted advertising about
+      ${ noun_plural(favorite_fruit) },
+      ${ noun_plural(favorite_vegetable) },
+      and ${ noun_plural(favorite_legume) }
+      in your Instagram feed.
+
+      Thank you very much!
 "navbar-language":
   "height": !!int |-
     130
@@ -20307,7 +20414,7 @@
       ${ overlay_pdf(the_document, logo_page) }
 "overlay-pdf-multi":
   "height": !!int |-
-    523
+    216
   "width": !!int |-
     488
   "yaml": |-
@@ -20330,7 +20437,7 @@
       ${ overlay_pdf(the_doc, overlay_doc.pdf, multi=True) }
 "pdfextract":
   "height": !!int |-
-    515
+    208
   "width": !!int |-
     488
   "yaml": |-
@@ -20648,20 +20755,21 @@
       ${ action_button_html(interview_url(i=interview_filename, session=session_id), label='Visit other session', new_window=True) }
 "progressive-disclosure":
   "height": !!int |-
-    376
+    360
   "width": !!int |-
     488
-  "yaml": "modules:\n  - .progressivedisclosure\n---\nfeatures:\n  css: progressivedisclosure.css\n\
-    ---\ntemplate: fruit_explanation\nsubject: |\n  Tell me more about fruit\ncontent:\
-    \ |\n  ##### What is a fruit?\n  \n  A fruit is the the sweet and\n  fleshy product\
-    \ of a tree or\n  other plant that contains\n  seed and can be eaten as food.\n\
-    ---\ntemplate: favorite_explanation\nsubject: |\n  Explain favorites\ncontent:\
-    \ |\n  ##### What is a favorite?\n\n  If you have a favorite something,\n  that\
-    \ means you like it more than\n  you like other things of a similar\n  nature.\n\
-    ---\nquestion: |\n  What is your favorite fruit?\nsubquestion: |\n  Everybody\
-    \ has a favorite fruit.\n  \n  ${ prog_disclose(fruit_explanation) }\n\n  Don't\
-    \ you have a favorite fruit?\n\n  ${ prog_disclose(favorite_explanation) }\n\n\
-    \  You must have a favorite.\nfields:\n  - Favorite fruit: favorite_fruit"
+  "yaml": "modules:\n  - .progressivedisclosure\n---\ntemplate: fruit_explanation\n\
+    subject: |\n  Tell me more about fruit\ncontent: |\n  ##### What is a fruit?\n\
+    \  \n  A fruit is the the sweet and\n  fleshy product of a tree or\n  other plant\
+    \ that contains\n  seed and can be eaten as food.\n---\ntemplate: favorite_explanation\n\
+    subject: |\n  Explain favorites\ncontent: |\n  ##### What is a favorite?\n\n \
+    \ If you have a favorite something,\n  that means you like it more than\n  you\
+    \ like other things of a similar\n  nature.\n---\nquestion: |\n  What is your\
+    \ favorite fruit?\nsubquestion: |\n  Everybody has a favorite fruit.\n  \n  ${\
+    \ prog_disclose(fruit_explanation) }\n\n  Don't you have a favorite fruit?\n\n\
+    \  ${ prog_disclose(favorite_explanation) }\n\n  You must have a favorite.\nfields:\n\
+    \  - Favorite fruit: favorite_fruit\n---\nmandatory: True\nquestion: |\n  Your\
+    \ favorite fruit is\n  ${ favorite_fruit }."
 "pytojs-dom":
   "height": !!int |-
     230
@@ -20935,6 +21043,8 @@
     mandatory: True
     question: |
       Here is the source code.
+    allow downloading: True
+    zip filename: Hello.zip
     attachment:
       name: Hello, world program
       filename: hello_world
@@ -20951,7 +21061,7 @@
     \ `${ item.inventory }`\n  \n  % endfor"
 "realtimegd":
   "height": !!int |-
-    368
+    502
   "width": !!int |-
     488
   "yaml": |-
@@ -21535,7 +21645,7 @@
       - Fruit: favorite_fruit
     ---
     code: |
-      part_two = user_info().package + ':data/questions/examples/stage-two.yml'
+      part_two = current_context().package + ':data/questions/examples/stage-two.yml'
     ---
     code: |
       user.name.first
@@ -21590,6 +21700,28 @@
       name: A document
       filename: final_document
       docx template file: main_document.docx
+"table-delete":
+  "height": !!int |-
+    230
+  "width": !!int |-
+    488
+  "yaml": |-
+    modules:
+      .tabledeletion
+    ---
+    objects:
+      - person: PeopleList.using(there_are_any=True)
+    ---
+    table: person.table
+    rows: person
+    columns:
+      - Name: |
+          row_item.name.full()
+      - Fruit: |
+          row_item.favorite_fruit
+    edit:
+      - name.first
+      - favorite_fruit
 "tagged-pdf":
   "height": !!int |-
     575
@@ -21976,7 +22108,7 @@
         datatype: date
 "universal-document":
   "height": !!int |-
-    549
+    386
   "width": !!int |-
     488
   "yaml": "features:\n  use catchall: True\n---\ngeneric object: DACatchAll\nquestion:\
@@ -22015,7 +22147,7 @@
       docx template file: doc-with-toc.docx
 "upload-file-size":
   "height": !!int |-
-    483
+    176
   "width": !!int |-
     488
   "yaml": |-

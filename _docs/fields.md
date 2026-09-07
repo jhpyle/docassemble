@@ -682,27 +682,15 @@ works with MIME types, you can only specify MIME types here, not file
 extensions.
 
 <a name="file css class"></a>By default, **docassemble** styles the
-upload using the [Bootstrap File Input] plugin. If you do not want the
-[Bootstrap File Input] plugin to be used, you can set `file css class`
-to `None`.
-
-{% include side-by-side.html demo="upload-plain" %}
-
-If you set `file css class` to `None`, then the `class` of the `<input
-type="file">` element will be `form-control`, which is the standard
-class that [Bootstrap] uses to style file input elements. You can set
+upload using [Bootstrap], using the class `form-control`. You can set
 `file css class` to any other class of your choosing if you want to
 use a different `class` than `form-control`. The `file css class`
 modifier can use [Mako] templating.
 
-If no `file css class` is specified, the `class` of the input element
-will be `dafile`, which causes the [Bootstrap File Input] plugin to
-be activated.
-
 Note that `file css class` is different from `css class`; the `css
 class` modifier simply adds additional classes to the `class`
 attribute of the input element, whereas `file css class` replaces the
-default class, which is `dafile`.
+default class, which is `form-control`.
 
 <a name="maximum image size"></a>If your users upload digital photos
 into your interviews, the uploads may take a long time.  You can
@@ -2012,6 +2000,13 @@ for customizing the user interface.  Thus whatever logic you express
 in `show if` will probably have to be repeated elsewhere.  If instead
 of using `show if` you gathered the field in a separate `question`,
 you would only need to specify the logic in one place.
+
+If you are using `show if` features extensively on a page, and your
+application may have users who use assistive technology, you may want
+to tell your users "depending on your answers, additional fields may
+appear" in the `subquestion` or elsewhere. When fields are shown, a
+message "Additional fields have appeared" will be announced to screen
+readers.
 
 ## <a name="hide if"></a>`hide if`
 
@@ -3981,7 +3976,6 @@ why this needs to be done manually as opposed to automatically:
 [breakpoint]: https://getbootstrap.com/docs/5.3/layout/breakpoints/#available-breakpoints
 [breakpoints]: https://getbootstrap.com/docs/5.3/layout/breakpoints/#available-breakpoints
 [`grid classes`]: {{ site.baseurl }}/docs/config.html#grid classes
-[Bootstrap File Input]: https://plugins.krajee.com/file-input
 [CSS color]: https://developer.mozilla.org/en-US/docs/Web/CSS/color
 [`disable if`]: #disable if
 [`js disable if`]: #js disable if

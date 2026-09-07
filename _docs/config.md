@@ -691,10 +691,10 @@ a [Bootstrap alert] at the top of the screen. The HTML of these alerts
 can be customized using `alert html` an `alert container html`.
 
 {% highlight yaml %}
-alert html: |
-  <div class="da-alert alert alert-%s alert-dismissible fade show" role="alert">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
 alert container html: |
-  <div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash">%s</div>
+  <div class="datopcenter col-sm-7 col-md-6 col-lg-5" id="daflash" aria-live="polite" aria-atomic="true">%s</div>
+alert html: |
+  <div class="da-alert alert alert-%s alert-dismissible fade show">%s<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
 {% endhighlight %}
 
 In `alert html`, the first `%s` represents the [Bootstrap color] of

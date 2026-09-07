@@ -1493,6 +1493,33 @@ the "Edit" button will not be shown.  If the value of the key
 
 {% include side-by-side.html demo="table-read-only-2" %}
 
+<a name="acknowledge"></a>If you want to flash a message to the user
+when an item is deleted, you can do so by subclassing `DAList` or
+`DADict` and providing a `hook_on_remove` method that calls `log()`.
+
+{% include demo-side-by-side.html demo="table-delete" %}
+
+In this example, the `tabledeletion.py` file contains the following:
+
+{% highlight python %}
+from docassemble.base.util import DAList, Individual, word, log
+
+class PeopleList(DAList):
+    """Subclass of DAList that demonstrates how to show a message when
+    an item is removed from the list."""
+
+    def init(self, *pargs, **kwargs):
+        self.object_type = Individual
+        self.complete_attribute = 'complete'
+        super().init(*pargs, **kwargs)
+
+    def hook_on_remove(self, item, *pargs, **kwargs):
+        try:
+            log(word(f"Removed {item} from the list"), "success")
+        except:
+            log(word("Removed"), "success")
+{% endhighlight %}
+
 <a name="require gathered"></a>Typically, the creation of a table
 requires the gathering process to be completed.  However, if the
 gathering process is already ongoing, then the table will still be

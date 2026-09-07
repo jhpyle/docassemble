@@ -962,10 +962,10 @@ using the [`id` and `supersedes`] question modifiers.
 # <a name="terms"></a><a name="auto terms"></a>Vocabulary `terms` and `auto terms`
 
 Sometimes you will use vocabulary terms that the user may or may not
-know.  Instead of interrupting the flow of your questions to define
+know. Instead of interrupting the flow of your questions to define
 every term, you can define certain vocabulary words, and
 **docassemble** will turn them into hyperlinks wherever they appear in
-curly brackets.  When the user clicks on the hyperlink, a popup
+curly brackets.  When the user clicks on the hyperlink, a popover
 appears with the word's definition.
 
 {% include side-by-side.html demo="terms" %}
@@ -1015,6 +1015,10 @@ templating.
 
 If you want to define terms using [Python] code, you can use the
 [`update_terms()`] function.
+
+For accessibility purposes, popovers should be concise and should not
+contain essential information. [Progressive disclosure] should be used
+instead.
 
 # <a name="template"></a>The `template` block
 
@@ -2981,3 +2985,4 @@ contained:
 [`lambda`]: https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions
 [`sorted`]: https://docs.python.org/3/library/functions.html#sorted
 [GitHub repository]: {{ site.github.repository_url }}
+[Progressive disclosure]: {{ site.baseurl }}/docs/recipes.html#progressive disclosure
