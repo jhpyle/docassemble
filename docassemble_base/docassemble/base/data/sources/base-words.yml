@@ -140,7 +140,6 @@
 "Check if applicable": Null
 "Chile": Null
 "China": Null
-"Choices (choose one):": Null
 "Choices:": Null
 "Christmas Island": Null
 "Classes": Null
@@ -810,6 +809,8 @@
 "question": Null
 "Question": Null
 "quit": Null
+"radio button, selected": Null
+"radio button, unselected": Null
 "Readability of help text": Null
 "Readability of question": Null
 "README file": Null
