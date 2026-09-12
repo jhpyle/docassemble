@@ -159,6 +159,324 @@ def recursively_add_fields(fields, id_to_page, outfields, prefix='', parent_ft=N
                 outfields.append((prefix, default, pageno, rect, field_type, export_value))
 
 
+def _pdf_object_key(obj):
+    """Return a stable key for an indirect PDF object."""
+    try:
+        if obj.objgen != (0, 0):
+            return obj.objgen
+    except Exception:
+        pass
+    return id(obj)
+
+
+def _inherited_field_value(widget, key):
+    """Resolve an inheritable field value from a widget and its ancestors."""
+    current = widget
+    seen = set()
+    while current is not None:
+        current_key = _pdf_object_key(current)
+        if current_key in seen:
+            break
+        seen.add(current_key)
+        value = current.get(key)
+        if value is not None:
+            return value
+        current = current.get('/Parent')
+    return None
+
+
+def _display_state(widget):
+    """Resolve /AS first, then the inherited field value as a fallback."""
+    state = widget.get('/AS') or _inherited_field_value(widget, '/V')
+    if state is None:
+        return None
+    state = str(state)
+    try:
+        return pikepdf.Name(state if state.startswith('/') else '/' + state)
+    except ValueError:
+        return None
+
+
+def _selected_appearance(widget):
+    """Return the normal appearance stream that the widget actually displays."""
+    appearance = widget.get('/AP')
+    if appearance is None:
+        return None
+    normal = appearance.get('/N')
+    if isinstance(normal, pikepdf.Stream):
+        return normal
+    if not isinstance(normal, pikepdf.Dictionary):
+        return None
+    state = _display_state(widget)
+    if state is not None and state in normal:
+        selected = normal[state]
+        return selected if isinstance(selected, pikepdf.Stream) else None
+    return None
+
+
+def _replace_selected_appearance(widget, appearance):
+    normal = widget.AP.N
+    if isinstance(normal, pikepdf.Stream):
+        widget.AP.N = appearance
+        return
+    state = _display_state(widget)
+    if state is None or state not in normal:
+        raise ValueError("widget has no selected normal appearance")
+    widget.AS = state
+    normal[state] = appearance
+
+
+def _ensure_selected_appearance(pdf, widget):
+    """Supply an empty off appearance when the unselected box is page artwork."""
+    appearance = _selected_appearance(widget)
+    if appearance is not None or _inherited_field_value(widget, '/FT') != '/Btn':
+        return appearance
+    state = _display_state(widget)
+    normal = widget.get('/AP') and widget.AP.get('/N')
+    if str(state).lower() != '/off' or not isinstance(normal, pikepdf.Dictionary):
+        return None
+    reference = next((item for item in normal.values() if isinstance(item, pikepdf.Stream)), None)
+    if reference is None:
+        return None
+    appearance = pdf.make_stream(
+        b'',
+        Type=pikepdf.Name('/XObject'),
+        Subtype=pikepdf.Name('/Form'),
+        FormType=1,
+        BBox=reference.get('/BBox', pikepdf.Array([0, 0, 1, 1])),
+        Resources=pikepdf.Dictionary(),
+    )
+    if reference.get('/Matrix') is not None:
+        appearance.Matrix = reference.Matrix
+    widget.AS = state
+    normal[state] = appearance
+    return appearance
+
+
+def _iter_widgets(pdf):
+    for page in pdf.pages:
+        for annot in page.get('/Annots', []):
+            if annot.get('/Subtype') == '/Widget':
+                yield page, annot
+
+
+def _parent_tree(pdf):
+    """Return the structure tree's /ParentTree as a mutable number tree."""
+    root = pdf.Root.get('/StructTreeRoot')
+    if root is None or root.get('/ParentTree') is None:
+        return None
+    # NumberTree only wraps a dictionary the Pdf owns.
+    root.ParentTree = pdf.make_indirect(root.ParentTree)
+    return pikepdf.NumberTree(root.ParentTree)
+
+
+def _find_widget_objr(item, widget):
+    """Find an OBJR content item that points at widget."""
+    if isinstance(item, pikepdf.Array):
+        for child in item:
+            result = _find_widget_objr(child, widget)
+            if result is not None:
+                return result
+        return None
+    if not isinstance(item, pikepdf.Dictionary):
+        return None
+    if item.get('/Type') == '/OBJR' and _pdf_object_key(item.get('/Obj')) == _pdf_object_key(widget):
+        return item
+    return None
+
+
+def _form_structure_element(parent_tree, widget):
+    """Return the existing Form element and OBJR that credibly own widget."""
+    struct_parent = widget.get('/StructParent')
+    if parent_tree is None or struct_parent is None or int(struct_parent) not in parent_tree:
+        return None, None
+    element = parent_tree[int(struct_parent)]
+    if isinstance(element, pikepdf.Array):
+        # Parent-tree arrays are for marked content. Annotation entries normally
+        # point directly to one structure element, but tolerate a single entry.
+        element = next((item for item in element if isinstance(item, pikepdf.Dictionary)), None)
+    if not isinstance(element, pikepdf.Dictionary) or element.get('/S') != '/Form':
+        return None, None
+    objr = _find_widget_objr(element.get('/K'), widget)
+    if objr is None:
+        return None, None
+    return element, objr
+
+
+def _appearance_wrapper(pdf, appearance, actual_text=None, mcid=None):
+    """Make a visually identical Form XObject that invokes appearance once.
+
+    The marked content lives inside this wrapper rather than in the page content
+    stream, so pdftk only has to paint the XObject during flattening and the
+    tagging rides along untouched.  Inlining the BDC/EMC into the page would
+    make the flatten discard it.
+    """
+    content = b'q\n/DocassembleAppearance Do\nQ\n'
+    if mcid is not None:
+        content = (
+            b'/Span << /MCID '
+            + str(int(mcid)).encode('ascii')
+            + b' >> BDC\n'
+            + content
+            + b'EMC\n'
+        )
+    if actual_text is not None:
+        # ActualText on a sequence containing only an invoked Form XObject is
+        # ignored by some extractors.  Give it an invisible text-showing operation
+        # to replace.  The dummy ASCII glyph is portable, ActualText carries Unicode,
+        # and text rendering mode 3 cannot change the printed appearance.
+        content += (
+            b'/Span << /ActualText '
+            + pikepdf.String(actual_text).unparse()
+            + b' >> BDC\nBT\n/DocassembleFallback 1 Tf\n3 Tr\n0 0 Td\n(x) Tj\nET\nEMC\n'
+        )
+    # An appearance stream is allowed to omit /Subtype while it is only an
+    # annotation appearance, but invoking it as an XObject resource requires one.
+    if appearance.get('/Subtype') is None:
+        appearance.Type = pikepdf.Name('/XObject')
+        appearance.Subtype = pikepdf.Name('/Form')
+    resources = pikepdf.Dictionary(XObject=pikepdf.Dictionary(DocassembleAppearance=appearance))
+    if actual_text is not None:
+        resources.Font = pikepdf.Dictionary(
+            DocassembleFallback=pikepdf.Dictionary(
+                Type=pikepdf.Name('/Font'),
+                Subtype=pikepdf.Name('/Type1'),
+                BaseFont=pikepdf.Name('/Helvetica'),
+                Encoding=pikepdf.Name('/WinAnsiEncoding'),
+            )
+        )
+    wrapper = pdf.make_stream(
+        content,
+        Type=pikepdf.Name('/XObject'),
+        Subtype=pikepdf.Name('/Form'),
+        FormType=1,
+        BBox=appearance.get('/BBox', pikepdf.Array([0, 0, 1, 1])),
+        Resources=resources,
+    )
+    if appearance.get('/Matrix') is not None:
+        wrapper.Matrix = appearance.Matrix
+    return wrapper
+
+
+def _button_role_and_state(widget):
+    flags = int(_inherited_field_value(widget, '/Ff') or 0)
+    if flags & (1 << 16):
+        return 'pb', None
+    state = str(_display_state(widget) or '/Off').lower()
+    checked = 'off' if state == '/off' else ('neutral' if state in ('/neutral', '/mixed') else 'on')
+    return ('rb' if flags & (1 << 15) else 'cb'), checked
+
+
+def _printfield_role_and_state(widget):
+    field_type = _inherited_field_value(widget, '/FT')
+    if field_type == '/Btn':
+        return _button_role_and_state(widget)
+    if field_type in ('/Tx', '/Ch'):
+        return 'tv', None
+    return None, None
+
+
+def _add_printfield_attribute(element, role, checked, description):
+    attribute = None
+    current = element.get('/A')
+    candidates = current if isinstance(current, pikepdf.Array) else [current]
+    for candidate in candidates:
+        if isinstance(candidate, pikepdf.Dictionary) and candidate.get('/O') == '/PrintField':
+            attribute = candidate
+            break
+    if attribute is None:
+        attribute = pikepdf.Dictionary(O=pikepdf.Name('/PrintField'))
+        if current is None:
+            element.A = attribute
+        elif isinstance(current, pikepdf.Array):
+            current.append(attribute)
+        else:
+            element.A = pikepdf.Array([current, attribute])
+    attribute.Role = pikepdf.Name('/' + role)
+    if checked is not None:
+        attribute[pikepdf.Name('/checked')] = pikepdf.Name('/' + checked)
+    elif '/checked' in attribute:
+        del attribute[pikepdf.Name('/checked')]
+    if description:
+        attribute.Desc = pikepdf.String(str(description))
+
+
+def _fallback_button_text(role, checked, checked_label, unchecked_label):
+    if role == 'pb':
+        return None
+    if role == 'rb':
+        return word("radio button, selected") if checked == 'on' else word("radio button, unselected")
+    if checked == 'on':
+        return checked_label if checked_label is not None else word("checkbox, checked")
+    return unchecked_label if unchecked_label is not None else word("checkbox, unchecked")
+
+
+def prepare_accessible_flatten(pdf, flattened_checkbox_label=None, flattened_checkbox_unselected_label=None):
+    """Move tagged widget semantics to their selected appearance XObjects.
+
+    Untagged checkbox and radio appearances instead receive an invisible ActualText
+    fallback, leaving the pdftk-generated drawing unchanged while giving text-based
+    accessibility tools a meaningful state to read.  A source PDF that was never
+    tagged does not become PDF/UA conformant this way; only its field states
+    become readable.
+    """
+    parent_tree = _parent_tree(pdf)
+    for _page, widget in _iter_widgets(pdf):
+        appearance = _ensure_selected_appearance(pdf, widget)
+        if appearance is None:
+            continue
+        role, checked = _printfield_role_and_state(widget)
+        element, objr = _form_structure_element(parent_tree, widget)
+        if element is not None:
+            # Annotation structure uses a singular /StructParent entry whose
+            # parent-tree value points directly to the owning structure element.
+            # A painted Form XObject instead needs /StructParents (plural), a
+            # parent-tree array indexed by MCID, and an MCR content item.  Keeping
+            # the annotation-shaped mapping on an XObject makes NVDA's Acrobat
+            # virtual buffer loop indefinitely while loading the document.
+            appearance = _appearance_wrapper(pdf, appearance, mcid=0)
+            _replace_selected_appearance(widget, appearance)
+            struct_parent = int(widget.StructParent)
+            appearance.StructParents = struct_parent
+            del widget.StructParent
+            parent_tree[struct_parent] = pikepdf.Array([element])
+            objr.Type = pikepdf.Name('/MCR')
+            if '/Obj' in objr:
+                del objr[pikepdf.Name('/Obj')]
+            objr.Stm = appearance
+            objr.MCID = 0
+            if role is not None:
+                description = _inherited_field_value(widget, '/TU') or _inherited_field_value(widget, '/T')
+                _add_printfield_attribute(element, role, checked, description)
+            continue
+        if _inherited_field_value(widget, '/FT') != '/Btn':
+            continue
+        fallback = _fallback_button_text(
+            role, checked, flattened_checkbox_label, flattened_checkbox_unselected_label
+        )
+        if fallback:
+            appearance = _appearance_wrapper(pdf, appearance, actual_text=fallback)
+            _replace_selected_appearance(widget, appearance)
+
+
+def _flatten_widgets(filename, template):
+    """Flatten the prepared widgets and drop the AcroForm they leave behind.
+
+    qpdf can paint these same appearances but does not place every real-world
+    BBox/Rect/Matrix combination exactly as pdftk does, so pdftk does the final
+    placement to preserve legacy rendering and other annotations.
+    """
+    flatten_pdf(filename)
+    with Pdf.open(filename, allow_overwriting_input=True) as pdf:
+        acroform = pdf.Root.get('/AcroForm')
+        fields = acroform.get('/Fields') if acroform is not None else None
+        if any(_iter_widgets(pdf)) or (fields is not None and len(fields) > 0):
+            raise DAError("Could not flatten every PDF form widget in template " + str(template))
+        if acroform is not None:
+            del pdf.Root.AcroForm
+            pdf.save()
+
+
 def fill_template(template, data_strings=None, data_names=None, hidden=None, readonly=None, images=None, pdf_url=None, editable=True, pdfa=False, password=None, owner_password=None, template_password=None, default_export_value=None, replacement_font=None, use_pdftk=False, flattened_checkbox_label=None, flattened_checkbox_unselected_label=None):
     if data_strings is None:
         data_strings = []
@@ -218,10 +536,8 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
     for key, val in data_strings:
         data_dict[key] = val
     pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
-    if pdfa or not editable or use_pdftk:
-    # if flattened_checkbox_label is not None or flattened_checkbox_unselected_label is not None:
-    #     use_pdftk = False
-    # if use_pdftk:
+    flattening = pdfa or not editable
+    if flattening or use_pdftk:
         fdf = Xfdf(pdf_url, data_dict)
         # fdf = fdfgen.forge_fdf(pdf_url, data_strings, data_names, hidden, readonly)
         fdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".xfdf", delete=False)
@@ -250,13 +566,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             font_arguments = DEFAULT_FONT_ARGUMENTS
         subprocess_arguments = [PDFTK_PATH, template, 'fill_form', fdf_file.name, 'output', pdf_file.name] + font_arguments
         # logmessage("Arguments are " + str(subprocess_arguments))
-        if len(images) > 0:
+        # pdftk generates the normal appearances while filling.  In the flattened
+        # path they must remain widgets for the accessibility rewrite below.
+        if not flattening:
             subprocess_arguments.append('need_appearances')
-        else:
-            if pdfa or not editable:
-                subprocess_arguments.append('flatten')
-            else:
-                subprocess_arguments.append('need_appearances')
         completed_process = None
         try:
             completed_process = subprocess.run(subprocess_arguments, timeout=600, check=False, capture_output=True)
@@ -268,10 +581,18 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
             logmessage("Failed to fill PDF form " + str(template))
             pdftk_error_msg = (f": {completed_process.stderr}") if completed_process else ""
             raise DAError("Call to pdftk failed for template " + str(template) + " where arguments were " + " ".join(subprocess_arguments) + pdftk_error_msg)
-        if len(images) > 0:
+        if len(images) > 0 or flattening:
             temp_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
             shutil.copyfile(pdf_file.name, temp_pdf_file.name)
             pdf = Pdf.open(temp_pdf_file.name)
+        if flattening and len(images) == 0:
+            prepare_accessible_flatten(
+                pdf,
+                flattened_checkbox_label=flattened_checkbox_label,
+                flattened_checkbox_unselected_label=flattened_checkbox_unselected_label,
+            )
+            pdf.save(pdf_file.name)
+            pdf.close()
     else:
         if template_password:
             pdf = Pdf.open(template, password=template_password)
@@ -298,13 +619,6 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                     elif field_type == "/Btn":
                         if hasattr(annot, "A"):
                             continue
-                        # if not editable:
-                        #     annot.FT = pikepdf.Name("/Tx")
-                        #     if value == "Off":
-                        #         annot.V = pikepdf.String(flattened_checkbox_unselected_label if flattened_checkbox_unselected_label is not None else word("checkbox, unchecked"))
-                        #     else:
-                        #         annot.V = pikepdf.String(flattened_checkbox_label if flattened_checkbox_label is not None else word("checkbox, checked"))
-                        #     continue
                         the_name = pikepdf.Name('/' + value)
                         # Could be radio button: if it is, set the appearance stream of the
                         # correct child annot
@@ -344,18 +658,9 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
         except Exception as err:
             logmessage("fill_template: could not generate appearance streams: " + str(err))
         pdf.Root.AcroForm.NeedAppearances = True
-        # if not editable:
-        #     try:
-        #         pdf.flatten_annotations(mode='all')
-        #     except Exception as err:
-        #         logmessage("fill_template: error flattening annotations with pikepdf: " + str(err))
         if len(images) == 0:
             pdf.save(pdf_file.name)
             pdf.close()
-        # else:
-        #     pdf.save(pdf_file.name)
-        #     pdf.close()
-        #     # Images will be overlaid later
     if len(images) > 0:
         fields = {}
         for field, default, pageno, rect, field_type, export_value in the_fields:
@@ -408,11 +713,16 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 with Pdf.open(item['overlay_file']) as overlay_file:
                     overlay_page = overlay_file.pages[0]
                     pdf.pages[item['pageno'] - 1].add_overlay(overlay_page, rect=pikepdf.Rectangle(xone, yone, xtwo, ytwo))
+        if flattening:
+            prepare_accessible_flatten(
+                pdf,
+                flattened_checkbox_label=flattened_checkbox_label,
+                flattened_checkbox_unselected_label=flattened_checkbox_unselected_label,
+            )
         pdf.save(pdf_file.name)
         pdf.close()
-    if (pdfa or not editable) and len(images) > 0:
-        # if use_pdftk:
-        flatten_pdf(pdf_file.name)
+    if flattening:
+        _flatten_widgets(pdf_file.name, template)
     if pdfa:
         pdf_to_pdfa(pdf_file.name)
     if password or owner_password:
