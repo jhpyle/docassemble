@@ -471,7 +471,10 @@ def _flatten_widgets(filename, template):
         acroform = pdf.Root.get('/AcroForm')
         fields = acroform.get('/Fields') if acroform is not None else None
         if any(_iter_widgets(pdf)) or (fields is not None and len(fields) > 0):
-            raise DAError("Could not flatten every PDF form widget in template " + str(template))
+            # Keep the AcroForm: widgets that pdftk left behind are worse off
+            # orphaned from it, and the document is still usable as it stands.
+            logmessage("fill_template: pdftk did not flatten every form widget in " + str(template))
+            return
         if acroform is not None:
             del pdf.Root.AcroForm
             pdf.save()
