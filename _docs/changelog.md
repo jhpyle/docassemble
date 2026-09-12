@@ -3,6 +3,16 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.10.9](https://github.com/jhpyle/docassemble/releases/tag/v1.10.9) - 2026-09-12
+
+
+### Changed
+
+- The `editable: False` option for `pdf template file` is implemented
+  a different way, which should provide improved accessibility.
+- For purposes of salutations and pronouns, gender is
+  case-insensitive.
+
 ## [1.10.8](https://github.com/jhpyle/docassemble/releases/tag/v1.10.8) - 2026-09-07
 
 
