@@ -99,6 +99,7 @@ class LazyArray:
 
 try:
     import ldap
+    import ldap.filter
 except ImportError:
     if 'ldap login' not in daconfig:
         daconfig['ldap login'] = {}
@@ -251,7 +252,7 @@ def da_unique_email_validator(form, field):
     if daconfig['ldap login'].get('enable', False) and daconfig['ldap login'].get('base dn', None) is not None and daconfig['ldap login'].get('bind email', None) is not None and daconfig['ldap login'].get('bind password', None) is not None:
         ldap_server = daconfig['ldap login'].get('server', 'localhost').strip()
         base_dn = daconfig['ldap login']['base dn'].strip()
-        search_filter = daconfig['ldap login'].get('search pattern', "mail=%s") % (form.email.data,)
+        search_filter = daconfig['ldap login'].get('search pattern', "mail=%s") % (ldap.filter.escape_filter_chars(form.email.data),)
         connect = ldap.initialize('ldap://' + ldap_server)
         try:
             connect.simple_bind_s(daconfig['ldap login']['bind email'], daconfig['ldap login']['bind password'])
