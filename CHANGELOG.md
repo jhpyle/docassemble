@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.10.10] - 2026-09-12
+
+### Fixed
+
+- Input sanitization for LDAP login method.
+
 ## [1.10.9] - 2026-09-12
 
 ### Changed
