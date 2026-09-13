@@ -3,6 +3,13 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.10.10](https://github.com/jhpyle/docassemble/releases/tag/v1.10.10) - 2026-09-12
+
+
+### Fixed
+
+- Input sanitization for LDAP login method.
+
 ## [1.10.9](https://github.com/jhpyle/docassemble/releases/tag/v1.10.9) - 2026-09-12
 
 
