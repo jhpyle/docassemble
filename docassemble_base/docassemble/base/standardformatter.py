@@ -2014,7 +2014,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                         ischecked = ' ' + verb + 'ed="' + verb + 'ed"'
                         found_default = True
                     if status.question.question_variety == "radio":
-                        output += help_wrap('<input type="radio" class="da-to-labelauty' + css_class + '" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" value=' + fix_double_quote(str(pair['key'])) + ischecked + '/><label for="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty">' + the_icon + formatted_item + '</label>', helptext, status)
+                        output += help_wrap('<input type="radio" class="da-to-labelauty' + css_class + '" id="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" name="' + escape_id(status.question.fields[0].saveas) + '" value=' + fix_double_quote(str(pair['key'])) + ischecked + '/><label for="' + escape_id(status.question.fields[0].saveas) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty' + css_class + '">' + the_icon + formatted_item + '</label>', helptext, status)
                     else:
                         if css_class:
                             css_class = 'class="' + css_class.strip() + '"'
@@ -2073,7 +2073,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                     id_index = 0
                     formatted_key = markdown_to_html(choice['label'], status=status, trim=True, escape=False, do_terms=False)
                     if status.question.question_variety == "radio":
-                        output += '                <div class="row"><div class="col">' + help_wrap('<input type="radio" class="da-to-labelauty' + css_class + '" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ" value="' + str(indexno) + '"' + ischecked + '/><label for="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty">' + the_icon + formatted_key + '</label>', helptext, status) + '</div></div>\n'
+                        output += '                <div class="row"><div class="col">' + help_wrap('<input type="radio" class="da-to-labelauty' + css_class + '" id="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" name="X211bHRpcGxlX2Nob2ljZQ" value="' + str(indexno) + '"' + ischecked + '/><label for="multiple_choice_' + str(indexno) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty' + css_class + '">' + the_icon + formatted_key + '</label>', helptext, status) + '</div></div>\n'
                     else:
                         if css_class:
                             css_class = 'class="' + css_class.strip() + '"'
@@ -2433,7 +2433,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                       <input type="hidden" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>"""
                     else:
                         output += """
-                      <div class="row da-form-group"><div class="offset-""" + daconfig['grid classes']['label width'] + """ col-""" + daconfig['grid classes']['field width'] + """"><div class="form-check"><input class="form-check-input" alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/><label for="da_attachment_include_editable" class="danobold form-check-label">""" + editable_name + '</label></div></div></div>\n'
+                      <div class="row da-form-group"><div class="offset-""" + daconfig['grid classes']['label width'] + """ col-""" + daconfig['grid classes']['field width'] + """"><div class="form-check"><input class="form-check-input" type="checkbox" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/><label for="da_attachment_include_editable" class="danobold form-check-label">""" + editable_name + '</label></div></div></div>\n'
                 output += """
                       <button class="btn """ + BUTTON_STYLE + BUTTON_COLOR_SEND + """" type="submit">""" + word('Send') + '</button>\n                      <input type="hidden" name="_email_attachments" value="1"/>'
                 output += """
@@ -2461,7 +2461,7 @@ def as_html(status, debug, root, validation_rules, field_error, the_progress_bar
                       <input type="hidden" value="True" name="_attachment_include_editable" id="da_attachment_include_editable"/>"""
                     else:
                         output += """
-                      <div class="row da-form-group"><div class="col"><div class="form-check"><input class="form-check-input" alt=""" + fix_double_quote(word("Check box") + ", " + editable_name) + """ type="checkbox" value="True" name="_attachment_include_editable" id="da_download_include_editable"/><label for="da_download_include_editable" class="danobold form-check-label">""" + editable_name + '</label></div></div></div>\n'
+                      <div class="row da-form-group"><div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" value="True" name="_attachment_include_editable" id="da_download_include_editable"/><label for="da_download_include_editable" class="danobold form-check-label">""" + editable_name + '</label></div></div></div>\n'
                 output += """
                       <button class="btn """ + BUTTON_STYLE + BUTTON_COLOR_DOWNLOAD + """" type="submit">""" + word('Download All') + '</button>\n                      <input type="hidden" name="_download_attachments" value="1"/>'
                 output += """
@@ -2918,7 +2918,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                 if embedded:
                     inner_fieldlist.append('<input type="checkbox" class="dacheckbox-embedded dafield' + str(field.number) + ' danon-nota-checkbox' + css_class + '" data-cbtype="' + cbtype + '"' + ' data-cbvalue=' + myb64quote(str(pair['key'])) + 'id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" type="checkbox" value="True"' + ischecked + disable_others_data + disabled_attr + '/>&nbsp;<label class="form-label" for="' + escape_id(saveas_string) + '_' + str(id_index) + '" />' + the_icon + formatted_item + '</label>')
                 else:
-                    inner_fieldlist.append(item_grid_start + help_wrap('<input type="checkbox" class="' + 'dafield' + str(field.number) + ' danon-nota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + css_class + '"' + ' data-cbtype="' + cbtype + '"' + ' data-cbvalue=' + myb64quote(str(pair['key'])) + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" value="True"' + ischecked + disable_others_data + disabled_attr + ' /><label for="' + escape_id(saveas_string) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty">' + the_icon + formatted_item + '</label>', helptext, status) + item_grid_end)
+                    inner_fieldlist.append(item_grid_start + help_wrap('<input type="checkbox" class="' + 'dafield' + str(field.number) + ' danon-nota-checkbox da-to-labelauty checkbox-icon' + extra_checkbox + css_class + '"' + ' data-cbtype="' + cbtype + '"' + ' data-cbvalue=' + myb64quote(str(pair['key'])) + title_text + ' id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + inner_field + '" value="True"' + ischecked + disable_others_data + disabled_attr + ' /><label for="' + escape_id(saveas_string) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty' + css_class + '">' + the_icon + formatted_item + '</label>', helptext, status) + item_grid_end)
                 id_index += 1
             if 'aota' in status.extras and field.number in status.extras['aota'] and status.extras['aota'][field.number] is not False:
                 if all_checked:
@@ -3044,7 +3044,7 @@ def input_for(status, field, embedded=False, floating_label=None):
                     else:
                         ischecked = ''
                         all_checked = False
-                    inner_fieldlist.append(item_grid_start + help_wrap('<input type="radio" class="da-to-labelauty' + daobject + extra_radio + css_class + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" value=' + fix_double_quote(str(pair['key'])) + ischecked + disable_others_data + disabled_attr + ' /><label for="' + escape_id(saveas_string) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty">' + the_icon + formatted_item + '</label>', helptext, status) + item_grid_end)
+                    inner_fieldlist.append(item_grid_start + help_wrap('<input type="radio" class="da-to-labelauty' + daobject + extra_radio + css_class + '" id="' + escape_id(saveas_string) + '_' + str(id_index) + '" name="' + escape_id(saveas_string) + '" value=' + fix_double_quote(str(pair['key'])) + ischecked + disable_others_data + disabled_attr + ' /><label for="' + escape_id(saveas_string) + '_' + str(id_index) + '" class="btn btn-' + css_color + ' text-start dalabelauty' + css_class + '">' + the_icon + formatted_item + '</label>', helptext, status) + item_grid_end)
                     id_index += 1
                 if 'aota' in status.extras and field.number in status.extras['aota'] and status.extras['aota'][field.number] is not False:
                     if status.extras['aota'][field.number] is True:

@@ -16806,6 +16806,20 @@ function daInitialize(doScroll) {
       region: "us",
       sessionToken: token,
     };
+    for (const [key, value] of Object.entries(daAutocomplete[thisId].opts)) {
+      if (
+        key !== "fields" &&
+        key !== "types" &&
+        key !== "includedPrimaryTypes" &&
+        key !== "sessionToken" &&
+        key !== "input"
+      ) {
+        request[key] = value;
+      }
+    }
+    request.includedPrimaryTypes = daAutocomplete[thisId].opts.types || [
+      "street_address",
+    ];
     cb.$target.on("change", async (e) => {
       if (!daAutocomplete[thisId].suggestions[cb.$target.val()]) {
         return;
@@ -16840,9 +16854,6 @@ function daInitialize(doScroll) {
           return;
       }
       request.input = elem.val();
-      request.includedPrimaryTypes = daAutocomplete[thisId].opts.types || [
-        "street_address",
-      ];
       if (request.input.length > 2 && request.input != priorQuery) {
         priorQuery = request.input;
         const { suggestions } =

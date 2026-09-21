@@ -1,5 +1,14 @@
 # Change Log
 
+## [1.10.11] - 2026-09-20
+
+### Fixed
+
+- The address autocomplete feature was not actually as configurable as
+  the documentation suggested.
+- The `css class` of a radio or checkbox item was attached to the
+  `<input>` but not to the `<label>`. It is now attached to both.
+
 ## [1.10.10] - 2026-09-12
 
 ### Fixed

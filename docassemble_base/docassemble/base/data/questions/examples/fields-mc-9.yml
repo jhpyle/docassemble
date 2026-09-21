@@ -34,10 +34,13 @@ fields:
 ---
 code: |
   myoptions = [
-                {'label': "Apples",
-                 'value': 'apple'},
-                {'label': "Oranges",
-                 'value': 'orange'},
-                {'label': "Pears",
-                 'value': 'pear'}
+                {'label': 'Apples',
+                 'value': 'apple',
+                 'css class': 'bg-danger'},
+                {'label': 'Oranges',
+                 'value': 'orange',
+                 'css class': 'bg-info'},
+                {'label': 'Pears',
+                 'value': 'pear',
+                 'css class': 'bg-warning'}
               ]
