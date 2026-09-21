@@ -2683,13 +2683,32 @@ the [`Address`] object.
 
 If you want to use additional features of the [Place Autocomplete]
 JavaScript API, you can set `address autocomplete` to a dictionary of
-options that will be passed directly to the [Place Autocomplete] API.
+options that will be used when calling the [Place Autocomplete] API.
 
-You will need to set the `types` and `fields` items within the
-dictionary to values that the [Place Autocomplete] API considers
-valid. Consult the API documentation for the list of valid [types] and
-[fields]. **docassemble** will pass the dictionary of options directly
-to the [`.fetchFields()`] method without checking if the options are
+By including a key for `fields`, you can specify a list of fields
+that should be passed to the [`.fetchFields()`] method when the user
+selects an address from the dropdown. Consult the API documentation for
+the list of valid [fields].
+
+If you include a key for `types`, you can specify a list of address
+types that should be passed to the
+[`.fetchAutocompleteSuggestions()`]. Consult the API documentation for
+the list of valid [types].
+
+Any other keys you include will be passed verbatim to the
+[`.fetchAutocompleteSuggestions()`] method. For example:
+
+{% highlight yaml %}
+    address autocomplete:
+      locationBias:
+        north: 71.9155194943835
+        south: 51.6808952823405
+        east: -129.60647296484444
+        west: -174.52831255014837
+{% endhighlight %}
+
+The values you include need to be values that the [Place Autocomplete]
+API considers valid. **docassemble** will not check if the options are
 valid. You need to monitor the JavaScript console and consult Google's
 documentation if there is an error.
 
@@ -3982,3 +4001,4 @@ why this needs to be done manually as opposed to automatically:
 [`disabled`]: #disabled
 [accessibility]: {{ site.baseurl }}/docs/accessibility.html
 [`.fetchFields()`]: https://developers.google.com/maps/documentation/javascript/place-details
+[`.fetchAutocompleteSuggestions()`]: https://developers.google.com/maps/documentation/javascript/reference/autocomplete-data#AutocompleteSuggestion.fetchAutocompleteSuggestions
