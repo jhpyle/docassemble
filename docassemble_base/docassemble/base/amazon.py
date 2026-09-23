@@ -75,7 +75,7 @@ class S3Key:
     def get_contents_as_string(self):
         resp = self.key_obj.get(**self.s3_object.download_args)
         self.size = resp['ContentLength']
-        self.content_type = resp['ContentType']
+        self.content_type = resp.get('ContentType', 'application/octet-stream')
         self.last_modified = resp['LastModified']
         return resp['Body'].read().decode()
 
@@ -83,7 +83,7 @@ class S3Key:
         try:
             resp = self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.name, **self.s3_object.download_args)
             self.size = resp['ContentLength']
-            self.content_type = resp['ContentType']
+            self.content_type = resp.get('ContentType', 'application/octet-stream')
             self.last_modified = resp['LastModified']
         except ClientError:
             return False
@@ -114,7 +114,7 @@ class S3Key:
             self.key_obj.upload_file(filename, ExtraArgs=self.s3_object.upload_args)
         resp = self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.name, **self.s3_object.download_args)
         self.size = resp['ContentLength']
-        self.content_type = resp['ContentType']
+        self.content_type = resp.get('ContentType', 'application/octet-stream')
         self.last_modified = resp['LastModified']
         secs = (self.last_modified - epoch).total_seconds()
         os.utime(filename, (secs, secs))
@@ -126,7 +126,7 @@ class S3Key:
             self.key_obj.put(Body=bytes(text, encoding='utf-8'), **self.s3_object.upload_args)
         resp = self.s3_object.client.head_object(Bucket=self.s3_object.bucket_name, Key=self.name, **self.s3_object.download_args)
         self.size = resp['ContentLength']
-        self.content_type = resp['ContentType']
+        self.content_type = resp.get('ContentType', 'application/octet-stream')
         self.last_modified = resp['LastModified']
 
     def generate_url(self, expires, content_type=None, display_filename=None, inline=False):
