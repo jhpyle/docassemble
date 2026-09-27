@@ -22,6 +22,7 @@ from unicodedata import normalize
 from enum import Enum
 from pathlib import Path
 import importlib.resources
+import importlib.util
 import astunparse
 import us
 import pycountry
@@ -3393,6 +3394,34 @@ def standard_template_filename(the_file, return_nonexistent=False):
     return None
 
 
+def package_data_path(package, relative_path):
+    """Resolve a file inside an installed package to a filesystem Path
+    without importing the package's modules.
+
+    Uses the import system's finders (``importlib.util.find_spec``) to
+    locate the package on disk.  Unlike ``importlib.resources.files()``,
+    this does not execute the named module, so a request that supplies an
+    arbitrary dotted package name cannot trigger module-level code.
+    Returns None if the package cannot be located.
+    """
+    try:
+        spec = importlib.util.find_spec(package)
+    except (ImportError, AttributeError, ValueError):
+        return None
+    if spec is None:
+        return None
+    directory = None
+    if spec.submodule_search_locations:
+        for loc in spec.submodule_search_locations:
+            directory = loc
+            break
+    elif spec.origin and spec.origin not in ('built-in', 'frozen'):
+        directory = os.path.dirname(spec.origin)
+    if directory is None:
+        return None
+    return Path(directory, relative_path)
+
+
 def package_template_filename(the_file, **kwargs):
     the_file = the_file.strip()
     parts = the_file.split(":")
@@ -3412,9 +3441,8 @@ def package_template_filename(the_file, **kwargs):
             parts[1] = 'data/templates/' + parts[1]
         if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
             return None
-        try:
-            path = Path(importlib.resources.files(parts[0]), parts[1])
-        except:
+        path = package_data_path(parts[0], parts[1])
+        if path is None:
             return None
         if path.exists() or kwargs.get('return_nonexistent', False):
             return str(path)
@@ -3462,9 +3490,8 @@ def package_data_filename(the_file, return_nonexistent=False):
             return abs_file.path
         if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
             return None
-        try:
-            path = Path(importlib.resources.files(parts[0]), parts[1])
-        except:
+        path = package_data_path(parts[0], parts[1])
+        if path is None:
             return None
         if path.exists() or return_nonexistent:
             result = str(path)
@@ -3482,9 +3509,8 @@ def package_question_filename(the_file, return_nonexistent=False):
             parts[1] = 'data/questions/' + parts[1]
         if filename_invalid(parts[1]) or package_name_invalid(parts[0]):
             raise DAInvalidFilename("Invalid filename")
-        try:
-            path = Path(importlib.resources.files(parts[0]), parts[1])
-        except:
+        path = package_data_path(parts[0], parts[1])
+        if path is None:
             return None
         if path.exists() or return_nonexistent:
             return str(path)
@@ -4017,6 +4043,8 @@ def _undefine_internal_old(*pargs, invalidate=False):  # pylint: disable=redefin
         str(var)
         if not isinstance(var, str):
             raise DAError("undefine() must be given a string, not " + repr(var) + ", a " + str(var.__class__.__name__))
+        if illegal_variable_name(var):
+            raise DAError("undefine: variable " + repr(var) + " is not a valid variable name")
         try:
             eval(var, {})
             continue
@@ -4163,6 +4191,8 @@ def set_variables(variables, process_objects=False):
     if process_objects:
         variables = transform_json_variables(variables)  # pylint: disable=assignment-from-none
     for var, val in variables.items():
+        if not isinstance(var, str) or illegal_variable_name(var):
+            raise DAError("set_variables: invalid variable name")
         exec(var + " = None", user_dict)
         user_dict['__define_val'] = val
         exec(var + " = __define_val", user_dict)
@@ -4184,6 +4214,8 @@ def define(var, val):
     ensure_definition(var, val)
     if not isinstance(var, str) or not re.search(r'^[A-Za-z_]', var):
         raise DAError("define() must be given a string as the variable name")
+    if illegal_variable_name(var):
+        raise DAError("define() must be given a valid variable name")
     user_dict = get_current_user_dict()
     if user_dict is None:
         raise DAError("define: could not find interview answers")

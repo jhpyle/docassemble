@@ -271,7 +271,7 @@ class SavedFile:
         filename = kwargs.get('filename', self.filename)
         self.fix()
         try:
-            with requests.get(url, stream=True, timeout=60) as rr:
+            with requests.get(url_sanitize(url), stream=True, timeout=60) as rr:
                 rr.raise_for_status()
                 with open(os.path.join(self.directory, filename), 'wb') as fp:
                     for chunk in rr.iter_content(8192):
