@@ -1086,7 +1086,7 @@ class InterviewStatus:
                 if debug:
                     for item in the_field['choices']:
                         if 'label' in item:
-                            output['question'] += '<p>' + item['label'] + '</p>'
+                            output['question'] += '<p>' + str(item['label']) + '</p>'
             if hasattr(field, 'aota'):
                 the_field['all_of_the_above'] = markdown_to_html(self.extras['aota'][field.number], do_terms=False, status=self, verbatim=not encode)
             if hasattr(field, 'nota'):
@@ -2032,6 +2032,8 @@ class Question:
                 self.interview.options['floating labels'] = data['features']['floating labels']
             if 'send question data' in data['features'] and isinstance(data['features']['send question data'], bool):
                 self.interview.options['send question data'] = data['features']['send question data']
+            elif get_config('send question data'):
+                self.interview.options['send question data'] = True
             if 'custom datatypes to load' in data['features']:
                 if isinstance(data['features']['custom datatypes to load'], str):
                     data['features']['custom datatypes to load'] = [data['features']['custom datatypes to load']]
@@ -2080,6 +2082,9 @@ class Question:
                         self.interview.options[key] = dateutil.parser.parse(data['features'][key]).astimezone(zoneinfo.ZoneInfo(get_default_timezone()))
                     except:
                         raise DASourceError("The " + key + " in features did not contain a valid date." + self.idebug(data))
+        else:
+            if get_config('send question data'):
+                self.interview.options['send question data'] = True
         if 'field' in data and not ('yesno' in data or 'noyes' in data or 'yesnomaybe' in data or 'noyesmaybe' in data or 'buttons' in data or 'choices' in data or 'dropdown' in data or 'combobox' in data):
             data['continue button field'] = data['field']
             del data['field']
