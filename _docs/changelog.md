@@ -3,6 +3,21 @@ layout: docs
 title: Change Log
 short_title: Change Log
 ---
+## [1.10.12](https://github.com/jhpyle/docassemble/releases/tag/v1.10.12) - 2026-09-27
+
+
+### Added
+
+- Configuration directive for setting a default value for the `send
+  question data` feature.
+
+
+### Fixed
+
+- Adjusted the code that calls S3 so that it is compatible with
+  servers that do not return `Content-Type`.
+- Added `DBPORT` to `Docker/env.list`.
+
 ## [1.10.11](https://github.com/jhpyle/docassemble/releases/tag/v1.10.11) - 2026-09-20
 
 

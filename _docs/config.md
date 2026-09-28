@@ -702,6 +702,19 @@ the alert, while the second `%s` represents the HTML of the content of
 the message. In `alert container html`, the `%s` represents one or
 more `alert html` `<div>`s.
 
+## <a name="send question data"></a>Whether to send data about the current question to JavaScript
+
+When setting the features of an interview, you can set [`send question
+data`] to `True` so that the JavaScript context has access to a
+variable called `daQuestionData` that contains a data structure
+defining the current `question`. The default value of [`send question
+data`] is `False`, but if you want to set the default value to `True`,
+you can set the following in your Configuration:
+
+{% highlight yaml %}
+send question data: True
+{% endhighlight %}
+
 ## <a name="customization"></a>Customization of administrative pages
 
 When the user is interacting with an interview, the page can be
@@ -7171,3 +7184,4 @@ and Facebook API keys.
 [`DAGlobal`]: {{ site.baseurl }}/docs/objects.html#DAGlobal
 [screen reader]: {{ site.baseurl }}/docs/special.html#speak_text
 [`translations`]: {{ site.baseurl }}/docs/initial.html#translations
+[`send question data`]: {{ site.baseurl }}/docs/initial.html#send question data
