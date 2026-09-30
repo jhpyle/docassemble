@@ -918,6 +918,14 @@ def states_list(country_code=None, abbreviate=False):
                 mapping[m.group(1)] = m.group(1)
             else:
                 mapping[m.group(1)] = word(subdivision.name)
+    if country_code == 'US':
+        armed_forces = {
+            'AA': 'Armed Forces Americas',
+            'AE': 'Armed Forces Europe',
+            'AP': 'Armed Forces Pacific'
+        }
+        for code, name in armed_forces.items():
+            mapping[code] = word(name) if not abbreviate else code
     return dict(sorted(mapping.items(), key=lambda item: item[1]))
 
 
