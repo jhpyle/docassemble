@@ -82,6 +82,7 @@ function daInitializeSignature(penColor, defaultImage) {
   });
   $(".dasigclear").click(function (e) {
     e.preventDefault();
+    $("#dasigcontent").empty();
     daNewCanvas();
     return false;
   });
@@ -144,6 +145,38 @@ function daNewCanvas(defaultImage = null) {
     cheight = 275;
   }
   $("#dasigcontent").height(cheight);
+  var defaultImageOptions = {
+    ratio: 1,
+    width: cwidth,
+    height: cheight,
+    xOffset: 0,
+    yOffset: 0,
+  };
+  if (defaultImage == null) {
+    var oldCanvas = document.querySelector("#dasigcontent canvas");
+    if (
+      oldCanvas != null &&
+      oldCanvas.width > 0 &&
+      oldCanvas.height > 0 &&
+      daSignaturePad &&
+      daSignaturePad.canvas === oldCanvas &&
+      !daSignaturePad.isEmpty()
+    ) {
+      // scale the old image to fit the new canvas, preserving its
+      // aspect ratio and centering it with padding
+      var scale = Math.min(
+        cwidth / oldCanvas.width,
+        cheight / oldCanvas.height,
+      );
+      var newWidth = oldCanvas.width * scale;
+      var newHeight = oldCanvas.height * scale;
+      defaultImage = oldCanvas.toDataURL();
+      defaultImageOptions.width = newWidth;
+      defaultImageOptions.height = newHeight;
+      defaultImageOptions.xOffset = (cwidth - newWidth) / 2;
+      defaultImageOptions.yOffset = (cheight - newHeight) / 2;
+    }
+  }
   var canvas =
     '<canvas class="form-control" id="dasigcanvas" width="' +
     cwidth +
@@ -157,13 +190,7 @@ function daNewCanvas(defaultImage = null) {
   }
   daSignaturePad = new SignaturePad(document.querySelector("#dasigcanvas"));
   if (defaultImage != null) {
-    daSignaturePad.fromDataURL(defaultImage, {
-      ratio: 1,
-      width: cwidth,
-      height: cheight,
-      xOffset: 0,
-      yOffset: 0,
-    });
+    daSignaturePad.fromDataURL(defaultImage, defaultImageOptions);
   }
   daSignaturePad.minWidth = 0.5 * daThicknessScalingFactor;
   daSignaturePad.maxWidth = 2.5 * daThicknessScalingFactor;

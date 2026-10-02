@@ -959,7 +959,7 @@ class InterviewStatus:
                             elif key == 'maxlength':
                                 the_field['validation_messages'][key] = field.validation_message(key, self, word("You cannot type more than %s characters."), parameters=tuple([self.extras[key][field.number]]))
             if hasattr(field, 'datatype'):
-                if field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and self.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)))):
+                if field.datatype in ('multiselect', 'object_multiselect', 'checkboxes', 'object_checkboxes') and ((hasattr(field, 'nota') and 'nota' in self.extras and field.number in self.extras['nota'] and self.extras['nota'][field.number] is not False) or (hasattr(field, 'extras') and (('minlength' in field.extras and 'minlength' in self.extras) or ('maxlength' in field.extras and 'maxlength' in self.extras)))):
                     if field.datatype.endswith('checkboxes'):
                         d_type = 'checkbox'
                     else:
@@ -997,7 +997,7 @@ class InterviewStatus:
                                     checkbox_messages['maxlength'] = field.validation_message(d_type + ' maxlength', self, word("Please select no more than %s."), parameters=tuple([self.extras['maxlength'][field.number]]))
                         the_field['validation_messages'].update(checkbox_messages)
                     if d_type == 'checkbox':
-                        if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
+                        if hasattr(field, 'nota') and 'nota' in self.extras and field.number in self.extras['nota'] and self.extras['nota'][field.number] is not False:
                             the_field['validation_messages']['checkatleast'] = field.validation_message('checkboxes required', self, word("Check at least one option, or check “%s”"), parameters=tuple([self.extras['nota'][field.number]]))
                 if field.datatype == 'date':
                     the_field['validation_messages']['date'] = field.validation_message('date', self, word("You need to enter a valid date."))
@@ -1087,9 +1087,9 @@ class InterviewStatus:
                     for item in the_field['choices']:
                         if 'label' in item:
                             output['question'] += '<p>' + str(item['label']) + '</p>'
-            if hasattr(field, 'aota'):
+            if hasattr(field, 'aota') and 'aota' in self.extras and field.number in self.extras['aota']:
                 the_field['all_of_the_above'] = markdown_to_html(self.extras['aota'][field.number], do_terms=False, status=self, verbatim=not encode)
-            if hasattr(field, 'nota'):
+            if hasattr(field, 'nota') and 'nota' in self.extras and field.number in self.extras['nota']:
                 the_field['none_of_the_above'] = markdown_to_html(self.extras['nota'][field.number], do_terms=False, status=self, verbatim=not encode)
             if field.number in self.extras['ok']:
                 the_field['active'] = self.extras['ok'][field.number]
@@ -1216,13 +1216,13 @@ class InterviewStatus:
                 else:
                     for pair in pairlist:
                         choice_list.append([pair['label'], saveas, pair['key']])
-                if hasattr(field, 'aota') and (field.datatype.endswith('checkboxes') and self.extras['aota'][field.number] is not False):
+                if hasattr(field, 'aota') and (field.datatype.endswith('checkboxes') and 'aota' in self.extras and field.number in self.extras['aota'] and self.extras['aota'][field.number] is not False):
                     if self.extras['aota'][field.number] is True:
                         formatted_item = word("All of the above")
                     else:
                         formatted_item = self.extras['aota'][field.number]
                     choice_list.append([formatted_item, None, None])
-                if hasattr(field, 'nota') and (field.datatype.endswith('checkboxes') and self.extras['nota'][field.number] is not False):  # or (field.datatype.endswith('multiselect') and self.extras['nota'][field.number] is True)
+                if hasattr(field, 'nota') and (field.datatype.endswith('checkboxes') and 'nota' in self.extras and field.number in self.extras['nota'] and self.extras['nota'][field.number] is not False):  # or (field.datatype.endswith('multiselect') and self.extras['nota'][field.number] is True)
                     if self.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
                     else:
@@ -1325,13 +1325,13 @@ class InterviewStatus:
                         if ('default' in pair and pair['default']) or (defaultvalue is not None and isinstance(defaultvalue, (str, int, bool, float)) and str(pair['key']) == str(defaultvalue)):
                             item['selected'] = True
                         choice_list.append(item)
-                if hasattr(field, 'aota') and self.extras['aota'][field.number] is not False:
+                if hasattr(field, 'aota') and 'aota' in self.extras and field.number in self.extras['aota'] and self.extras['aota'][field.number] is not False:
                     if self.extras['aota'][field.number] is True:
                         formatted_item = word("All of the above")
                     else:
                         formatted_item = self.extras['aota'][field.number]
                     choice_list.append({'label': markdown_to_html(formatted_item, trim=True, do_terms=False, status=self, verbatim=encode)})
-                if hasattr(field, 'nota') and self.extras['nota'][field.number] is not False:
+                if hasattr(field, 'nota') and 'nota' in self.extras and field.number in self.extras['nota'] and self.extras['nota'][field.number] is not False:
                     if self.extras['nota'][field.number] is True:
                         formatted_item = word("None of the above")
                     else:

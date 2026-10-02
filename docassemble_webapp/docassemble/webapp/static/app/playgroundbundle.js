@@ -46086,7 +46086,11 @@ function readyQuestionsPage() {
     $("#playground_content").val(daCm.ev.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
   });
-  $("#form").areYouSure(daTranslations.unsavedChangesWarning);
+  $("#form").areYouSure({
+    message: daTranslations.unsavedChangesWarning,
+    fieldSelector:
+      ":input:not(input[type=submit]):not(input[type=button]):not(button)",
+  });
   $("#form").bind("submit", function () {
     $("#playground_content").val(daCm.ev.state.doc.toString());
     $("#form").trigger("reinitialize.areYouSure");
@@ -46691,7 +46695,11 @@ function readyFilesPage() {
       event.preventDefault();
     }
   });
-  $("#formtwo").areYouSure({ message: daTranslations.unsavedChangesWarning });
+  $("#formtwo").areYouSure({
+    message: daTranslations.unsavedChangesWarning,
+    fieldSelector:
+      ":input:not(input[type=submit]):not(input[type=button]):not(button)",
+  });
   $("#formtwo").bind("submit", function (e) {
     $("#file_content").val(daCm.ev.state.doc.toString());
     $("#formtwo").trigger("reinitialize.areYouSure");
@@ -46786,7 +46794,11 @@ function readyPackagePage() {
     $("#readme").val(daCm.ev.state.doc.toString());
     $("#form").trigger("checkform.areYouSure");
   });
-  $("#form").areYouSure(daTranslations.unsavedChangesWarning);
+  $("#form").areYouSure({
+    message: daTranslations.unsavedChangesWarning,
+    fieldSelector:
+      ":input:not(input[type=submit]):not(input[type=button]):not(button)",
+  });
   $("#form").bind("submit", function () {
     $("#readme").val(daCm.ev.state.doc.toString());
     $("#form").trigger("reinitialize.areYouSure");

@@ -568,7 +568,6 @@ def state_name(state_code, country_code=None):
         if m and m.group(1) == state_code:
             return word(subdivision.name)
     return state_code
-    # return us.states.lookup(state_code).name
 
 
 def language_name(language_code):
