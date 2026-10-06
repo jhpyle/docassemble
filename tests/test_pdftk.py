@@ -1,13 +1,73 @@
+import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import pikepdf
+import pytest
+from PIL import Image, ImageChops, ImageDraw
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen.canvas import Canvas
 
 sys.path.insert(0, str(Path(__file__).parents[1] / 'docassemble_base'))
 from docassemble.base.pdftk import fill_template, prepare_accessible_flatten
+from docassemble.base.config import daconfig
+
+
+@pytest.mark.parametrize('width,height', [(120, 40), (40, 120)])
+def test_signature_padding_does_not_render_a_colored_border(tmp_path, monkeypatch, width, height):
+    template = tmp_path / 'signature.pdf'
+    canvas = Canvas(str(template), pagesize=letter)
+    canvas.drawString(36, 740, 'Signature')
+    canvas.acroForm.textfield(name='signature', x=36, y=500, width=width, height=height)
+    canvas.save()
+    with pikepdf.Pdf.open(str(template), allow_overwriting_input=True) as pdf:
+        field = pdf.Root.AcroForm.Fields[0]
+        field.FT = pikepdf.Name('/Sig')
+        for key in ['/AP', '/MK', '/DA', '/BS', '/V', '/DV', '/MaxLen']:
+            if key in field:
+                del field[key]
+        pdf.save(template)
+
+    # Opaque white signature images must retain their white background and
+    # should render only black, white, and gray when padded to fit a PDF field.
+    signature = tmp_path / 'signature.png'
+    image = Image.new('RGB', (192, 96), 'white')
+    ImageDraw.Draw(image).line([(20, 76), (80, 20), (172, 76)], fill='black', width=4)
+    image.save(signature)
+    original_run = subprocess.run
+
+    def run_without_imagemagick(args, **kwargs):
+        if args[0] == daconfig.get('imagemagick', 'convert'):
+            # Use the fixture directly to keep the test independent of
+            # ImageMagick while exercising PDF embedding and page rendering.
+            shutil.copyfile(args[1], args[-1])
+            return subprocess.CompletedProcess(args, 0)
+        return original_run(args, **kwargs)
+
+    monkeypatch.setattr(subprocess, 'run', run_without_imagemagick)
+    output = fill_template(
+        str(template), images=[('signature', {'fullpath': str(signature)})], editable=True,
+    )
+    try:
+        # Check the encoded RGB values too: a viewer may expose otherwise
+        # invisible colors while interpolating the image and its alpha mask.
+        with pikepdf.Pdf.open(output) as pdf:
+            for _, form in pdf.pages[0].Resources.XObject.items():
+                for _, image_object in form.Resources.XObject.items():
+                    embedded = pikepdf.PdfImage(image_object).as_pil_image().convert('RGB')
+                    red, green, blue = embedded.split()
+                    assert ImageChops.difference(red, green).getbbox() is None
+                    assert ImageChops.difference(red, blue).getbbox() is None
+        prefix = tmp_path / 'rendered'
+        subprocess.run(
+            ['pdftoppm', '-r', '144', '-singlefile', '-png', output, str(prefix)],
+            check=True, capture_output=True,
+        )
+        with Image.open(prefix.with_suffix('.png')) as rendered:
+            assert all(r == g == b for r, g, b in rendered.convert('RGB').getdata())
+    finally:
+        Path(output).unlink(missing_ok=True)
 
 
 def make_form(filename):
