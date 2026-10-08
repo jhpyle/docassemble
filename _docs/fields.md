@@ -3004,6 +3004,9 @@ will appear on the screen in the normal fashion.
 
 The label of an embedded field is used as the [tooltip] of the field.
 
+When a field is embedded, `show if`, `disable if`, `js show if`, etc.,
+cannot be used.
+
 <a name="inline width"></a>When you are using embedded fields, you can
 add the field modifier `inline width` to change the initial width of
 the field.  For example, if you include `inline width: 15em`, the
