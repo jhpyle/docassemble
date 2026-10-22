@@ -35,7 +35,7 @@ dependencies = [
   "botocore==1.43.62",
   "cachetools==7.1.6",
   "cairocffi==1.7.1",
-  "CairoSVG==2.9.0",
+  "CairoSVG==2.9.1",
   "certifi==2026.10.19",
   "cffi==2.1.0",
   "chardet==7.4.3",
