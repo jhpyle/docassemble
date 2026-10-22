@@ -698,7 +698,10 @@ def fill_template(template, data_strings=None, data_names=None, hidden=None, rea
                 dpp = dppy
                 x_offset = int(0.5 * ((xtwo - xone) * dpp - width))
                 y_offset = 0
-            new_im = Image.new('RGBA', (int((xtwo - xone) * dpp), int((ytwo - yone) * dpp)), (255, 0, 0, 0))
+            # Match the white page background even in fully transparent pixels.
+            # Some PDF renderers interpolate RGB and alpha separately, exposing
+            # a colored fringe when transparent padding contains red RGB values.
+            new_im = Image.new('RGBA', (int((xtwo - xone) * dpp), int((ytwo - yone) * dpp)), (255, 255, 255, 0))
             new_im.paste(im, (x_offset, y_offset))
             overlay_pdf_file = tempfile.NamedTemporaryFile(prefix="datemp", mode="wb", suffix=".pdf", delete=False)
             with BytesIO() as output:
