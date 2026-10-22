@@ -184,7 +184,7 @@ dependencies = [
   "pycryptodome==3.23.0",
   "pycryptodomex==3.23.0",
   "Pygments==2.20.0",
-  "PyJWT==2.13.0",
+  "PyJWT==2.15.0",
   "PyLaTeX==1.4.2",
   "pyOpenSSL==26.3.0",
   "PyOTP==2.10.0",
