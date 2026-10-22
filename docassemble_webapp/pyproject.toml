@@ -249,7 +249,7 @@ dependencies = [
   "ua-parser==1.0.2",
   "ua-parser-builtins==202606",
   "uritemplate==4.2.0",
-  "urllib3==2.7.0",
+  "urllib3==2.8.0",
   "us==3.2.0",
   "user-agents==2.2.0",
   "vine==5.1.0",
