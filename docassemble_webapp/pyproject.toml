@@ -262,7 +262,7 @@ dependencies = [
   "WTForms==3.2.2",
   "xfdfgen==0.4",
   "xlsxwriter==3.2.9",
-  "yarl==1.24.5",
+  "yarl==1.25.1",
   "zipp==4.1.0",
   "zope.event==6.2",
   "zope.interface==8.5"
