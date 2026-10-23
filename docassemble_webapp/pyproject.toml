@@ -165,7 +165,7 @@ dependencies = [
   "pdfminer.six==20260107",
   "phonenumbers==9.0.36",
   "pikepdf==10.11.0",
-  "pillow==12.3.0",
+  "pillow==13.0.0",
   "pkginfo==1.12.1.2",
   "platformdirs==4.11.0",
   "pluggy==1.6.0",
