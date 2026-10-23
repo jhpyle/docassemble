@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.10.14] - 2026-10-22
+
+### Changed
+
+- Upgraded `CairoSVG`, `certifi`, `Mako`, `multidict`, `PyJWT`,
+  `urllib3`, and `Werkzeug`.
+
+### Fixed
+
+- Avoid red shadow on signature images added to PDF files.
+
 ## [1.10.13] - 2026-10-01
 
 ### Fixed
