@@ -149,11 +149,14 @@ group].  Consultants who are available for projects include:
 
 * [Lemma Legal Consulting]
 * [Legal Tech Helper]
+* [Fintegration - DocAssemble Development] 
+* 
 
 [use Terminal]: https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-ssh-using-terminal
 [use PuTTY]: https://lightsail.aws.amazon.com/ls/docs/en_us/articles/lightsail-how-to-set-up-putty-to-connect-using-ssh
 [Amazon Lightsail]: https://aws.amazon.com/lightsail/
 [Lemma Legal Consulting]: https://lemmalegal.com
+[Fintegration - DocAssemble Development]: https://docassembledevelopment.com/
 [Legal Tech Helper]: https://legaltechhelper.com.au
 [cluster]: {{ site.baseurl }}/docs/scalability.html
 [install]: {{ site.baseurl }}/docs/installation.html
