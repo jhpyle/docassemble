@@ -79,3 +79,4 @@ __pycache__
 pyproject.toml
 autoimport.py
 runpylint.py
+compare_freeze.py

@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.10.15] - 2026-10-29
+
+### Changed
+
+- Upgraded Python dependencies other than `nltk`. Note that if you are
+  using third-party Python packages, you may encounter dependency
+  conflicts. It is possible that your interviews will need to be
+  updated.
+- Upgraded CodeMirror.
+
 ## [1.10.14] - 2026-10-22
 
 ### Changed
