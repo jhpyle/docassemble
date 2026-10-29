@@ -113,7 +113,7 @@ dependencies = [
   "msrest==0.7.1",
   "multidict==7.2.1",
   "nh3==0.3.7",
-  "nltk==3.9.2",
+  "nltk==3.10.4",
   "num2words==0.5.14",
   "numpy==2.5.4",
   "oauth2client==4.1.3",
