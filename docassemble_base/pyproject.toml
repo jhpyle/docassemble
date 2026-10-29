@@ -108,7 +108,7 @@ dependencies = [
   "more-itertools==11.1.0",
   "msal==1.37.0",
   "msal-extensions==1.3.1",
-  "msgpack==1.2.1",
+  "msgpack==1.2.3",
   "msrest==0.7.1",
   "multidict==6.9.1",
   "nh3==0.3.6",
