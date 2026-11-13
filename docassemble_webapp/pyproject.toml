@@ -235,7 +235,7 @@ dependencies = [
   "simple-websocket==1.1.0",
   "simplekv==0.14.1",
   "six==1.17.0",
-  "soupsieve==3.0.4",
+  "soupsieve==4.0",
   "SQLAlchemy==2.1.6",
   "tailer==0.4.1",
   "threadpoolctl==3.7.0",
