@@ -1636,8 +1636,13 @@ fi
 echo "initialize: Checking to see if unoserver should be started" >&2
 
 if [ "$ENABLEUNOCONV" == "true" ] && command -v unoserver &> /dev/null; then
-    echo "initialize: Starting unoserver" >&2
-    ${SUPERVISORCMD} start unoserver
+    UNOSERVER_RUNNING=`pgrep -fc bin/unoserver`
+    if [ "$UNOSERVER_RUNNING" == "0" ]; then
+        echo "initialize: Starting unoserver" >&2
+        ${SUPERVISORCMD} start unoserver
+    else
+        echo "initialize: Unoserver already running" >&2
+    fi
 fi
 
 if [[ ! $CONTAINERROLE =~ .*:(all):.* ]]; then

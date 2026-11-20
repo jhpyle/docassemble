@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.10.16] - 2026-11-
+
+### Changed
+
+- Upgraded `oauthlib`.
+
 ## [1.10.15] - 2026-10-29
 
 ### Changed

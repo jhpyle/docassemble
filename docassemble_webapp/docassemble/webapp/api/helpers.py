@@ -214,9 +214,9 @@ def api_verify(roles=None, permissions=None):
         return False
     login_user(user, remember=False)
     update_last_login(user)
-    if current_user.has_role('admin') and 'permissions' in info and len(info['permissions']) > 0:
+    if current_user.has_role('admin') and 'limits' in info and len(info['limits']) > 0:
         current_user.limited_api = True
-        current_user.limits = info['permissions']
+        current_user.limits = info['limits']
     ok_permission = False
     if permissions:
         for permission in permissions:
