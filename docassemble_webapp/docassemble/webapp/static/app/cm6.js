@@ -4052,10 +4052,6 @@
       this.rules = [];
       let {finish} = options || {};
 
-      function splitSelector(selector) {
-        return /^@/.test(selector) ? [selector] : selector.split(/,\s*/)
-      }
-
       function render(selectors, spec, target, isKeyframes) {
         let local = [], isAt = /^@(\w+)\b/.exec(selectors[0]), keyframes = isAt && isAt[1] == "keyframes";
         if (isAt && spec == null) return target.push(selectors[0] + ";")
@@ -4068,7 +4064,8 @@
             if (!isAt) throw new RangeError("The value of a property (" + prop + ") should be a primitive value.")
             render(splitSelector(prop), value, local, keyframes);
           } else if (value != null) {
-            local.push(prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase()) + ": " + value + ";");
+            if (!/^--/.test(prop)) prop = prop.replace(/_.*/, "").replace(/[A-Z]/g, l => "-" + l.toLowerCase());
+            local.push(prop + ": " + value + ";");
           }
         }
         if (local.length || keyframes) {
@@ -4114,6 +4111,34 @@
       else if (nonce) set.setNonce(nonce);
       set.mount(Array.isArray(modules) ? modules : [modules], root);
     }
+  }
+
+  function splitSelector(selector) {
+    if (/^@/.test(selector)) return [selector]
+    // Superficially tokenize the selector to find top-level commas
+    let result = [], depth = 0, inStr = null, lastNonSpace = 0, cut = 0;
+    for (let i = 0; i < selector.length; i++) {
+      let next = selector[i];
+      if (next == "\\") {
+        i++;
+      } else if (next == '"' || next == "'") {
+        if (next == inStr) inStr = false;
+        else if (!inStr) inStr = next;
+      } else if ((next == "[" || next == "(") && !inStr) {
+        depth++;
+      } else if ((next == "]" || next == ")") && !inStr) {
+        depth--;
+      } else if (next == "," && !depth && !inStr) {
+        result.push(selector.slice(cut, lastNonSpace));
+        cut = i + 1;
+      }
+
+      if (/\S/.test(next)) lastNonSpace = i + 1;
+      else if (i == cut) cut++;
+    }
+    result.push(selector.slice(cut, lastNonSpace));
+
+    return result
   }
 
   let adoptedSet = new Map; //<Document, StyleSet>
@@ -17550,6 +17575,16 @@
                       takeFlatNode(start, endPos, localChildren, localPositions);
                   }
                   else {
+                      // If the next entry is a reused node matching the local
+                      // repeat, flush a repeat leaf and move lastGroup past it
+                      if (localInRepeat >= 0 && cursor.size == -1 /* SpecialRecord.Reuse */ &&
+                          reused[cursor.id].type == nodeSet.types[localInRepeat]) {
+                          if (lastGroup < localChildren.length)
+                              makeRepeatLeaf(localChildren, localPositions, start, lastGroup, cursor.end, lastEnd, localInRepeat, groupLookAhead, contextAtStart);
+                          lastGroup = localChildren.length + 1;
+                          lastEnd = cursor.start;
+                          groupLookAhead = lookAhead;
+                      }
                       takeNode(start, endPos, localChildren, localPositions, localInRepeat, depth + 1);
                   }
               }
@@ -17922,7 +17957,7 @@
                       let cut = nextF;
                       if (pos >= cut.from || nextPos <= cut.to || off) {
                           let fFrom = Math.max(cut.from, pos) - off, fTo = Math.min(cut.to, nextPos) - off;
-                          cut = fFrom >= fTo ? null : new TreeFragment(fFrom, fTo, cut.tree, cut.offset + off, cI > 0, !!nextC);
+                          cut = fFrom >= fTo ? null : new TreeFragment(fFrom, fTo, cut.tree, cut.offset + off, cut.openStart || cI > 0, cut.openEnd || !!nextC);
                       }
                       if (cut)
                           result.push(cut);
@@ -18019,6 +18054,16 @@
       }
   }
   const stoppedInner = new NodeProp({ perNode: true });
+  // The state of the walk that finds nested regions, kept between
+  // advance() calls.
+  class InnerScan {
+      constructor(fragments, cursor) {
+          this.cursor = cursor;
+          this.overlay = null;
+          this.covered = null;
+          this.fragmentCursor = new FragmentCursor$2(fragments);
+      }
+  }
   class MixedParse {
       constructor(base, nest, input, fragments, ranges) {
           this.nest = nest;
@@ -18028,6 +18073,7 @@
           this.inner = [];
           this.innerDone = 0;
           this.baseTree = null;
+          this.scan = null;
           this.stoppedAt = null;
           this.baseParse = base;
       }
@@ -18038,7 +18084,12 @@
                   return null;
               this.baseParse = null;
               this.baseTree = done;
-              this.startInner();
+              this.scan = new InnerScan(this.fragments, new TreeCursor(new TreeNode(done, this.ranges[0].from, 0, null), IterMode.IncludeAnonymous | IterMode.IgnoreMounts));
+          }
+          if (this.scan) {
+              if (!this.scanInner())
+                  return null;
+              this.scan = null;
               if (this.stoppedAt != null)
                   for (let inner of this.inner)
                       inner.parse.stopAt(this.stoppedAt);
@@ -18066,6 +18117,13 @@
           if (this.baseParse)
               return 0;
           let pos = this.input.length;
+          if (this.scan) {
+              // Everything before the walk's position has been looked at, except
+              // what open overlays still collect ranges for.
+              pos = this.scan.cursor.from;
+              for (let o = this.scan.overlay; o; o = o.prev)
+                  pos = Math.min(pos, o.start);
+          }
           for (let i = this.innerDone; i < this.inner.length; i++) {
               if (this.inner[i].from < pos)
                   pos = Math.min(pos, this.inner[i].parse.parsedPos);
@@ -18080,12 +18138,19 @@
               for (let i = this.innerDone; i < this.inner.length; i++)
                   this.inner[i].parse.stopAt(pos);
       }
-      startInner() {
-          let fragmentCursor = new FragmentCursor$2(this.fragments);
-          let overlay = null;
-          let covered = null;
-          let cursor = new TreeCursor(new TreeNode(this.baseTree, this.ranges[0].from, 0, null), IterMode.IncludeAnonymous | IterMode.IgnoreMounts);
-          scan: for (let nest, isCovered;;) {
+      // Continue the walk that finds nested regions. Returns true when
+      // it's done, false when it stopped to let advance() return.
+      scanInner() {
+          let scan = this.scan, { fragmentCursor, cursor } = scan;
+          let { overlay, covered } = scan;
+          let work = 0;
+          walk: for (let nest, isCovered;;) {
+              if (work >= 2000 /* Scan.Work */) {
+                  scan.overlay = overlay;
+                  scan.covered = covered;
+                  return false;
+              }
+              work++;
               let enter = true, range;
               if (this.stoppedAt != null && cursor.from >= this.stoppedAt) {
                   enter = false;
@@ -18123,8 +18188,10 @@
                   else {
                       let ranges = punchRanges(this.ranges, nest.overlay ||
                           (cursor.from < cursor.to ? [new Range(cursor.from, cursor.to)] : []));
-                      if (ranges.length)
+                      if (ranges.length) {
                           checkRanges(ranges);
+                          work += 20 /* Scan.StartCost */;
+                      }
                       if (ranges.length || !nest.overlay)
                           this.inner.push(new InnerParse(nest.parser, ranges.length ? nest.parser.startParse(this.input, enterFragments(oldMounts, ranges), ranges)
                               : nest.parser.startParse(""), nest.overlay ? nest.overlay.map(r => new Range(r.from - cursor.from, r.to - cursor.from)) : null, !!nest.bracketed, cursor.tree, ranges.length ? ranges[0].from : cursor.from));
@@ -18156,11 +18223,12 @@
                       if (cursor.nextSibling())
                           break;
                       if (!cursor.parent())
-                          break scan;
+                          break walk;
                       if (overlay && !--overlay.depth) {
                           let ranges = punchRanges(this.ranges, overlay.ranges);
                           if (ranges.length) {
                               checkRanges(ranges);
+                              work += 20 /* Scan.StartCost */;
                               this.inner.splice(overlay.index, 0, new InnerParse(overlay.parser, overlay.parser.startParse(this.input, enterFragments(overlay.mounts, ranges), ranges), overlay.ranges.map(r => new Range(r.from - overlay.start, r.to - overlay.start)), overlay.bracketed, overlay.target, ranges[0].from));
                           }
                           overlay = overlay.prev;
@@ -18170,6 +18238,7 @@
                   }
               }
           }
+          return true;
       }
   }
   function checkCover(covered, from, to) {
@@ -18239,7 +18308,7 @@
       moveTo(pos) {
           let { cursor } = this, p = pos - this.offset;
           while (!this.done && cursor.from < p) {
-              if (cursor.to >= p && cursor.enter(p, 1, IterMode.IncludeAnonymous | IterMode.IgnoreOverlays | IterMode.ExcludeBuffers)) ;
+              if (cursor.to >= p && cursor.enter(p, 1, IterMode.IncludeAnonymous | IterMode.IgnoreMounts | IterMode.IgnoreOverlays | IterMode.ExcludeBuffers)) ;
               else if (cursor.to <= p) {
                   if (!cursor.next(false))
                       this.done = true;
@@ -18265,15 +18334,21 @@
           return false;
       }
   }
+  // The end of the range in which a fragment's nodes can be reused. For
+  // a tree from a stopped parse, that is no further than the stop
+  // position (in tree coordinates, so it is mapped to the document).
+  function fragEnd(frag) {
+      let stopped = frag.tree.prop(stoppedInner);
+      return stopped == null ? frag.to : Math.min(frag.to, stopped - frag.offset);
+  }
   let FragmentCursor$2 = class FragmentCursor {
       constructor(fragments) {
-          var _a;
           this.fragments = fragments;
           this.curTo = 0;
           this.fragI = 0;
           if (fragments.length) {
               let first = this.curFrag = fragments[0];
-              this.curTo = (_a = first.tree.prop(stoppedInner)) !== null && _a !== void 0 ? _a : first.to;
+              this.curTo = fragEnd(first);
               this.inner = new StructureCursor(first.tree, -first.offset);
           }
           else {
@@ -18286,14 +18361,13 @@
           return this.curFrag && this.curFrag.from <= node.from && this.curTo >= node.to && this.inner.hasNode(node);
       }
       nextFrag() {
-          var _a;
           this.fragI++;
           if (this.fragI == this.fragments.length) {
               this.curFrag = this.inner = null;
           }
           else {
               let frag = this.curFrag = this.fragments[this.fragI];
-              this.curTo = (_a = frag.tree.prop(stoppedInner)) !== null && _a !== void 0 ? _a : frag.to;
+              this.curTo = fragEnd(frag);
               this.inner = new StructureCursor(frag.tree, -frag.offset);
           }
       }
@@ -26648,14 +26722,14 @@
       var _a;
       let keys = inPanel ? assignKeys(diagnostic.actions) : [];
       return crelt("li", { class: "cm-diagnostic cm-diagnostic-" + diagnostic.severity }, crelt("span", { class: "cm-diagnosticText" }, diagnostic.renderMessage ? diagnostic.renderMessage(view) : diagnostic.message), (_a = diagnostic.actions) === null || _a === void 0 ? void 0 : _a.map((action, i) => {
-          let fired = false, click = (e) => {
+          let fired = 0, click = (e) => {
               e.preventDefault();
-              if (fired)
+              if (fired > Date.now() - 100)
                   return;
-              fired = true;
               let found = findDiagnostic(view.state.field(lintState).diagnostics, diagnostic);
               if (found)
                   action.apply(view, found.from, found.to);
+              fired = Date.now();
           };
           let { name } = action, keyIndex = keys[i] ? name.indexOf(keys[i]) : -1;
           let nameElt = keyIndex < 0 ? name : [name.slice(0, keyIndex),
@@ -28334,6 +28408,8 @@
                   this.nextFragment();
                   return null;
               }
+              if (pos < this.safeFrom)
+                  return null;
               let top = this.trees[last], index = this.index[last];
               if (index == top.children.length) {
                   this.trees.pop();
@@ -28359,9 +28435,6 @@
                           }
                           if (start == pos)
                               return next;
-                      }
-                      else if (start == pos) {
-                          return null;
                       }
                   }
                   this.index[last]++;

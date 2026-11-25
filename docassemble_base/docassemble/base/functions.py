@@ -3628,6 +3628,8 @@ def process_action():
         force_ask(*this_thread.current_info['arguments']['variables'])
     if the_action == '_da_compute' and 'variables' in this_thread.current_info['arguments']:
         for variable_name in this_thread.current_info['arguments']['variables']:
+            if illegal_variable_name(variable_name):
+                raise DAError("Illegal variable name")
             if variable_name not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
                 the_context = {}
                 the_user_dict = get_user_dict()
@@ -3644,6 +3646,8 @@ def process_action():
         force_ask_nameerror(this_thread.current_info['arguments']['variables'][0])
     if the_action == '_da_define' and 'variables' in this_thread.current_info['arguments']:
         for variable_name in this_thread.current_info['arguments']['variables']:
+            if illegal_variable_name(variable_name):
+                raise DAError("Illegal variable name")
             if variable_name not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
                 the_context = {}
                 the_user_dict = get_current_user_dict()
@@ -3856,6 +3860,8 @@ def process_action():
             if key in this_thread.current_info['arguments']:
                 if isinstance(this_thread.current_info['arguments'][key], list):
                     for var in this_thread.current_info['arguments'][key]:
+                        if illegal_variable_name(var):
+                            raise DAError("Illegal variable name")
                         if var not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
                             the_context = {}
                             the_user_dict = get_current_user_dict()
@@ -3864,14 +3870,18 @@ def process_action():
                                     the_context[var_name] = the_user_dict[var_name]
                             del the_user_dict
                             this_thread.internal['gather'].append({'var': var, 'context': the_context})
-                elif this_thread.current_info['arguments'][key] not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
-                    the_context = {}
-                    the_user_dict = get_current_user_dict()
-                    for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
-                        if var_name in the_user_dict:
-                            the_context[var_name] = the_user_dict[var_name]
-                    del the_user_dict
-                    this_thread.internal['gather'].append({'var': this_thread.current_info['arguments'][key], 'context': the_context})
+                else:
+                    var = this_thread.current_info['arguments'][key]
+                    if not isinstance(var, str) or illegal_variable_name(var):
+                        raise DAError("Illegal variable name")
+                    if this_thread.current_info['arguments'][key] not in [(variable_dict if isinstance(variable_dict, str) else variable_dict['var']) for variable_dict in this_thread.internal['gather']]:
+                        the_context = {}
+                        the_user_dict = get_current_user_dict()
+                        for var_name in ('x', 'i', 'j', 'k', 'l', 'm', 'n'):
+                            if var_name in the_user_dict:
+                                the_context[var_name] = the_user_dict[var_name]
+                        del the_user_dict
+                        this_thread.internal['gather'].append({'var': var, 'context': the_context})
                 del this_thread.current_info['arguments'][key]
         to_be_gathered = [({'var': variable_dict, 'context': {}} if isinstance(variable_dict, str) else variable_dict) for variable_dict in this_thread.internal['gather']]
         for variable_dict in to_be_gathered:
@@ -4514,12 +4524,14 @@ def value(var: str, prior=False):
     str(var)
     if not isinstance(var, str):
         raise DAError("value() must be given a string")
+    if illegal_variable_name(var):
+        raise DAError("value() must be given a valid variable name")
+    if re.search(r'[\(\)\n\r]|lambda:|lambda ', var):
+        raise DAError("value() is invalid: " + repr(var))
     try:
         return eval(var, {})
     except:
         pass
-    if re.search(r'[\(\)\n\r]|lambda:|lambda ', var):
-        raise DAError("value() is invalid: " + repr(var))
     if prior:
         return _inspect_user_dict_with_prior(var, DefCaller.VALUE)
     return _inspect_user_dict(var, DefCaller.VALUE)
@@ -4545,6 +4557,8 @@ def defined(var: str, prior=False) -> bool:
         raise DAError("defined() must be given a string")
     if not re.search(r'[A-Za-z][A-Za-z0-9\_]*', var):
         raise DAError("defined() must be given a valid Python variable name")
+    if illegal_variable_name(var):
+        raise DAError("defined() must be given a valid variable name")
     try:
         eval(var, {})
         return True
@@ -4576,6 +4590,8 @@ def showifdef(var: str, alternative='', prior=False):
         raise DAError("showifdef() must be given a string")
     if not re.search(r'[A-Za-z][A-Za-z0-9\_]*', var):
         raise DAError("showifdef() must be given a valid Python variable name")
+    if illegal_variable_name(var):
+        raise DAError("showifdef() must be given a valid variable name")
     try:
         return eval(var, {})
     except:

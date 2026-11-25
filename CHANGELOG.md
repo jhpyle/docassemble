@@ -1,10 +1,14 @@
 # Change Log
 
-## [1.10.16] - 2026-11-
+## [1.10.16] - 2026-11-24
 
 ### Changed
 
-- Upgraded `oauthlib`.
+- Upgraded Python dependencies other than `nltk`. Note that if you are
+  using third-party Python packages, you may encounter dependency
+  conflicts. It is possible that your interviews will need to be
+  updated.
+- Upgraded CodeMirror and jQuery.
 
 ## [1.10.15] - 2026-10-29
 
